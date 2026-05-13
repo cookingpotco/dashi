@@ -4,6 +4,10 @@ import { TestComponent } from "./test.tsx";
 if (import.meta.main) {
   Deno.serve((req) => {
     const url = new URL(req.url);
+
+    if (req.url.match("favicon.ico")) {
+      return new Response();
+    }
     const query: Record<string, string> = {};
     url.searchParams.forEach((k, v) => query[k] = v);
 

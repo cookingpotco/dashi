@@ -42,11 +42,12 @@ export function jsxAttr(name: string, value: unknown): string {
 }
 
 export function jsxEscape(value: unknown): string {
-  if (
-    value === null || value === undefined || typeof value === "boolean" ||
-    Array.isArray(value)
-  ) {
+  if (value === null || value === undefined || typeof value === "boolean") {
     return "";
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(jsxEscape).join("");
   }
 
   if (typeof value === "function" || typeof value === "object") {
