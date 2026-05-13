@@ -1,8 +1,21 @@
-export function add(a: number, b: number): number {
-  return a + b;
-}
+import { TestComponent } from "./test.tsx";
 
 // Learn more at https://docs.deno.com/runtime/manual/examples/module_metadata#concepts
 if (import.meta.main) {
-  console.log("Add 2 + 3 =", add(2, 3));
+  Deno.serve((req) => {
+    const url = new URL(req.url);
+    const query: Record<string, string> = {};
+    url.searchParams.forEach((k, v) => query[k] = v);
+
+    const text = `<!DOCTYPE html><html>${
+      TestComponent({ urlParams: query })
+    }</html>`;
+    const res = new Response(text);
+
+    res.headers.set("Content-Type", "text/html");
+
+    console.log(`Served: ${text}`);
+
+    return res;
+  });
 }

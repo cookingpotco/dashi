@@ -42,7 +42,10 @@ export function jsxAttr(name: string, value: unknown): string {
 }
 
 export function jsxEscape(value: unknown): string {
-  if (value === null || value === undefined || typeof value === "boolean") {
+  if (
+    value === null || value === undefined || typeof value === "boolean" ||
+    Array.isArray(value)
+  ) {
     return "";
   }
 
