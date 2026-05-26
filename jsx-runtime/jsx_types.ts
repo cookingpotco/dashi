@@ -1,16 +1,18 @@
 import * as dom from "./dom_types.ts";
 
+export type Element = string; // All JSX should resolve to a string
+export type SaffronNode = dom.Node | Element;
+
 export type ElementType<P extends Record<string, unknown> = never> =
   | keyof IntrinsicElements
-  | ((props: P) => dom.ParsedNode)
+  | ((props: P) => SaffronNode)
   | null;
-export type Element = string; // Resolves as string, but is it string here?
 
 // We don't plan to support class components, so making them never
 export type ElementClass = never;
 
 export interface ElementChildrenAttribute {
-  children: dom.ParsedNode;
+  children: SaffronNode;
 }
 
 type MappedAttributes<T extends keyof HTMLElementTagNameMap> =
