@@ -11,10 +11,10 @@ export interface Layout {
 }
 
 export interface Middleware {
-  handle(
+  preRender?: (
     req: Request,
-    next: () => Promise<Response>,
-  ): void | Promise<void>;
+  ) => void | Promise<void>;
+  postRender?: (res: Response) => void | Promise<void>;
 }
 
 interface FsPath {
@@ -61,10 +61,8 @@ async function getDirModule<T>(
 ): Promise<FsModule<Partial<T>> | null> {
   const candidate = entries.find((entry) =>
     entry.isFile &&
-    entry.name.replace(/[\.js,\.jsx,\.ts,\.tsx]/, "") === reservedName
+    entry.name.replace(/(\.js|\.jsx|\.ts|\.tsx)/, "") === reservedName
   );
-
-  // TODO: Add logging for misconfigured files
 
   if (!candidate) {
     return null;
@@ -75,6 +73,7 @@ async function getDirModule<T>(
   const instance = getModuleInstance<T>(candidateModule);
 
   if (!instance) {
+    console.error("Configured improper module", candidate.name);
     return null;
   }
 
@@ -82,7 +81,8 @@ async function getDirModule<T>(
 }
 
 function isMiddleware(value: Partial<Middleware>): value is Middleware {
-  return typeof value.handle === "function";
+  return typeof value.preRender === "function" ||
+    typeof value.postRender === "function";
 }
 
 async function getMiddleware(
@@ -94,7 +94,6 @@ async function getMiddleware(
     entries,
     "_middleware",
   );
-
   if (!res) {
     return null;
   }
@@ -152,6 +151,18 @@ async function parseRouteDir(
   const middleware = await getMiddleware(dir, dirEntries);
   const layout = await getLayout(dir, dirEntries);
 
+  if (middleware) {
+    console.log(
+      `${middleware.instance.constructor.name} registered on everthing under ${relativePath}`,
+    );
+  }
+
+  if (layout) {
+    console.log(
+      `${layout.instance.constructor.name} registered on everything under ${relativePath}`,
+    );
+  }
+
   const paths: FsPath[] = [];
   const unresolvedPaths: Promise<FsPath[]>[] = [];
 
@@ -202,6 +213,19 @@ async function parseRouteDir(
   return (await Promise.all(unresolvedPaths)).flat().concat(paths);
 }
 
+async function combinedLayoutRender(
+  layouts: Layout[],
+  route: Route,
+): Promise<SaffronNode> {
+  const [layout, ...rest] = layouts;
+
+  if (!layout) {
+    return route.render();
+  }
+
+  return layout.render(await combinedLayoutRender(rest, route));
+}
+
 export async function serveFileBased() {
   const rootDir = Deno.mainModule.replace(/\/[^\/]*$/, "");
   const routesDir = `${rootDir}/routes/`;
@@ -220,16 +244,18 @@ export async function serveFileBased() {
     const matched = paths.find((path) => !!path.pattern.exec(req.url));
 
     // TODO: Don't match twice
-    const match = matched?.pattern.exec(req.url);
+    // const match = matched?.pattern.exec(req.url);
 
-    const serve = () => {
-    };
+    if (matched) {
+      matched.middlewares.forEach(async (m) => await m.preRender?.(req));
+      const html = await combinedLayoutRender(matched.layouts, matched.route);
 
-    if (match) {
-      const text = `<!DOCTYPE html>${await matched?.route.render?.()}`;
+      const text = `<!DOCTYPE html>${html}`;
       const res = new Response(text);
       res.headers.set("Content-Type", "text/html");
       console.log(`Served: ${text}`);
+
+      matched.middlewares.forEach(async (m) => await m.postRender?.(res));
 
       return res;
     }
