@@ -147,6 +147,7 @@ async function parseRouteDir(
     higherLayouts?: Layout[];
   },
 ): Promise<FsPath[]> {
+  console.log("Parsing", relativePath, "at", dir);
   const dirEntries = Array.from(Deno.readDirSync(new URL(dir)));
   const middleware = await getMiddleware(dir, dirEntries);
   const layout = await getLayout(dir, dirEntries);
@@ -176,12 +177,13 @@ async function parseRouteDir(
     if (entry.isDirectory) {
       unresolvedPaths.push(
         parseRouteDir({
-          dir: `${dir}/${entry.name}`,
+          dir: `${dir}${entry.name}/`,
           relativePath: `${relativePath}${entry.name}/`,
           higherMiddlewares: middlewares,
           higherLayouts: layouts,
         }),
       );
+      continue;
     }
 
     if (middleware && middleware.file === entry.name) {
