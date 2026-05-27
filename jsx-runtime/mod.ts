@@ -1,4 +1,5 @@
 export * as JSX from "./jsx_types.ts";
+export { type SaffronNode } from "./jsx_types.ts";
 
 export class JsxRuntimeError extends Error {
   constructor(...message: string[]) {

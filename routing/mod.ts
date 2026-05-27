@@ -61,7 +61,7 @@ async function getDirModule<T>(
 ): Promise<FsModule<Partial<T>> | null> {
   const candidate = entries.find((entry) =>
     entry.isFile &&
-    entry.name.replace(/(\.js|\.jsx|\.ts|\.tsx)/, "") === reservedName
+    entry.name.replace(/(\.jsx|\.js|\.tsx|\.ts)/, "") === reservedName
   );
 
   if (!candidate) {

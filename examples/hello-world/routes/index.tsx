@@ -10,10 +10,6 @@ export class HomeRoute implements Route {
   async render() {
     const { hello } = await fetchData();
 
-    return (
-      <html>
-        <h1>Hello Yuna {"<3"} {hello.toFixed(2)}</h1>
-      </html>
-    );
+    return <h1>Hello Yuna {"<3"} {hello.toFixed(2)}</h1>;
   }
 }
