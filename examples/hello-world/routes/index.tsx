@@ -1,4 +1,4 @@
-import { Route } from "saffron";
+import { Route } from "dashi";
 
 function fetchData() {
   return new Promise<{ hello: number }>((resolve) =>
@@ -6,10 +6,19 @@ function fetchData() {
   );
 }
 
+const TestComponent = ({ text }: { text: string }) => {
+  return <footer>Test Footer {text} 2</footer>;
+};
+
 export class HomeRoute implements Route {
   async render() {
     const { hello } = await fetchData();
 
-    return <h1>Hello Yuna {"<3"} {hello.toFixed(2)}</h1>;
+    return (
+      <h1>
+        Hello Yuna {"<3"} {hello.toFixed(2)}
+        <TestComponent text="my footy" />
+      </h1>
+    );
   }
 }

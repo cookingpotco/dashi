@@ -1,7 +1,7 @@
 export * as JSX from "./jsx_types.ts";
-export { type SaffronNode } from "./jsx_types.ts";
+export { type DashiNode } from "./jsx_types.ts";
 
-// TODO: Check if some of those functions need to work with SaffronNode instead of strings
+// TODO: Check if some of those functions need to work with DashiNode instead of strings
 
 export class JsxRuntimeError extends Error {
   constructor(...message: string[]) {

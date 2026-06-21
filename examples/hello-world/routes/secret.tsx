@@ -1,11 +1,10 @@
-// @ts-types="saffron"
-import { Route } from "saffron";
+import { Route } from "dashi";
 
 export class SecretRoute implements Route {
   render() {
     return (
       <html>
-        <h2>(.)(.)</h2>
+        <h2>{"<3"}</h2>
       </html>
     );
   }

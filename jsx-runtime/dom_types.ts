@@ -83,10 +83,10 @@ export type TransitionEventHandler<T extends EventTarget = EventTarget> =
     TransitionEvent
   >;
 
-export type Node = string | string[] | number | bigint | boolean | null;
+export type Node = string | number | bigint | boolean | null;
 
 export interface DOMAttributes<T extends EventTarget> {
-  children?: Node;
+  children?: Node | Node[];
 
   // Clipboard Events
   onCopy?: ClipboardEventHandler<T>;

@@ -1,13 +1,13 @@
-import { SaffronNode } from "../jsx-runtime/jsx_types.ts";
+import { DashiNode } from "../jsx-runtime/jsx_types.ts";
 
 export interface Route {
-  render(): Promise<SaffronNode> | SaffronNode;
+  render(): Promise<DashiNode> | DashiNode;
 }
 
 export interface Layout {
   render(
-    children: SaffronNode,
-  ): Promise<SaffronNode> | SaffronNode;
+    children: DashiNode,
+  ): Promise<DashiNode> | DashiNode;
 }
 
 export interface Middleware {
@@ -218,7 +218,7 @@ async function parseRouteDir(
 async function combinedLayoutRender(
   layouts: Layout[],
   route: Route,
-): Promise<SaffronNode> {
+): Promise<DashiNode> {
   const [layout, ...rest] = layouts;
 
   if (!layout) {

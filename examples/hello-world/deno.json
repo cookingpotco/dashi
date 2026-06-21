@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "jsx": "precompile",
-    "jsxImportSource": "saffron",
+    "jsxImportSource": "dashi",
     "lib": ["dom", "deno.ns"]
   },
   "tasks": {
@@ -9,7 +9,7 @@
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1",
-    "saffron": "../../mod.ts",
-    "saffron/jsx-runtime": "../../jsx-runtime/mod.ts"
+    "dashi": "../../mod.ts",
+    "dashi/jsx-runtime": "../../jsx-runtime/mod.ts"
   }
 }

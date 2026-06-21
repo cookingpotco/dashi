@@ -1,4 +1,4 @@
-import { type Middleware } from "saffron";
+import { type Middleware } from "dashi";
 
 export class RootMiddleware implements Middleware {
   preRender(req: Request) {

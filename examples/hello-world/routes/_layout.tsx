@@ -1,8 +1,7 @@
-// @ts-types="saffron"
-import { Layout, SaffronNode } from "saffron";
+import { DashiNode, Layout } from "dashi";
 
 export class RootLayout implements Layout {
-  render(children: SaffronNode): SaffronNode {
+  render(children: DashiNode): DashiNode {
     return (
       <html>
         <h1>Website Title</h1>

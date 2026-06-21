@@ -1,5 +1,4 @@
-// @ts-types="saffron"
-import { Route } from "saffron";
+import { Route } from "dashi";
 
 export class NestedTestRoute implements Route {
   render() {
