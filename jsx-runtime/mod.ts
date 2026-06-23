@@ -1,4 +1,5 @@
 export * as JSX from "./jsx_types.ts";
+export * from "./dom_types.ts";
 export { type DashiNode } from "./jsx_types.ts";
 
 // TODO: Check if some of those functions need to work with DashiNode instead of strings
@@ -12,7 +13,7 @@ export class JsxRuntimeError extends Error {
 export function jsxTemplate(
   strings: string[],
   ...dynamic: string[]
-) {
+): string {
   const arr = [];
 
   for (let i = 0; i < dynamic.length; i++) {

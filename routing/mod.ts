@@ -4,6 +4,30 @@ export interface Route {
   render(): Promise<DashiNode> | DashiNode;
 }
 
+// Flows:
+//
+// 1) Lazy loaded upon page load
+// <Route>
+//  <Link to fetch Fragment />
+// </Route>
+//
+// 2) Separate cache load? - how would it be used from SSR?
+// <Route> Short cache
+//  <Fragment /> Long cache
+// </Route>
+//
+// 3) Update from response (form/SSE)
+// Click -> Server response ->
+// ...
+// <Fragment />
+// ...
+//
+// 4) Fragment version of a given page (returned for a lazy route, which can point to a full page route)
+// <Route> Full route
+// ...
+// <Fragment /> // This will be returned / rendered
+// </Route>
+
 export interface Layout {
   render(
     children: DashiNode,
@@ -154,13 +178,13 @@ async function parseRouteDir(
 
   if (middleware) {
     console.log(
-      `${middleware.instance.constructor.name} registered on everthing under ${relativePath}`,
+      `[MIDDLEWARE] ${middleware.instance.constructor.name} registered on everthing under ${relativePath}`,
     );
   }
 
   if (layout) {
     console.log(
-      `${layout.instance.constructor.name} registered on everything under ${relativePath}`,
+      `[LAYOUT] ${layout.instance.constructor.name} registered on everything under ${relativePath}`,
     );
   }
 
@@ -202,7 +226,7 @@ async function parseRouteDir(
       const pathname = `${relativePath}${
         entry.name.replace(/\.[^\.]+$/, "").replace("index", "")
       }`;
-      console.log(`${route.constructor.name} mounted on ${pathname}`);
+      console.log(`[ROUTE] ${route.constructor.name} mounted on ${pathname}`);
       paths.push({
         route,
         layouts,

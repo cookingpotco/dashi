@@ -197,4 +197,7 @@ export interface IntrinsicElements {
   tspan: dom.SVGAttributes<SVGTSpanElement>;
   use: dom.SVGAttributes<SVGUseElement>;
   view: dom.SVGAttributes<SVGViewElement>;
+
+  // custom elements
+  "dashi-fragment": dom.DashiFragmentAttributes;
 }
