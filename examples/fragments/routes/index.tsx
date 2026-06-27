@@ -15,7 +15,7 @@ export class HomeRoute implements Route {
     const { hello } = await fetchData();
 
     return (
-      <main val>
+      <main>
         <h1>
           Random number: {hello.toFixed(2)}
         </h1>
