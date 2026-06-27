@@ -1,7 +1,7 @@
 import { DashiNode } from "../jsx-runtime/jsx_types.ts";
 
 export interface Route {
-  render(): Promise<DashiNode> | DashiNode;
+  render(): DashiNode | Promise<DashiNode>;
 }
 
 // Flows:
@@ -11,7 +11,7 @@ export interface Route {
 //  <Link to fetch Fragment />
 // </Route>
 //
-// 2) Separate cache load? - how would it be used from SSR?
+// 2) Separate cache load? - how would it be used from SSR? NO for now
 // <Route> Short cache
 //  <Fragment /> Long cache
 // </Route>
@@ -28,6 +28,8 @@ export interface Route {
 // <Fragment /> // This will be returned / rendered
 // </Route>
 
+// TODO: Can we make Middlewares support layout functionality?
+// They are very similar, so it's worth having just 1 way of doing things
 export interface Layout {
   render(
     children: DashiNode,
@@ -274,7 +276,10 @@ export async function serveFileBased() {
 
     if (matched) {
       matched.middlewares.forEach(async (m) => await m.preRender?.(req));
-      const html = await combinedLayoutRender(matched.layouts, matched.route);
+      const html = await combinedLayoutRender(
+        matched.layouts,
+        matched.route,
+      );
 
       const text = `<!DOCTYPE html>${html}`;
       const res = new Response(text);

@@ -2,8 +2,6 @@ export * as JSX from "./jsx_types.ts";
 export * from "./dom_types.ts";
 export { type DashiNode } from "./jsx_types.ts";
 
-// TODO: Check if some of those functions need to work with DashiNode instead of strings
-
 export class JsxRuntimeError extends Error {
   constructor(...message: string[]) {
     super(message.join(" "));
@@ -42,6 +40,10 @@ export function jsxAttr(name: string, value: unknown): string {
     return name;
   }
 
+  if (typeof value === "string") {
+    return `${name}="${value}"`;
+  }
+
   return `${name}=${value}`;
 }
 
@@ -65,9 +67,20 @@ export function jsxEscape(value: unknown): string {
 }
 
 export function jsx(
-  type: (props?: Record<string, unknown>) => string,
-  props: Record<string, unknown> | null,
-  _key: string,
+  type: ((props?: Record<string, unknown>) => string) | string,
+  props?: Record<string, unknown> | null,
+  _key?: string,
 ): string {
-  return type(props ?? {});
+  if (typeof type === "function") {
+    const res = type(props ?? {});
+    return res;
+  }
+
+  const { children, ...rest } = props ?? {};
+  const attrs = Object.entries(rest).map(([key, val]) => jsxAttr(key, val))
+    .join(" ");
+
+  const res = `<${type} ${attrs}>${jsxEscape(children)}</${type}>`;
+
+  return res;
 }

@@ -199,5 +199,5 @@ export interface IntrinsicElements {
   view: dom.SVGAttributes<SVGViewElement>;
 
   // custom elements
-  "dashi-fragment": dom.DashiFragmentAttributes;
+  "route-fragment": dom.RouteFragmentAttributes;
 }

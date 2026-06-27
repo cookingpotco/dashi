@@ -86,7 +86,7 @@ export type TransitionEventHandler<T extends EventTarget = EventTarget> =
 export type Node = string | number | bigint | boolean | null;
 
 export interface DOMAttributes<T extends EventTarget> {
-  children?: Node[];
+  children?: Node | Node[];
 
   // Clipboard Events
   onCopy?: ClipboardEventHandler<T>;
@@ -708,19 +708,11 @@ export interface HTMLAttributes<T extends HTMLElement>
   part?: string;
 }
 
-export interface DashiFragmentAttributes extends HTMLAttributes<HTMLElement> {
-  /**
-   * Identifier used to replace/update/affect the fragment
-   */
-  id: string;
-  /**
-   * Fragment will be fetched from this location when appearing on the page,
-   * useful for separating caching lifetimes and dynamic data.
-   *
-   * Passing `children` will add a pending UI appearing until the
-   * actual fragment is loaded.
-   */
-  src?: string;
+export type InternalSrc = `/${string}`;
+
+export interface RouteFragmentAttributes extends HTMLAttributes<HTMLElement> {
+  src: InternalSrc;
+  lazy?: boolean;
 }
 
 export type HTMLAttributeReferrerPolicy =

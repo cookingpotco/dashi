@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "jsx": "precompile",
+    "jsxImportSource": "dashi",
+    "lib": ["dom", "deno.ns"]
+  },
+  "tasks": {
+    "dev": "deno run --watch main.ts"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1",
+    "dashi": "../../mod.ts",
+    "dashi/jsx-runtime": "../../jsx-runtime/mod.ts"
+  }
+}
