@@ -47,5 +47,5 @@ export function RouteFragment(
     );
   }
 
-  return <route-fragment src={src} {...rest} />;
+  return <route-fragment src={src} {...rest}></route-fragment>;
 }

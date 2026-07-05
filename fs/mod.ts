@@ -1,11 +1,9 @@
-import { Layout, Middleware, Route } from "../shared/shared_types.ts";
-
-interface FsPath {
-  route: Route;
-  pattern: URLPattern;
-  layouts: Layout[];
-  middlewares: Middleware[];
-}
+import {
+  Layout,
+  Middleware,
+  Route,
+  RoutingPath,
+} from "../shared/shared_types.ts";
 
 interface FsModule<T> {
   file: string;
@@ -129,26 +127,26 @@ export async function parseRoutesDir(
     higherMiddlewares?: Middleware[];
     higherLayouts?: Layout[];
   },
-): Promise<FsPath[]> {
-  console.log("Parsing", relativePath, "at", dir);
+): Promise<RoutingPath[]> {
+  console.log(`Parsing ${relativePath}`);
   const dirEntries = Array.from(Deno.readDirSync(new URL(dir)));
   const middleware = await getMiddleware(dir, dirEntries);
   const layout = await getLayout(dir, dirEntries);
 
   if (middleware) {
     console.log(
-      `[MIDDLEWARE] ${middleware.instance.constructor.name} registered on everthing under ${relativePath}`,
+      `[MIDDLEWARE] ${middleware.instance.constructor.name} registered ${relativePath}`,
     );
   }
 
   if (layout) {
     console.log(
-      `[LAYOUT] ${layout.instance.constructor.name} registered on everything under ${relativePath}`,
+      `[LAYOUT]     ${layout.instance.constructor.name} registered on ${relativePath}`,
     );
   }
 
-  const paths: FsPath[] = [];
-  const unresolvedPaths: Promise<FsPath[]>[] = [];
+  const paths: RoutingPath[] = [];
+  const unresolvedPaths: Promise<RoutingPath[]>[] = [];
 
   const middlewares = [
     ...higherMiddlewares,
@@ -185,7 +183,9 @@ export async function parseRoutesDir(
       const pathname = `${relativePath}${
         entry.name.replace(/\.[^\.]+$/, "").replace("index", "")
       }`;
-      console.log(`[ROUTE] ${route.constructor.name} mounted on ${pathname}`);
+      console.log(
+        `[ROUTE]      ${route.constructor.name} mounted on ${pathname}`,
+      );
       paths.push({
         route,
         layouts,

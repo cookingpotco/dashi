@@ -2,6 +2,8 @@ export * as JSX from "./jsx_types.ts";
 export * from "./dom_types.ts";
 export { type DashiNode } from "./jsx_types.ts";
 
+const FRAGMENT_TAG = "route-fragment";
+
 export class JsxRuntimeError extends Error {
   constructor(...message: string[]) {
     super(message.join(" "));
@@ -80,7 +82,13 @@ export function jsx(
   const attrs = Object.entries(rest).map(([key, val]) => jsxAttr(key, val))
     .join(" ");
 
-  const res = `<${type} ${attrs}>${jsxEscape(children)}</${type}>`;
+  if (type === FRAGMENT_TAG && !rest.lazy && typeof rest.src === "string") {
+    return `<${type} ${attrs}>${getInlineFragmentSlot(rest.src)}</${type}>`;
+  }
 
-  return res;
+  return `<${type} ${attrs}>${jsxEscape(children)}</${type}>`;
+}
+
+export function getInlineFragmentSlot(src: string) {
+  return `{{fragment:${src}}}`;
 }
