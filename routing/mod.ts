@@ -72,16 +72,24 @@ export async function handle(
   return result.res;
 }
 
-export function requestInlineFragment(req: Request, src: string) {
+export function requestInlineFragment(src: string) {
   const ctx = RenderStorage.getInstance();
+
+  if (!ctx.req) {
+    throw new Error("RenderStorage wasn't properly initialized, missing `req`");
+  }
 
   if (ctx.hasFragment(src)) {
     return;
   }
 
-  const promise = internalHandle(req, { inlineFragment: true }).then((res) =>
-    res ? res.html : res
-  );
+  console.log(ctx.req);
+  const updatedReq = new Request(src, ctx.req);
+  console.log(updatedReq);
+
+  const promise = internalHandle(updatedReq, { inlineFragment: true }).then((
+    res,
+  ) => res ? res.html : res);
 
   ctx.addFragment(src, promise);
 }

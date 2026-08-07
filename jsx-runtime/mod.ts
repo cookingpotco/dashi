@@ -1,3 +1,5 @@
+import { requestInlineFragment } from "../routing/mod.ts";
+
 export * as JSX from "./jsx_types.ts";
 export * from "./dom_types.ts";
 export { type DashiNode } from "./jsx_types.ts";
@@ -83,6 +85,8 @@ export function jsx(
     .join(" ");
 
   if (type === FRAGMENT_TAG && !rest.lazy && typeof rest.src === "string") {
+    requestInlineFragment(rest.src);
+
     return `<${type} ${attrs}>${getInlineFragmentSlot(rest.src)}</${type}>`;
   }
 

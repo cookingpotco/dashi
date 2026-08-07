@@ -4,7 +4,7 @@ import { Layout, Route } from "../shared/shared_types.ts";
 // TODO: Replace with async local storage
 // This doesn't work for concurrent requests
 export class RenderStorage {
-  private static readonly instance: RenderStorage;
+  private static instance: RenderStorage;
 
   private readonly inflightFragments: Map<string, Promise<string | null>>;
   private _req: Request | null;
@@ -15,11 +15,13 @@ export class RenderStorage {
   }
 
   static getInstance() {
-    if (this.instance) {
-      return this.instance;
+    if (RenderStorage.instance) {
+      return RenderStorage.instance;
     }
 
-    return new RenderStorage();
+    RenderStorage.instance = new RenderStorage();
+
+    return RenderStorage.instance;
   }
 
   get req() {
