@@ -1,0 +1,30 @@
+---
+description: How we pick up, plan, delegate and review Linear issues in this repo
+alwaysApply: true
+---
+
+# Issue Workflow
+
+Work flows through Linear. One issue at a time, planned before it is implemented.
+
+## The loop
+
+1. **Pick** an issue from the `Dashi F&F Launch` project, respecting milestone order and `blocked by` relations.
+2. **Discuss and research** before planning. Verify the ticket's claims against the code, since tickets are written from memory and go stale.
+3. **Plan** in plan mode, iterating until the human approves. Skip this for S-pointed issues whose ticket already reads like a plan.
+4. **Post the approved plan** as a comment on the ticket, so the implementing agent needs nothing but the issue ID.
+5. **Delegate** the issue to the `Cursor` agent in Linear. It works on the issue's `gitBranchName`.
+6. **Review** with Bugbot on the diff first, then the human. An approved plan catches the wrong approach, not a wrong implementation of the right one.
+
+## Status conventions
+
+- `Ready` means "has an approved plan". Move it there on approval.
+- Never set `In Review` or `Done` by hand. The GitHub integration moves the ticket when the PR opens and when it merges.
+- Reference the issue from the PR so that automation fires.
+
+## Rules of thumb
+
+- **Do not delegate spikes.** Design issues produce a written decision and stay with the human.
+- **Check for file collisions before running agents in parallel.** Two issues touching the same directory will conflict.
+- **Quarantine with an owner.** When leaving a known failure in place, suppress it as narrowly as possible and name the issue that fixes it, so the debt stays greppable.
+- **Split when scope grows.** If planning uncovers work with unknown fallout, file a separate issue and land it first rather than letting an S ticket quietly become an L.
