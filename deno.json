@@ -2,7 +2,23 @@
   "compilerOptions": {
     "jsx": "precompile",
     "jsxImportSource": "dashi",
-    "lib": ["dom", "deno.ns"]
+    "lib": [
+      "dom",
+      "deno.ns"
+    ]
+  },
+  "workspace": [
+    "./examples/hello-world",
+    "./examples/fragments"
+  ],
+  "minimumDependencyAge": "P1D",
+  "lint": {
+    "rules": {
+      "include": [
+        "no-process-global",
+        "no-node-globals"
+      ]
+    }
   },
   "tasks": {
     "dev": "deno run --watch main.ts"
