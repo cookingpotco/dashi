@@ -13,14 +13,29 @@ Work flows through Linear. One issue at a time, planned before it is implemented
 2. **Discuss and research** before planning. Verify the ticket's claims against the code, since tickets are written from memory and go stale.
 3. **Plan** in plan mode, iterating until the human approves. Skip this for S-pointed issues whose ticket already reads like a plan.
 4. **Post the approved plan** as a comment on the ticket, so the implementing agent needs nothing but the issue ID.
-5. **Delegate** the issue to the `Cursor` agent in Linear. It works on the issue's `gitBranchName`.
-6. **Review** with Bugbot on the diff first, then the human. An approved plan catches the wrong approach, not a wrong implementation of the right one.
+5. **Delegate** the issue to the `Cursor` agent in Linear. The agent names its own branch (`cursor/...`) rather than using the issue's `gitBranchName`, so the PR must reference the issue for Linear's automation to fire.
+6. **Open the PR as a draft.** After the implementation is complete, passes the CI locally, is clean and considered final by the implementor, bugbot does its single pass, the findings go back to the implementing agent, and it pushes fixes.
+7. **Mark ready for review** once the findings are addressed and CI is green. That is the signal that it is the human's turn, and it is what moves the ticket to `In Review`.
+
+## Where feedback goes
+
+- **Code-level feedback**: inline on the GitHub PR diff. This is the system of record. An agent does not automatically read human PR comments, so follow up with a top-level `@cursor` comment asking it to address the review.
+- **Scope or approach changes**: a Linear comment on the ticket, with an explicit `@Cursor` mention. Without the mention it is a note for humans only. If the feedback amends the plan, it belongs where the plan lives.
+- **Prefer the original agent over a fresh one.** It holds the plan and the reasoning behind deliberate choices. A new agent rediscovers the branch from scratch and may "fix" something the plan asked for.
+- Only one run is active per agent, so wait for it to finish before sending a follow-up. Any follow-up also disables that agent's automatic CI-fix behaviour for the PR.
+
+## Bugbot
+
+- Bugbot **cannot see this file.** Project rules do not apply to Bugbot runs. Its guidance lives in `.cursor/BUGBOT.md`.
+- Autofix is deliberately **off**. Bugbot comments, the implementing agent fixes. Autofix spawns a fresh agent without the plan's context.
+- Bugbot runs **once per PR**, not on later commits. It is triage that saves the human a first pass, not a merge gate.
+- Two consequences of once-only. Do not require the `Cursor Bugbot` check in branch protection: once it reports findings it sits at `neutral`, and with no further runs nothing re-evaluates it, so it can never clear. And the fix commits are the least-reviewed code in the PR, since neither Bugbot nor anyone else has looked at them - read them more carefully than the rest.
 
 ## Status conventions
 
 - `Ready` means "has an approved plan". Move it there on approval.
-- Never set `In Review` or `Done` by hand. The GitHub integration moves the ticket when the PR opens and when it merges.
-- Reference the issue from the PR so that automation fires.
+- Always set `In Progress` when starting work on a ready piece of work.
+- Never set `In Review` or `Done` by hand. The GitHub integration moves the ticket on ready-for-review and on merge.
 
 ## Rules of thumb
 
