@@ -20,7 +20,7 @@ gh api graphql -f owner=OWNER -f name=NAME -F number=PR -f query='
     repository(owner:$owner,name:$name){ pullRequest(number:$number){
       reviewThreads(first:100){ nodes {
         isResolved isOutdated path line
-        comments(first:50){ nodes { author{login} body } }
+        comments(first:50){ nodes { databaseId author{login} body } }
       } }
     } }
   }'
@@ -34,6 +34,22 @@ gh pr view PR --repo OWNER/NAME --comments
 
 Inline threads carry the specifics; the review summary usually carries the
 intent behind them. Read both before changing anything.
+
+## 3. Replying in a thread
+
+Answer a question where it was asked, using the `databaseId` of any comment in
+the thread:
+
+```
+gh api --method POST \
+  repos/OWNER/NAME/pulls/PR/comments/COMMENT_ID/replies \
+  -f body='...'
+```
+
+A reply belongs in the thread whenever the point is specific to that comment: a
+question about why something was done, a disagreement, or a note that the fix
+took a different shape than suggested. Keep the top-level PR comment for the
+overall scope of the change.
 
 ## Interpreting the result
 
@@ -49,7 +65,7 @@ intent behind them. Read both before changing anything.
   resolves it, so an open thread is not proof that nothing was done about it.
   Check the history of the thread and the current state of the code.
 - If a review asks for something that contradicts a deliberate decision, say so
-  in a reply rather than silently changing it.
+  in a reply on that thread rather than silently changing it.
 
 ## If the result looks truncated
 
