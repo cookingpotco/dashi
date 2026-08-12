@@ -1,0 +1,32 @@
+name: Review follow-up
+
+# Forwards a submitted review to the agent that opened the PR. Bot reviews, such
+# as Bugbot's, are forwarded too.
+on:
+  pull_request_review:
+    types: [submitted]
+
+# An agent takes one run at a time, so reviews on the same PR queue. Cancelling
+# would drop the feedback silently.
+concurrency:
+  group: review-followup-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  forward:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # The agent fetches the review itself, so only the event payload is read here.
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Tell the original agent to read the review
+        run: deno run --allow-net --allow-env --allow-read scripts/review_followup.ts
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
