@@ -11,6 +11,9 @@
     "./examples/hello-world",
     "./examples/fragments"
   ],
+  "lock": {
+    "frozen": true
+  },
   "minimumDependencyAge": "P1D",
   "lint": {
     "rules": {
