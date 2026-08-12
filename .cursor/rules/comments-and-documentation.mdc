@@ -1,0 +1,63 @@
+---
+description: How to write comments, documentation, rules and commit bodies in this repo
+alwaysApply: true
+---
+
+# Comments and documentation
+
+Write for someone opening the file cold, months from now. They did not see the
+conversation that produced it, the branch it came from, or what it replaced.
+
+## Documentation
+
+Short and sweet. Say the thing and stop. A reader skimming for one fact should
+find it without wading, so prefer a tight paragraph over a long one and cut
+anything that would be skipped.
+
+## Comments
+
+**Default to none.** If a comment is needed to understand the code, the code
+needs to be written better: rename the thing, split the function, make the
+structure say what the comment was going to.
+
+Two cases earn one.
+
+**JSDoc on a function**, for external API surface or genuinely complex logic. Not
+on every function, and not to restate the signature.
+
+**A note on something done unusually**, where the reason is not obvious from the
+code and the next reader would otherwise "fix" it. Going against convention,
+suppressing a lint rule, working around a bug elsewhere, or anything temporary.
+Say why it is like that.
+
+```ts
+// deno-lint-ignore no-explicit-any -- the upstream type is wrong; see COO-42
+```
+
+Never comment to restate the next line, to label a section of a function, or to
+explain a change to whoever reviews it.
+
+## Describe what is, not what was
+
+Say how the code behaves now. Do not narrate the change that produced it.
+
+- No "previously", "used to", "no longer", "instead of", "we changed this to".
+- Do not say where something does **not** live, or which approach was rejected.
+- Do not justify a choice against an alternative the reader cannot see.
+- Do not mention that something was tested, verified or discussed. Just state it.
+
+```
+Good: The agent reads review feedback with the `pr-review-feedback` skill.
+Bad:  How to read review feedback lives in the skill, not in the prompt, because
+      a skill's body only enters context when used.
+```
+
+The exception is a **breaking change to a published interface**, where callers
+genuinely need to know what moved. That belongs in a changelog or a migration
+note, not scattered through comments.
+
+## Keep it current
+
+Documentation that describes something the code no longer does is worse than
+none. When behaviour changes, rewrite the surrounding prose to match rather than
+appending a correction to it.
