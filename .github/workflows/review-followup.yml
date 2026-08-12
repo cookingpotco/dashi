@@ -15,10 +15,13 @@ concurrency:
 jobs:
   forward:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    # The agent fetches the review itself, so only the event payload is read here.
+    # Long enough to outlast the wait for the agent's current run to finish.
+    timeout-minutes: 60
+    # Write is for putting the PR back into draft. The review itself is read by
+    # the agent, not here.
     permissions:
       contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v5
 
@@ -26,7 +29,8 @@ jobs:
         with:
           deno-version: v2.x
 
-      - name: Tell the original agent to read the review
+      - name: Hand the review to the agent that opened the PR
         run: deno run --allow-net --allow-env --allow-read scripts/review_followup.ts
         env:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -18,6 +18,7 @@ interface ReviewContext {
   repo: string;
   prNumber: number;
   prUrl: string;
+  prNodeId: string;
   reviewId: number;
   reviewState: string;
   reviewAuthor: string;
@@ -49,6 +50,7 @@ async function contextFromEvent(path: string): Promise<ReviewContext> {
     repo: event.repository.full_name,
     prNumber: event.pull_request.number,
     prUrl: event.pull_request.html_url,
+    prNodeId: event.pull_request.node_id,
     reviewId: event.review.id,
     reviewState: String(event.review.state).toLowerCase(),
     reviewAuthor: event.review.user?.login ?? "unknown",
@@ -70,6 +72,40 @@ async function githubFetch(path: string, token: string): Promise<unknown> {
   return await response.json();
 }
 
+/**
+ * Puts the PR back into draft, which is only possible through GraphQL - REST
+ * exposes `draft` as read-only. Draft is what tells Linear the work is back with
+ * the agent, and the agent marks it ready again when it is finished.
+ */
+async function convertToDraft(nodeId: string, token: string): Promise<void> {
+  const response = await fetch("https://api.github.com/graphql", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/vnd.github+json",
+    },
+    body: JSON.stringify({
+      query:
+        "mutation($id:ID!){convertPullRequestToDraft(input:{pullRequestId:$id}){pullRequest{isDraft}}}",
+      variables: { id: nodeId },
+    }),
+  });
+  const body = await response.json() as {
+    errors?: { message: string }[];
+    data?: {
+      convertPullRequestToDraft?: { pullRequest?: { isDraft: boolean } };
+    };
+  };
+  if (!response.ok || body.errors?.length) {
+    const detail = body.errors?.map((e) => e.message).join("; ") ??
+      `HTTP ${response.status}`;
+    throw new Error(`Could not convert the PR to draft: ${detail}`);
+  }
+  if (body.data?.convertPullRequestToDraft?.pullRequest?.isDraft !== true) {
+    throw new Error("The PR did not end up in draft.");
+  }
+}
+
 async function contextFromApi(
   repo: string,
   prNumber: number,
@@ -83,11 +119,12 @@ async function contextFromApi(
   const pr = await githubFetch(
     `/repos/${repo}/pulls/${prNumber}`,
     token,
-  ) as { html_url: string };
+  ) as { html_url: string; node_id: string };
   return {
     repo,
     prNumber,
     prUrl: pr.html_url,
+    prNodeId: pr.node_id,
     reviewId,
     reviewState: String(review.state).toLowerCase(),
     reviewAuthor: review.user?.login ?? "unknown",
@@ -123,10 +160,11 @@ function buildPrompt(context: ReviewContext): string {
     "comment conflicts with something the plan deliberately called for, say so in",
     "your reply rather than silently changing it.",
     "",
-    "When you are done:",
+    "The review put the PR back into draft. When you are done:",
     "- Commit and push to the same branch. Do not force-push or rebase.",
     "- Post one PR comment summarising what you changed, and anything you",
     "  disagreed with and why.",
+    "- Mark the PR ready for review again with `gh pr ready`.",
   ].join("\n");
 }
 
@@ -176,6 +214,22 @@ async function main(): Promise<number> {
   if (flags.has("dry-run")) {
     console.log("\n--- prompt (not sent) ---\n" + buildPrompt(context));
     return 0;
+  }
+
+  // An approval says the PR may merge, and drafting it would take that back.
+  if (context.reviewState !== "approved") {
+    const token = Deno.env.get("GITHUB_TOKEN");
+    if (!token) {
+      console.warn("No GITHUB_TOKEN, so the PR keeps its current state.");
+    } else {
+      try {
+        await convertToDraft(context.prNodeId, token);
+        console.log("Put the PR back into draft.");
+      } catch (error) {
+        // Losing the draft flip is survivable; losing the feedback is not.
+        console.warn(error instanceof Error ? error.message : String(error));
+      }
+    }
   }
 
   try {
