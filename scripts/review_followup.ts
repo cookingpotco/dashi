@@ -110,6 +110,9 @@ function buildPrompt(context: ReviewContext): string {
   return [
     `${context.reviewAuthor} ${stateLabel} on your pull request ${context.prUrl}.`,
     "",
+    "Pull the branch before you start. It may have moved since your last run, and",
+    "a push from a workspace that is behind will be rejected.",
+    "",
     "Address the review feedback. Collect it with the `pr-review-feedback` skill",
     `for PR ${context.prNumber} in ${context.repo}; if that skill is not already`,
     "available to you, read `.cursor/skills/pr-review-feedback/SKILL.md` in the",
