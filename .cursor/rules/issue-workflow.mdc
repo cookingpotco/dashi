@@ -19,8 +19,8 @@ Work flows through Linear. One issue at a time, planned before it is implemented
 
 ## Definition of done (for the implementing agent)
 
-Cursor opens the PR automatically on your **first push**, which is long before you
-are finished. An open PR therefore means nothing about readiness; these do:
+Cursor opens a draft PR on your **first push**, which is long before you are
+finished. An open PR therefore means nothing about readiness; these do:
 
 - `deno fmt --check .`, `deno lint`, `deno check .` and `deno test -A` all pass
   locally, and CI is green on the branch you pushed.
@@ -33,7 +33,10 @@ are finished. An open PR therefore means nothing about readiness; these do:
 - **Then ask Bugbot for a review**, by commenting exactly `cursor review` on the
   PR. An `@` prefix addresses a cloud agent instead, so leave it off. Ask once per
   PR: each run is billed, and only finished work is worth spending it on.
-- Address its findings and hand over. Do not ask it again.
+- Address its findings, without asking it again.
+- **Last of all, `gh pr ready`.** Ready for review is what says the work is done
+  and it is the human's turn. Check that it took: the draft state sometimes
+  survives the call, and a draft cannot be merged.
 
 Until COO-36 and COO-11 land, the baseline is red and there is no CI, so your
 local runs are the only signal: `deno fmt --check .` fails on `README.md` and
