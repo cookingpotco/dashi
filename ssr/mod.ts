@@ -63,10 +63,10 @@ export async function renderRoute(
   const [layout, ...rest] = options.layouts;
 
   if (!layout || options.inlineFragment) {
-    const res = `${(await route.render(options.req))}`;
-    replaceInlineFragmentSlots(res);
+    const res = await route.render(options.req);
+    replaceInlineFragmentSlots(String(res));
 
-    return res;
+    return res as string;
   }
 
   const res = layout.render(
@@ -74,7 +74,7 @@ export async function renderRoute(
     await renderRoute(route, { ...options, layouts: rest }),
   );
 
-  return `${res}`;
+  return res as string;
 }
 
 export async function replaceInlineFragmentSlots(initialOutput: string) {

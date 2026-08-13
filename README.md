@@ -8,7 +8,10 @@ published yet.
 
 ## Implemented
 
-- JSX → HTML strings
+- JSX → HTML strings. Interpolated values are escaped in body and attribute
+  position. JSX output is already-rendered markup and interpolates unchanged, as
+  does anything passed to `raw()`. Passing unsanitized user input to `raw()` is
+  an XSS vector.
 - File-based routing, layouts, and middleware
 - `<RouteFragment>` for composing another route into the current page (inline
   during SSR, or client-fetched when `lazy`)
@@ -18,8 +21,8 @@ published yet.
 
 - JSR publish
 - Static asset serving
-- Production-ready SSR (escaping, concurrency, and inline fragments still have
-  known defects)
+- Production-ready SSR (concurrency and inline fragments still have known
+  defects)
 
 ## Development
 
