@@ -22,8 +22,8 @@ Work flows through Linear. One issue at a time, planned before it is implemented
 Cursor opens a draft PR on your **first push**, which is long before you are
 finished. An open PR therefore means nothing about readiness; these do:
 
-- `deno fmt --check .`, `deno lint`, `deno check .` and `deno test -A` all pass
-  locally, and CI is green on the branch you pushed.
+- `deno fmt --check .`, `deno lint`, `deno task check` and `deno test -A` all
+  pass locally, and CI is green on the branch you pushed.
 - Anything you could not make pass is called out explicitly in the PR
   description, naming the issue that owns it. Do not quietly leave it broken and
   do not fix unrelated failures you did not cause.
@@ -38,10 +38,7 @@ finished. An open PR therefore means nothing about readiness; these do:
   and it is the human's turn. Check that it took: the draft state sometimes
   survives the call, and a draft cannot be merged.
 
-Until COO-36 and COO-11 land, the baseline is red and there is no CI, so your
-local runs are the only signal: `deno fmt --check .` fails on `README.md` and
-`deno test -A` fails from the root on the examples' bare `dashi` specifier. Match
-the baseline you started from; do not chase those.
+Those four commands are what CI runs. Match them locally before you push.
 
 ## Where feedback goes
 

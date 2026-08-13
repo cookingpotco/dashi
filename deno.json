@@ -17,6 +17,9 @@
   "minimumDependencyAge": "P1D",
   "lint": {
     "rules": {
+      "exclude": [
+        "jsx-key"
+      ],
       "include": [
         "no-process-global",
         "no-node-globals"
@@ -24,11 +27,13 @@
     }
   },
   "tasks": {
-    "dev": "deno run --watch main.ts"
+    "dev": "deno run --watch main.ts",
+    "check": "deno check mod.ts client/ fragments/ fs/ jsx-runtime/ routing/ scripts/ serve/ shared/ ssr/ examples/hello-world/ examples/fragments/"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1",
     "@std/testing": "jsr:@std/testing@^1.0.18",
+    "dashi": "./mod.ts",
     "dashi/jsx-runtime": "./jsx-runtime/mod.ts"
   },
   "exports": {

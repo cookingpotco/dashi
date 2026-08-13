@@ -4,6 +4,11 @@
     "jsxImportSource": "dashi",
     "lib": ["dom", "deno.ns"]
   },
+  "test": {
+    "exclude": [
+      "."
+    ]
+  },
   "tasks": {
     "dev": "deno run --watch main.ts"
   },
