@@ -1,0 +1,5 @@
+{
+  "modules": {
+    "https://jsr.io/@std/data-structures/1.1.2/_binary_search_tree_internals.ts": {}
+  }
+}

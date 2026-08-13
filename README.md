@@ -23,7 +23,8 @@ published yet.
 
 ## Development
 
-Deno 2.9.5 (see `.tool-versions`). From the repo root:
+Deno 2.9.5 (see `.tool-versions`). Remote modules are in `vendor/`. From the
+repo root:
 
 ```sh
 deno fmt --check .

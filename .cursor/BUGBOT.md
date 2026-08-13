@@ -60,8 +60,8 @@ introduces a new instance of the same class elsewhere.
 
 ## Conventions
 
-- Deno with JSR specifiers. Dependency versions are pinned by `deno.lock`;
-  ranges in `deno.json` are intentional.
+- Deno with JSR specifiers. Remote modules live in `vendor/`; `deno.lock` is
+  frozen. Ranges in `deno.json` are intentional.
 - Tests use `describe`/`it` from `@std/testing/bdd` and `@std/assert`.
 - `deno check` is the type-check command. It covers the framework, scripts, and
   example apps.

@@ -11,6 +11,7 @@
     "./examples/hello-world",
     "./examples/fragments"
   ],
+  "vendor": true,
   "lock": {
     "frozen": true
   },
