@@ -39,8 +39,8 @@ stop: tell the human rather than silently substituting another issue.
 3. **Start the implementor.** After approval, post the plan as a Linear comment
    that begins with `@Cursor`, then the full approved plan. That mention is the
    handoff: Linear puts this comment in the agent's prompt. Leave the status at
-   `Ready`. Queueing is not progress. Do not set `In Progress` for an agent that
-   has not begun.
+   `Ready`. The GitHub integration sets `In Progress` when the agent opens its
+   draft PR.
 
 ## While planning
 

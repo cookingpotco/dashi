@@ -5,8 +5,8 @@ started you; that and this file are the brief. Skip the `plan-ticket` skill.
 
 ## Start
 
-Set the ticket to `In Progress` as your first act, once you have actually
-started. Do not set `In Review` or `Done`; the GitHub integration does that.
+Do not set Linear status. Opening the draft PR on init moves the ticket to
+`In Progress`; the GitHub integration handles `In Review` and `Done` after that.
 
 ## Done
 
