@@ -28,6 +28,7 @@ interpolated HTML, and its request path runs concurrently under `Deno.serve`.
 
 - **Formatting.** `deno fmt` is authoritative. Never comment on style, spacing,
   or line breaks.
+- **Missing `key` props in JSX.** There is no VDOM. `jsx-key` is off.
 - **Anything in `jsx-runtime/dom_types.ts`** beyond correctness bugs. It is 1619
   lines of vendored, React-derived typings scheduled for deletion in COO-35. Do
   not suggest restructuring it.
@@ -61,5 +62,5 @@ introduces a new instance of the same class elsewhere.
 - Deno with JSR specifiers. Dependency versions are pinned by `deno.lock`;
   ranges in `deno.json` are intentional.
 - Tests use `describe`/`it` from `@std/testing/bdd` and `@std/assert`.
-- `deno check .` is the type-check command. Bare `deno check` only walks
-  entrypoints.
+- `deno check` is the type-check command. It covers the framework, scripts, and
+  example apps.

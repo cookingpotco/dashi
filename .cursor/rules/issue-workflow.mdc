@@ -22,7 +22,7 @@ Work flows through Linear. One issue at a time, planned before it is implemented
 Cursor opens a draft PR on your **first push**, which is long before you are
 finished. An open PR therefore means nothing about readiness; these do:
 
-- `deno fmt --check .`, `deno lint`, `deno check .` and `deno test -A` all pass
+- `deno fmt --check .`, `deno lint`, `deno check` and `deno test -A` all pass
   locally, and CI is green on the branch you pushed.
 - Anything you could not make pass is called out explicitly in the PR
   description, naming the issue that owns it. Do not quietly leave it broken and
@@ -30,18 +30,15 @@ finished. An open PR therefore means nothing about readiness; these do:
 - The PR description says what you did and what you deliberately left out.
 - Dead code, debug output and commented-out experiments are gone. The diff is
   production ready, not a work in progress.
-- **Then ask Bugbot for a review**, by commenting exactly `cursor review` on the
-  PR. An `@` prefix addresses a cloud agent instead, so leave it off. Ask once per
-  PR: each run is billed, and only finished work is worth spending it on.
+- **Then ask Bugbot for a review**, by commenting exactly `@cursor review` on
+  the PR. Ask once per PR: each run is billed, and only finished work is worth
+  spending it on.
 - Address its findings, without asking it again.
 - **Last of all, `gh pr ready`.** Ready for review is what says the work is done
   and it is the human's turn. Check that it took: the draft state sometimes
   survives the call, and a draft cannot be merged.
 
-Until COO-36 and COO-11 land, the baseline is red and there is no CI, so your
-local runs are the only signal: `deno fmt --check .` fails on `README.md` and
-`deno test -A` fails from the root on the examples' bare `dashi` specifier. Match
-the baseline you started from; do not chase those.
+Those four commands are what CI runs. Match them locally before you push.
 
 ## Where feedback goes
 
@@ -68,7 +65,9 @@ the baseline you started from; do not chase those.
 - Autofix is **off**. Bugbot comments, the implementing agent fixes. Autofix would spawn a fresh agent with no knowledge of the plan.
 - Bugbot runs **on request only**, and **once per PR**: the implementing agent asks for it at the end of the work, as described in the definition of done. It is triage that saves the human a first pass, not a merge gate.
 - **Do not require the `Cursor Bugbot` check in branch protection.** A PR nobody asked Bugbot to review has no such check, so requiring it would block every PR until someone remembers to ask.
-- Two things to watch the first time this runs, neither of which Cursor documents: whether a `cursor review` comment from the agent triggers a review at all, and whether Bugbot's findings arrive as a submitted review. `review-followup.yml` only fires on a submitted review, so if Bugbot posts standalone comments a human has to relay them.
+- The trigger is a top-level PR comment that is exactly `@cursor review`.
+  `review-followup.yml` only fires on a submitted review, so if Bugbot posts
+  standalone comments a human has to relay them.
 
 ## Status conventions
 

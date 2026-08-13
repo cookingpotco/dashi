@@ -17,6 +17,9 @@
   "minimumDependencyAge": "P1D",
   "lint": {
     "rules": {
+      "exclude": [
+        "jsx-key"
+      ],
       "include": [
         "no-process-global",
         "no-node-globals"

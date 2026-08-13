@@ -1,3 +1,4 @@
+// deno-lint-ignore-file ban-types -- React-derived typings; see COO-35
 interface EventBase<C extends EventTarget, T extends EventTarget> {
   currentTarget: EventTarget & C;
   target: T;

@@ -1,10 +1,10 @@
 import { Route } from "dashi";
 
-export class NestedTestRoute implements Route {
+export class NestedRoute implements Route {
   render() {
     return (
       <div>
-        <code>test</code>
+        <code>nested</code>
       </div>
     );
   }

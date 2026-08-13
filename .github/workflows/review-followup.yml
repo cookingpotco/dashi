@@ -17,9 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     # Long enough to outlast the wait for the agent's current run to finish.
     timeout-minutes: 60
-    # The agent reads the review itself, so only the event payload is read here.
+    # Empty reviews are listed via the API so thread replies can be skipped.
     permissions:
       contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v5
 
@@ -31,3 +32,4 @@ jobs:
         run: deno run --allow-net --allow-env --allow-read scripts/review_followup.ts
         env:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
