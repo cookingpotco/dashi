@@ -101,10 +101,11 @@ Deno.test("emits a string style attribute", () => {
 });
 
 Deno.test("keeps 0 and empty string in attributes and children", () => {
+  const empty = "";
   assertEquals(String(<input value={0} />), `<input value="0">`);
-  assertEquals(String(<input value="" />), `<input value="">`);
+  assertEquals(String(<input value={empty} />), `<input value="">`);
   assertEquals(String(<div>{0}</div>), "<div>0</div>");
-  assertEquals(String(<div>{""}</div>), "<div></div>");
+  assertEquals(String(<div>{empty}</div>), "<div></div>");
 });
 
 Deno.test("renders an array of children", () => {
