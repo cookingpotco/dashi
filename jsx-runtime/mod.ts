@@ -41,7 +41,7 @@ export class JsxRuntimeError extends Error {
 
 export function jsxTemplate(
   strings: string[],
-  ...dynamic: Array<string | TrustedHtml | number | bigint | boolean | null>
+  ...dynamic: Array<string | TrustedHtml>
 ): TrustedHtml {
   const arr = [];
 
