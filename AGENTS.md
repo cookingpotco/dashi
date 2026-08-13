@@ -10,6 +10,9 @@ started. Do not set `In Review` or `Done`; the GitHub integration does that.
 
 ## Done
 
+This list applies every time you hand the PR back, including after review
+follow-up. A later commit does not inherit a previous green run.
+
 Cursor opens a draft PR on the first push, long before the work is finished. An
 open PR is not readiness. These are:
 
@@ -80,7 +83,8 @@ Linear plan.
 Code-level feedback arrives as a **submitted** GitHub review. Collect what is
 still open with the `pr-review-feedback` skill. Do not `@Cursor` the Linear
 ticket for fixes: that starts a new agent from `main`, which cannot see the
-branch. Do not edit the PR description.
+branch. Do not edit the PR description. When the fixes are in, complete **Done**
+again — including a green CI run on the new push — before `gh pr ready`.
 
 ## Constraints
 
