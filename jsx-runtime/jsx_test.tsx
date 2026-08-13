@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { HTML_ATTR_NAMES } from "./mod.ts";
+import { MAPPED_HTML_ATTR_NAMES } from "./mod.ts";
 
 describe("JSX escaping", () => {
   it("renders an interpolated script tag inert in body position", () => {
@@ -68,24 +68,22 @@ describe("JSX escaping", () => {
 });
 
 describe("JSX attribute names", () => {
-  it("emits class from both className and class", () => {
+  it("emits class from className", () => {
     assertEquals(String(<div className="x"></div>), `<div class="x"></div>`);
-    assertEquals(String(<div class="x"></div>), `<div class="x"></div>`);
   });
 
-  it("emits for from both htmlFor and for", () => {
+  it("emits for from htmlFor", () => {
     assertEquals(
       String(<label htmlFor="id"></label>),
       `<label for="id"></label>`,
     );
-    assertEquals(String(<label for="id"></label>), `<label for="id"></label>`);
   });
 
   it("remaps closed-list names on a DOM spread", () => {
     const props = Object.fromEntries(
-      Object.keys(HTML_ATTR_NAMES).map((name) => [name, "x"]),
+      Object.keys(MAPPED_HTML_ATTR_NAMES).map((name) => [name, "x"]),
     );
-    const attrs = Object.values(HTML_ATTR_NAMES)
+    const attrs = Object.values(MAPPED_HTML_ATTR_NAMES)
       .map((name) => `${name}="x"`)
       .join(" ");
     assertEquals(String(<div {...props}></div>), `<div ${attrs}></div>`);

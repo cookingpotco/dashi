@@ -54,7 +54,7 @@ export function jsxTemplate(
 
 // Closed list matching Deno's jsx precompile remaps. Unknown names pass
 // through; lowercasing would break viewBox and data-* on spreads.
-export const HTML_ATTR_NAMES: Record<string, string> = {
+export const MAPPED_HTML_ATTR_NAMES: Record<string, string> = {
   className: "class",
   htmlFor: "for",
   panose1: "panose-1",
@@ -160,7 +160,7 @@ export function jsxAttr(name: string, value: unknown): string {
     );
   }
 
-  const attr = HTML_ATTR_NAMES[name] ?? name;
+  const attr = MAPPED_HTML_ATTR_NAMES[name] ?? name;
 
   if (value === true) {
     return attr;

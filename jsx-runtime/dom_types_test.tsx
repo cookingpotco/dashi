@@ -3,13 +3,12 @@ import { describe, it } from "@std/testing/bdd";
 function typechecks() {
   const fn = () => {};
 
-  <div
-    className="x"
-    class="y"
-    data-id="1"
-    style="color:red"
-  />;
-  <label htmlFor="id" for="id" />;
+  <div className="x" data-id="1" style="color:red" />;
+  <label htmlFor="id" />;
+  // @ts-expect-error JSX uses className, not class
+  <div class="y" />;
+  // @ts-expect-error JSX uses htmlFor, not for
+  <label for="id" />;
 
   // @ts-expect-error event handlers are not supported
   <div onClick={fn} />;

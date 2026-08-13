@@ -196,7 +196,6 @@ export type AriaRole =
 
 interface BaseAttributes extends AriaAttributes, DOMAttributes {
   [name: `data-${string}`]: AttrValue | undefined;
-  "class"?: string;
   className?: string;
   style?: string;
   id?: string;
@@ -210,7 +209,6 @@ interface BaseAttributes extends AriaAttributes, DOMAttributes {
 }
 
 export interface HTMLAttributes extends BaseAttributes {
-  "for"?: string;
   htmlFor?: string;
   accessKey?: string;
   autoCapitalize?:
