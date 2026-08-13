@@ -7,22 +7,24 @@ alwaysApply: true
 
 Work flows through Linear. One issue at a time, planned before it is implemented.
 
-The planner follows `.cursor/rules/planner.mdc`. The implementing agent follows
+The planner follows the `plan-ticket` skill. The implementing agent follows
 `AGENTS.md`.
 
 ## Stages
 
 1. An issue is picked from `Dashi F&F Launch`, respecting milestone order and
    `blocked by` relations.
-2. A plan is written and approved. The approved plan is a comment on the ticket.
-3. The issue is delegated to the `Cursor` agent at status `Ready`.
-4. The implementing agent builds it, then the human reviews.
-5. Merge once checks are green, Bugbot has had its pass, and the human has
+2. A plan is written and approved. After approval, the plan is posted as a
+   Linear comment that begins with `@Cursor`, which starts the implementing
+   agent. The ticket stays at `Ready`.
+3. The implementing agent builds it, then the human reviews.
+4. Merge once checks are green, Bugbot has had its pass, and the human has
    approved.
 
 ## Status
 
-- `Ready` means the ticket has an approved plan. Delegation does not change it.
+- `Ready` means the ticket has an approved plan. `@Cursor` on that comment
+  starts the implementor and does not change the status.
 - `In Progress` means the implementing agent has started.
 - Never set `In Review` or `Done` by hand. The GitHub integration moves the
   ticket.
@@ -36,9 +38,9 @@ The planner follows `.cursor/rules/planner.mdc`. The implementing agent follows
   still open, including ones from earlier rounds.
 - **One agent owns a task end to end.** It keeps the conversation and workspace
   from its first run, so it still holds the plan.
-- **Fixes go through a GitHub review, not `@Cursor` in Linear.** A Linear
-  mention starts a new agent from `main`, which cannot see the branch under
-  review. Linear's Automations behave the same way.
+- **Fixes go through a GitHub review.** A later `@Cursor` on Linear starts a
+  new agent from `main`, which cannot see the branch under review. Linear's
+  Automations behave the same way.
 - **Plan deviations ship in the PR.** The implementing agent lists them under
   **Plan deviations** in the handoff comment and leaves the Linear plan as the
   human wrote it.

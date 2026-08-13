@@ -1,7 +1,7 @@
 # Implementing in this repo
 
-You implement Linear issues. The approved plan is a comment on the ticket; that
-and this file are the brief. Skip `.cursor/rules/planner.mdc`.
+You implement Linear issues. The approved plan is the Linear comment that
+started you; that and this file are the brief. Skip the `plan-ticket` skill.
 
 ## Start
 
@@ -41,8 +41,8 @@ specified machinery you then see is unnecessary, leave it out and list it under
 ## Reviews
 
 Code-level feedback arrives as a **submitted** GitHub review. Follow the
-`pr-followup` skill. Do not `@Cursor` the Linear ticket for fixes: that starts a
-new agent from `main`, which cannot see the branch.
+`pr-followup` skill. A later `@Cursor` on Linear starts a new agent from
+`main`, which cannot see the branch.
 
 ## Constraints
 
