@@ -50,4 +50,19 @@ describe("JSX escaping", () => {
       "<section>&lt;script&gt;alert(1)&lt;/script&gt;</section>",
     );
   });
+
+  it("escapes a plain string returned from a component", () => {
+    function Echo({ text }: { text: string }) {
+      return text;
+    }
+
+    assertEquals(
+      String(
+        <div>
+          <Echo text="<script>alert(1)</script>" />
+        </div>,
+      ),
+      "<div>&lt;script&gt;alert(1)&lt;/script&gt;</div>",
+    );
+  });
 });

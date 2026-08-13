@@ -117,7 +117,10 @@ export function jsx(
 ): string {
   if (typeof type === "function") {
     const res = type(props ?? {});
-    return res;
+    if (isTrustedHtml(res)) {
+      return res;
+    }
+    return jsxEscape(res);
   }
 
   const { children, ...rest } = props ?? {};
