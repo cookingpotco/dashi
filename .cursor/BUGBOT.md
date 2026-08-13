@@ -32,9 +32,6 @@ interpolated HTML, and its request path runs concurrently under `Deno.serve`.
 - **Formatting.** `deno fmt` is authoritative. Never comment on style, spacing,
   or line breaks.
 - **Missing `key` props in JSX.** There is no VDOM. `jsx-key` is off.
-- **Anything in `jsx-runtime/dom_types.ts`** beyond correctness bugs. It is 1619
-  lines of vendored, React-derived typings scheduled for deletion in COO-35. Do
-  not suggest restructuring it.
 - **A missing unit test of routing, SSR, or other glue** when the change is
   already visible in rendered HTML, or when the right coverage is an HTTP case
   that belongs to COO-38. Do not ask for a one-off end-to-end harness.
@@ -47,17 +44,16 @@ These are real problems with owning issues. Do not report them as new findings.
 **Do** flag a change that touches one of them without fixing it, or that
 introduces a new instance of the same class elsewhere.
 
-| Location                   | Defect                                                                                                               | Issue     |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------- |
-| `jsx-runtime/dom_types.ts` | React-derived typings, licensing and accuracy both unresolved                                                        | COO-35    |
-| `ssr/mod.ts`               | `RenderStorage` is a process-wide singleton re-inited per request, so concurrent requests corrupt each other         | COO-7     |
-| `ssr/mod.ts`               | `replaceInlineFragmentSlots` discards the result of `replaceAll` and is not awaited, making inline fragments a no-op | COO-8     |
-| `routing/mod.ts`           | Middleware chain runs via `forEach` over an async callback, so it is never awaited                                   | COO-9     |
-| `routing/mod.ts`           | 404 is a bare `Response`; a throw during render is unhandled                                                         | COO-16    |
-| `routing/mod.ts`           | Hardcoded `favicon.ico` check standing in for static asset serving                                                   | COO-17    |
-| `fs/mod.ts`                | `getModuleInstance` takes `Object.keys(mod)[0]` and calls `new` on it, so routing depends on export order            | COO-13    |
-| `client/routeFragment.ts`  | Never bundled or served, so it is currently dead code                                                                | COO-18    |
-| `deno.json` (all three)    | The `dev` task has no permission flags and relies on interactive prompts                                             | untracked |
+| Location                  | Defect                                                                                                               | Issue     |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------- |
+| `ssr/mod.ts`              | `RenderStorage` is a process-wide singleton re-inited per request, so concurrent requests corrupt each other         | COO-7     |
+| `ssr/mod.ts`              | `replaceInlineFragmentSlots` discards the result of `replaceAll` and is not awaited, making inline fragments a no-op | COO-8     |
+| `routing/mod.ts`          | Middleware chain runs via `forEach` over an async callback, so it is never awaited                                   | COO-9     |
+| `routing/mod.ts`          | 404 is a bare `Response`; a throw during render is unhandled                                                         | COO-16    |
+| `routing/mod.ts`          | Hardcoded `favicon.ico` check standing in for static asset serving                                                   | COO-17    |
+| `fs/mod.ts`               | `getModuleInstance` takes `Object.keys(mod)[0]` and calls `new` on it, so routing depends on export order            | COO-13    |
+| `client/routeFragment.ts` | Never bundled or served, so it is currently dead code                                                                | COO-18    |
+| `deno.json` (all three)   | The `dev` task has no permission flags and relies on interactive prompts                                             | untracked |
 
 ## Conventions
 

@@ -1,5 +1,6 @@
 import { assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
+import { MAPPED_HTML_ATTR_NAMES } from "./mod.ts";
 
 describe("JSX escaping", () => {
   it("renders an interpolated script tag inert in body position", () => {
@@ -62,6 +63,44 @@ describe("JSX escaping", () => {
         </div>,
       ),
       "<div>&lt;script&gt;alert(1)&lt;/script&gt;</div>",
+    );
+  });
+});
+
+describe("JSX attribute names", () => {
+  it("emits class from className", () => {
+    assertEquals(String(<div className="x"></div>), `<div class="x"></div>`);
+  });
+
+  it("emits for from htmlFor", () => {
+    assertEquals(
+      String(<label htmlFor="id"></label>),
+      `<label for="id"></label>`,
+    );
+  });
+
+  it("remaps closed-list names on a DOM spread", () => {
+    const props = Object.fromEntries(
+      Object.keys(MAPPED_HTML_ATTR_NAMES).map((name) => [name, "x"]),
+    );
+    const attrs = Object.values(MAPPED_HTML_ATTR_NAMES)
+      .map((name) => `${name}="x"`)
+      .join(" ");
+    assertEquals(String(<div {...props}></div>), `<div ${attrs}></div>`);
+  });
+
+  it("passes className through to a function component", () => {
+    function Probe(props: { className?: string }) {
+      return <span>{props.className}</span>;
+    }
+
+    assertEquals(String(<Probe className="x" />), "<span>x</span>");
+  });
+
+  it("emits a string style attribute", () => {
+    assertEquals(
+      String(<div style="color:red"></div>),
+      `<div style="color:red"></div>`,
     );
   });
 });
