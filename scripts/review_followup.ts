@@ -24,6 +24,32 @@ interface ReviewContext {
   reviewBody: string;
 }
 
+interface ReviewComment {
+  in_reply_to_id?: number | null;
+}
+
+/**
+ * GitHub records a thread reply as a submitted review with an empty body
+ * whose comments all set `in_reply_to_id`. Forwarding those re-queues the
+ * agent on its own answers. A review with a body, or with a top-level inline
+ * comment, is still forwarded — including Bugbot.
+ */
+export function shouldForwardReview(
+  state: string,
+  body: string,
+  comments: ReviewComment[],
+): boolean {
+  const trimmed = body.trim();
+  if (state === "approved" && trimmed === "") return false;
+  if (
+    trimmed === "" &&
+    comments.every((comment) => comment.in_reply_to_id != null)
+  ) {
+    return false;
+  }
+  return true;
+}
+
 function parseFlags(args: string[]): Map<string, string> {
   const flags = new Map<string, string>();
   for (let i = 0; i < args.length; i++) {
@@ -160,8 +186,22 @@ async function main(): Promise<number> {
       `(${context.reviewState}) on ${context.prUrl}`,
   );
 
-  if (context.reviewState === "approved" && !context.reviewBody.trim()) {
-    console.log("Bare approval with no summary; nothing to forward.");
+  const token = Deno.env.get("GITHUB_TOKEN");
+  let comments: ReviewComment[] = [];
+  if (!context.reviewBody.trim()) {
+    if (!token) {
+      throw new Error(
+        "GITHUB_TOKEN is required to inspect an empty review before forwarding.",
+      );
+    }
+    comments = await githubFetch(
+      `/repos/${context.repo}/pulls/${context.prNumber}/reviews/${context.reviewId}/comments`,
+      token,
+    ) as ReviewComment[];
+  }
+
+  if (!shouldForwardReview(context.reviewState, context.reviewBody, comments)) {
+    console.log("Thread replies or a bare approval; nothing to forward.");
     return 0;
   }
 
