@@ -33,9 +33,10 @@ open PR is not readiness. These are:
 
 Those four commands are what CI runs. Match them locally before you push.
 
-Update from the PR base before handing over: check the base branch out, `git
-pull`, check your branch back out, merge the base into it. Resolve conflicts.
-Do not rebase or force-push.
+Update from the PR base before handing over: check the base branch out,
+`git
+pull`, check your branch back out, merge the base into it. Resolve
+conflicts. Do not rebase or force-push.
 
 Then `gh pr ready`. Check that it took: the draft state sometimes survives the
 call, and a draft cannot be merged. Marking the PR ready is what starts Bugbot.

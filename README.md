@@ -8,10 +8,7 @@ published yet.
 
 ## Implemented
 
-- JSX → HTML strings. Interpolated values are escaped in body and attribute
-  position. JSX output is already-rendered markup and interpolates unchanged, as
-  does `{__dangerouslyInlineHtml(html)}`. Passing unsanitized user input to
-  `__dangerouslyInlineHtml` is an XSS vector.
+- JSX → HTML strings with escaped XSS values
 - File-based routing, layouts, and middleware
 - `<RouteFragment>` for composing another route into the current page (inline
   during SSR, or client-fetched when `lazy`)

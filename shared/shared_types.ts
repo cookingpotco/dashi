@@ -1,7 +1,7 @@
-import { DashiNode } from "../jsx-runtime/jsx_types.ts";
+import { TrustedHtml } from "../jsx-runtime/jsx_types.ts";
 
 export interface Route {
-  render(req: Request): DashiNode | Promise<DashiNode>;
+  render(req: Request): TrustedHtml | Promise<TrustedHtml>;
 }
 
 // TODO: Can/should we make Middlewares support layout functionality?
@@ -9,8 +9,8 @@ export interface Route {
 export interface Layout {
   render(
     req: Request,
-    children: DashiNode,
-  ): Promise<DashiNode> | DashiNode;
+    children: TrustedHtml,
+  ): Promise<TrustedHtml> | TrustedHtml;
 }
 
 export interface Middleware {

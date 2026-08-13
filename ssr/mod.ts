@@ -1,5 +1,5 @@
 import { getInlineFragmentSlot } from "dashi/jsx-runtime";
-import { DashiNode } from "../jsx-runtime/jsx_types.ts";
+import { TrustedHtml } from "../jsx-runtime/jsx_types.ts";
 import { Layout, Route } from "../shared/shared_types.ts";
 
 // TODO: Replace with async local storage
@@ -60,7 +60,7 @@ interface RenderRouteOptions {
 export async function renderRoute(
   route: Route,
   options: RenderRouteOptions,
-): Promise<DashiNode> {
+): Promise<TrustedHtml> {
   const [layout, ...rest] = options.layouts;
 
   if (!layout || options.inlineFragment) {
@@ -70,7 +70,7 @@ export async function renderRoute(
     return res;
   }
 
-  return await layout.render(
+  return layout.render(
     options.req,
     await renderRoute(route, { ...options, layouts: rest }),
   );
