@@ -17,7 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     # Long enough to outlast the wait for the agent's current run to finish.
     timeout-minutes: 60
-    # The agent reads the review itself, so only the event payload is read here.
     permissions:
       contents: read
       pull-requests: read
