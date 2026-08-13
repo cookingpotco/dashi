@@ -1,5 +1,6 @@
 import { assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
+import { HTML_ATTR_NAMES } from "./mod.ts";
 
 describe("JSX escaping", () => {
   it("renders an interpolated script tag inert in body position", () => {
@@ -80,9 +81,14 @@ describe("JSX attribute names", () => {
     assertEquals(String(<label for="id"></label>), `<label for="id"></label>`);
   });
 
-  it("remaps className on a DOM spread", () => {
-    const props = { className: "x" };
-    assertEquals(String(<div {...props}></div>), `<div class="x"></div>`);
+  it("remaps closed-list names on a DOM spread", () => {
+    const props = Object.fromEntries(
+      Object.keys(HTML_ATTR_NAMES).map((name) => [name, "x"]),
+    );
+    const attrs = Object.values(HTML_ATTR_NAMES)
+      .map((name) => `${name}="x"`)
+      .join(" ");
+    assertEquals(String(<div {...props}></div>), `<div ${attrs}></div>`);
   });
 
   it("passes className through to a function component", () => {
