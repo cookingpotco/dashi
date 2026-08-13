@@ -62,5 +62,5 @@ introduces a new instance of the same class elsewhere.
 - Deno with JSR specifiers. Dependency versions are pinned by `deno.lock`;
   ranges in `deno.json` are intentional.
 - Tests use `describe`/`it` from `@std/testing/bdd` and `@std/assert`.
-- `deno task check` is the type-check command. It covers the framework, scripts,
-  and example apps. Bare `deno check` only walks entrypoints.
+- `deno check` is the type-check command. It covers the framework, scripts, and
+  example apps.

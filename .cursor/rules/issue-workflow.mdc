@@ -22,8 +22,8 @@ Work flows through Linear. One issue at a time, planned before it is implemented
 Cursor opens a draft PR on your **first push**, which is long before you are
 finished. An open PR therefore means nothing about readiness; these do:
 
-- `deno fmt --check .`, `deno lint`, `deno task check` and `deno test -A` all
-  pass locally, and CI is green on the branch you pushed.
+- `deno fmt --check .`, `deno lint`, `deno check` and `deno test -A` all pass
+  locally, and CI is green on the branch you pushed.
 - Anything you could not make pass is called out explicitly in the PR
   description, naming the issue that owns it. Do not quietly leave it broken and
   do not fix unrelated failures you did not cause.
@@ -66,9 +66,8 @@ Those four commands are what CI runs. Match them locally before you push.
 - Bugbot runs **on request only**, and **once per PR**: the implementing agent asks for it at the end of the work, as described in the definition of done. It is triage that saves the human a first pass, not a merge gate.
 - **Do not require the `Cursor Bugbot` check in branch protection.** A PR nobody asked Bugbot to review has no such check, so requiring it would block every PR until someone remembers to ask.
 - The trigger is a top-level PR comment that is exactly `@cursor review`.
-  Without the `@`, Bugbot does not run. `review-followup.yml` only fires on a
-  submitted review, so if Bugbot posts standalone comments a human has to relay
-  them.
+  `review-followup.yml` only fires on a submitted review, so if Bugbot posts
+  standalone comments a human has to relay them.
 
 ## Status conventions
 

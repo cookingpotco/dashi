@@ -28,7 +28,7 @@ Deno 2.9.5 (see `.tool-versions`). From the repo root:
 ```sh
 deno fmt --check .
 deno lint
-deno task check
+deno check
 deno test -A
 ```
 
