@@ -65,3 +65,38 @@ describe("JSX escaping", () => {
     );
   });
 });
+
+describe("JSX attribute names", () => {
+  it("emits class from both className and class", () => {
+    assertEquals(String(<div className="x"></div>), `<div class="x"></div>`);
+    assertEquals(String(<div class="x"></div>), `<div class="x"></div>`);
+  });
+
+  it("emits for from both htmlFor and for", () => {
+    assertEquals(
+      String(<label htmlFor="id"></label>),
+      `<label for="id"></label>`,
+    );
+    assertEquals(String(<label for="id"></label>), `<label for="id"></label>`);
+  });
+
+  it("remaps className on a DOM spread", () => {
+    const props = { className: "x" };
+    assertEquals(String(<div {...props}></div>), `<div class="x"></div>`);
+  });
+
+  it("passes className through to a function component", () => {
+    function Probe(props: { className?: string }) {
+      return <span>{props.className}</span>;
+    }
+
+    assertEquals(String(<Probe className="x" />), "<span>x</span>");
+  });
+
+  it("emits a string style attribute", () => {
+    assertEquals(
+      String(<div style="color:red"></div>),
+      `<div style="color:red"></div>`,
+    );
+  });
+});

@@ -104,6 +104,15 @@ describe("jsx", () => {
       `<x-panel title="n">ok</x-panel>`,
     );
   });
+  it("remaps className when the tag is a string", () => {
+    assertEquals(
+      String(jsx("div", { className: "x" })),
+      `<div class="x"></div>`,
+    );
+  });
+  it("throws when style is an object", () => {
+    assertThrows(() => jsx("div", { style: { color: "red" } }));
+  });
   it("inlines dangerouslySetInnerHTML without escaping", () => {
     assertEquals(
       String(

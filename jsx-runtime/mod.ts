@@ -52,6 +52,101 @@ export function jsxTemplate(
   return asTrustedHtml(arr.join(""));
 }
 
+// Closed list matching Deno's jsx precompile remaps. Unknown names pass
+// through; lowercasing would break viewBox and data-* on spreads.
+const HTML_ATTR_NAMES: Record<string, string> = {
+  className: "class",
+  htmlFor: "for",
+  panose1: "panose-1",
+  xlinkActuate: "xlink:actuate",
+  xlinkArcrole: "xlink:arcrole",
+  xlinkHref: "href",
+  "xlink:href": "href",
+  xlinkRole: "xlink:role",
+  xlinkShow: "xlink:show",
+  xlinkTitle: "xlink:title",
+  xlinkType: "xlink:type",
+  xmlBase: "xml:base",
+  xmlLang: "xml:lang",
+  xmlSpace: "xml:space",
+  accentHeight: "accent-height",
+  acceptCharset: "accept-charset",
+  alignmentBaseline: "alignment-baseline",
+  arabicForm: "arabic-form",
+  baselineShift: "baseline-shift",
+  capHeight: "cap-height",
+  clipPath: "clip-path",
+  clipRule: "clip-rule",
+  colorInterpolation: "color-interpolation",
+  colorInterpolationFilters: "color-interpolation-filters",
+  colorProfile: "color-profile",
+  colorRendering: "color-rendering",
+  contentScriptType: "content-script-type",
+  contentStyleType: "content-style-type",
+  dominantBaseline: "dominant-baseline",
+  enableBackground: "enable-background",
+  fillOpacity: "fill-opacity",
+  fillRule: "fill-rule",
+  floodColor: "flood-color",
+  floodOpacity: "flood-opacity",
+  fontFamily: "font-family",
+  fontSize: "font-size",
+  fontSizeAdjust: "font-size-adjust",
+  fontStretch: "font-stretch",
+  fontStyle: "font-style",
+  fontVariant: "font-variant",
+  fontWeight: "font-weight",
+  glyphName: "glyph-name",
+  glyphOrientationHorizontal: "glyph-orientation-horizontal",
+  glyphOrientationVertical: "glyph-orientation-vertical",
+  horizAdvX: "horiz-adv-x",
+  horizOriginX: "horiz-origin-x",
+  horizOriginY: "horiz-origin-y",
+  httpEquiv: "http-equiv",
+  imageRendering: "image-rendering",
+  letterSpacing: "letter-spacing",
+  lightingColor: "lighting-color",
+  markerEnd: "marker-end",
+  markerMid: "marker-mid",
+  markerStart: "marker-start",
+  overlinePosition: "overline-position",
+  overlineThickness: "overline-thickness",
+  paintOrder: "paint-order",
+  pointerEvents: "pointer-events",
+  renderingIntent: "rendering-intent",
+  shapeRendering: "shape-rendering",
+  stopColor: "stop-color",
+  stopOpacity: "stop-opacity",
+  strikethroughPosition: "strikethrough-position",
+  strikethroughThickness: "strikethrough-thickness",
+  strokeDasharray: "stroke-dasharray",
+  strokeDashoffset: "stroke-dashoffset",
+  strokeLinecap: "stroke-linecap",
+  strokeLinejoin: "stroke-linejoin",
+  strokeMiterlimit: "stroke-miterlimit",
+  strokeOpacity: "stroke-opacity",
+  strokeWidth: "stroke-width",
+  textAnchor: "text-anchor",
+  textDecoration: "text-decoration",
+  textRendering: "text-rendering",
+  transformOrigin: "transform-origin",
+  underlinePosition: "underline-position",
+  underlineThickness: "underline-thickness",
+  unicodeBidi: "unicode-bidi",
+  unicodeRange: "unicode-range",
+  unitsPerEm: "units-per-em",
+  vAlphabetic: "v-alphabetic",
+  vectorEffect: "vector-effect",
+  vertAdvY: "vert-adv-y",
+  vertOriginX: "vert-origin-x",
+  vertOriginY: "vert-origin-y",
+  vHanging: "v-hanging",
+  vMathematical: "v-mathematical",
+  wordSpacing: "word-spacing",
+  writingMode: "writing-mode",
+  xHeight: "x-height",
+};
+
 export function jsxAttr(name: string, value: unknown): string {
   if (value === null || value === undefined || value === false) {
     return "";
@@ -65,11 +160,13 @@ export function jsxAttr(name: string, value: unknown): string {
     );
   }
 
+  const attr = HTML_ATTR_NAMES[name] ?? name;
+
   if (value === true) {
-    return name;
+    return attr;
   }
 
-  return `${name}="${escapeHtml(String(value))}"`;
+  return `${attr}="${escapeHtml(String(value))}"`;
 }
 
 export function jsxEscape(value: unknown): string {
