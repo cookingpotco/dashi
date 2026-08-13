@@ -9,8 +9,7 @@ const FRAGMENT_TAG = "route-fragment";
 const trustedHtmlBrand = Symbol("dashi.trustedHtml");
 
 /**
- * A string the JSX runtime will interpolate without escaping.
- * Produced by JSX itself and by {@link raw}.
+ * Already-rendered markup. JSX interpolates it without escaping.
  */
 export type TrustedHtml = string & { readonly [trustedHtmlBrand]: true };
 
@@ -32,20 +31,42 @@ function isTrustedHtml(value: unknown): value is TrustedHtml {
     trustedHtmlBrand in value;
 }
 
+function asTrustedHtml(html: string): TrustedHtml {
+  const value = new String(html) as TrustedHtml;
+  Object.defineProperty(value, trustedHtmlBrand, { value: true });
+  return value;
+}
+
 /**
  * Treat `html` as already-rendered markup and interpolate it unchanged.
  * Passing unsanitized user input is an XSS vector.
  */
-export function raw(html: string): TrustedHtml {
-  const value = new String(html) as TrustedHtml;
-  Object.defineProperty(value, trustedHtmlBrand, { value: true });
-  return value;
+export function __dangerouslyInlineHtml(html: string): TrustedHtml {
+  return asTrustedHtml(html);
 }
 
 export class JsxRuntimeError extends Error {
   constructor(...message: string[]) {
     super(message.join(" "));
   }
+}
+
+function interpolationToHtml(value: unknown): string {
+  if (typeof value === "string") {
+    return value;
+  }
+  if (isTrustedHtml(value)) {
+    return String(value);
+  }
+  if (value === null || value === undefined || typeof value === "boolean") {
+    return "";
+  }
+  if (typeof value === "number" || typeof value === "bigint") {
+    return String(value);
+  }
+  throw new JsxRuntimeError(
+    `jsxTemplate received ${value} which is not allowed`,
+  );
 }
 
 export function jsxTemplate(
@@ -56,11 +77,11 @@ export function jsxTemplate(
 
   for (let i = 0; i < dynamic.length; i++) {
     arr.push(strings[i]);
-    arr.push(dynamic[i]);
+    arr.push(interpolationToHtml(dynamic[i]));
   }
   arr.push(strings[strings.length - 1]);
 
-  return raw(arr.join(""));
+  return asTrustedHtml(arr.join(""));
 }
 
 export function jsxAttr(name: string, value: unknown): string {
@@ -68,15 +89,11 @@ export function jsxAttr(name: string, value: unknown): string {
     return "";
   }
 
-  if (isTrustedHtml(value)) {
-    return `${name}="${escapeHtml(String(value))}"`;
-  }
-
   if (typeof value === "function" || typeof value === "object") {
     throw new JsxRuntimeError(
-      `Element was passed attribute "${name}"`,
-      `containing a function/object (${value})`,
-      "which is not allowed",
+      isTrustedHtml(value)
+        ? `Element was passed attribute "${name}" containing rendered HTML, which is not allowed`
+        : `Element was passed attribute "${name}" containing a function/object (${value}) which is not allowed`,
     );
   }
 
@@ -111,16 +128,16 @@ export function jsxEscape(value: unknown): string {
 }
 
 export function jsx(
-  type: ((props?: Record<string, unknown>) => string) | string,
+  type: ((props?: Record<string, unknown>) => unknown) | string,
   props?: Record<string, unknown> | null,
   _key?: string,
-): string {
+): TrustedHtml {
   if (typeof type === "function") {
     const res = type(props ?? {});
     if (isTrustedHtml(res)) {
       return res;
     }
-    return jsxEscape(res);
+    return asTrustedHtml(jsxEscape(res));
   }
 
   const { children, ...rest } = props ?? {};
@@ -130,12 +147,12 @@ export function jsx(
   if (type === FRAGMENT_TAG && !rest.lazy && typeof rest.src === "string") {
     requestInlineFragment(rest.src);
 
-    return raw(
+    return asTrustedHtml(
       `<${type} ${attrs}>${getInlineFragmentSlot(rest.src)}</${type}>`,
     );
   }
 
-  return raw(`<${type} ${attrs}>${jsxEscape(children)}</${type}>`);
+  return asTrustedHtml(`<${type} ${attrs}>${jsxEscape(children)}</${type}>`);
 }
 
 export function getInlineFragmentSlot(src: string) {

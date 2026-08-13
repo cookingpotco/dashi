@@ -10,8 +10,8 @@ published yet.
 
 - JSX → HTML strings. Interpolated values are escaped in body and attribute
   position. JSX output is already-rendered markup and interpolates unchanged, as
-  does anything passed to `raw()`. Passing unsanitized user input to `raw()` is
-  an XSS vector.
+  does `{__dangerouslyInlineHtml(html)}`. Passing unsanitized user input to
+  `__dangerouslyInlineHtml` is an XSS vector.
 - File-based routing, layouts, and middleware
 - `<RouteFragment>` for composing another route into the current page (inline
   during SSR, or client-fetched when `lazy`)

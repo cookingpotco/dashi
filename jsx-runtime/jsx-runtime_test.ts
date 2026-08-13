@@ -1,6 +1,6 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { jsxAttr, jsxEscape, raw } from "./mod.ts";
+import { __dangerouslyInlineHtml, jsx, jsxAttr, jsxEscape } from "./mod.ts";
 
 describe("jsxAttr", () => {
   it("should return empty string for null value", () => {
@@ -31,6 +31,9 @@ describe("jsxAttr", () => {
   });
   it("should throw an error for array value", () => {
     assertThrows(() => jsxAttr("test", ["a"]));
+  });
+  it("should throw when given rendered HTML", () => {
+    assertThrows(() => jsxAttr("title", __dangerouslyInlineHtml("<b>x</b>")));
   });
   it("should return attr=value for string value", () => {
     const result = jsxAttr("test", "a");
@@ -79,17 +82,32 @@ describe("jsxEscape", () => {
   });
   it("should escape each item in an array", () => {
     assertEquals(
-      jsxEscape(["<b>", raw("<i>ok</i>"), "'"]),
+      jsxEscape(["<b>", __dangerouslyInlineHtml("<i>ok</i>"), "'"]),
       "&lt;b&gt;<i>ok</i>&#39;",
     );
   });
-  it("should interpolate raw() markup unchanged", () => {
-    assertEquals(jsxEscape(raw("<b>ok</b>")), "<b>ok</b>");
+  it("should interpolate __dangerouslyInlineHtml markup unchanged", () => {
+    assertEquals(
+      jsxEscape(__dangerouslyInlineHtml("<b>ok</b>")),
+      "<b>ok</b>",
+    );
   });
   it("should throw an error for function value", () => {
     assertThrows(() => jsxEscape(() => {}));
   });
   it("should throw an error for object value", () => {
     assertThrows(() => jsxEscape({ test: "a" }));
+  });
+  it("should throw for a plain { html } object that was not marked trusted", () => {
+    assertThrows(() => jsxEscape({ html: "<b>ok</b>" }));
+  });
+});
+
+describe("jsx", () => {
+  it("renders a custom element through the host-tag path", () => {
+    assertEquals(
+      String(jsx("x-panel", { title: "n", children: "ok" })),
+      `<x-panel title="n">ok</x-panel>`,
+    );
   });
 });
