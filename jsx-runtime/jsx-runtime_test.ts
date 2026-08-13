@@ -1,132 +1,147 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
 import { jsx, jsxAttr, jsxEscape } from "./mod.ts";
 
-describe("jsxAttr", () => {
-  it("should return empty string for null value", () => {
-    const result = jsxAttr("test", null);
+Deno.test("jsxAttr returns empty string when value is null", () => {
+  const result = jsxAttr("test", null);
 
-    assertEquals(result, "");
-  });
-  it("should return empty string for undefined value", () => {
-    const result = jsxAttr("test", undefined);
-
-    assertEquals(result, "");
-  });
-  it("should return empty string for false value", () => {
-    const result = jsxAttr("test", false);
-
-    assertEquals(result, "");
-  });
-  it("should return only name string for true value", () => {
-    const result = jsxAttr("test", true);
-
-    assertEquals(result, "test");
-  });
-  it("should throw an error for function value", () => {
-    assertThrows(() => jsxAttr("test", () => {}));
-  });
-  it("should throw an error for object value", () => {
-    assertThrows(() => jsxAttr("test", { test: "a" }));
-  });
-  it("should throw an error for array value", () => {
-    assertThrows(() => jsxAttr("test", ["a"]));
-  });
-  it("should throw when given rendered HTML", () => {
-    assertThrows(() => jsxAttr("title", jsx("b", { children: "x" })));
-  });
-  it("should return attr=value for string value", () => {
-    const result = jsxAttr("test", "a");
-
-    assertEquals(result, 'test="a"');
-  });
-  it("should return quoted attr=value for number value", () => {
-    const result = jsxAttr("test", 0);
-
-    assertEquals(result, 'test="0"');
-  });
-  it("should escape quotes so an attribute value cannot break out", () => {
-    const result = jsxAttr("title", `" onload="alert(1)`);
-
-    assertEquals(result, `title="&quot; onload=&quot;alert(1)"`);
-  });
-  it("should escape ampersands in attribute values", () => {
-    const result = jsxAttr("href", "/docs?q=1&lang=en");
-
-    assertEquals(result, 'href="/docs?q=1&amp;lang=en"');
-  });
+  assertEquals(result, "");
 });
 
-describe("jsxEscape", () => {
-  it("should return empty string for null, undefined, and booleans", () => {
-    assertEquals(jsxEscape(null), "");
-    assertEquals(jsxEscape(undefined), "");
-    assertEquals(jsxEscape(true), "");
-    assertEquals(jsxEscape(false), "");
-  });
-  it("should escape XSS payloads in body position", () => {
-    assertEquals(
-      jsxEscape("<script>alert(1)</script>"),
-      "&lt;script&gt;alert(1)&lt;/script&gt;",
-    );
-  });
-  it("should escape ampersands, quotes, and brackets", () => {
-    assertEquals(
-      jsxEscape(`&<>"'`),
-      "&amp;&lt;&gt;&quot;&#39;",
-    );
-  });
-  it("should stringify numbers without changing them", () => {
-    assertEquals(jsxEscape(0), "0");
-    assertEquals(jsxEscape(12.5), "12.5");
-  });
-  it("should escape each item in an array", () => {
-    assertEquals(
-      jsxEscape(["<b>", jsx("i", { children: "ok" }), "'"]),
-      "&lt;b&gt;<i>ok</i>&#39;",
-    );
-  });
-  it("should interpolate JSX output unchanged", () => {
-    assertEquals(jsxEscape(jsx("b", { children: "ok" })), "<b>ok</b>");
-  });
-  it("should throw an error for function value", () => {
-    assertThrows(() => jsxEscape(() => {}));
-  });
-  it("should throw an error for object value", () => {
-    assertThrows(() => jsxEscape({ test: "a" }));
-  });
+Deno.test("jsxAttr returns empty string when value is undefined", () => {
+  const result = jsxAttr("test", undefined);
+
+  assertEquals(result, "");
 });
 
-describe("jsx", () => {
-  it("renders a custom element through the host-tag path", () => {
-    assertEquals(
-      String(jsx("x-panel", { title: "n", children: "ok" })),
-      `<x-panel title="n">ok</x-panel>`,
-    );
-  });
-  it("remaps className when the tag is a string", () => {
-    assertEquals(
-      String(jsx("div", { className: "x" })),
-      `<div class="x"></div>`,
-    );
-  });
-  it("throws when style is an object", () => {
-    assertThrows(() => jsx("div", { style: { color: "red" } }));
-  });
-  it("inlines dangerouslySetInnerHTML without escaping", () => {
-    assertEquals(
-      String(
-        jsx("div", { dangerouslySetInnerHTML: { __html: "<b>ok</b>" } }),
-      ),
-      "<div><b>ok</b></div>",
-    );
-  });
-  it("throws when children and dangerouslySetInnerHTML are both set", () => {
-    assertThrows(() =>
-      jsx("div", {
-        dangerouslySetInnerHTML: { __html: "<b>ok</b>" },
-        children: "nope",
-      })
-    );
-  });
+Deno.test("jsxAttr returns empty string when value is false", () => {
+  const result = jsxAttr("test", false);
+
+  assertEquals(result, "");
+});
+
+Deno.test("jsxAttr returns only the name when value is true", () => {
+  const result = jsxAttr("test", true);
+
+  assertEquals(result, "test");
+});
+
+Deno.test("jsxAttr throws when value is a function", () => {
+  assertThrows(() => jsxAttr("test", () => {}));
+});
+
+Deno.test("jsxAttr throws when value is an object", () => {
+  assertThrows(() => jsxAttr("test", { test: "a" }));
+});
+
+Deno.test("jsxAttr throws when value is an array", () => {
+  assertThrows(() => jsxAttr("test", ["a"]));
+});
+
+Deno.test("jsxAttr throws when given rendered HTML", () => {
+  assertThrows(() => jsxAttr("title", jsx("b", { children: "x" })));
+});
+
+Deno.test('jsxAttr returns name="value" when value is a string', () => {
+  const result = jsxAttr("test", "a");
+
+  assertEquals(result, 'test="a"');
+});
+
+Deno.test('jsxAttr returns a quoted name="value" when value is a number', () => {
+  const result = jsxAttr("test", 0);
+
+  assertEquals(result, 'test="0"');
+});
+
+Deno.test("jsxAttr escapes quotes so an attribute value cannot break out", () => {
+  const result = jsxAttr("title", `" onload="alert(1)`);
+
+  assertEquals(result, `title="&quot; onload=&quot;alert(1)"`);
+});
+
+Deno.test("jsxAttr escapes ampersands in attribute values", () => {
+  const result = jsxAttr("href", "/docs?q=1&lang=en");
+
+  assertEquals(result, 'href="/docs?q=1&amp;lang=en"');
+});
+
+Deno.test("jsxEscape returns empty string for null, undefined, and booleans", () => {
+  assertEquals(jsxEscape(null), "");
+  assertEquals(jsxEscape(undefined), "");
+  assertEquals(jsxEscape(true), "");
+  assertEquals(jsxEscape(false), "");
+});
+
+Deno.test("jsxEscape escapes XSS payloads in body position", () => {
+  assertEquals(
+    jsxEscape("<script>alert(1)</script>"),
+    "&lt;script&gt;alert(1)&lt;/script&gt;",
+  );
+});
+
+Deno.test("jsxEscape escapes ampersands, quotes, and brackets", () => {
+  assertEquals(
+    jsxEscape(`&<>"'`),
+    "&amp;&lt;&gt;&quot;&#39;",
+  );
+});
+
+Deno.test("jsxEscape stringifies numbers without changing them", () => {
+  assertEquals(jsxEscape(0), "0");
+  assertEquals(jsxEscape(12.5), "12.5");
+});
+
+Deno.test("jsxEscape escapes each item in an array", () => {
+  assertEquals(
+    jsxEscape(["<b>", jsx("i", { children: "ok" }), "'"]),
+    "&lt;b&gt;<i>ok</i>&#39;",
+  );
+});
+
+Deno.test("jsxEscape interpolates JSX output unchanged", () => {
+  assertEquals(jsxEscape(jsx("b", { children: "ok" })), "<b>ok</b>");
+});
+
+Deno.test("jsxEscape throws when given a function", () => {
+  assertThrows(() => jsxEscape(() => {}));
+});
+
+Deno.test("jsxEscape throws when given an object", () => {
+  assertThrows(() => jsxEscape({ test: "a" }));
+});
+
+Deno.test("jsx renders a custom element through the host-tag path", () => {
+  assertEquals(
+    String(jsx("x-panel", { title: "n", children: "ok" })),
+    `<x-panel title="n">ok</x-panel>`,
+  );
+});
+
+Deno.test("jsx remaps className when the tag is a string", () => {
+  assertEquals(
+    String(jsx("div", { className: "x" })),
+    `<div class="x"></div>`,
+  );
+});
+
+Deno.test("jsx throws when style is an object", () => {
+  assertThrows(() => jsx("div", { style: { color: "red" } }));
+});
+
+Deno.test("jsx inlines dangerouslySetInnerHTML without escaping", () => {
+  assertEquals(
+    String(
+      jsx("div", { dangerouslySetInnerHTML: { __html: "<b>ok</b>" } }),
+    ),
+    "<div><b>ok</b></div>",
+  );
+});
+
+Deno.test("jsx throws when children and dangerouslySetInnerHTML are both set", () => {
+  assertThrows(() =>
+    jsx("div", {
+      dangerouslySetInnerHTML: { __html: "<b>ok</b>" },
+      children: "nope",
+    })
+  );
 });

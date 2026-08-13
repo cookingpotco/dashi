@@ -1,5 +1,3 @@
-import { describe, it } from "@std/testing/bdd";
-
 function typechecks() {
   const fn = () => {};
 
@@ -20,8 +18,6 @@ function typechecks() {
   <div suppressHydrationWarning />;
 }
 
-describe("DOM attribute types", () => {
-  it("is covered by compile-time checks in this file", () => {
-    void typechecks;
-  });
+Deno.test("DOM attribute types typecheck", () => {
+  void typechecks;
 });
