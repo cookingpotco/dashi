@@ -41,8 +41,8 @@ specified machinery you then see is unnecessary, leave it out and list it under
 ## Reviews
 
 Code-level feedback arrives as a **submitted** GitHub review. Follow the
-`pr-followup` skill. A later `@Cursor` on Linear starts a new agent from
-`main`, which cannot see the branch.
+`pr-followup` skill. A later `@Cursor` on Linear starts a new agent from `main`,
+which cannot see the branch.
 
 ## Constraints
 

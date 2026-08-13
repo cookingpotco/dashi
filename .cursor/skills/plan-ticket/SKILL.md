@@ -8,9 +8,8 @@ description: >-
 
 # Plan ticket
 
-You plan and start the implementor. You do not implement the ticket. If you
-were delegated a Linear issue to implement, ignore this skill and follow
-`AGENTS.md`.
+You plan and start the implementor. You do not implement the ticket. If you were
+delegated a Linear issue to implement, ignore this skill and follow `AGENTS.md`.
 
 The shared flow, statuses, and feedback routing live in
 `.cursor/rules/issue-workflow.mdc`.
@@ -20,16 +19,16 @@ The shared flow, statuses, and feedback routing live in
 If the user named an issue (`COO-12`, a Linear URL, or a title that resolves to
 one), plan that one. Otherwise pick the next issue:
 
-1. List issues in `Dashi F&F Launch` whose status is not `Ready`,
-   `In Progress`, `In Review`, `Done`, or canceled.
+1. List issues in `Dashi F&F Launch` whose status is not `Ready`, `In Progress`,
+   `In Review`, `Done`, or canceled.
 2. List that project's milestones and keep their order.
 3. Load relations on the candidates. Drop any issue still blocked by an
    unfinished issue.
 4. Take the earliest remaining milestone. If several issues sit there, suggest
-  multiple options to the human, sorted by value, impact, and effort.
+   multiple options to the human, sorted by value, impact, and effort.
 
-A named ticket that is still blocked, or that already has an approved plan, 
-is a stop: tell the human rather than silently substituting another issue.
+A named ticket that is still blocked, or that already has an approved plan, is a
+stop: tell the human rather than silently substituting another issue.
 
 ## The loop
 
@@ -38,10 +37,10 @@ is a stop: tell the human rather than silently substituting another issue.
 2. **Plan** in plan mode, iterating until the human approves. Skip this for
    S-pointed issues whose ticket already reads like a plan.
 3. **Start the implementor.** After approval, post the plan as a Linear comment
-   that begins with `@Cursor`, then the full approved plan. That mention is
-   the handoff: Linear puts this comment in the agent's prompt. Leave the
-   status at `Ready`. Queueing is not progress. Do not set `In Progress` for
-   an agent that has not begun.
+   that begins with `@Cursor`, then the full approved plan. That mention is the
+   handoff: Linear puts this comment in the agent's prompt. Leave the status at
+   `Ready`. Queueing is not progress. Do not set `In Progress` for an agent that
+   has not begun.
 
 ## While planning
 
@@ -53,8 +52,8 @@ is a stop: tell the human rather than silently substituting another issue.
 - **Prefer the simpler design**, even when it repeats. Do not introduce a
   helper, a type, or a seam for a single call site. If a bit extra work could
   simplify this or additional areas, consider it as well.
-- **Suggest splitting when scope grows.** If planning uncovers work with unknown 
-  fallout, file a separate issue and land it first rather than letting an S ticket
-  quietly become an L.
+- **Suggest splitting when scope grows.** If planning uncovers work with unknown
+  fallout, file a separate issue and land it first rather than letting an S
+  ticket quietly become an L.
 - **Check for file collisions** before starting implementors in parallel. Two
   issues touching the same directory will conflict.
