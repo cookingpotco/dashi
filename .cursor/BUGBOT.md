@@ -26,6 +26,9 @@ interpolated HTML, and its request path runs concurrently under `Deno.serve`.
 - **A behaviour change with no test covering it.** Flag that. Do not demand a
   unit test of glue code when a black-box assertion on the output would cover
   it.
+- **A second way to do the same thing.** A new alias prop, twin type, or
+  overlapping concept beside an existing one, with no crisp distinction. Flag
+  it. Equivalent twins (`class` / `className`) should be one API, not two.
 
 ## Do not flag
 

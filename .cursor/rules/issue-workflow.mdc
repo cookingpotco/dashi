@@ -71,3 +71,6 @@ dependencies.
   narrowly as possible and name the issue that fixes it.
 - **One owner per directory at a time.** Two in-flight issues touching the same
   directory will conflict.
+- **One way to do a thing.** No alias, twin API, or overlapping concept for a
+  job that already has a way. Planning, implementation, and review each catch
+  this; see those stages.

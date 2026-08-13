@@ -52,6 +52,12 @@ stop: tell the human rather than silently substituting another issue.
 - **Prefer the simpler design**, even when it repeats. Do not introduce a
   helper, a type, or a seam for a single call site. If a bit extra work could
   simplify this or additional areas, consider it as well.
+- **One way to do a thing.** Do not plan a parallel API, an alias, or a second
+  pattern for a job that already has one. If the ticket would leave both in
+  place, decide which survives before the plan is approved. Equivalent twins
+  (`class` / `className`) collapse to one. Overlapping concepts must either
+  merge or come out with a distinction no caller can miss; leaving both "for
+  now" is the failure mode.
 - **Suggest splitting when scope grows.** If planning uncovers work with unknown
   fallout, file a separate issue and land it first rather than letting an S
   ticket quietly become an L.

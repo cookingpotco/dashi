@@ -34,6 +34,11 @@ failures you did not cause.
 The change is covered by tests, following **Tests** in `AGENTS.md`. Dead code,
 debug output and commented-out experiments are gone.
 
+The change does not add a second way to do something the repo already does. No
+alias props, no twin types, no parallel pattern. Follow **One way** in
+`AGENTS.md`. If the PR grows one, it is a plan deviation that has to be named,
+or it is not done.
+
 ## Sweep
 
 Grep the repo for the ticket id (`COO-XX`) and for the names of what you

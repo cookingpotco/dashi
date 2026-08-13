@@ -38,6 +38,19 @@ or a seam has to earn its keep; one call site is not enough. If the plan
 specified machinery you then see is unnecessary, leave it out and list it under
 **Plan deviations** in the handoff comment. Leave the Linear plan as it is.
 
+## One way
+
+One way to do a thing. A second API, alias, or overlapping concept has to
+justify why it is not the first. If it cannot, it does not ship. Users should
+not have to choose, and the codebase should not end up mixed.
+
+`class` and `className` as equivalent props is two ways to set one attribute;
+keep one. Overlapping concepts must either collapse or come out with a
+distinction no caller can miss.
+
+If the plan specified a twin you then see is the same job, ship the one way and
+list it under **Plan deviations**.
+
 ## Reviews
 
 Code-level feedback arrives as a **submitted** GitHub review. Follow the
