@@ -1,10 +1,35 @@
 import { requestInlineFragment } from "../routing/mod.ts";
+import { type Element, trustedHtmlBrand } from "./jsx_types.ts";
 
-export * as JSX from "./jsx_types.ts";
+export type * as JSX from "./jsx_types.ts";
 export * from "./dom_types.ts";
-export { type DashiNode } from "./jsx_types.ts";
+export { type DashiNode, type Element } from "./jsx_types.ts";
 
 const FRAGMENT_TAG = "route-fragment";
+
+const ESCAPE_RE = /[&<>"']/g;
+const ESCAPE_MAP: Record<string, string> = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
+
+function escapeHtml(value: string): string {
+  return value.replace(ESCAPE_RE, (ch) => ESCAPE_MAP[ch]!);
+}
+
+function isTrustedHtml(value: unknown): value is Element {
+  return typeof value === "object" && value !== null &&
+    trustedHtmlBrand in value;
+}
+
+function asTrustedHtml(html: string): Element {
+  const value = new String(html) as Element;
+  Object.defineProperty(value, trustedHtmlBrand, { value: true });
+  return value;
+}
 
 export class JsxRuntimeError extends Error {
   constructor(...message: string[]) {
@@ -14,8 +39,8 @@ export class JsxRuntimeError extends Error {
 
 export function jsxTemplate(
   strings: string[],
-  ...dynamic: string[]
-): string {
+  ...dynamic: Array<string | Element>
+): Element {
   const arr = [];
 
   for (let i = 0; i < dynamic.length; i++) {
@@ -24,7 +49,7 @@ export function jsxTemplate(
   }
   arr.push(strings[strings.length - 1]);
 
-  return arr.join("");
+  return asTrustedHtml(arr.join(""));
 }
 
 export function jsxAttr(name: string, value: unknown): string {
@@ -32,11 +57,11 @@ export function jsxAttr(name: string, value: unknown): string {
     return "";
   }
 
-  if (value === "function" || typeof value === "object") {
+  if (typeof value === "function" || typeof value === "object") {
     throw new JsxRuntimeError(
-      `Element was passed attribute "${name}"`,
-      `containing a function/object (${value})`,
-      "which is not allowed",
+      isTrustedHtml(value)
+        ? `Element was passed attribute "${name}" containing rendered HTML, which is not allowed`
+        : `Element was passed attribute "${name}" containing a function/object (${value}) which is not allowed`,
     );
   }
 
@@ -44,16 +69,16 @@ export function jsxAttr(name: string, value: unknown): string {
     return name;
   }
 
-  if (typeof value === "string") {
-    return `${name}="${value}"`;
-  }
-
-  return `${name}=${value}`;
+  return `${name}="${escapeHtml(String(value))}"`;
 }
 
 export function jsxEscape(value: unknown): string {
   if (value === null || value === undefined || typeof value === "boolean") {
     return "";
+  }
+
+  if (isTrustedHtml(value)) {
+    return String(value);
   }
 
   if (Array.isArray(value)) {
@@ -67,30 +92,56 @@ export function jsxEscape(value: unknown): string {
     );
   }
 
-  return String(value);
+  return escapeHtml(String(value));
+}
+
+function innerHtmlFromProp(value: unknown): string {
+  if (typeof value === "object" && value !== null && "__html" in value) {
+    return String(value.__html);
+  }
+  throw new JsxRuntimeError(
+    "dangerouslySetInnerHTML must be `{ __html: string }`",
+  );
 }
 
 export function jsx(
-  type: ((props?: Record<string, unknown>) => string) | string,
+  type: ((props?: Record<string, unknown>) => unknown) | string,
   props?: Record<string, unknown> | null,
   _key?: string,
-): string {
+): Element {
   if (typeof type === "function") {
     const res = type(props ?? {});
-    return res;
+    if (isTrustedHtml(res)) {
+      return res;
+    }
+    return asTrustedHtml(jsxEscape(res));
   }
 
-  const { children, ...rest } = props ?? {};
+  const { children, dangerouslySetInnerHTML, ...rest } = props ?? {};
   const attrs = Object.entries(rest).map(([key, val]) => jsxAttr(key, val))
     .join(" ");
+  const open = attrs === "" ? `<${type}>` : `<${type} ${attrs}>`;
 
   if (type === FRAGMENT_TAG && !rest.lazy && typeof rest.src === "string") {
     requestInlineFragment(rest.src);
 
-    return `<${type} ${attrs}>${getInlineFragmentSlot(rest.src)}</${type}>`;
+    return asTrustedHtml(
+      `${open}${getInlineFragmentSlot(rest.src)}</${type}>`,
+    );
   }
 
-  return `<${type} ${attrs}>${jsxEscape(children)}</${type}>`;
+  if (dangerouslySetInnerHTML != null) {
+    if (children != null) {
+      throw new JsxRuntimeError(
+        "Can only set one of `children` or `dangerouslySetInnerHTML`.",
+      );
+    }
+    return asTrustedHtml(
+      `${open}${innerHtmlFromProp(dangerouslySetInnerHTML)}</${type}>`,
+    );
+  }
+
+  return asTrustedHtml(`${open}${jsxEscape(children)}</${type}>`);
 }
 
 export function getInlineFragmentSlot(src: string) {

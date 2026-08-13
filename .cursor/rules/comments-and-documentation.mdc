@@ -47,7 +47,7 @@ Say how the code behaves now. Do not narrate the change that produced it.
 - Do not mention that something was tested, verified or discussed. Just state it.
 
 ```
-Good: The agent reads review feedback with the `pr-review-feedback` skill.
+Good: The agent reads review feedback with the `pr-followup` skill.
 Bad:  How to read review feedback lives in the skill, not in the prompt, because
       a skill's body only enters context when used.
 ```

@@ -1,6 +1,6 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { jsxAttr } from "./mod.ts";
+import { jsx, jsxAttr, jsxEscape } from "./mod.ts";
 
 describe("jsxAttr", () => {
   it("should return empty string for null value", () => {
@@ -23,8 +23,7 @@ describe("jsxAttr", () => {
 
     assertEquals(result, "test");
   });
-  // COO-5: jsxAttr interpolates functions into attributes instead of throwing.
-  it.ignore("should throw an error for function value", () => {
+  it("should throw an error for function value", () => {
     assertThrows(() => jsxAttr("test", () => {}));
   });
   it("should throw an error for object value", () => {
@@ -33,14 +32,92 @@ describe("jsxAttr", () => {
   it("should throw an error for array value", () => {
     assertThrows(() => jsxAttr("test", ["a"]));
   });
+  it("should throw when given rendered HTML", () => {
+    assertThrows(() => jsxAttr("title", jsx("b", { children: "x" })));
+  });
   it("should return attr=value for string value", () => {
     const result = jsxAttr("test", "a");
 
     assertEquals(result, 'test="a"');
   });
-  it("should return attr=value for number value", () => {
+  it("should return quoted attr=value for number value", () => {
     const result = jsxAttr("test", 0);
 
-    assertEquals(result, "test=0");
+    assertEquals(result, 'test="0"');
+  });
+  it("should escape quotes so an attribute value cannot break out", () => {
+    const result = jsxAttr("title", `" onload="alert(1)`);
+
+    assertEquals(result, `title="&quot; onload=&quot;alert(1)"`);
+  });
+  it("should escape ampersands in attribute values", () => {
+    const result = jsxAttr("href", "/docs?q=1&lang=en");
+
+    assertEquals(result, 'href="/docs?q=1&amp;lang=en"');
+  });
+});
+
+describe("jsxEscape", () => {
+  it("should return empty string for null, undefined, and booleans", () => {
+    assertEquals(jsxEscape(null), "");
+    assertEquals(jsxEscape(undefined), "");
+    assertEquals(jsxEscape(true), "");
+    assertEquals(jsxEscape(false), "");
+  });
+  it("should escape XSS payloads in body position", () => {
+    assertEquals(
+      jsxEscape("<script>alert(1)</script>"),
+      "&lt;script&gt;alert(1)&lt;/script&gt;",
+    );
+  });
+  it("should escape ampersands, quotes, and brackets", () => {
+    assertEquals(
+      jsxEscape(`&<>"'`),
+      "&amp;&lt;&gt;&quot;&#39;",
+    );
+  });
+  it("should stringify numbers without changing them", () => {
+    assertEquals(jsxEscape(0), "0");
+    assertEquals(jsxEscape(12.5), "12.5");
+  });
+  it("should escape each item in an array", () => {
+    assertEquals(
+      jsxEscape(["<b>", jsx("i", { children: "ok" }), "'"]),
+      "&lt;b&gt;<i>ok</i>&#39;",
+    );
+  });
+  it("should interpolate JSX output unchanged", () => {
+    assertEquals(jsxEscape(jsx("b", { children: "ok" })), "<b>ok</b>");
+  });
+  it("should throw an error for function value", () => {
+    assertThrows(() => jsxEscape(() => {}));
+  });
+  it("should throw an error for object value", () => {
+    assertThrows(() => jsxEscape({ test: "a" }));
+  });
+});
+
+describe("jsx", () => {
+  it("renders a custom element through the host-tag path", () => {
+    assertEquals(
+      String(jsx("x-panel", { title: "n", children: "ok" })),
+      `<x-panel title="n">ok</x-panel>`,
+    );
+  });
+  it("inlines dangerouslySetInnerHTML without escaping", () => {
+    assertEquals(
+      String(
+        jsx("div", { dangerouslySetInnerHTML: { __html: "<b>ok</b>" } }),
+      ),
+      "<div><b>ok</b></div>",
+    );
+  });
+  it("throws when children and dangerouslySetInnerHTML are both set", () => {
+    assertThrows(() =>
+      jsx("div", {
+        dangerouslySetInnerHTML: { __html: "<b>ok</b>" },
+        children: "nope",
+      })
+    );
   });
 });

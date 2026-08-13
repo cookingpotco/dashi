@@ -122,9 +122,9 @@ async function contextFromApi(
 }
 
 /**
- * The skill's path is spelled out as well as its name: Cursor only documents
- * skill invocation from chat, so an agent resumed through the API may not pick
- * it up from the name alone.
+ * Skill paths are spelled out as well as names: Cursor only documents skill
+ * invocation from chat, so an agent resumed through the API may not pick them
+ * up from the name alone.
  */
 function buildPrompt(context: ReviewContext): string {
   const stateLabel = context.reviewState === "changes_requested"
@@ -136,38 +136,9 @@ function buildPrompt(context: ReviewContext): string {
   return [
     `${context.reviewAuthor} ${stateLabel} on your pull request ${context.prUrl}.`,
     "",
-    "Before anything else:",
-    "- `gh pr ready --undo`, so the PR sits in draft while the work is with you.",
-    "- Pull your branch. It may have moved since your last run, and a push from a",
-    "  workspace that is behind will be rejected.",
-    "- Update from the PR base: `gh pr view --json baseRefName -q .baseRefName`,",
-    "  check that branch out, `git pull`, check your branch back out, merge the",
-    "  base into it. Resolve conflicts. Do not rebase or force-push.",
-    "",
-    "Address the review feedback. Collect it with the `pr-review-feedback` skill",
-    `for PR ${context.prNumber} in ${context.repo}; if that skill is not already`,
-    "available to you, read `.cursor/skills/pr-review-feedback/SKILL.md` in the",
-    "repository and follow it. Work from what you find there, not from this",
-    "message, so that you see every thread still open.",
-    "",
-    "You still have the approved plan from earlier in this conversation. If a",
-    "comment conflicts with something the plan deliberately called for, say so in",
-    "your reply rather than silently changing it. If you want to change the plan,",
-    "put that in the summary comment as a suggestion. Do not edit the Linear plan",
-    "or the PR description, and do not ship the deviation until it is approved",
-    "on the PR.",
-    "",
-    "When you are done, complete the definition of done in AGENTS.md again. A",
-    "later commit does not inherit a previous green run:",
-    "- `deno fmt --check .`, `deno lint`, `deno check` and `deno test -A` all",
-    "  pass locally. Fix anything that fails.",
-    "- Commit and push to the same branch. Do not force-push or rebase.",
-    "- Wait until CI is green on that push. A red check means you are not done.",
-    "- Answer anything asked of you as a reply in that comment's thread, so each",
-    "  conversation stays where it started. The skill shows how.",
-    "- Post one PR comment summarising the follow-up: what you changed and to",
-    "  what end. Not a point-by-point response. Do not edit the PR description.",
-    "- `gh pr ready` to hand it back, and check that it took.",
+    `Follow the \`pr-followup\` skill for PR ${context.prNumber} in ${context.repo}.`,
+    "If it is not already available, read `.cursor/skills/pr-followup/SKILL.md`",
+    "in the repository and follow it.",
   ].join("\n");
 }
 

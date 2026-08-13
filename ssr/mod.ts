@@ -1,4 +1,5 @@
 import { getInlineFragmentSlot } from "dashi/jsx-runtime";
+import { type Element } from "../jsx-runtime/jsx_types.ts";
 import { Layout, Route } from "../shared/shared_types.ts";
 
 // TODO: Replace with async local storage
@@ -59,22 +60,20 @@ interface RenderRouteOptions {
 export async function renderRoute(
   route: Route,
   options: RenderRouteOptions,
-): Promise<string> {
+): Promise<Element> {
   const [layout, ...rest] = options.layouts;
 
   if (!layout || options.inlineFragment) {
-    const res = `${(await route.render(options.req))}`;
-    replaceInlineFragmentSlots(res);
+    const res = await route.render(options.req);
+    replaceInlineFragmentSlots(String(res));
 
     return res;
   }
 
-  const res = layout.render(
+  return layout.render(
     options.req,
     await renderRoute(route, { ...options, layouts: rest }),
   );
-
-  return `${res}`;
 }
 
 export async function replaceInlineFragmentSlots(initialOutput: string) {

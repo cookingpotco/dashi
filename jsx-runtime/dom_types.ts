@@ -88,6 +88,7 @@ export type Node = string | number | bigint | boolean | null;
 
 export interface DOMAttributes<T extends EventTarget> {
   children?: Node | Node[];
+  dangerouslySetInnerHTML?: { __html: string };
 
   // Clipboard Events
   onCopy?: ClipboardEventHandler<T>;

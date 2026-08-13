@@ -1,6 +1,8 @@
 import * as dom from "./dom_types.ts";
 
-export type Element = string; // All JSX should resolve to a string
+export const trustedHtmlBrand: unique symbol = Symbol("dashi.trustedHtml");
+
+export type Element = string & { readonly [trustedHtmlBrand]: true };
 export type DashiNode = dom.Node | Element;
 
 export type ElementType<P extends Record<string, unknown> = never> =

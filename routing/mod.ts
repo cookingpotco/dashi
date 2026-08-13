@@ -26,13 +26,15 @@ async function internalHandle(
 
   if (matched) {
     matched.middlewares.forEach(async (m) => await m.preRender?.(req));
-    const html = await renderRoute(
-      matched.route,
-      {
-        req: req,
-        layouts: matched.layouts,
-        inlineFragment: options.inlineFragment,
-      },
+    const html = String(
+      await renderRoute(
+        matched.route,
+        {
+          req: req,
+          layouts: matched.layouts,
+          inlineFragment: options.inlineFragment,
+        },
+      ),
     );
 
     // TODO: Better way to handle content type and DOCTYPE

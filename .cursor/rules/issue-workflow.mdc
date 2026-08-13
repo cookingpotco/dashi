@@ -39,8 +39,9 @@ The planner follows `.cursor/rules/planner.mdc`. The implementing agent follows
 - **Fixes go through a GitHub review, not `@Cursor` in Linear.** A Linear
   mention starts a new agent from `main`, which cannot see the branch under
   review. Linear's Automations behave the same way.
-- **Implementor suggestions stay on the GitHub PR** until the human approves
-  them there. The implementing agent does not edit the Linear plan.
+- **Plan deviations ship in the PR.** The implementing agent lists them under
+  **Plan deviations** in the handoff comment and leaves the Linear plan as the
+  human wrote it.
 
 ## Bugbot
 

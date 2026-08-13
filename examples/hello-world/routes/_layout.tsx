@@ -1,7 +1,7 @@
-import { DashiNode, Layout } from "dashi";
+import { type Element, Layout } from "dashi";
 
 export class RootLayout implements Layout {
-  render(_req: Request, children: DashiNode): DashiNode {
+  render(_req: Request, children: Element): Element {
     return (
       <html>
         <h1>Website Title</h1>
