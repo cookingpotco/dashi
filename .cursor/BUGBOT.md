@@ -18,9 +18,9 @@ interpolated HTML, and its request path runs concurrently under `Deno.serve`.
 - **Unawaited async work in the request path.** A dropped promise means the
   response is built before the work finishes.
 - **New external dependencies in framework source.** The framework currently has
-  _zero_ — the only external imports in the repo are `@std/assert` and
-  `@std/testing` in test files. A new runtime dependency is a significant
-  decision, not an implementation detail.
+  _zero_ — the only external import in the repo is `@std/assert` in test files.
+  A new runtime dependency is a significant decision, not an implementation
+  detail.
 - **Type assertions and `any` that hide real errors** rather than expressing
   something the compiler cannot see.
 - **A behaviour change with no test covering it.** Flag that. Do not demand a
@@ -62,6 +62,6 @@ introduces a new instance of the same class elsewhere.
 
 - Deno with JSR specifiers. Remote modules live in `vendor/`; `deno.lock` is
   frozen. Ranges in `deno.json` are intentional.
-- Tests use `describe`/`it` from `@std/testing/bdd` and `@std/assert`.
+- Tests use `Deno.test` and `@std/assert`.
 - `deno check` is the type-check command. It covers the framework, scripts, and
   example apps.
