@@ -23,6 +23,9 @@ interpolated HTML, and its request path runs concurrently under `Deno.serve`.
   decision, not an implementation detail.
 - **Type assertions and `any` that hide real errors** rather than expressing
   something the compiler cannot see.
+- **A behaviour change with no test covering it.** Flag that. Do not demand a
+  unit test of glue code when a black-box assertion on the output would cover
+  it.
 
 ## Do not flag
 
@@ -32,8 +35,9 @@ interpolated HTML, and its request path runs concurrently under `Deno.serve`.
 - **Anything in `jsx-runtime/dom_types.ts`** beyond correctness bugs. It is 1619
   lines of vendored, React-derived typings scheduled for deletion in COO-35. Do
   not suggest restructuring it.
-- **Missing test coverage outside `jsx-runtime/`.** Test coverage is owned by
-  COO-6.
+- **A missing unit test of routing, SSR, or other glue** when the change is
+  already visible in rendered HTML, or when the right coverage is an HTTP case
+  that belongs to COO-38. Do not ask for a one-off end-to-end harness.
 - **The known defects listed below.** They are tracked, and restating them is
   noise.
 

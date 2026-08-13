@@ -1,5 +1,5 @@
 ---
-description: How we pick up, plan, delegate and review Linear issues in this repo
+description: How work flows through Linear in this repo
 alwaysApply: true
 ---
 
@@ -7,77 +7,64 @@ alwaysApply: true
 
 Work flows through Linear. One issue at a time, planned before it is implemented.
 
-## The loop
+The planner follows `.cursor/rules/planner.mdc`. The implementing agent follows
+`AGENTS.md`.
 
-1. **Pick** an issue from the `Dashi F&F Launch` project, respecting milestone order and `blocked by` relations.
-2. **Discuss and research** before planning. Verify the ticket's claims against the code, since tickets are written from memory and go stale.
-3. **Plan** in plan mode, iterating until the human approves. Skip this for S-pointed issues whose ticket already reads like a plan.
-4. **Post the approved plan** as a comment on the ticket, so the implementing agent needs nothing but the issue ID.
-5. **Delegate** the issue to the `Cursor` agent in Linear.
-6. **The agent finishes to the definition of done below**, asks Bugbot for a review, and addresses what it finds before handing over.
-7. **Merge** once checks are green, Bugbot is satisfied and the human has approved.
+## Stages
 
-## Definition of done (for the implementing agent)
+1. An issue is picked from `Dashi F&F Launch`, respecting milestone order and
+   `blocked by` relations.
+2. A plan is written and approved. The approved plan is a comment on the ticket.
+3. The issue is delegated to the `Cursor` agent at status `Ready`.
+4. The implementing agent builds it, then the human reviews.
+5. Merge once checks are green, Bugbot has had its pass, and the human has
+   approved.
 
-Cursor opens a draft PR on your **first push**, which is long before you are
-finished. An open PR therefore means nothing about readiness; these do:
+## Status
 
-- `deno fmt --check .`, `deno lint`, `deno check` and `deno test -A` all pass
-  locally, and CI is green on the branch you pushed.
-- Anything you could not make pass is called out explicitly in the PR
-  description, naming the issue that owns it. Do not quietly leave it broken and
-  do not fix unrelated failures you did not cause.
-- The PR description says what you did and what you deliberately left out.
-- Dead code, debug output and commented-out experiments are gone. The diff is
-  production ready, not a work in progress.
-- **Then ask Bugbot for a review**, by commenting exactly `@cursor review` on
-  the PR. Ask once per PR: each run is billed, and only finished work is worth
-  spending it on.
-- Address its findings, without asking it again.
-- **Last of all, `gh pr ready`.** Ready for review is what says the work is done
-  and it is the human's turn. Check that it took: the draft state sometimes
-  survives the call, and a draft cannot be merged.
+- `Ready` means the ticket has an approved plan. Delegation does not change it.
+- `In Progress` means the implementing agent has started.
+- Never set `In Review` or `Done` by hand. The GitHub integration moves the
+  ticket.
 
-Those four commands are what CI runs. Match them locally before you push.
+## Feedback
 
-## Where feedback goes
-
-- **Code-level feedback**: inline on the GitHub PR diff, then **submit it as a review**. Submitting is what matters: `review-followup.yml` fires on the submitted review and hands it to the agent that opened the PR. Comments left without submitting a review reach nobody. A review sweeps up every thread still open, including ones from earlier rounds.
-- **One agent owns a task end to end.** It keeps the conversation and workspace from its first run, so it still holds the plan.
-- **Ask for fixes through a GitHub review, not `@Cursor` in Linear.** A Linear mention starts a new agent from `main`, which cannot see the branch under review. Linear's Automations behave the same way.
-- **Scope or approach changes**: a Linear comment on the ticket, for the humans. If it amends the plan, it belongs where the plan lives.
-
-## Tooling
-
-- `scripts/review_followup.ts`, run by `.github/workflows/review-followup.yml`,
-  talks to the Cursor Cloud Agents **v1** REST API over plain `fetch`. The repo
-  has no dependencies; keep it that way.
-- The agent reads review feedback with the `pr-review-feedback` skill.
-- **Use v1, not the legacy v0 API**, whose `branchName` and
-  `openAsCursorGithubApp` look useful. v1 rejects a `branchName` outright, so
-  agents get generated `cursor/...` branch names. Linear links the PR through the
-  delegation rather than the branch name, so that is fine.
-- The workflow needs `CURSOR_API_KEY` as a repository secret.
+- **Code-level feedback**: inline on the GitHub PR diff, then **submit it as a
+  review**. Submitting is what matters: `review-followup.yml` fires on the
+  submitted review and hands it to the agent that opened the PR. Comments left
+  without submitting a review reach nobody. A review sweeps up every thread
+  still open, including ones from earlier rounds.
+- **One agent owns a task end to end.** It keeps the conversation and workspace
+  from its first run, so it still holds the plan.
+- **Fixes go through a GitHub review, not `@Cursor` in Linear.** A Linear
+  mention starts a new agent from `main`, which cannot see the branch under
+  review. Linear's Automations behave the same way.
+- **Implementor suggestions stay on the GitHub PR** until the human approves
+  them there. The implementing agent does not edit the Linear plan.
 
 ## Bugbot
 
-- Bugbot **cannot see this file.** Project rules do not apply to Bugbot runs. Its guidance lives in `.cursor/BUGBOT.md`.
-- Autofix is **off**. Bugbot comments, the implementing agent fixes. Autofix would spawn a fresh agent with no knowledge of the plan.
-- Bugbot runs **on request only**, and **once per PR**: the implementing agent asks for it at the end of the work, as described in the definition of done. It is triage that saves the human a first pass, not a merge gate.
-- **Do not require the `Cursor Bugbot` check in branch protection.** A PR nobody asked Bugbot to review has no such check, so requiring it would block every PR until someone remembers to ask.
-- The trigger is a top-level PR comment that is exactly `@cursor review`.
-  `review-followup.yml` only fires on a submitted review, so if Bugbot posts
+- Bugbot **cannot see project rules or `AGENTS.md`.** Its guidance lives in
+  `.cursor/BUGBOT.md`.
+- Autofix is **off**. Bugbot comments, the implementing agent fixes.
+- It runs **once**, automatically, when the PR leaves draft. Draft reviews are
+  off so the first-push stub is skipped.
+- It is triage, not a merge gate. Do not require the `Cursor Bugbot` check in
+  branch protection as a findings gate; the check is `neutral` when it reports
+  issues.
+- `review-followup.yml` only fires on a submitted review, so if Bugbot posts
   standalone comments a human has to relay them.
 
-## Status conventions
+## Tooling
 
-- `Ready` means "has an approved plan". Move it there on approval.
-- Always set `In Progress` when starting work on a ready piece of work.
-- Never set `In Review` or `Done` by hand. The GitHub integration moves the ticket.
+`scripts/review_followup.ts` is run by `.github/workflows/review-followup.yml`.
+It talks to the Cursor Cloud Agents **v1** REST API over plain `fetch`. The
+workflow needs `CURSOR_API_KEY` as a repository secret. The repo has no
+dependencies.
 
-## Rules of thumb
+## Shared conventions
 
-- **Do not delegate spikes.** Design issues produce a written decision and stay with the human.
-- **Check for file collisions before running agents in parallel.** Two issues touching the same directory will conflict.
-- **Quarantine with an owner.** When leaving a known failure in place, suppress it as narrowly as possible and name the issue that fixes it, so the debt stays greppable.
-- **Split when scope grows.** If planning uncovers work with unknown fallout, file a separate issue and land it first rather than letting an S ticket quietly become an L.
+- **Quarantine with an owner.** A known failure stays greppable: suppress it as
+  narrowly as possible and name the issue that fixes it.
+- **One owner per directory at a time.** Two in-flight issues touching the same
+  directory will conflict.
