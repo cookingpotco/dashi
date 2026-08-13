@@ -1,5 +1,35 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { jsx, jsxAttr, jsxEscape } from "./mod.ts";
+import { jsx, jsxAttr, jsxEscape, jsxTemplate } from "./mod.ts";
+import { init } from "../routing/mod.ts";
+import { RenderStorage } from "../ssr/mod.ts";
+
+Deno.test("jsxTemplate returns empty HTML when the strings array is empty", () => {
+  assertEquals(String(jsxTemplate([])), "");
+});
+
+Deno.test("jsxTemplate returns a single static string unchanged", () => {
+  assertEquals(String(jsxTemplate(["<div>ok</div>"])), "<div>ok</div>");
+});
+
+Deno.test("jsxTemplate concatenates adjacent dynamics with no static text between them", () => {
+  assertEquals(
+    String(jsxTemplate(["<p>", "", "</p>"], "a", "b")),
+    "<p>ab</p>",
+  );
+});
+
+Deno.test("jsxTemplate interpolates trusted HTML and raw strings as given", () => {
+  assertEquals(
+    String(jsxTemplate(["<p>", "</p>"], jsx("b", { children: "ok" }))),
+    "<p><b>ok</b></p>",
+  );
+  assertEquals(String(jsxTemplate(["<p>", "</p>"], "<b>")), "<p><b></p>");
+});
+
+Deno.test("jsxTemplate still concatenates when the dynamic count does not match the strings", () => {
+  assertEquals(String(jsxTemplate(["a"], "x", "y")), "axya");
+  assertEquals(String(jsxTemplate(["a", "b", "c"], "x")), "axc");
+});
 
 Deno.test("jsxAttr returns empty string when value is null", () => {
   const result = jsxAttr("test", null);
@@ -47,10 +77,10 @@ Deno.test('jsxAttr returns name="value" when value is a string', () => {
   assertEquals(result, 'test="a"');
 });
 
-Deno.test('jsxAttr returns a quoted name="value" when value is a number', () => {
-  const result = jsxAttr("test", 0);
-
-  assertEquals(result, 'test="0"');
+Deno.test("jsxAttr keeps 0 and empty string as quoted values", () => {
+  assertEquals(jsxAttr("value", 0), 'value="0"');
+  assertEquals(jsxAttr("count", 12.5), 'count="12.5"');
+  assertEquals(jsxAttr("value", ""), 'value=""');
 });
 
 Deno.test("jsxAttr escapes quotes so an attribute value cannot break out", () => {
@@ -91,11 +121,13 @@ Deno.test("jsxEscape stringifies numbers without changing them", () => {
   assertEquals(jsxEscape(12.5), "12.5");
 });
 
-Deno.test("jsxEscape escapes each item in an array", () => {
+Deno.test("jsxEscape escapes each item in an array, including nested and empty arrays", () => {
   assertEquals(
     jsxEscape(["<b>", jsx("i", { children: "ok" }), "'"]),
     "&lt;b&gt;<i>ok</i>&#39;",
   );
+  assertEquals(jsxEscape([]), "");
+  assertEquals(jsxEscape(["a", ["b", ["<c>"]]]), "ab&lt;c&gt;");
 });
 
 Deno.test("jsxEscape interpolates JSX output unchanged", () => {
@@ -108,6 +140,46 @@ Deno.test("jsxEscape throws when given a function", () => {
 
 Deno.test("jsxEscape throws when given an object", () => {
   assertThrows(() => jsxEscape({ test: "a" }));
+});
+
+Deno.test("jsx renders a function component and escapes a plain string return", () => {
+  function Greet(props?: Record<string, unknown>) {
+    return jsx("span", { children: props?.name });
+  }
+  function Echo(props?: Record<string, unknown>) {
+    return props?.text;
+  }
+
+  assertEquals(String(jsx(Greet, { name: "Ada" })), "<span>Ada</span>");
+  assertEquals(String(jsx(Greet)), "<span></span>");
+  assertEquals(String(jsx(Echo, { text: "<em>" })), "&lt;em&gt;");
+});
+
+Deno.test("jsx renders intrinsic elements with no props", () => {
+  assertEquals(String(jsx("div")), "<div></div>");
+  assertEquals(String(jsx("div", null)), "<div></div>");
+});
+
+Deno.test("jsx renders void elements with a closing tag", () => {
+  assertEquals(String(jsx("br")), "<br></br>");
+  assertEquals(
+    String(jsx("img", { src: "x.png", alt: "" })),
+    `<img src="x.png" alt=""></img>`,
+  );
+});
+
+Deno.test("jsx renders children, including arrays and falsy-but-meaningful values", () => {
+  assertEquals(String(jsx("div", { children: "ok" })), "<div>ok</div>");
+  assertEquals(String(jsx("div", { children: 0 })), "<div>0</div>");
+  assertEquals(String(jsx("div", { children: "" })), "<div></div>");
+  assertEquals(
+    String(
+      jsx("ul", {
+        children: [jsx("li", { children: "a" }), 0, ""],
+      }),
+    ),
+    "<ul><li>a</li>0</ul>",
+  );
 });
 
 Deno.test("jsx renders a custom element through the host-tag path", () => {
@@ -143,5 +215,32 @@ Deno.test("jsx throws when children and dangerouslySetInnerHTML are both set", (
       dangerouslySetInnerHTML: { __html: "<b>ok</b>" },
       children: "nope",
     })
+  );
+});
+
+Deno.test("jsx throws when dangerouslySetInnerHTML is not `{ __html: string }`", () => {
+  assertThrows(() => jsx("div", { dangerouslySetInnerHTML: "<b>ok</b>" }));
+});
+
+Deno.test("jsx emits an inline slot for a non-lazy route-fragment", () => {
+  init([]);
+  RenderStorage.getInstance().init(new Request("http://localhost/"));
+  // requestInlineFragment builds `new Request(src, req)`, which needs an absolute URL
+  assertEquals(
+    String(jsx("route-fragment", { src: "http://localhost/comments" })),
+    `<route-fragment src="http://localhost/comments">{{fragment:http://localhost/comments}}</route-fragment>`,
+  );
+});
+
+Deno.test("jsx renders a lazy route-fragment without an inline slot", () => {
+  assertEquals(
+    String(
+      jsx("route-fragment", {
+        src: "/comments",
+        lazy: true,
+        children: "soon",
+      }),
+    ),
+    `<route-fragment src="/comments" lazy>soon</route-fragment>`,
   );
 });
