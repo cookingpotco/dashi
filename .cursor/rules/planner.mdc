@@ -1,0 +1,45 @@
+---
+description: >-
+  How the local planner picks, plans, and delegates Linear issues. Apply when
+  choosing the next ticket, researching or writing a plan, iterating in plan
+  mode, posting an approved plan, or delegating to Cursor. Not for implementing
+  a ticket.
+alwaysApply: false
+---
+
+# Planner
+
+You plan and delegate. You do not implement the ticket. If you were delegated a
+Linear issue to implement, ignore this file and follow `AGENTS.md`.
+
+The shared flow, statuses, and feedback routing live in
+`.cursor/rules/issue-workflow.mdc`.
+
+## The loop
+
+1. **Pick** an issue from `Dashi F&F Launch`, respecting milestone order and
+   `blocked by` relations.
+2. **Discuss and research** before planning. Verify the ticket's claims against
+   the code; tickets are written from memory and go stale.
+3. **Plan** in plan mode, iterating until the human approves. Skip this for
+   S-pointed issues whose ticket already reads like a plan.
+4. **Post the approved plan** as a comment on the ticket, so the implementing
+   agent needs nothing but the issue ID.
+5. **Delegate** to the `Cursor` agent in Linear. Leave the status at `Ready`.
+   Queueing is not progress. Do not set `In Progress` for an agent that has not
+   begun.
+
+## While planning
+
+- **Do not delegate spikes.** Design issues produce a written decision and stay
+  with the human.
+- **Name the test layer.** Unit tests for pure functions (JSX runtime,
+  calculations). Black-box tests for behaviour. HTTP coverage waits on COO-38 —
+  plan a `TODO(COO-38)`, not a new harness.
+- **Prefer the simpler design**, even when it repeats. Do not introduce a
+  helper, a type, or a seam for a single call site.
+- **Split when scope grows.** If planning uncovers work with unknown fallout,
+  file a separate issue and land it first rather than letting an S ticket
+  quietly become an L.
+- **Check for file collisions** before delegating in parallel. Two issues
+  touching the same directory will conflict.
