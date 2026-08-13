@@ -25,9 +25,9 @@ The planner follows the `plan-ticket` skill. The implementing agent follows
 
 - `Ready` means the ticket has an approved plan. `@Cursor` on that comment
   starts the implementor and does not change the status.
-- `In Progress` means the implementing agent has started.
-- Never set `In Review` or `Done` by hand. The GitHub integration moves the
-  ticket.
+- `In Progress` means a draft PR exists. The GitHub integration sets this when
+  the agent opens the PR on init.
+- Never set Linear status by hand. The GitHub integration moves the ticket.
 
 ## Feedback
 
