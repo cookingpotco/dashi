@@ -99,3 +99,22 @@ Deno.test("emits a string style attribute", () => {
     `<div style="color:red"></div>`,
   );
 });
+
+Deno.test("compiled JSX emits void tags, empty tags, and adjacent children", () => {
+  assertEquals(String(<br />), "<br>");
+  assertEquals(String(<div />), "<div></div>");
+  const a = "x";
+  const b = "y";
+  assertEquals(
+    // deno-fmt-ignore
+    String(<div>{a}{b}</div>),
+    "<div>xy</div>",
+  );
+  assertEquals(
+    // deno-fmt-ignore
+    String(<div>{["hi", <b>ok</b>, 0]}</div>),
+    "<div>hi<b>ok</b>0</div>",
+  );
+});
+
+// TODO(COO-38): eager <route-fragment src> registers a slot and SSR substitutes it

@@ -1,5 +1,38 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { jsx, jsxAttr, jsxEscape } from "./mod.ts";
+import {
+  getInlineFragmentSlot,
+  jsx,
+  jsxAttr,
+  jsxEscape,
+  jsxTemplate,
+} from "./mod.ts";
+import { trustedHtmlBrand } from "./jsx_types.ts";
+
+Deno.test("jsxTemplate joins statics with slots without re-escaping", () => {
+  const empty = jsxTemplate([""]);
+  assertEquals(String(empty), "");
+  assertEquals(trustedHtmlBrand in empty, true);
+
+  assertEquals(String(jsxTemplate(["<div></div>"])), "<div></div>");
+  assertEquals(
+    String(
+      jsxTemplate(
+        ["<div ", ">", "</div>"],
+        jsxAttr("id", "x"),
+        jsxEscape("<b>"),
+      ),
+    ),
+    `<div id="x">&lt;b&gt;</div>`,
+  );
+  assertEquals(
+    String(jsxTemplate(["<div>", "", "</div>"], "a", "b")),
+    "<div>ab</div>",
+  );
+  assertEquals(
+    String(jsxTemplate(["<p>", "</p>"], jsx("b", { children: "ok" }))),
+    "<p><b>ok</b></p>",
+  );
+});
 
 Deno.test("jsxAttr returns empty string when value is null", () => {
   const result = jsxAttr("test", null);
@@ -53,6 +86,11 @@ Deno.test('jsxAttr returns a quoted name="value" when value is a number', () => 
   assertEquals(result, 'test="0"');
 });
 
+Deno.test("jsxAttr keeps empty string and non-zero numbers as quoted values", () => {
+  assertEquals(jsxAttr("test", ""), 'test=""');
+  assertEquals(jsxAttr("test", 3), 'test="3"');
+});
+
 Deno.test("jsxAttr escapes quotes so an attribute value cannot break out", () => {
   const result = jsxAttr("title", `" onload="alert(1)`);
 
@@ -92,10 +130,12 @@ Deno.test("jsxEscape stringifies numbers without changing them", () => {
 });
 
 Deno.test("jsxEscape escapes each item in an array", () => {
+  assertEquals(jsxEscape([]), "");
   assertEquals(
     jsxEscape(["<b>", jsx("i", { children: "ok" }), "'"]),
     "&lt;b&gt;<i>ok</i>&#39;",
   );
+  assertEquals(jsxEscape(["a", ["<", "b"]]), "a&lt;b");
 });
 
 Deno.test("jsxEscape interpolates JSX output unchanged", () => {
@@ -144,4 +184,43 @@ Deno.test("jsx throws when children and dangerouslySetInnerHTML are both set", (
       children: "nope",
     })
   );
+});
+
+Deno.test("jsx renders tags, child arrays, and function components", () => {
+  assertEquals(String(jsx("div")), "<div></div>");
+  assertEquals(
+    String(jsx("div", { children: ["a", 0, jsx("b", { children: "c" })] })),
+    "<div>a0<b>c</b></div>",
+  );
+
+  function Label() {
+    return jsx("span", { children: "hi" });
+  }
+  assertEquals(String(jsx(Label)), "<span>hi</span>");
+
+  function Empty() {
+    return null;
+  }
+  assertEquals(String(jsx(Empty)), "");
+
+  function Count() {
+    return 0;
+  }
+  assertEquals(String(jsx(Count)), "0");
+});
+
+Deno.test("jsx throws when dangerouslySetInnerHTML is not { __html }", () => {
+  assertThrows(() => jsx("div", { dangerouslySetInnerHTML: "oops" }));
+  assertThrows(() => jsx("div", { dangerouslySetInnerHTML: {} }));
+});
+
+Deno.test("jsx emits a lazy route-fragment host tag without routing", () => {
+  assertEquals(
+    String(jsx("route-fragment", { src: "/x", lazy: true })),
+    `<route-fragment src="/x" lazy></route-fragment>`,
+  );
+});
+
+Deno.test("getInlineFragmentSlot wraps the src in a slot marker", () => {
+  assertEquals(getInlineFragmentSlot("/x"), "{{fragment:/x}}");
 });
