@@ -1,6 +1,5 @@
 import { assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { __dangerouslyInlineHtml } from "./mod.ts";
 
 describe("JSX escaping", () => {
   it("renders an interpolated script tag inert in body position", () => {
@@ -21,9 +20,9 @@ describe("JSX escaping", () => {
     );
   });
 
-  it("interpolates __dangerouslyInlineHtml markup unchanged", () => {
+  it("inlines dangerouslySetInnerHTML without escaping", () => {
     assertEquals(
-      String(<div>{__dangerouslyInlineHtml("<b>ok</b>")}</div>),
+      String(<div dangerouslySetInnerHTML={{ __html: "<b>ok</b>" }}></div>),
       "<div><b>ok</b></div>",
     );
   });

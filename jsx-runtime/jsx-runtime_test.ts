@@ -1,6 +1,6 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { __dangerouslyInlineHtml, jsx, jsxAttr, jsxEscape } from "./mod.ts";
+import { jsx, jsxAttr, jsxEscape } from "./mod.ts";
 
 describe("jsxAttr", () => {
   it("should return empty string for null value", () => {
@@ -33,7 +33,7 @@ describe("jsxAttr", () => {
     assertThrows(() => jsxAttr("test", ["a"]));
   });
   it("should throw when given rendered HTML", () => {
-    assertThrows(() => jsxAttr("title", __dangerouslyInlineHtml("<b>x</b>")));
+    assertThrows(() => jsxAttr("title", jsx("b", { children: "x" })));
   });
   it("should return attr=value for string value", () => {
     const result = jsxAttr("test", "a");
@@ -82,24 +82,18 @@ describe("jsxEscape", () => {
   });
   it("should escape each item in an array", () => {
     assertEquals(
-      jsxEscape(["<b>", __dangerouslyInlineHtml("<i>ok</i>"), "'"]),
+      jsxEscape(["<b>", jsx("i", { children: "ok" }), "'"]),
       "&lt;b&gt;<i>ok</i>&#39;",
     );
   });
-  it("should interpolate __dangerouslyInlineHtml markup unchanged", () => {
-    assertEquals(
-      jsxEscape(__dangerouslyInlineHtml("<b>ok</b>")),
-      "<b>ok</b>",
-    );
+  it("should interpolate JSX output unchanged", () => {
+    assertEquals(jsxEscape(jsx("b", { children: "ok" })), "<b>ok</b>");
   });
   it("should throw an error for function value", () => {
     assertThrows(() => jsxEscape(() => {}));
   });
   it("should throw an error for object value", () => {
     assertThrows(() => jsxEscape({ test: "a" }));
-  });
-  it("should throw for a plain { html } object that was not marked trusted", () => {
-    assertThrows(() => jsxEscape({ html: "<b>ok</b>" }));
   });
 });
 
@@ -108,6 +102,22 @@ describe("jsx", () => {
     assertEquals(
       String(jsx("x-panel", { title: "n", children: "ok" })),
       `<x-panel title="n">ok</x-panel>`,
+    );
+  });
+  it("inlines dangerouslySetInnerHTML without escaping", () => {
+    assertEquals(
+      String(
+        jsx("div", { dangerouslySetInnerHTML: { __html: "<b>ok</b>" } }),
+      ),
+      "<div><b>ok</b></div>",
+    );
+  });
+  it("throws when children and dangerouslySetInnerHTML are both set", () => {
+    assertThrows(() =>
+      jsx("div", {
+        dangerouslySetInnerHTML: { __html: "<b>ok</b>" },
+        children: "nope",
+      })
     );
   });
 });

@@ -1,17 +1,13 @@
 import { requestInlineFragment } from "../routing/mod.ts";
+import { type TrustedHtml } from "./jsx_types.ts";
 
 export * as JSX from "./jsx_types.ts";
 export * from "./dom_types.ts";
-export { type DashiNode } from "./jsx_types.ts";
+export { type DashiNode, type Element, type TrustedHtml } from "./jsx_types.ts";
 
 const FRAGMENT_TAG = "route-fragment";
 
 const trustedHtmlBrand = Symbol("dashi.trustedHtml");
-
-/**
- * Already-rendered markup. JSX interpolates it without escaping.
- */
-export type TrustedHtml = string & { readonly [trustedHtmlBrand]: true };
 
 const ESCAPE_RE = /[&<>"']/g;
 const ESCAPE_MAP: Record<string, string> = {
@@ -37,47 +33,21 @@ function asTrustedHtml(html: string): TrustedHtml {
   return value;
 }
 
-/**
- * Treat `html` as already-rendered markup and interpolate it unchanged.
- * Passing unsanitized user input is an XSS vector.
- */
-export function __dangerouslyInlineHtml(html: string): TrustedHtml {
-  return asTrustedHtml(html);
-}
-
 export class JsxRuntimeError extends Error {
   constructor(...message: string[]) {
     super(message.join(" "));
   }
 }
 
-function interpolationToHtml(value: unknown): string {
-  if (typeof value === "string") {
-    return value;
-  }
-  if (isTrustedHtml(value)) {
-    return String(value);
-  }
-  if (value === null || value === undefined || typeof value === "boolean") {
-    return "";
-  }
-  if (typeof value === "number" || typeof value === "bigint") {
-    return String(value);
-  }
-  throw new JsxRuntimeError(
-    `jsxTemplate received ${value} which is not allowed`,
-  );
-}
-
 export function jsxTemplate(
   strings: string[],
-  ...dynamic: unknown[]
+  ...dynamic: Array<string | TrustedHtml>
 ): TrustedHtml {
   const arr = [];
 
   for (let i = 0; i < dynamic.length; i++) {
     arr.push(strings[i]);
-    arr.push(interpolationToHtml(dynamic[i]));
+    arr.push(dynamic[i]);
   }
   arr.push(strings[strings.length - 1]);
 
@@ -127,6 +97,15 @@ export function jsxEscape(value: unknown): string {
   return escapeHtml(String(value));
 }
 
+function innerHtmlFromProp(value: unknown): string {
+  if (typeof value === "object" && value !== null && "__html" in value) {
+    return String(value.__html);
+  }
+  throw new JsxRuntimeError(
+    "dangerouslySetInnerHTML must be `{ __html: string }`",
+  );
+}
+
 export function jsx(
   type: ((props?: Record<string, unknown>) => unknown) | string,
   props?: Record<string, unknown> | null,
@@ -140,19 +119,31 @@ export function jsx(
     return asTrustedHtml(jsxEscape(res));
   }
 
-  const { children, ...rest } = props ?? {};
+  const { children, dangerouslySetInnerHTML, ...rest } = props ?? {};
   const attrs = Object.entries(rest).map(([key, val]) => jsxAttr(key, val))
     .join(" ");
+  const open = attrs === "" ? `<${type}>` : `<${type} ${attrs}>`;
 
   if (type === FRAGMENT_TAG && !rest.lazy && typeof rest.src === "string") {
     requestInlineFragment(rest.src);
 
     return asTrustedHtml(
-      `<${type} ${attrs}>${getInlineFragmentSlot(rest.src)}</${type}>`,
+      `${open}${getInlineFragmentSlot(rest.src)}</${type}>`,
     );
   }
 
-  return asTrustedHtml(`<${type} ${attrs}>${jsxEscape(children)}</${type}>`);
+  if (dangerouslySetInnerHTML != null) {
+    if (children != null) {
+      throw new JsxRuntimeError(
+        "Can only set one of `children` or `dangerouslySetInnerHTML`.",
+      );
+    }
+    return asTrustedHtml(
+      `${open}${innerHtmlFromProp(dangerouslySetInnerHTML)}</${type}>`,
+    );
+  }
+
+  return asTrustedHtml(`${open}${jsxEscape(children)}</${type}>`);
 }
 
 export function getInlineFragmentSlot(src: string) {
