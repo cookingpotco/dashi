@@ -35,15 +35,14 @@ Do not add an integration or end-to-end harness outside COO-38.
 
 Prefer the simpler version, even when it repeats a few lines. A helper, a type,
 or a seam has to earn its keep; one call site is not enough. If the plan
-specified machinery you then see is unnecessary, leave it out and list it
-under **Plan deviations** in the handoff comment. Leave the Linear plan as it
-is.
+specified machinery you then see is unnecessary, leave it out and list it under
+**Plan deviations** in the handoff comment. Leave the Linear plan as it is.
 
 ## Reviews
 
 Code-level feedback arrives as a **submitted** GitHub review. Follow the
-`pr-followup` skill. Do not `@Cursor` the Linear ticket for fixes: that starts
-a new agent from `main`, which cannot see the branch.
+`pr-followup` skill. Do not `@Cursor` the Linear ticket for fixes: that starts a
+new agent from `main`, which cannot see the branch.
 
 ## Constraints
 

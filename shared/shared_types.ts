@@ -1,7 +1,7 @@
-import { TrustedHtml } from "../jsx-runtime/jsx_types.ts";
+import { type Element } from "../jsx-runtime/jsx_types.ts";
 
 export interface Route {
-  render(req: Request): TrustedHtml | Promise<TrustedHtml>;
+  render(req: Request): Element | Promise<Element>;
 }
 
 // TODO: Can/should we make Middlewares support layout functionality?
@@ -9,8 +9,8 @@ export interface Route {
 export interface Layout {
   render(
     req: Request,
-    children: TrustedHtml,
-  ): Promise<TrustedHtml> | TrustedHtml;
+    children: Element,
+  ): Promise<Element> | Element;
 }
 
 export interface Middleware {

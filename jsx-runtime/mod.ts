@@ -1,13 +1,11 @@
 import { requestInlineFragment } from "../routing/mod.ts";
-import { type TrustedHtml } from "./jsx_types.ts";
+import { type Element, trustedHtmlBrand } from "./jsx_types.ts";
 
-export * as JSX from "./jsx_types.ts";
+export type * as JSX from "./jsx_types.ts";
 export * from "./dom_types.ts";
-export { type DashiNode, type Element, type TrustedHtml } from "./jsx_types.ts";
+export { type DashiNode, type Element } from "./jsx_types.ts";
 
 const FRAGMENT_TAG = "route-fragment";
-
-const trustedHtmlBrand = Symbol("dashi.trustedHtml");
 
 const ESCAPE_RE = /[&<>"']/g;
 const ESCAPE_MAP: Record<string, string> = {
@@ -22,13 +20,13 @@ function escapeHtml(value: string): string {
   return value.replace(ESCAPE_RE, (ch) => ESCAPE_MAP[ch]!);
 }
 
-function isTrustedHtml(value: unknown): value is TrustedHtml {
+function isTrustedHtml(value: unknown): value is Element {
   return typeof value === "object" && value !== null &&
     trustedHtmlBrand in value;
 }
 
-function asTrustedHtml(html: string): TrustedHtml {
-  const value = new String(html) as TrustedHtml;
+function asTrustedHtml(html: string): Element {
+  const value = new String(html) as Element;
   Object.defineProperty(value, trustedHtmlBrand, { value: true });
   return value;
 }
@@ -41,8 +39,8 @@ export class JsxRuntimeError extends Error {
 
 export function jsxTemplate(
   strings: string[],
-  ...dynamic: Array<string | TrustedHtml>
-): TrustedHtml {
+  ...dynamic: Array<string | Element>
+): Element {
   const arr = [];
 
   for (let i = 0; i < dynamic.length; i++) {
@@ -110,7 +108,7 @@ export function jsx(
   type: ((props?: Record<string, unknown>) => unknown) | string,
   props?: Record<string, unknown> | null,
   _key?: string,
-): TrustedHtml {
+): Element {
   if (typeof type === "function") {
     const res = type(props ?? {});
     if (isTrustedHtml(res)) {

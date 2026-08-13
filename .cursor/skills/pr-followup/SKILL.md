@@ -9,17 +9,17 @@ description: >-
 
 # PR follow-up
 
-A submitted review resumed you. You still have the approved plan from earlier
-in this conversation. Given a repository as `OWNER/NAME` and a pull request
-number:
+A submitted review resumed you. You still have the approved plan from earlier in
+this conversation. Given a repository as `OWNER/NAME` and a pull request number:
 
 1. `gh pr ready --undo`, so the PR sits in draft while the work is with you.
 2. Pull your branch. It may have moved since your last run, and a push from a
    workspace that is behind will be rejected.
-3. Update from the PR base before you change anything: `gh pr view --json
-   baseRefName -q .baseRefName`, check that branch out, `git pull`, check your
-   branch back out, merge the base into it. Resolve conflicts. Do not rebase
-   or force-push.
+3. Update from the PR base before you change anything:
+   `gh pr view --json
+   baseRefName -q .baseRefName`, check that branch out,
+   `git pull`, check your branch back out, merge the base into it. Resolve
+   conflicts. Do not rebase or force-push.
 4. Collect what is still open (below). Work from that list, so you see every
    thread still open.
 5. Address the feedback. Follow the plan where you can. If a comment conflicts
@@ -58,8 +58,8 @@ intent behind them. Read both before changing anything.
 
 ## Replying in a thread
 
-Answer a question where it was asked. Reply on that thread with the
-pull-request tool.
+Answer a question where it was asked. Reply on that thread with the pull-request
+tool.
 
 A reply belongs in the thread whenever the point is specific to that comment: a
 question about why something was done, a disagreement, or a note that the fix

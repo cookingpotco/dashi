@@ -1,10 +1,8 @@
 import * as dom from "./dom_types.ts";
 
-declare const trustedHtmlBrand: unique symbol;
+export const trustedHtmlBrand: unique symbol = Symbol("dashi.trustedHtml");
 
-export type TrustedHtml = string & { readonly [trustedHtmlBrand]: true };
-
-export type Element = TrustedHtml;
+export type Element = string & { readonly [trustedHtmlBrand]: true };
 export type DashiNode = dom.Node | Element;
 
 export type ElementType<P extends Record<string, unknown> = never> =
