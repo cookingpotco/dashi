@@ -11,8 +11,16 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Shared with setup-deno so the cache path matches what Deno actually uses.
+  DENO_DIR: ${{ github.workspace }}/.deno
+
 jobs:
-  check:
+  # Populate DENO_DIR from the lockfile and save it under a lockfile-only key
+  # so later jobs, and other branches with the same lockfile, can skip the
+  # download. setup-deno's own cache includes the job id, which would prevent
+  # that sharing.
+  deps:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -20,24 +28,52 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      # Pin matches .tool-versions. cache: true stores DENO_DIR (downloaded
-      # deps); setup-deno also caches the Deno binary itself.
       - uses: denoland/setup-deno@v2
         with:
           deno-version-file: .tool-versions
-          cache: true
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.DENO_DIR }}
+          key: deno-${{ runner.os }}-${{ hashFiles('deno.lock') }}
+          restore-keys: |
+            deno-${{ runner.os }}-
 
       - name: Install locked dependencies
         run: deno ci
 
-      - name: Format
-        run: deno fmt --check .
+  check:
+    name: ${{ matrix.name }}
+    needs: deps
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Format
+            run: deno fmt --check .
+          - name: Lint
+            run: deno lint
+          - name: Type check
+            run: deno task check
+          - name: Test
+            run: deno test -A
+    steps:
+      - uses: actions/checkout@v5
 
-      - name: Lint
-        run: deno lint
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version-file: .tool-versions
 
-      - name: Type check
-        run: deno task check
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.DENO_DIR }}
+          key: deno-${{ runner.os }}-${{ hashFiles('deno.lock') }}
+          restore-keys: |
+            deno-${{ runner.os }}-
 
-      - name: Test
-        run: deno test -A
+      - name: ${{ matrix.name }}
+        run: ${{ matrix.run }}

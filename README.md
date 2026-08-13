@@ -1,22 +1,25 @@
 # dashi
 
-A fragment is just a route. `<RouteFragment src="/comments" />` composes another
-route into the current page — rendered inline during SSR, or fetched client-side
-when marked `lazy`. Same code, same URL, two delivery modes.
+TODO: replace this with the real README as part of the docs work.
 
-Server-first: JSX compiles to HTML strings. No VDOM, no hydration, no client
-framework. Deno-native.
+Server-first web framework for Deno. JSX compiles to HTML strings. No VDOM, no
+hydration, no client framework. Friends-and-family beta; the package is not
+published yet.
 
-Friends-and-family beta. The package is not published yet.
+## Implemented
 
-## Examples
+- JSX → HTML strings
+- File-based routing, layouts, and middleware
+- `<RouteFragment>` for composing another route into the current page (inline
+  during SSR, or client-fetched when `lazy`)
+- Example apps under `examples/`
 
-```sh
-cd examples/hello-world
-deno task dev
-```
+## Not yet
 
-`examples/fragments` shows inline and lazy `<RouteFragment>`.
+- JSR publish
+- Static asset serving
+- Production-ready SSR (escaping, concurrency, and inline fragments still have
+  known defects)
 
 ## Development
 
