@@ -18,7 +18,7 @@ published yet.
 
 - JSR publish
 - Static asset serving
-- Production-ready SSR (concurrency still has a known defect)
+- Production-ready SSR
 
 ## Development
 
