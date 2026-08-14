@@ -29,13 +29,12 @@ assert on the HTML — rather than the internals of routing or SSR. Prefer the
 outer layer that actually runs: compiled JSX over a parallel `jsx()` call for
 the same markup. Once COO-38 lands, that is the HTTP end-to-end suite: add a
 case there instead of a new harness. Until then, if the right coverage is an
-HTTP test, leave a `TODO(COO-38)` on the behaviour and do not stand up a
-one-off server test.
+HTTP test, leave a `TODO(COO-38)` on the behaviour and do not stand up a one-off
+server test.
 
 **Unit tests** only for small, pure functions that are the behaviour: the JSX
-runtime exports, escaping, anything that is a calculation. COO-6 owns
-exhaustive jsx-runtime coverage; other modules do not get a parallel suite of
-that density.
+runtime exports, escaping, anything that is a calculation. COO-6 owns exhaustive
+jsx-runtime coverage; other modules do not get a parallel suite of that density.
 
 Do not add an integration or end-to-end harness outside COO-38.
 

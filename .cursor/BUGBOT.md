@@ -38,8 +38,8 @@ interpolated HTML, and its request path runs concurrently under `Deno.serve`.
 - **A missing unit test of routing, SSR, or other glue** when the change is
   already visible in rendered HTML, or when the right coverage is an HTTP case
   that belongs to COO-38. Do not ask for a one-off end-to-end harness.
-- **Several asserts on one input.** That is covering a flow. Do not ask to
-  split them.
+- **Several asserts on one input.** That is covering a flow. Do not ask to split
+  them.
 - **The known defects listed below.** They are tracked, and restating them is
   noise.
 
