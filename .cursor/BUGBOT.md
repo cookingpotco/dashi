@@ -51,7 +51,6 @@ introduces a new instance of the same class elsewhere.
 
 | Location                  | Defect                                                                                                    | Issue     |
 | ------------------------- | --------------------------------------------------------------------------------------------------------- | --------- |
-| `routing/mod.ts`          | Middleware chain runs via `forEach` over an async callback, so it is never awaited                        | COO-9     |
 | `routing/mod.ts`          | 404 is a bare `Response`; a throw during render is unhandled                                              | COO-16    |
 | `routing/mod.ts`          | Hardcoded `favicon.ico` check standing in for static asset serving                                        | COO-17    |
 | `fs/mod.ts`               | `getModuleInstance` takes `Object.keys(mod)[0]` and calls `new` on it, so routing depends on export order | COO-13    |

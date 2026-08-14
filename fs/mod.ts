@@ -1,3 +1,4 @@
+import { error, info } from "../logging/mod.ts";
 import {
   Layout,
   Middleware,
@@ -54,7 +55,7 @@ async function getDirModule<T>(
   const instance = getModuleInstance<T>(candidateModule);
 
   if (!instance) {
-    console.error("Configured improper module", candidate.name);
+    error("Configured improper module", candidate.name);
     return null;
   }
 
@@ -128,19 +129,19 @@ export async function parseRoutesDir(
     higherLayouts?: Layout[];
   },
 ): Promise<RoutingPath[]> {
-  console.log(`Parsing ${relativePath}`);
+  info(`Parsing ${relativePath}`);
   const dirEntries = Array.from(Deno.readDirSync(new URL(dir)));
   const middleware = await getMiddleware(dir, dirEntries);
   const layout = await getLayout(dir, dirEntries);
 
   if (middleware) {
-    console.log(
+    info(
       `[MIDDLEWARE] ${middleware.instance.constructor.name} registered ${relativePath}`,
     );
   }
 
   if (layout) {
-    console.log(
+    info(
       `[LAYOUT]     ${layout.instance.constructor.name} registered on ${relativePath}`,
     );
   }
@@ -183,7 +184,7 @@ export async function parseRoutesDir(
       const pathname = `${relativePath}${
         entry.name.replace(/\.[^\.]+$/, "").replace("index", "")
       }`;
-      console.log(
+      info(
         `[ROUTE]      ${route.constructor.name} mounted on ${pathname}`,
       );
       paths.push({
