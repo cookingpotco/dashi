@@ -33,8 +33,8 @@ HTTP test, leave a `TODO(COO-38)` on the behaviour and do not stand up a one-off
 server test.
 
 **Unit tests** only for small, pure functions that are the behaviour: the JSX
-runtime exports, escaping, anything that is a calculation. COO-6 owns exhaustive
-jsx-runtime coverage; other modules do not get a parallel suite of that density.
+runtime exports, escaping, anything that is a calculation. Other modules do not
+get a parallel suite of that density.
 
 Do not add an integration or end-to-end harness outside COO-38.
 
