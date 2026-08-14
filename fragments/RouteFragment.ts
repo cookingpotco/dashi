@@ -11,12 +11,7 @@ declare global {
 
 type InternalSrc = `/${string}`;
 
-interface RouteFragmentAttributes extends HTMLAttributes {
-  src: InternalSrc;
-  lazy?: boolean;
-}
-
-interface BaseRouteFragmentProps extends RouteFragmentAttributes {
+interface BaseRouteFragmentProps extends HTMLAttributes {
   /**
    * Fragment is fetched from this location, either eagerly during SSR or after
    * load when `lazy` is set.
