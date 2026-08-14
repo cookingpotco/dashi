@@ -46,7 +46,6 @@ function internalHandle(
       const text = isFragment ? html : `<!DOCTYPE html>${html}`;
       const res = new Response(text);
       res.headers.set("Content-Type", "text/html");
-      // TODO(COO-38): a default-configured server emits no framework log per request
 
       for (const m of matched.middlewares.toReversed()) {
         await m.postRender?.(res);

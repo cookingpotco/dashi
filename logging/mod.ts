@@ -13,17 +13,25 @@ function enabled(level: Level): boolean {
 }
 
 export function debug(...data: unknown[]): void {
-  if (enabled("debug")) console.debug(...data);
+  if (enabled("debug")) {
+    console.debug(...data);
+  }
 }
 
 export function info(...data: unknown[]): void {
-  if (enabled("info")) console.info(...data);
+  if (enabled("info")) {
+    console.info(...data);
+  }
 }
 
 export function warn(...data: unknown[]): void {
-  if (enabled("warn")) console.warn(...data);
+  if (enabled("warn")) {
+    console.warn(...data);
+  }
 }
 
 export function error(...data: unknown[]): void {
-  if (enabled("error")) console.error(...data);
+  if (enabled("error")) {
+    console.error(...data);
+  }
 }
