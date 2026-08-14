@@ -9,9 +9,9 @@ declare global {
   }
 }
 
-export type InternalSrc = `/${string}`;
+type InternalSrc = `/${string}`;
 
-export interface RouteFragmentAttributes extends HTMLAttributes {
+interface RouteFragmentAttributes extends HTMLAttributes {
   src: InternalSrc;
   lazy?: boolean;
 }

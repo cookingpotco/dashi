@@ -1,5 +1,1 @@
-export {
-  type InternalSrc,
-  RouteFragment,
-  type RouteFragmentAttributes,
-} from "./RouteFragment.ts";
+export { RouteFragment } from "./RouteFragment.ts";
