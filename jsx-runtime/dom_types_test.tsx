@@ -16,6 +16,9 @@ function typechecks() {
   <div style={{ color: "red" }} />;
   // @ts-expect-error hydration warnings are not a dashi concept
   <div suppressHydrationWarning />;
+
+  // @ts-expect-error route-fragment is not a JSX intrinsic; use RouteFragment
+  <route-fragment src="/x" />;
 }
 
 Deno.test("DOM attribute types typecheck", () => {

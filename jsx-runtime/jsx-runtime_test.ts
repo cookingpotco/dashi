@@ -1,11 +1,5 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import {
-  getInlineFragmentSlot,
-  jsx,
-  jsxAttr,
-  jsxEscape,
-  jsxTemplate,
-} from "./mod.ts";
+import { jsx, jsxAttr, jsxEscape, jsxTemplate } from "./mod.ts";
 import { trustedHtmlBrand } from "./jsx_types.ts";
 
 Deno.test("jsxTemplate joins statics with slots without re-escaping", () => {
@@ -218,15 +212,4 @@ Deno.test("jsx renders tags, child arrays, and function components", () => {
 Deno.test("jsx throws when dangerouslySetInnerHTML is not { __html }", () => {
   assertThrows(() => jsx("div", { dangerouslySetInnerHTML: "oops" }));
   assertThrows(() => jsx("div", { dangerouslySetInnerHTML: {} }));
-});
-
-Deno.test("jsx emits a lazy route-fragment host tag without routing", () => {
-  assertEquals(
-    String(jsx("route-fragment", { src: "/x", lazy: true })),
-    `<route-fragment src="/x" lazy></route-fragment>`,
-  );
-});
-
-Deno.test("getInlineFragmentSlot wraps the src in a slot marker", () => {
-  assertEquals(getInlineFragmentSlot("/x"), "{{fragment:/x}}");
 });

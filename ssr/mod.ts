@@ -1,6 +1,5 @@
-import { getInlineFragmentSlot } from "dashi/jsx-runtime";
 import { type Element } from "../jsx-runtime/jsx_types.ts";
-import { Layout, Route } from "../shared/shared_types.ts";
+import { Layout, REQUEST_HEADERS, Route } from "../shared/mod.ts";
 
 // TODO: Replace with async local storage
 // This doesn't work for concurrent requests
@@ -29,6 +28,10 @@ export class RenderStorage {
     return this._req;
   }
 
+  get size() {
+    return this.inflightFragments.size;
+  }
+
   init(req: Request) {
     this.inflightFragments.clear();
     this._req = req;
@@ -54,7 +57,6 @@ export class RenderStorage {
 interface RenderRouteOptions {
   req: Request;
   layouts: Layout[];
-  inlineFragment?: boolean;
 }
 
 export async function renderRoute(
@@ -63,11 +65,8 @@ export async function renderRoute(
 ): Promise<Element> {
   const [layout, ...rest] = options.layouts;
 
-  if (!layout || options.inlineFragment) {
-    const res = await route.render(options.req);
-    replaceInlineFragmentSlots(String(res));
-
-    return res;
+  if (!layout || options.req.headers.has(REQUEST_HEADERS.FRAGMENT)) {
+    return await route.render(options.req);
   }
 
   return layout.render(
@@ -76,15 +75,25 @@ export async function renderRoute(
   );
 }
 
-export async function replaceInlineFragmentSlots(initialOutput: string) {
-  const fragments = await Promise.all(
-    RenderStorage.getInstance().unresolvedFragments,
-  );
+export function getFragmentSlot(src: string) {
+  return `{{fragment:${src}}}`;
+}
 
-  for (const fragment of fragments) {
-    initialOutput.replaceAll(
-      getInlineFragmentSlot(fragment.src),
-      fragment.content || "",
-    );
+export async function replaceFragmentSlots(html: string): Promise<string> {
+  const store = RenderStorage.getInstance();
+  let seen = 0;
+
+  while (store.size > seen) {
+    seen = store.size;
+    const fragments = await Promise.all(store.unresolvedFragments);
+
+    for (const fragment of fragments) {
+      html = html.replaceAll(
+        getFragmentSlot(fragment.src),
+        fragment.content || "",
+      );
+    }
   }
+
+  return html;
 }

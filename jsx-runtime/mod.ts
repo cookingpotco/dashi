@@ -1,11 +1,8 @@
-import { requestInlineFragment } from "../routing/mod.ts";
 import { type Element, trustedHtmlBrand } from "./jsx_types.ts";
 
 export type * as JSX from "./jsx_types.ts";
 export * from "./dom_types.ts";
 export { type DashiNode, type Element } from "./jsx_types.ts";
-
-const FRAGMENT_TAG = "route-fragment";
 
 // Closed list matching Deno's jsx precompile void elements.
 const VOID_ELEMENTS = new Set([
@@ -238,14 +235,6 @@ export function jsx(
   const open = attrs === "" ? `<${type}>` : `<${type} ${attrs}>`;
   const close = VOID_ELEMENTS.has(type) ? "" : `</${type}>`;
 
-  if (type === FRAGMENT_TAG && !rest.lazy && typeof rest.src === "string") {
-    requestInlineFragment(rest.src);
-
-    return asTrustedHtml(
-      `${open}${getInlineFragmentSlot(rest.src)}${close}`,
-    );
-  }
-
   if (dangerouslySetInnerHTML != null) {
     if (children != null) {
       throw new JsxRuntimeError(
@@ -258,8 +247,4 @@ export function jsx(
   }
 
   return asTrustedHtml(`${open}${jsxEscape(children)}${close}`);
-}
-
-export function getInlineFragmentSlot(src: string) {
-  return `{{fragment:${src}}}`;
 }

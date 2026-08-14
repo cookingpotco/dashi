@@ -190,6 +190,4 @@ export interface IntrinsicElements {
   tspan: dom.SVGAttributes;
   use: dom.SVGAttributes;
   view: dom.SVGAttributes;
-
-  "route-fragment": dom.RouteFragmentAttributes;
 }

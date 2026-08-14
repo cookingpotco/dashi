@@ -1,11 +1,15 @@
 import { REQUEST_HEADERS } from "../shared/mod.ts";
 import { RoutingPath } from "../shared/shared_types.ts";
-import { renderRoute, RenderStorage } from "../ssr/mod.ts";
+import {
+  renderRoute,
+  RenderStorage,
+  replaceFragmentSlots,
+} from "../ssr/mod.ts";
 
 let paths: RoutingPath[];
 
 interface InternalHandleOptions {
-  inlineFragment?: boolean;
+  nested?: boolean;
 }
 
 async function internalHandle(
@@ -14,28 +18,28 @@ async function internalHandle(
 ): Promise<{ html: string; res: Response } | null> {
   // TODO: Error handling
   const matched = paths.find((path) => !!path.pattern.exec(req.url));
-  const isFragment = req.headers.has(REQUEST_HEADERS.FRAGMENT) ||
-    options.inlineFragment;
+  const isFragment = req.headers.has(REQUEST_HEADERS.FRAGMENT);
 
-  // TODO: Use custom storage for this
-  // req.inlineFragment = inlineFragment;
-
-  if (!options.inlineFragment) {
+  if (!options.nested) {
     RenderStorage.getInstance().init(req);
   }
 
   if (matched) {
     matched.middlewares.forEach(async (m) => await m.preRender?.(req));
-    const html = String(
+    let html = String(
       await renderRoute(
         matched.route,
         {
           req: req,
           layouts: matched.layouts,
-          inlineFragment: options.inlineFragment,
         },
       ),
     );
+
+    if (!options.nested) {
+      // TODO(COO-38): eager fragment substitution over real HTTP
+      html = await replaceFragmentSlots(html);
+    }
 
     // TODO: Better way to handle content type and DOCTYPE
     const text = isFragment ? html : `<!DOCTYPE html>${html}`;
@@ -74,7 +78,7 @@ export async function handle(
   return result.res;
 }
 
-export function requestInlineFragment(src: string) {
+export function requestEagerFragment(src: string) {
   const ctx = RenderStorage.getInstance();
 
   if (!ctx.req) {
@@ -85,11 +89,20 @@ export function requestInlineFragment(src: string) {
     return;
   }
 
-  console.log(ctx.req);
-  const updatedReq = new Request(src, ctx.req);
-  console.log(updatedReq);
+  const url = new URL(src, ctx.req.url);
+  const headers = new Headers();
+  const cookie = ctx.req.headers.get("cookie");
+  const authorization = ctx.req.headers.get("authorization");
+  if (cookie !== null) {
+    headers.set("cookie", cookie);
+  }
+  if (authorization !== null) {
+    headers.set("authorization", authorization);
+  }
+  headers.set(REQUEST_HEADERS.FRAGMENT, "1");
 
-  const promise = internalHandle(updatedReq, { inlineFragment: true }).then((
+  const nestedReq = new Request(url, { method: "GET", headers });
+  const promise = internalHandle(nestedReq, { nested: true }).then((
     res,
   ) => res ? res.html : res);
 
