@@ -99,3 +99,31 @@ Deno.test("emits a string style attribute", () => {
     `<div style="color:red"></div>`,
   );
 });
+
+Deno.test("omits the closing tag on a void element", () => {
+  assertEquals(String(<br />), "<br>");
+});
+
+Deno.test("renders a no-props intrinsic with open and close tags", () => {
+  assertEquals(String(<div />), "<div></div>");
+});
+
+Deno.test("joins adjacent dynamic children", () => {
+  const a = "x";
+  const b = "y";
+  assertEquals(
+    // deno-fmt-ignore
+    String(<div>{a}{b}</div>),
+    "<div>xy</div>",
+  );
+});
+
+Deno.test("renders an array of mixed children", () => {
+  assertEquals(
+    // deno-fmt-ignore
+    String(<div>{["hi", <b>ok</b>, 0]}</div>),
+    "<div>hi<b>ok</b>0</div>",
+  );
+});
+
+// TODO(COO-38): eager <route-fragment src> registers a slot and SSR substitutes it
