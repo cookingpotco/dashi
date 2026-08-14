@@ -150,6 +150,12 @@ Deno.test("jsxEscape throws when given an object", () => {
   assertThrows(() => jsxEscape({ test: "a" }));
 });
 
+Deno.test("jsx omits the closing tag on a void element", () => {
+  assertEquals(String(jsx("br")), "<br>");
+  assertEquals(String(jsx("img", { src: "x" })), `<img src="x">`);
+  assertEquals(String(jsx("div")), "<div></div>");
+});
+
 Deno.test("jsx renders a custom element through the host-tag path", () => {
   assertEquals(
     String(jsx("x-panel", { title: "n", children: "ok" })),
