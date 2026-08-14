@@ -53,7 +53,9 @@ export class CursorClient {
   #apiKey: string;
 
   constructor(apiKey: string) {
-    if (!apiKey) throw new Error("A Cursor API key is required.");
+    if (!apiKey) {
+      throw new Error("A Cursor API key is required.");
+    }
     this.#apiKey = apiKey;
   }
 
@@ -66,7 +68,9 @@ export class CursorClient {
       // The key is the Basic username with an empty password.
       Authorization: `Basic ${btoa(`${this.#apiKey}:`)}`,
     };
-    if (body !== undefined) headers["Content-Type"] = "application/json";
+    if (body !== undefined) {
+      headers["Content-Type"] = "application/json";
+    }
 
     const response = await fetch(`${API_BASE}${path}`, {
       method,
@@ -160,7 +164,9 @@ export class CursorClient {
     const deadline = Date.now() + timeoutMs;
     while (true) {
       const agent = await this.getAgent(agentId);
-      if (!agent.latestRunId) return;
+      if (!agent.latestRunId) {
+        return;
+      }
       const run = await this.getRun(agentId, agent.latestRunId);
       if ((TERMINAL_RUN_STATUSES as readonly string[]).includes(run.status)) {
         return;

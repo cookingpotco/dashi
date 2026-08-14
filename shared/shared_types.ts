@@ -13,6 +13,14 @@ export interface Layout {
   ): Promise<Element> | Element;
 }
 
+/**
+ * Hooks around a matched route. They return nothing and cannot replace the
+ * response or skip later hooks.
+ *
+ * `postRender` may mutate headers on the existing `Response`. `status` and
+ * `body` are not replaceable through this API. Do not read the body (it is the
+ * stream `Deno.serve` will send).
+ */
 export interface Middleware {
   preRender?: (
     req: Request,

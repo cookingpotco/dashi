@@ -16,6 +16,10 @@
     "frozen": true
   },
   "minimumDependencyAge": "P1D",
+  "fmt": {
+    "useBraces": "always",
+    "singleBodyPosition": "nextLine"
+  },
   "lint": {
     "rules": {
       "exclude": [
