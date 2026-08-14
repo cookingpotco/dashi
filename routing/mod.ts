@@ -13,7 +13,7 @@ interface InternalHandleOptions {
   nested?: boolean;
 }
 
-async function internalHandle(
+function internalHandle(
   req: Request,
   options: InternalHandleOptions = {},
 ): Promise<{ html: string; res: Response } | null> {
