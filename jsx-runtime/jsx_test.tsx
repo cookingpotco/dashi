@@ -132,5 +132,3 @@ Deno.test("renders an array of mixed children", () => {
     "<div>hi<b>ok</b>0</div>",
   );
 });
-
-// TODO(COO-38): eager <route-fragment src> registers a slot and SSR substitutes it

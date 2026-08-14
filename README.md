@@ -10,7 +10,7 @@ published yet.
 
 - JSX → HTML strings with escaped XSS values
 - File-based routing, layouts, and middleware
-- `<RouteFragment>` for composing another route into the current page (inline
+- `<RouteFragment>` for composing another route into the current page (eager
   during SSR, or client-fetched when `lazy`)
 - Example apps under `examples/`
 
@@ -18,8 +18,7 @@ published yet.
 
 - JSR publish
 - Static asset serving
-- Production-ready SSR (concurrency and inline fragments still have known
-  defects)
+- Production-ready SSR (concurrency still has a known defect)
 
 ## Development
 

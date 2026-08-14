@@ -274,13 +274,6 @@ export interface HTMLAttributes extends BaseAttributes {
   exportparts?: string;
 }
 
-export type InternalSrc = `/${string}`;
-
-export interface RouteFragmentAttributes extends HTMLAttributes {
-  src: InternalSrc;
-  lazy?: boolean;
-}
-
 export type HTMLAttributeReferrerPolicy =
   | ""
   | "no-referrer"
