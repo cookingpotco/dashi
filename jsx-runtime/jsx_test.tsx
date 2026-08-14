@@ -104,6 +104,13 @@ Deno.test("omits the closing tag on a void element", () => {
   assertEquals(String(<br />), "<br>");
 });
 
+Deno.test("omits the closing tag when spreading onto a void element", () => {
+  const brProps = {};
+  const imgProps = { src: "x" };
+  assertEquals(String(<br {...brProps} />), "<br>");
+  assertEquals(String(<img {...imgProps} />), `<img src="x">`);
+});
+
 Deno.test("renders a no-props intrinsic with open and close tags", () => {
   assertEquals(String(<div />), "<div></div>");
 });

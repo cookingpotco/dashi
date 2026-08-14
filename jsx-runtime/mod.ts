@@ -7,6 +7,24 @@ export { type DashiNode, type Element } from "./jsx_types.ts";
 
 const FRAGMENT_TAG = "route-fragment";
 
+// Closed list matching Deno's jsx precompile void elements.
+const VOID_ELEMENTS = new Set([
+  "area",
+  "base",
+  "br",
+  "col",
+  "embed",
+  "hr",
+  "img",
+  "input",
+  "link",
+  "meta",
+  "param",
+  "source",
+  "track",
+  "wbr",
+]);
+
 const ESCAPE_RE = /[&<>"']/g;
 const ESCAPE_MAP: Record<string, string> = {
   "&": "&amp;",
@@ -218,12 +236,13 @@ export function jsx(
   const attrs = Object.entries(rest).map(([key, val]) => jsxAttr(key, val))
     .join(" ");
   const open = attrs === "" ? `<${type}>` : `<${type} ${attrs}>`;
+  const close = VOID_ELEMENTS.has(type) ? "" : `</${type}>`;
 
   if (type === FRAGMENT_TAG && !rest.lazy && typeof rest.src === "string") {
     requestInlineFragment(rest.src);
 
     return asTrustedHtml(
-      `${open}${getInlineFragmentSlot(rest.src)}</${type}>`,
+      `${open}${getInlineFragmentSlot(rest.src)}${close}`,
     );
   }
 
@@ -234,11 +253,11 @@ export function jsx(
       );
     }
     return asTrustedHtml(
-      `${open}${innerHtmlFromProp(dangerouslySetInnerHTML)}</${type}>`,
+      `${open}${innerHtmlFromProp(dangerouslySetInnerHTML)}${close}`,
     );
   }
 
-  return asTrustedHtml(`${open}${jsxEscape(children)}</${type}>`);
+  return asTrustedHtml(`${open}${jsxEscape(children)}${close}`);
 }
 
 export function getInlineFragmentSlot(src: string) {
