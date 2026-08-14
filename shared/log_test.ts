@@ -1,12 +1,5 @@
 import { assertEquals } from "@std/assert";
-import {
-  debug,
-  error,
-  info,
-  type LogLevel,
-  setLogLevel,
-  warn,
-} from "./log.ts";
+import { debug, error, info, type LogLevel, setLogLevel, warn } from "./log.ts";
 
 Deno.test("logger writes at or above the configured level", () => {
   const captured: Record<LogLevel, string[]> = {
