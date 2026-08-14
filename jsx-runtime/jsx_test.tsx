@@ -100,9 +100,15 @@ Deno.test("emits a string style attribute", () => {
   );
 });
 
-Deno.test("compiled JSX emits void tags, empty tags, and adjacent children", () => {
+Deno.test("omits the closing tag on a void element", () => {
   assertEquals(String(<br />), "<br>");
+});
+
+Deno.test("renders a no-props intrinsic with open and close tags", () => {
   assertEquals(String(<div />), "<div></div>");
+});
+
+Deno.test("joins adjacent dynamic children", () => {
   const a = "x";
   const b = "y";
   assertEquals(
@@ -110,6 +116,9 @@ Deno.test("compiled JSX emits void tags, empty tags, and adjacent children", () 
     String(<div>{a}{b}</div>),
     "<div>xy</div>",
   );
+});
+
+Deno.test("renders an array of mixed children", () => {
   assertEquals(
     // deno-fmt-ignore
     String(<div>{["hi", <b>ok</b>, 0]}</div>),
