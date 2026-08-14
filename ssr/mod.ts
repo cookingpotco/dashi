@@ -1,57 +1,27 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { type Element } from "../jsx-runtime/jsx_types.ts";
 import { Layout, REQUEST_HEADERS, Route } from "../shared/mod.ts";
 
-// TODO: Replace with async local storage
-// This doesn't work for concurrent requests
-export class RenderStorage {
-  private static instance: RenderStorage;
+interface RenderStore {
+  req: Request;
+  inflightFragments: Map<string, Promise<string | null>>;
+}
 
-  private readonly inflightFragments: Map<string, Promise<string | null>>;
-  private _req: Request | null;
+const als = new AsyncLocalStorage<RenderStore>();
 
-  private constructor() {
-    this.inflightFragments = new Map();
-    this._req = null;
+export function runWithRenderStore<T>(req: Request, fn: () => T): T {
+  return als.run({
+    req,
+    inflightFragments: new Map(),
+  }, fn);
+}
+
+export function getRenderStore(): RenderStore {
+  const store = als.getStore();
+  if (!store) {
+    throw new Error("getRenderStore() was called outside a handle() render");
   }
-
-  static getInstance() {
-    if (RenderStorage.instance) {
-      return RenderStorage.instance;
-    }
-
-    RenderStorage.instance = new RenderStorage();
-
-    return RenderStorage.instance;
-  }
-
-  get req() {
-    return this._req;
-  }
-
-  get size() {
-    return this.inflightFragments.size;
-  }
-
-  init(req: Request) {
-    this.inflightFragments.clear();
-    this._req = req;
-  }
-
-  addFragment(src: string, promise: Promise<string | null>) {
-    if (!this.inflightFragments.has(src)) {
-      this.inflightFragments.set(src, promise);
-    }
-  }
-
-  hasFragment(src: string) {
-    return this.inflightFragments.has(src);
-  }
-
-  get unresolvedFragments() {
-    return this.inflightFragments.entries().map(async (
-      [src, promise],
-    ) => ({ src, content: await promise }));
-  }
+  return store;
 }
 
 interface RenderRouteOptions {
@@ -80,12 +50,17 @@ export function getFragmentSlot(src: string) {
 }
 
 export async function replaceFragmentSlots(html: string): Promise<string> {
-  const store = RenderStorage.getInstance();
+  const store = getRenderStore();
   let seen = 0;
 
-  while (store.size > seen) {
-    seen = store.size;
-    const fragments = await Promise.all(store.unresolvedFragments);
+  while (store.inflightFragments.size > seen) {
+    seen = store.inflightFragments.size;
+    const fragments = await Promise.all(
+      store.inflightFragments.entries().map(async ([src, promise]) => ({
+        src,
+        content: await promise,
+      })),
+    );
 
     for (const fragment of fragments) {
       html = html.replaceAll(

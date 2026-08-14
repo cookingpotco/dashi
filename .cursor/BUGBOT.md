@@ -49,15 +49,14 @@ These are real problems with owning issues. Do not report them as new findings.
 **Do** flag a change that touches one of them without fixing it, or that
 introduces a new instance of the same class elsewhere.
 
-| Location                  | Defect                                                                                                       | Issue     |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------ | --------- |
-| `ssr/mod.ts`              | `RenderStorage` is a process-wide singleton re-inited per request, so concurrent requests corrupt each other | COO-7     |
-| `routing/mod.ts`          | Middleware chain runs via `forEach` over an async callback, so it is never awaited                           | COO-9     |
-| `routing/mod.ts`          | 404 is a bare `Response`; a throw during render is unhandled                                                 | COO-16    |
-| `routing/mod.ts`          | Hardcoded `favicon.ico` check standing in for static asset serving                                           | COO-17    |
-| `fs/mod.ts`               | `getModuleInstance` takes `Object.keys(mod)[0]` and calls `new` on it, so routing depends on export order    | COO-13    |
-| `client/routeFragment.ts` | Never bundled or served, so it is currently dead code                                                        | COO-18    |
-| `deno.json` (all three)   | The `dev` task has no permission flags and relies on interactive prompts                                     | untracked |
+| Location                  | Defect                                                                                                    | Issue     |
+| ------------------------- | --------------------------------------------------------------------------------------------------------- | --------- |
+| `routing/mod.ts`          | Middleware chain runs via `forEach` over an async callback, so it is never awaited                        | COO-9     |
+| `routing/mod.ts`          | 404 is a bare `Response`; a throw during render is unhandled                                              | COO-16    |
+| `routing/mod.ts`          | Hardcoded `favicon.ico` check standing in for static asset serving                                        | COO-17    |
+| `fs/mod.ts`               | `getModuleInstance` takes `Object.keys(mod)[0]` and calls `new` on it, so routing depends on export order | COO-13    |
+| `client/routeFragment.ts` | Never bundled or served, so it is currently dead code                                                     | COO-18    |
+| `deno.json` (all three)   | The `dev` task has no permission flags and relies on interactive prompts                                  | untracked |
 
 ## Conventions
 
