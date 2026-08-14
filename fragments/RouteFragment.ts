@@ -1,16 +1,19 @@
-import {
-  DashiNode,
-  InternalSrc,
-  jsx,
-  RouteFragmentAttributes,
-} from "dashi/jsx-runtime";
+import { DashiNode, HTMLAttributes, jsx } from "dashi/jsx-runtime";
 import { requestEagerFragment } from "../routing/mod.ts";
 import { getFragmentSlot } from "../ssr/mod.ts";
 
+// So document.querySelector("route-fragment") is HTMLElement.
 declare global {
   interface HTMLElementTagNameMap {
     "route-fragment": HTMLElement;
   }
+}
+
+export type InternalSrc = `/${string}`;
+
+export interface RouteFragmentAttributes extends HTMLAttributes {
+  src: InternalSrc;
+  lazy?: boolean;
 }
 
 interface BaseRouteFragmentProps extends RouteFragmentAttributes {

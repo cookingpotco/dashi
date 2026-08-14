@@ -1,1 +1,5 @@
-export { RouteFragment } from "./RouteFragment.ts";
+export {
+  type InternalSrc,
+  RouteFragment,
+  type RouteFragmentAttributes,
+} from "./RouteFragment.ts";

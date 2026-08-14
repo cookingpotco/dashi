@@ -66,7 +66,7 @@ export async function renderRoute(
   const [layout, ...rest] = options.layouts;
 
   if (!layout || options.req.headers.has(REQUEST_HEADERS.FRAGMENT)) {
-    return await route.render(options.req);
+    return route.render(options.req);
   }
 
   return layout.render(
