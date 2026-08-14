@@ -13,6 +13,11 @@ export interface Layout {
   ): Promise<Element> | Element;
 }
 
+/**
+ * Runs around a matched route. `preRender` and `postRender` are awaited in
+ * registration order. Neither hook can skip the route; `postRender` may mutate
+ * response headers before the response is returned.
+ */
 export interface Middleware {
   preRender?: (
     req: Request,
