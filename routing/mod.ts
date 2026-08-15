@@ -23,7 +23,10 @@ function internalHandle(
     const isFragment = req.headers.has(REQUEST_HEADERS.FRAGMENT);
 
     if (matched) {
-      matched.middlewares.forEach(async (m) => await m.preRender?.(req));
+      // TODO(COO-38): async middleware completes before the response is sent
+      for (const m of matched.middlewares) {
+        await m.preRender?.(req);
+      }
       let html = String(
         await renderRoute(
           matched.route,
@@ -43,11 +46,10 @@ function internalHandle(
       const text = isFragment ? html : `<!DOCTYPE html>${html}`;
       const res = new Response(text);
       res.headers.set("Content-Type", "text/html");
-      // TODO: Remove log
-      // add not found handling
-      console.log(`Served: ${text}`);
 
-      matched.middlewares.forEach(async (m) => await m.postRender?.(res));
+      for (const m of matched.middlewares.toReversed()) {
+        await m.postRender?.(res);
+      }
 
       return { html: html, res };
     }

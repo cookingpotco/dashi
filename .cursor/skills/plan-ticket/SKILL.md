@@ -52,11 +52,11 @@ stop: tell the human rather than silently substituting another issue.
 
 - **Do not start an implementor on spikes.** Design issues produce a written
   decision and stay with the human.
-- **Name the test layer.** Unit tests for pure functions (JSX runtime exports,
-  calculations). Black-box tests for behaviour, at the outer layer that runs:
-  compiled JSX over a twin `jsx()` call, HTTP once COO-38 lands. One test per
-  flow; cover as much of that flow as will hold. Unrelated flows stay separate.
-  HTTP coverage waits on COO-38 — plan a `TODO(COO-38)`, not a new harness.
+- **Name the test layer.** Follow the Tests section in `AGENTS.md`. Unit tests
+  for pure functions. Behaviour at the path that actually runs — compiled JSX
+  today, HTTP once COO-38 lands. No stubs, mocks, or a narrower harness to stand
+  in for a flow that only happens further out. If the right coverage is HTTP,
+  plan a `TODO(COO-38)`, not a substitute.
 - **Prefer the simpler design**, even when it repeats. Do not introduce a
   helper, a type, or a seam for a single call site. If a bit extra work could
   simplify this or additional areas, consider it as well.

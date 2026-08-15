@@ -40,7 +40,9 @@ export function shouldForwardReview(
   comments: ReviewComment[],
 ): boolean {
   const trimmed = body.trim();
-  if (state === "approved" && trimmed === "") return false;
+  if (state === "approved" && trimmed === "") {
+    return false;
+  }
   if (
     trimmed === "" &&
     comments.every((comment) => comment.in_reply_to_id != null)
@@ -53,7 +55,9 @@ export function shouldForwardReview(
 function parseFlags(args: string[]): Map<string, string> {
   const flags = new Map<string, string>();
   for (let i = 0; i < args.length; i++) {
-    if (!args[i].startsWith("--")) continue;
+    if (!args[i].startsWith("--")) {
+      continue;
+    }
     const name = args[i].slice(2);
     const next = args[i + 1];
     if (next === undefined || next.startsWith("--")) {
@@ -212,7 +216,9 @@ async function main(): Promise<number> {
     if (flags.has("wait")) {
       const result = await client.waitForRun(agent.id, run.id);
       console.log(`Run ${result.id} ended as ${result.status}.`);
-      if (result.result) console.log(result.result);
+      if (result.result) {
+        console.log(result.result);
+      }
       return result.status === "FINISHED" ? 0 : 2;
     }
     return 0;

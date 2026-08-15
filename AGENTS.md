@@ -16,21 +16,26 @@ review follow-up. If that skill is not already available, read
 
 ## Tests
 
-Every behaviour change is covered by a test: extend one that already exists, or
-add one.
+Every behaviour change is covered at the layer that actually runs: a test, or a
+`TODO(COO-38)` when that layer is HTTP and the suite does not exist yet.
+
+**The path that happens.** Drive real inputs through the public surface a user
+or the compiler hits. Do not stub, mock, or stand up a narrower entry point to
+approximate a flow whose natural test is further out. If that outer layer is
+HTTP, wait for COO-38; do not invent a substitute harness.
+
+**Don't test what never happens.** A situation the product never produces is not
+coverage.
 
 **One flow per test.** Cover as much of that flow as will hold. Several asserts
 on one input are right; running the same input again for each detail of the
 output is not. Unrelated flows stay in separate tests so a failure names the
 path and an early assert cannot hide another.
 
-**Black-box first.** Drive the public behaviour — render some JSX, hit a route,
-assert on the HTML — rather than the internals of routing or SSR. Prefer the
-outer layer that actually runs: compiled JSX over a parallel `jsx()` call for
-the same markup. Once COO-38 lands, that is the HTTP end-to-end suite: add a
-case there instead of a new harness. Until then, if the right coverage is an
-HTTP test, leave a `TODO(COO-38)` on the behaviour and do not stand up a one-off
-server test.
+**Black-box.** Assert on what a caller sees (HTML, an HTTP response, a thrown
+error), not on routing or SSR internals. For JSX, the outer layer that runs is
+compiled JSX (a parallel `jsx()` call for the same markup is the same layer, not
+a narrower one).
 
 **Unit tests** only for small, pure functions that are the behaviour: the JSX
 runtime exports, escaping, anything that is a calculation. Other modules do not
