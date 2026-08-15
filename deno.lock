@@ -1,10 +1,14 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@b-fuze/deno-dom@0.1": "0.1.56",
     "jsr:@std/assert@1": "1.0.19",
     "jsr:@std/internal@^1.0.12": "1.0.13"
   },
   "jsr": {
+    "@b-fuze/deno-dom@0.1.56": {
+      "integrity": "8030e2dc1d8750f1682b53462ab893d9c3470f2287feecbe22f44a88c54ab148"
+    },
     "@std/assert@1.0.19": {
       "integrity": "eaada96ee120cb980bc47e040f82814d786fe8162ecc53c91d8df60b8755991e",
       "dependencies": [
@@ -27,6 +31,12 @@
       },
       "examples/hello-world": {
         "dependencies": [
+          "jsr:@std/assert@1"
+        ]
+      },
+      "int-tests": {
+        "dependencies": [
+          "jsr:@b-fuze/deno-dom@0.1",
           "jsr:@std/assert@1"
         ]
       }

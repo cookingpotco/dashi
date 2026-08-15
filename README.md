@@ -29,10 +29,12 @@ repo root:
 deno fmt --check .
 deno lint
 deno check
-deno test -A
+deno task test
+deno task test:int
 ```
 
-CI runs the same commands on every pull request and every push to `main`.
+CI runs the same commands on every pull request and every push to `main`. Unit
+tests stay on the Test check; HTTP cases are the Integration check.
 
 ## License
 

@@ -16,13 +16,15 @@ review follow-up. If that skill is not already available, read
 
 ## Tests
 
-Every behaviour change is covered at the layer that actually runs: a test, or a
-`TODO(COO-38)` when that layer is HTTP and the suite does not exist yet.
+Every behaviour change is covered at the layer that actually runs: a unit test
+for a pure function, compiled JSX for markup, or an `int-tests/` case for HTTP.
 
 **The path that happens.** Drive real inputs through the public surface a user
 or the compiler hits. Do not stub, mock, or stand up a narrower entry point to
 approximate a flow whose natural test is further out. If that outer layer is
-HTTP, wait for COO-38; do not invent a substitute harness.
+HTTP, add a case in `int-tests/` — declarative when it is one request, or a
+`t.step` on the same harness helpers when it is not. Do not invent a second
+harness.
 
 **Don't test what never happens.** A situation the product never produces is not
 coverage.
@@ -41,7 +43,7 @@ a narrower one).
 runtime exports, escaping, anything that is a calculation. Other modules do not
 get a parallel suite of that density.
 
-Do not add an integration or end-to-end harness outside COO-38.
+Do not add a second HTTP harness; extend `int-tests/`.
 
 ## Simpler
 

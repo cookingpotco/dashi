@@ -29,7 +29,9 @@ jobs:
           - name: Type check
             run: deno check
           - name: Test
-            run: deno test -A
+            run: deno task test
+          - name: Integration
+            run: deno task test:int
     steps:
       - uses: actions/checkout@v5
 

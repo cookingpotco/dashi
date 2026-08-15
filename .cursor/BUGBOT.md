@@ -18,9 +18,9 @@ interpolated HTML, and its request path runs concurrently under `Deno.serve`.
 - **Unawaited async work in the request path.** A dropped promise means the
   response is built before the work finishes.
 - **New external dependencies in framework source.** The framework currently has
-  _zero_ — the only external import in the repo is `@std/assert` in test files.
-  A new runtime dependency is a significant decision, not an implementation
-  detail.
+  _zero_ — test files import `@std/assert`, and `int-tests/` also imports
+  `@b-fuze/deno-dom`. A new runtime dependency is a significant decision, not an
+  implementation detail.
 - **Type assertions and `any` that hide real errors** rather than expressing
   something the compiler cannot see.
 - **A behaviour change with no test covering it.** Flag that. Do not demand a
@@ -37,7 +37,7 @@ interpolated HTML, and its request path runs concurrently under `Deno.serve`.
 - **Missing `key` props in JSX.** There is no VDOM. `jsx-key` is off.
 - **A missing unit test of routing, SSR, or other glue** when the change is
   already visible in rendered HTML, or when the right coverage is an HTTP case
-  that belongs to COO-38. Do not ask for a one-off end-to-end harness.
+  in `int-tests/`. Do not ask for a one-off harness; ask for a case there.
 - **Several asserts on one input.** That is covering a flow. Do not ask to split
   them.
 - **The known defects listed below.** They are tracked, and restating them is

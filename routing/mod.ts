@@ -23,7 +23,6 @@ function internalHandle(
     const isFragment = req.headers.has(REQUEST_HEADERS.FRAGMENT);
 
     if (matched) {
-      // TODO(COO-38): async middleware completes before the response is sent
       for (const m of matched.middlewares) {
         await m.preRender?.(req);
       }
@@ -38,7 +37,6 @@ function internalHandle(
       );
 
       if (!options.nested) {
-        // TODO(COO-38): eager fragment substitution over real HTTP
         html = await replaceFragmentSlots(html);
       }
 
@@ -69,12 +67,16 @@ export function init(p: RoutingPath[]) {
 }
 
 export async function handle(
-  req: Request,
+  incoming: Request,
 ) {
   // TODO: Remove hardcoded stuff
-  if (req.url.match("favicon.ico")) {
+  if (incoming.url.match("favicon.ico")) {
     return new Response();
   }
+
+  // Incoming Fetch headers are immutable; preRender stamps values the route reads.
+  // TODO(COO-13): drop the clone; mutable request data will live on ctx.state.
+  const req = new Request(incoming);
 
   const result = await internalHandle(req);
 
