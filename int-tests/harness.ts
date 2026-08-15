@@ -35,7 +35,7 @@ async function withTimeout<T>(
   }
 }
 
-/** Child process serving a fixture or example on an ephemeral port. */
+/** Child process serving an app on an ephemeral port. */
 export class App implements AsyncDisposable {
   readonly origin: string;
   #child: Deno.ChildProcess;

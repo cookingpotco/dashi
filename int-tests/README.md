@@ -32,6 +32,4 @@ Each fixture is a `main.ts` that calls `serveFileBased({ port: 0 })` and a
 `routes/` tree, the same shape as `examples/`.
 
 The runner is keyed by the fixture's `main.ts` path. `app_test.ts` boots
-`fixtures/app` once and runs its cases as `t.step`s. Example smokes in
-`examples_test.ts` boot `examples/hello-world` and `examples/fragments` the same
-way; they only check that those apps listen and serve a cheap path.
+`fixtures/app` once and runs its cases as `t.step`s.
