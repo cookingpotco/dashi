@@ -1,46 +1,29 @@
 import { error, info } from "../logging/mod.ts";
 import {
+  Handler,
   Layout,
   Middleware,
-  Route,
   RoutingPath,
 } from "../shared/shared_types.ts";
 
-interface FsModule<T> {
-  file: string;
-  instance: T;
-}
-
-type Constructor<T> = new () => T;
-
-function getModuleInstance<T>(
-  mod: unknown,
-): Partial<T> | null {
+function defaultExport<T>(mod: unknown): T | null {
   if (!mod || typeof mod !== "object") {
     return null;
   }
 
-  const className = Object.keys(mod)[0];
-
-  if (!className) {
+  const value = (mod as { default?: unknown }).default;
+  if (typeof value !== "function") {
     return null;
   }
 
-  const ModClass = (mod as Record<string, unknown>)[className];
-
-  if (typeof ModClass !== "function") {
-    return null;
-  }
-
-  // TODO: Should this be changed? Looks weird, can just use modules instead of classes, or export a function for init
-  return new (ModClass as Constructor<Partial<T>>)();
+  return value as T;
 }
 
-async function getDirModule<T>(
+async function loadReserved<T>(
   dir: string,
   entries: Deno.DirEntry[],
   reservedName: string,
-): Promise<FsModule<Partial<T>> | null> {
+): Promise<{ file: string; fn: T } | null> {
   const candidate = entries.find((entry) =>
     entry.isFile &&
     entry.name.replace(/(\.jsx|\.js|\.tsx|\.ts)/, "") === reservedName
@@ -50,72 +33,16 @@ async function getDirModule<T>(
     return null;
   }
 
-  const candidateModule = await import(`${dir}/${candidate.name}`);
-
-  const instance = getModuleInstance<T>(candidateModule);
-
-  if (!instance) {
+  const fn = defaultExport<T>(await import(`${dir}/${candidate.name}`));
+  if (!fn) {
     error("Configured improper module", candidate.name);
     return null;
   }
 
-  return { file: candidate.name, instance };
+  return { file: candidate.name, fn };
 }
 
-function isMiddleware(value: Partial<Middleware>): value is Middleware {
-  return typeof value.preRender === "function" ||
-    typeof value.postRender === "function";
-}
-
-async function getMiddleware(
-  dir: string,
-  entries: Deno.DirEntry[],
-): Promise<{ file: string; instance: Middleware } | null> {
-  const res = await getDirModule<Middleware>(
-    dir,
-    entries,
-    "_middleware",
-  );
-  if (!res) {
-    return null;
-  }
-
-  const { file, instance } = res;
-
-  if (!isMiddleware(instance)) {
-    return null;
-  }
-
-  return { file, instance };
-}
-
-function isLayout(value: Partial<Layout>): value is Layout {
-  return typeof value.render === "function";
-}
-
-async function getLayout(
-  dir: string,
-  entries: Deno.DirEntry[],
-): Promise<FsModule<Layout> | null> {
-  const res = await getDirModule<Layout>(dir, entries, "_layout");
-
-  if (!res) {
-    return null;
-  }
-
-  const { file, instance } = res;
-
-  if (!isLayout(instance)) {
-    return null;
-  }
-
-  return { file, instance };
-}
-
-function isRoute(value: Partial<Route>): value is Route {
-  return typeof value.render === "function";
-}
-
+// COO-12 deletes this walk. Filename is the path; default export is the function.
 export async function parseRoutesDir(
   {
     dir,
@@ -131,19 +58,19 @@ export async function parseRoutesDir(
 ): Promise<RoutingPath[]> {
   info(`Parsing ${relativePath}`);
   const dirEntries = Array.from(Deno.readDirSync(new URL(dir)));
-  const middleware = await getMiddleware(dir, dirEntries);
-  const layout = await getLayout(dir, dirEntries);
+  const middleware = await loadReserved<Middleware>(
+    dir,
+    dirEntries,
+    "_middleware",
+  );
+  const layout = await loadReserved<Layout>(dir, dirEntries, "_layout");
 
   if (middleware) {
-    info(
-      `[MIDDLEWARE] ${middleware.instance.constructor.name} registered ${relativePath}`,
-    );
+    info(`[MIDDLEWARE] ${middleware.file} registered ${relativePath}`);
   }
 
   if (layout) {
-    info(
-      `[LAYOUT]     ${layout.instance.constructor.name} registered on ${relativePath}`,
-    );
+    info(`[LAYOUT]     ${layout.file} registered on ${relativePath}`);
   }
 
   const paths: RoutingPath[] = [];
@@ -151,9 +78,9 @@ export async function parseRoutesDir(
 
   const middlewares = [
     ...higherMiddlewares,
-    ...(middleware ? [middleware.instance] : []),
+    ...(middleware ? [middleware.fn] : []),
   ];
-  const layouts = [...higherLayouts, ...(layout ? [layout.instance] : [])];
+  const layouts = [...higherLayouts, ...(layout ? [layout.fn] : [])];
 
   for (const entry of dirEntries) {
     if (entry.isDirectory) {
@@ -176,19 +103,18 @@ export async function parseRoutesDir(
       continue;
     }
 
-    const mod = await import(`${dir}/${entry.name}`);
-    const route = getModuleInstance<Route>(mod);
+    const handler = defaultExport<Handler>(
+      await import(`${dir}/${entry.name}`),
+    );
 
     // TODO: Replace any special characters for params, spread, etc.
-    if (route && isRoute(route)) {
+    if (handler) {
       const pathname = `${relativePath}${
         entry.name.replace(/\.[^\.]+$/, "").replace("index", "")
       }`;
-      info(
-        `[ROUTE]      ${route.constructor.name} mounted on ${pathname}`,
-      );
+      info(`[ROUTE]      mounted on ${pathname}`);
       paths.push({
-        route,
+        handler,
         layouts,
         middlewares,
         pattern: new URLPattern({ pathname }),

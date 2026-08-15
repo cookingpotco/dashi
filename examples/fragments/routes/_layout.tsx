@@ -1,12 +1,13 @@
-import { type Element, Layout } from "dashi";
+import { type Element } from "dashi";
 
-export class RootLayout implements Layout {
-  render(_req: Request, children: Element): Element {
-    return (
-      <html>
-        <h1>Website Title</h1>
-        {children}
-      </html>
-    );
-  }
+export default function RootLayout(
+  _req: Request,
+  children: Element,
+): Element {
+  return (
+    <html>
+      <h1>Website Title</h1>
+      {children}
+    </html>
+  );
 }

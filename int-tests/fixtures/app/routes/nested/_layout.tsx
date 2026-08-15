@@ -1,12 +1,13 @@
-import { type Element, Layout } from "dashi";
+import { type Element } from "dashi";
 
-export class NestedLayout implements Layout {
-  render(_req: Request, children: Element): Element {
-    return (
-      <div>
-        <h2>Nested</h2>
-        {children}
-      </div>
-    );
-  }
+export default function NestedLayout(
+  _req: Request,
+  children: Element,
+): Element {
+  return (
+    <div>
+      <h2>Nested</h2>
+      {children}
+    </div>
+  );
 }

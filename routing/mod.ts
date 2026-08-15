@@ -23,33 +23,42 @@ function internalHandle(
     const isFragment = req.headers.has(REQUEST_HEADERS.FRAGMENT);
 
     if (matched) {
-      for (const m of matched.middlewares) {
-        await m.preRender?.(req);
-      }
-      let html = String(
-        await renderRoute(
-          matched.route,
-          {
-            req: req,
+      let html = "";
+      const terminal = async () => {
+        html = String(
+          await renderRoute(matched.handler, {
+            req,
             layouts: matched.layouts,
-          },
-        ),
-      );
+          }),
+        );
+        if (!options.nested) {
+          html = await replaceFragmentSlots(html);
+        }
+        const text = isFragment ? html : `<!DOCTYPE html>${html}`;
+        const res = new Response(text);
+        res.headers.set("Content-Type", "text/html");
+        return res;
+      };
 
-      if (!options.nested) {
-        html = await replaceFragmentSlots(html);
-      }
+      let index = -1;
+      const dispatch = async (i: number): Promise<Response> => {
+        if (i <= index) {
+          throw new Error("next() called multiple times");
+        }
+        index = i;
+        const mw = matched.middlewares[i];
+        if (!mw) {
+          return terminal();
+        }
+        const out = await mw(req, () => dispatch(i + 1));
+        if (!(out instanceof Response)) {
+          throw new Error("middleware must return a Response");
+        }
+        return out;
+      };
 
-      // TODO: Better way to handle content type and DOCTYPE
-      const text = isFragment ? html : `<!DOCTYPE html>${html}`;
-      const res = new Response(text);
-      res.headers.set("Content-Type", "text/html");
-
-      for (const m of matched.middlewares.toReversed()) {
-        await m.postRender?.(res);
-      }
-
-      return { html: html, res };
+      const res = await dispatch(0);
+      return { html, res };
     }
 
     return null;
@@ -74,7 +83,7 @@ export async function handle(
     return new Response();
   }
 
-  // Incoming Fetch headers are immutable; preRender stamps values the route reads.
+  // Incoming Fetch headers are immutable; middleware stamps values the handler reads.
   // TODO(COO-13): drop the clone; mutable request data will live on ctx.state.
   const req = new Request(incoming);
 
