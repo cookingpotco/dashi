@@ -42,11 +42,11 @@ stop: tell the human rather than silently substituting another issue.
    cloud agent. Leave the status at `Ready`. The GitHub integration sets
    `In Progress` when the agent opens its draft PR.
 
-   Do not also set Linear `delegate` or assignee to Cursor. Delegating the
-   issue and mentioning `@Cursor` are two independent starts; using both
-   launches two agents, two PRs, and two bills. Linear fills in `delegate`
-   itself once the mention agent is running. If an agent-session thread
-   already exists on the issue, stop — do not post another `@Cursor`.
+   Do not also set Linear `delegate` or assignee to Cursor. Delegating the issue
+   and mentioning `@Cursor` are two independent starts; using both launches two
+   agents, two PRs, and two bills. Linear fills in `delegate` itself once the
+   mention agent is running. If an agent-session thread already exists on the
+   issue, stop — do not post another `@Cursor`.
 
 ## While planning
 
@@ -54,9 +54,11 @@ stop: tell the human rather than silently substituting another issue.
   decision and stay with the human.
 - **Name the test layer.** Follow the Tests section in `AGENTS.md`. Unit tests
   for pure functions. Behaviour at the path that actually runs — compiled JSX
-  today, HTTP once COO-38 lands. No stubs, mocks, or a narrower harness to stand
-  in for a flow that only happens further out. If the right coverage is HTTP,
-  plan a `TODO(COO-38)`, not a substitute.
+  for markup, HTTP cases in `int-tests/`. No stubs, mocks, or a narrower harness
+  to stand in for a flow that only happens further out. If the right coverage is
+  HTTP, plan an `int-tests/` case (declarative when it is one request, or a
+  `t.step` on the same harness helpers when it is not). Do not invent a
+  substitute harness.
 - **Prefer the simpler design**, even when it repeats. Do not introduce a
   helper, a type, or a seam for a single call site. If a bit extra work could
   simplify this or additional areas, consider it as well.
