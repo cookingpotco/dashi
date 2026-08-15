@@ -4,15 +4,16 @@ import {
   assertStringIncludes,
 } from "@std/assert";
 import { DOMParser } from "@b-fuze/deno-dom";
-import { App, AppRequest, formatHttpFailure } from "./harness.ts";
+import { App, AppRequest, formatIntegrationFailure } from "./harness.ts";
 
 export interface SelectExpect {
   selector: string;
   text?: string;
   attr?: Record<string, string>;
+  exists?: boolean;
 }
 
-export interface HttpCase {
+export interface IntegrationTestCase {
   name: string;
   fixture?: string | URL;
   request: AppRequest;
@@ -31,23 +32,26 @@ function parseHtml(body: string) {
   return doc;
 }
 
-export async function runCase(app: App, httpCase: HttpCase): Promise<void> {
-  const res = await app.fetch(httpCase.request);
+export async function runCase(
+  app: App,
+  testCase: IntegrationTestCase,
+): Promise<void> {
+  const res = await app.fetch(testCase.request);
   const body = await res.text();
   try {
-    assertEquals(res.status, httpCase.status);
-    if (httpCase.headers) {
-      for (const [name, value] of Object.entries(httpCase.headers)) {
+    assertEquals(res.status, testCase.status);
+    if (testCase.headers) {
+      for (const [name, value] of Object.entries(testCase.headers)) {
         assertEquals(res.headers.get(name), value);
       }
     }
-    if (httpCase.bodyIncludes) {
-      for (const snippet of httpCase.bodyIncludes) {
+    if (testCase.bodyIncludes) {
+      for (const snippet of testCase.bodyIncludes) {
         assertStringIncludes(body, snippet);
       }
     }
-    if (httpCase.bodyExcludes) {
-      for (const snippet of httpCase.bodyExcludes) {
+    if (testCase.bodyExcludes) {
+      for (const snippet of testCase.bodyExcludes) {
         if (body.includes(snippet)) {
           throw new AssertionError(
             `body includes ${JSON.stringify(snippet)}`,
@@ -55,10 +59,18 @@ export async function runCase(app: App, httpCase: HttpCase): Promise<void> {
         }
       }
     }
-    if (httpCase.select) {
-      const doc = parseHtml(body);
-      for (const expect of httpCase.select) {
+    const doc = parseHtml(body);
+    if (testCase.select) {
+      for (const expect of testCase.select) {
         const el = doc.querySelector(expect.selector);
+        if (expect.exists === false) {
+          if (el) {
+            throw new AssertionError(
+              `expected no element matching ${JSON.stringify(expect.selector)}`,
+            );
+          }
+          continue;
+        }
         if (!el) {
           throw new AssertionError(
             `no element matches ${JSON.stringify(expect.selector)}`,
@@ -75,7 +87,7 @@ export async function runCase(app: App, httpCase: HttpCase): Promise<void> {
       }
     }
   } catch (error) {
-    const dump = formatHttpFailure(app, httpCase.request, res, body);
+    const dump = formatIntegrationFailure(app, testCase.request, res, body);
     if (error instanceof Error) {
       error.message = `${error.message}\n\n${dump}`;
     }

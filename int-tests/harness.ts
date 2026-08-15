@@ -35,6 +35,7 @@ async function withTimeout<T>(
   }
 }
 
+/** Child process serving a fixture or example on an ephemeral port. */
 export class App implements AsyncDisposable {
   readonly origin: string;
   #child: Deno.ChildProcess;
@@ -113,6 +114,7 @@ async function waitUntilAccepting(app: App): Promise<void> {
   );
 }
 
+/** Spawn `mainPath` and wait until it accepts HTTP. */
 export async function boot(mainPath: string | URL): Promise<App> {
   const spec = mainPath instanceof URL ? mainPath.href : mainPath;
   const child = new Deno.Command(Deno.execPath(), {
@@ -185,7 +187,7 @@ export async function boot(mainPath: string | URL): Promise<App> {
   }
 }
 
-export function formatHttpFailure(
+export function formatIntegrationFailure(
   app: App,
   request: AppRequest,
   res: Response,
@@ -195,7 +197,7 @@ export function formatHttpFailure(
     .map(([name, value]) => `  ${name}: ${value}`)
     .join("\n");
   return [
-    `HTTP case failed for ${request.path}`,
+    `Integration case failed for ${request.path}`,
     `status: ${res.status}`,
     `headers:\n${headers}`,
     `body:\n${body}`,

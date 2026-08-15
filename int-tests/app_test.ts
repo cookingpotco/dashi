@@ -1,12 +1,8 @@
-import {
-  assertEquals,
-  AssertionError,
-  assertStringIncludes,
-} from "@std/assert";
-import { type HttpCase, runCase } from "./cases.ts";
-import { boot, formatHttpFailure } from "./harness.ts";
+import { assertEquals, assertFalse, assertStringIncludes } from "@std/assert";
+import { type IntegrationTestCase, runCase } from "./cases.ts";
+import { boot, formatIntegrationFailure } from "./harness.ts";
 
-const appCases: HttpCase[] = [
+const appCases: IntegrationTestCase[] = [
   {
     name: "nested page wraps in both layouts",
     request: { path: "/nested/" },
@@ -14,10 +10,10 @@ const appCases: HttpCase[] = [
     headers: { "content-type": "text/html", "x-mw": "ok" },
     bodyIncludes: ["<!DOCTYPE html>"],
     select: [
-      { selector: "h1", text: "Website Title" },
-      { selector: "h2", text: "Nested" },
-      { selector: "code", text: "nested" },
-      { selector: "#pre", text: "from-mw" },
+      { selector: "html > body > h1", text: "Website Title" },
+      { selector: "html > body > div > h2", text: "Nested" },
+      { selector: "html > body > div > div > code", text: "nested" },
+      { selector: "html > body > #pre", text: "from-mw" },
     ],
   },
   {
@@ -39,12 +35,14 @@ const appCases: HttpCase[] = [
     name: "eager fragment substitutes; lazy keeps fallback",
     request: { path: "/embed" },
     status: 200,
-    bodyIncludes: ["eager-fragment-body"],
     bodyExcludes: ["{{fragment:"],
     select: [
-      { selector: "#frag", text: "eager-fragment-body" },
-      { selector: "#fallback", text: "Loading..." },
-      { selector: "#lazy", text: "Loading..." },
+      {
+        selector: "route-fragment:not([lazy]) #frag",
+        text: "eager-fragment-body",
+      },
+      { selector: "route-fragment[lazy] #fallback", text: "Loading..." },
+      { selector: "route-fragment[lazy] #frag", exists: false },
     ],
   },
   {
@@ -54,8 +52,8 @@ const appCases: HttpCase[] = [
     headers: { "content-type": "text/html" },
     bodyIncludes: ["<!DOCTYPE html>"],
     select: [
-      { selector: "h1", text: "Website Title" },
-      { selector: "#frag", text: "eager-fragment-body" },
+      { selector: "html > body > h1", text: "Website Title" },
+      { selector: "html > body > #frag", text: "eager-fragment-body" },
     ],
   },
   {
@@ -66,9 +64,10 @@ const appCases: HttpCase[] = [
     },
     status: 200,
     headers: { "content-type": "text/html" },
-    bodyExcludes: ["<!DOCTYPE html>", "Website Title"],
+    bodyExcludes: ["<!DOCTYPE html>"],
     select: [
       { selector: "#frag", text: "eager-fragment-body" },
+      { selector: "h1", exists: false },
     ],
   },
   {
@@ -84,9 +83,9 @@ Deno.test("fixture app over HTTP", async (t) => {
     new URL("./fixtures/app/main.ts", import.meta.url),
   );
 
-  for (const httpCase of appCases) {
-    await t.step(httpCase.name, async () => {
-      await runCase(app, httpCase);
+  for (const testCase of appCases) {
+    await t.step(testCase.name, async () => {
+      await runCase(app, testCase);
     });
   }
 
@@ -101,16 +100,12 @@ Deno.test("fixture app over HTTP", async (t) => {
       assertEquals(resB.status, 200);
       assertStringIncludes(bodyA, "alpha");
       assertStringIncludes(bodyB, "beta");
-      if (bodyA.includes("beta")) {
-        throw new AssertionError('alpha response included "beta"');
-      }
-      if (bodyB.includes("alpha")) {
-        throw new AssertionError('beta response included "alpha"');
-      }
+      assertFalse(bodyA.includes("beta"));
+      assertFalse(bodyB.includes("alpha"));
     } catch (error) {
       const dump = [
-        formatHttpFailure(app, { path: "/echo?id=alpha" }, resA, bodyA),
-        formatHttpFailure(app, { path: "/echo?id=beta" }, resB, bodyB),
+        formatIntegrationFailure(app, { path: "/echo?id=alpha" }, resA, bodyA),
+        formatIntegrationFailure(app, { path: "/echo?id=beta" }, resB, bodyB),
       ].join("\n\n");
       if (error instanceof Error) {
         error.message = `${error.message}\n\n${dump}`;

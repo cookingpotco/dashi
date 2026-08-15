@@ -21,7 +21,6 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@b-fuze/deno-dom@0.1",
       "jsr:@std/assert@1"
     ],
     "members": {
@@ -32,6 +31,12 @@
       },
       "examples/hello-world": {
         "dependencies": [
+          "jsr:@std/assert@1"
+        ]
+      },
+      "int-tests": {
+        "dependencies": [
+          "jsr:@b-fuze/deno-dom@0.1",
           "jsr:@std/assert@1"
         ]
       }

@@ -75,6 +75,7 @@ export async function handle(
   }
 
   // Incoming Fetch headers are immutable; preRender stamps values the route reads.
+  // TODO(COO-13): drop the clone; mutable request data will live on ctx.state.
   const req = new Request(incoming);
 
   const result = await internalHandle(req);
