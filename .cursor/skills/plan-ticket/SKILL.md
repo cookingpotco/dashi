@@ -38,9 +38,15 @@ stop: tell the human rather than silently substituting another issue.
    S-pointed issues whose ticket already reads like a plan.
 3. **Start the implementor.** After approval, post the plan as a Linear comment
    that begins with `@Cursor`, then the full approved plan. That mention is the
-   handoff: Linear puts this comment in the agent's prompt. Leave the status at
-   `Ready`. The GitHub integration sets `In Progress` when the agent opens its
-   draft PR.
+   only handoff: Linear puts this comment in the agent's prompt and starts one
+   cloud agent. Leave the status at `Ready`. The GitHub integration sets
+   `In Progress` when the agent opens its draft PR.
+
+   Do not also set Linear `delegate` or assignee to Cursor. Delegating the
+   issue and mentioning `@Cursor` are two independent starts; using both
+   launches two agents, two PRs, and two bills. Linear fills in `delegate`
+   itself once the mention agent is running. If an agent-session thread
+   already exists on the issue, stop — do not post another `@Cursor`.
 
 ## While planning
 
