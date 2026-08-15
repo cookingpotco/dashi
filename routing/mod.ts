@@ -20,39 +20,48 @@ function internalHandle(
   const run = async () => {
     // TODO: Error handling
     const matched = paths.find((path) => !!path.pattern.exec(req.url));
+    if (!matched) {
+      return null;
+    }
+
     const isFragment = req.headers.has(REQUEST_HEADERS.FRAGMENT);
-
-    if (matched) {
-      for (const m of matched.middlewares) {
-        await m.preRender?.(req);
-      }
-      let html = String(
-        await renderRoute(
-          matched.route,
-          {
-            req: req,
-            layouts: matched.layouts,
-          },
-        ),
+    let html = "";
+    const terminal = async () => {
+      html = String(
+        await renderRoute(matched.handler, {
+          req,
+          layouts: matched.layouts,
+        }),
       );
-
       if (!options.nested) {
         html = await replaceFragmentSlots(html);
       }
-
-      // TODO: Better way to handle content type and DOCTYPE
       const text = isFragment ? html : `<!DOCTYPE html>${html}`;
       const res = new Response(text);
       res.headers.set("Content-Type", "text/html");
+      return res;
+    };
 
-      for (const m of matched.middlewares.toReversed()) {
-        await m.postRender?.(res);
+    let index = -1;
+    const dispatch = async (i: number): Promise<Response> => {
+      if (i <= index) {
+        throw new Error("next() called multiple times");
       }
+      index = i;
+      const mw = matched.middlewares[i];
+      if (!mw) {
+        return terminal();
+      }
+      const out = await mw(req, () => dispatch(i + 1));
+      // TODO(COO-12): drop once the table type-checks middleware; the walker casts any function.
+      if (!(out instanceof Response)) {
+        throw new Error("middleware must return a Response");
+      }
+      return out;
+    };
 
-      return { html: html, res };
-    }
-
-    return null;
+    const res = await dispatch(0);
+    return { html, res };
   };
 
   if (!options.nested) {
@@ -74,7 +83,7 @@ export async function handle(
     return new Response();
   }
 
-  // Incoming Fetch headers are immutable; preRender stamps values the route reads.
+  // Incoming Fetch headers are immutable; middleware stamps values the handler reads.
   // TODO(COO-13): drop the clone; mutable request data will live on ctx.state.
   const req = new Request(incoming);
 

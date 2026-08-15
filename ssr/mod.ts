@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { type Element } from "../jsx-runtime/jsx_types.ts";
-import { Layout, REQUEST_HEADERS, Route } from "../shared/mod.ts";
+import { Handler, Layout, REQUEST_HEADERS } from "../shared/mod.ts";
 
 interface RenderStore {
   req: Request;
@@ -30,18 +30,18 @@ interface RenderRouteOptions {
 }
 
 export async function renderRoute(
-  route: Route,
+  handler: Handler,
   options: RenderRouteOptions,
 ): Promise<Element> {
   const [layout, ...rest] = options.layouts;
 
   if (!layout || options.req.headers.has(REQUEST_HEADERS.FRAGMENT)) {
-    return route.render(options.req);
+    return handler(options.req);
   }
 
-  return layout.render(
+  return layout(
     options.req,
-    await renderRoute(route, { ...options, layouts: rest }),
+    await renderRoute(handler, { ...options, layouts: rest }),
   );
 }
 

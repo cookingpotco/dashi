@@ -76,6 +76,13 @@ const appCases: IntegrationTestCase[] = [
     status: 404,
     bodyIncludes: ["Not found"],
   },
+  {
+    name: "named export does not replace the default handler",
+    request: { path: "/decoy" },
+    status: 200,
+    bodyIncludes: ["default-body"],
+    bodyExcludes: ["decoy-body"],
+  },
 ];
 
 Deno.test("fixture app over HTTP", async (t) => {

@@ -1,7 +1,3 @@
-import { Route } from "dashi";
-
-export class FragmentRoute implements Route {
-  render() {
-    return <aside id="frag">eager-fragment-body</aside>;
-  }
+export default function Fragment() {
+  return <aside id="frag">eager-fragment-body</aside>;
 }

@@ -1,12 +1,10 @@
-import { type Middleware } from "dashi";
-
-export class RootMiddleware implements Middleware {
-  async preRender(req: Request) {
-    await new Promise((resolve) => setTimeout(resolve, 25));
-    req.headers.set("x-pre", "from-mw");
-  }
-
-  postRender(res: Response) {
-    res.headers.set("x-mw", "ok");
-  }
+export default async function root(
+  req: Request,
+  next: () => Promise<Response>,
+): Promise<Response> {
+  await new Promise((resolve) => setTimeout(resolve, 25));
+  req.headers.set("x-pre", "from-mw");
+  const res = await next();
+  res.headers.set("x-mw", "ok");
+  return res;
 }

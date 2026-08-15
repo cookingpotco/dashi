@@ -1,11 +1,7 @@
-import { Route } from "dashi";
-
-export class NestedRoute implements Route {
-  render() {
-    return (
-      <div>
-        <code>nested</code>
-      </div>
-    );
-  }
+export default function Nested() {
+  return (
+    <div>
+      <code>nested</code>
+    </div>
+  );
 }
