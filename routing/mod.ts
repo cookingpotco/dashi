@@ -20,48 +20,47 @@ function internalHandle(
   const run = async () => {
     // TODO: Error handling
     const matched = paths.find((path) => !!path.pattern.exec(req.url));
-    const isFragment = req.headers.has(REQUEST_HEADERS.FRAGMENT);
-
-    if (matched) {
-      let html = "";
-      const terminal = async () => {
-        html = String(
-          await renderRoute(matched.handler, {
-            req,
-            layouts: matched.layouts,
-          }),
-        );
-        if (!options.nested) {
-          html = await replaceFragmentSlots(html);
-        }
-        const text = isFragment ? html : `<!DOCTYPE html>${html}`;
-        const res = new Response(text);
-        res.headers.set("Content-Type", "text/html");
-        return res;
-      };
-
-      let index = -1;
-      const dispatch = async (i: number): Promise<Response> => {
-        if (i <= index) {
-          throw new Error("next() called multiple times");
-        }
-        index = i;
-        const mw = matched.middlewares[i];
-        if (!mw) {
-          return terminal();
-        }
-        const out = await mw(req, () => dispatch(i + 1));
-        if (!(out instanceof Response)) {
-          throw new Error("middleware must return a Response");
-        }
-        return out;
-      };
-
-      const res = await dispatch(0);
-      return { html, res };
+    if (!matched) {
+      return null;
     }
 
-    return null;
+    const isFragment = req.headers.has(REQUEST_HEADERS.FRAGMENT);
+    let html = "";
+    const terminal = async () => {
+      html = String(
+        await renderRoute(matched.handler, {
+          req,
+          layouts: matched.layouts,
+        }),
+      );
+      if (!options.nested) {
+        html = await replaceFragmentSlots(html);
+      }
+      const text = isFragment ? html : `<!DOCTYPE html>${html}`;
+      const res = new Response(text);
+      res.headers.set("Content-Type", "text/html");
+      return res;
+    };
+
+    let index = -1;
+    const dispatch = async (i: number): Promise<Response> => {
+      if (i <= index) {
+        throw new Error("next() called multiple times");
+      }
+      index = i;
+      const mw = matched.middlewares[i];
+      if (!mw) {
+        return terminal();
+      }
+      const out = await mw(req, () => dispatch(i + 1));
+      if (!(out instanceof Response)) {
+        throw new Error("middleware must return a Response");
+      }
+      return out;
+    };
+
+    const res = await dispatch(0);
+    return { html, res };
   };
 
   if (!options.nested) {
