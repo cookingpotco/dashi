@@ -53,6 +53,7 @@ function internalHandle(
         return terminal();
       }
       const out = await mw(req, () => dispatch(i + 1));
+      // TODO(COO-12): drop once the table type-checks middleware; the walker casts any function.
       if (!(out instanceof Response)) {
         throw new Error("middleware must return a Response");
       }
