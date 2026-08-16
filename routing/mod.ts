@@ -1,6 +1,6 @@
 import { REQUEST_HEADERS } from "../shared/mod.ts";
 import { info } from "../logging/mod.ts";
-import { compile, type CompiledRoute, match, type Route } from "./path.ts";
+import { compile, type CompiledTable, match, type Route } from "./path.ts";
 import {
   getRenderStore,
   renderRoute,
@@ -8,7 +8,9 @@ import {
   runWithRenderStore,
 } from "../ssr/mod.ts";
 
-let compiled: CompiledRoute[] = [];
+export { type ParamsOf, type Route, route } from "./path.ts";
+
+let compiled: CompiledTable = { staticByPath: new Map(), dynamic: [] };
 
 interface InternalHandleOptions {
   nested?: boolean;

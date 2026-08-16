@@ -1,148 +1,31 @@
 import { type Element } from "../jsx-runtime/jsx_types.ts";
 import { Handler, Layout, Middleware } from "../shared/shared_types.ts";
+import { type ParamsOf, type PathError } from "./path_types.ts";
 
-type Alpha =
-  | "a"
-  | "b"
-  | "c"
-  | "d"
-  | "e"
-  | "f"
-  | "g"
-  | "h"
-  | "i"
-  | "j"
-  | "k"
-  | "l"
-  | "m"
-  | "n"
-  | "o"
-  | "p"
-  | "q"
-  | "r"
-  | "s"
-  | "t"
-  | "u"
-  | "v"
-  | "w"
-  | "x"
-  | "y"
-  | "z"
-  | "A"
-  | "B"
-  | "C"
-  | "D"
-  | "E"
-  | "F"
-  | "G"
-  | "H"
-  | "I"
-  | "J"
-  | "K"
-  | "L"
-  | "M"
-  | "N"
-  | "O"
-  | "P"
-  | "Q"
-  | "R"
-  | "S"
-  | "T"
-  | "U"
-  | "V"
-  | "W"
-  | "X"
-  | "Y"
-  | "Z"
-  | "_";
+export type { ParamsOf } from "./path_types.ts";
 
-type Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
-type Alnum = Alpha | Digit;
+const enum SegmentKind {
+  Static = "static",
+  Param = "param",
+  Optional = "optional",
+  Catchall = "catchall",
+}
 
-type RestAlnum<N extends string> = N extends "" ? true
-  : N extends `${infer F}${infer R}` ? F extends Alnum ? RestAlnum<R> : false
-  : false;
+type ParamKind =
+  | SegmentKind.Param
+  | SegmentKind.Optional
+  | SegmentKind.Catchall;
 
-type ValidName<N extends string> = N extends `${infer F}${infer R}`
-  ? F extends Alpha ? RestAlnum<R> : false
-  : false;
+type ParsedSegment =
+  | { kind: SegmentKind.Static; value: string }
+  | { kind: SegmentKind.Param; name: string }
+  | { kind: SegmentKind.Optional; name: string }
+  | { kind: SegmentKind.Catchall; name: string };
 
-type Split<S extends string> = S extends `${infer A}/${infer B}`
-  ? [A, ...Split<B>]
-  : [S];
-
-type SegsOf<P extends string> = P extends "/" ? []
-  : P extends `/${infer Rest}` ? Split<Rest>
-  : [];
-
-type NameCheck<N extends string, Seen extends string[]> = ValidName<N> extends
-  true ? N extends Seen[number] ? "Invalid route path: duplicate param name"
-  : never
-  : "Invalid route path: invalid param name";
-
-type MidErr<H extends string, Seen extends string[]> = H extends ""
-  ? "Invalid route path: empty segments are not allowed"
-  : H extends "*" ? "Invalid route path: catch-all must be named (:path*)"
-  : H extends `:${string}?`
-    ? "Invalid route path: optional and catch-all only allowed as the last segment"
-  : H extends `:${string}*`
-    ? "Invalid route path: optional and catch-all only allowed as the last segment"
-  : H extends `:${infer N}` ? NameCheck<N, Seen>
-  : never;
-
-type LastErr<H extends string, Seen extends string[]> = H extends ""
-  ? "Invalid route path: empty segments are not allowed"
-  : H extends "*" ? "Invalid route path: catch-all must be named (:path*)"
-  : H extends `:${infer N}?` ? NameCheck<N, Seen>
-  : H extends `:${infer N}*` ? NameCheck<N, Seen>
-  : H extends `:${infer N}` ? NameCheck<N, Seen>
-  : never;
-
-type NameOf<H extends string> = H extends `:${infer N}?` ? N
-  : H extends `:${infer N}*` ? N
-  : H extends `:${infer N}` ? N
-  : never;
-
-type Walk<Segs extends string[], Seen extends string[] = []> = Segs extends
-  [infer H extends string, ...infer T extends string[]]
-  ? T extends [] ? LastErr<H, Seen>
-  : MidErr<H, Seen> extends infer E
-    ? [E] extends [never]
-      ? Walk<T, NameOf<H> extends infer N extends string ? [...Seen, N] : Seen>
-    : E
-  : never
-  : never;
-
-type PathError<P extends string> = P extends "/" ? never
-  : P extends `/${infer Rest}`
-    ? Rest extends `${string}/`
-      ? "Invalid route path: no trailing slash except /"
-    : Walk<Split<Rest>>
-  : "Invalid route path: path must start with /";
-
-type SegParam<H extends string> = H extends `:${infer N}?`
-  ? { [K in N]?: string }
-  : H extends `:${infer N}*` ? { [K in N]: string }
-  : H extends `:${infer N}` ? { [K in N]: string }
-  : never;
-
-type ParamUnion<Segs extends string[]> = Segs extends
-  [infer H extends string, ...infer T extends string[]]
-  ? SegParam<H> | ParamUnion<T>
-  : never;
-
-type UnionToIntersection<U> = (
-  U extends unknown ? (k: U) => void : never
-) extends (k: infer I) => void ? I
-  : never;
-
-type Flatten<T> = { [K in keyof T]: T[K] };
-
-/** Params inferred from a path literal like `/posts/:id`. */
-export type ParamsOf<P extends string> = [PathError<P>] extends [never]
-  ? [ParamUnion<SegsOf<P>>] extends [never] ? Record<string, never>
-  : Flatten<UnionToIntersection<ParamUnion<SegsOf<P>>>>
-  : never;
+type ConcreteSegment =
+  | { kind: SegmentKind.Static; value: string }
+  | { kind: SegmentKind.Param; name: string }
+  | { kind: SegmentKind.Catchall; name: string };
 
 export interface Route {
   path: string;
@@ -152,17 +35,6 @@ export interface Route {
   ) => Element | Promise<Element>;
   layouts: Layout[];
   middleware: Middleware[];
-}
-
-type ConcreteSegment =
-  | { kind: "static"; value: string }
-  | { kind: "param"; name: string }
-  | { kind: "catchall"; name: string };
-
-interface ParsedSegment {
-  kind: "static" | "param" | "optional" | "catchall";
-  value?: string;
-  name?: string;
 }
 
 export interface CompiledRoute {
@@ -215,16 +87,19 @@ function parsePath(path: string): ParsedSegment[] {
       );
     }
     if (part.startsWith(":")) {
-      let kind: "param" | "optional" | "catchall" = "param";
+      let kind: ParamKind = SegmentKind.Param;
       let name = part.slice(1);
       if (name.endsWith("?")) {
-        kind = "optional";
+        kind = SegmentKind.Optional;
         name = name.slice(0, -1);
       } else if (name.endsWith("*")) {
-        kind = "catchall";
+        kind = SegmentKind.Catchall;
         name = name.slice(0, -1);
       }
-      if ((kind === "optional" || kind === "catchall") && !last) {
+      if (
+        (kind === SegmentKind.Optional || kind === SegmentKind.Catchall) &&
+        !last
+      ) {
         throw new Error(
           `Optional and catch-all are only allowed as the last segment: ${
             JSON.stringify(path)
@@ -250,42 +125,47 @@ function parsePath(path: string): ParsedSegment[] {
       continue;
     }
 
-    segments.push({ kind: "static", value: part });
+    segments.push({ kind: SegmentKind.Static, value: part });
   }
 
   return segments;
 }
 
-function toConcrete(segment: ParsedSegment): ConcreteSegment {
-  if (segment.kind === "static") {
-    return { kind: "static", value: segment.value! };
-  }
-  if (segment.kind === "param" || segment.kind === "catchall") {
-    return { kind: segment.kind, name: segment.name! };
-  }
-  return { kind: "param", name: segment.name! };
-}
-
 function expand(segments: ParsedSegment[]): ConcreteSegment[][] {
   const last = segments[segments.length - 1];
-  if (last?.kind === "optional") {
-    const head = segments.slice(0, -1).map(toConcrete);
-    return [head, [...head, { kind: "param", name: last.name! }]];
+  if (last?.kind === SegmentKind.Optional) {
+    const withoutOptional: ConcreteSegment[] = [];
+    for (const segment of segments.slice(0, -1)) {
+      if (segment.kind !== SegmentKind.Optional) {
+        withoutOptional.push(segment);
+      }
+    }
+    return [
+      withoutOptional,
+      [...withoutOptional, { kind: SegmentKind.Param, name: last.name }],
+    ];
   }
-  return [segments.map(toConcrete)];
+
+  const concrete: ConcreteSegment[] = [];
+  for (const segment of segments) {
+    if (segment.kind !== SegmentKind.Optional) {
+      concrete.push(segment);
+    }
+  }
+  return [concrete];
 }
 
 function shapeKey(segments: ConcreteSegment[]): string {
   return segments.map((segment) =>
-    segment.kind === "static" ? `s:${segment.value}` : segment.kind
+    segment.kind === SegmentKind.Static ? `s:${segment.value}` : segment.kind
   ).join("/");
 }
 
 function rank(kind: ConcreteSegment["kind"]): number {
-  if (kind === "static") {
+  if (kind === SegmentKind.Static) {
     return 0;
   }
-  if (kind === "param") {
+  if (kind === SegmentKind.Param) {
     return 1;
   }
   return 2;
@@ -310,36 +190,62 @@ function compareCompiled(a: CompiledRoute, b: CompiledRoute): number {
   return a.declarationIndex - b.declarationIndex;
 }
 
-export function compile(routes: Route[]): CompiledRoute[] {
+export interface CompiledTable {
+  staticByPath: Map<string, CompiledRoute>;
+  dynamic: CompiledRoute[];
+}
+
+function staticPathname(segments: ConcreteSegment[]): string | null {
+  let pathname = "";
+  for (const segment of segments) {
+    if (segment.kind !== SegmentKind.Static) {
+      return null;
+    }
+    pathname += `/${segment.value}`;
+  }
+  return pathname === "" ? "/" : pathname;
+}
+
+export function compile(routes: Route[]): CompiledTable {
   const compiled: CompiledRoute[] = [];
   const seen = new Map<string, string>();
 
   for (let i = 0; i < routes.length; i++) {
-    const r = routes[i]!;
-    for (const segments of expand(parsePath(r.path))) {
+    const declared = routes[i]!;
+    for (const segments of expand(parsePath(declared.path))) {
       const key = shapeKey(segments);
       const existing = seen.get(key);
       if (existing !== undefined) {
         throw new Error(
           `Duplicate or unreachable route: ${JSON.stringify(existing)} and ${
-            JSON.stringify(r.path)
+            JSON.stringify(declared.path)
           }`,
         );
       }
-      seen.set(key, r.path);
+      seen.set(key, declared.path);
       compiled.push({
         segments,
-        handler: r.handler,
-        layouts: r.layouts,
-        middleware: r.middleware,
+        handler: declared.handler,
+        layouts: declared.layouts,
+        middleware: declared.middleware,
         declarationIndex: i,
-        path: r.path,
+        path: declared.path,
       });
     }
   }
 
-  compiled.sort(compareCompiled);
-  return compiled;
+  const staticByPath = new Map<string, CompiledRoute>();
+  const dynamic: CompiledRoute[] = [];
+  for (const compiledRoute of compiled) {
+    const pathname = staticPathname(compiledRoute.segments);
+    if (pathname !== null) {
+      staticByPath.set(pathname, compiledRoute);
+    } else {
+      dynamic.push(compiledRoute);
+    }
+  }
+  dynamic.sort(compareCompiled);
+  return { staticByPath, dynamic };
 }
 
 function matchPattern(
@@ -349,14 +255,14 @@ function matchPattern(
   const last = segments[segments.length - 1];
   const params: Record<string, string> = {};
 
-  if (last?.kind === "catchall") {
+  if (last?.kind === SegmentKind.Catchall) {
     if (parts.length < segments.length - 1) {
       return null;
     }
     for (let i = 0; i < segments.length - 1; i++) {
       const seg = segments[i]!;
       const part = parts[i]!;
-      if (seg.kind === "static") {
+      if (seg.kind === SegmentKind.Static) {
         if (part !== seg.value) {
           return null;
         }
@@ -375,7 +281,7 @@ function matchPattern(
   for (let i = 0; i < segments.length; i++) {
     const seg = segments[i]!;
     const part = parts[i]!;
-    if (seg.kind === "static") {
+    if (seg.kind === SegmentKind.Static) {
       if (part !== seg.value) {
         return null;
       }
@@ -386,29 +292,40 @@ function matchPattern(
   return params;
 }
 
+function matched(
+  compiledRoute: CompiledRoute,
+  params: Record<string, string>,
+): MatchedRoute {
+  return {
+    handler: compiledRoute.handler,
+    params,
+    layouts: compiledRoute.layouts,
+    middleware: compiledRoute.middleware,
+  };
+}
+
 export function match(
-  compiled: CompiledRoute[],
+  compiled: CompiledTable,
   pathname: string,
 ): MatchedRoute | null {
-  const parts = pathname === "/" ? [] : pathname.slice(1).split("/");
+  const exact = compiled.staticByPath.get(pathname);
+  if (exact) {
+    return matched(exact, {});
+  }
 
-  for (const route of compiled) {
-    const params = matchPattern(route.segments, parts);
+  const parts = pathname === "/" ? [] : pathname.slice(1).split("/");
+  for (const compiledRoute of compiled.dynamic) {
+    const params = matchPattern(compiledRoute.segments, parts);
     if (params) {
-      return {
-        handler: route.handler,
-        params,
-        layouts: route.layouts,
-        middleware: route.middleware,
-      };
+      return matched(compiledRoute, params);
     }
   }
   return null;
 }
 
-export function route<P extends string>(
-  path: [PathError<P>] extends [never] ? P : PathError<P>,
-  handler: Handler<ParamsOf<P>>,
+export function route<Path extends string>(
+  path: [PathError<Path>] extends [never] ? Path : PathError<Path>,
+  handler: Handler<ParamsOf<Path>>,
   wraps?: { layouts?: Layout[]; middleware?: Middleware[] },
 ): Route {
   return {

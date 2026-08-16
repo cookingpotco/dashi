@@ -5,4 +5,4 @@ export * from "./jsx-runtime/mod.ts";
 export * from "./fragments/mod.ts";
 export * from "./shared/mod.ts";
 export * from "./serve/mod.ts";
-export { type ParamsOf, route } from "./routing/path.ts";
+export { type ParamsOf, route } from "./routing/mod.ts";

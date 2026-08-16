@@ -1,5 +1,4 @@
-import { handle, init } from "../routing/mod.ts";
-import { type Route } from "../routing/path.ts";
+import { handle, init, type Route } from "../routing/mod.ts";
 
 /** Forwards remaining options to `Deno.serve` except `handler`, which is always the router. */
 export function serve(
