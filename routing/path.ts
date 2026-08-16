@@ -4,6 +4,11 @@ import { type ParamsOf, type PathError } from "./path_types.ts";
 
 export type { ParamsOf } from "./path_types.ts";
 
+const enum NodeKind {
+  Route = "route",
+  Group = "group",
+}
+
 const enum SegmentKind {
   Static = "static",
   Param = "param",
@@ -28,6 +33,7 @@ type ConcreteSegment =
   | { kind: SegmentKind.Catchall; name: string };
 
 export interface Route {
+  kind: NodeKind.Route;
   path: string;
   handler: (
     req: Request,
@@ -35,6 +41,19 @@ export interface Route {
   ) => Element | Promise<Element>;
   layouts: Layout[];
   middleware: Middleware[];
+}
+
+export interface Group {
+  kind: NodeKind.Group;
+  layouts: Layout[];
+  middleware: Middleware[];
+  routes: Array<Route | Group>;
+}
+
+export interface RouteTable {
+  layouts?: Layout[];
+  middleware?: Middleware[];
+  routes: Array<Route | Group>;
 }
 
 export interface CompiledRoute {
@@ -326,12 +345,62 @@ export function match(
 export function route<Path extends string>(
   path: [PathError<Path>] extends [never] ? Path : PathError<Path>,
   handler: Handler<ParamsOf<Path>>,
-  wraps?: { layouts?: Layout[]; middleware?: Middleware[] },
 ): Route {
   return {
+    kind: NodeKind.Route,
     path,
     handler: handler as Route["handler"],
-    layouts: wraps?.layouts ?? [],
-    middleware: wraps?.middleware ?? [],
+    layouts: [],
+    middleware: [],
   };
+}
+
+/**
+ * A group of routes sharing middlewares and layouts. The parent's run first.
+ * Doesn't affect paths.
+ */
+export function group(opts: RouteTable): Group {
+  return {
+    kind: NodeKind.Group,
+    layouts: opts.layouts ?? [],
+    middleware: opts.middleware ?? [],
+    routes: opts.routes,
+  };
+}
+
+export function flatten(table: RouteTable): Route[] {
+  const routes: Route[] = [];
+  append(
+    table.routes,
+    table.layouts ?? [],
+    table.middleware ?? [],
+    routes,
+  );
+  return routes;
+}
+
+function append(
+  nodes: Array<Route | Group>,
+  layouts: Layout[],
+  middleware: Middleware[],
+  routes: Route[],
+): void {
+  for (const node of nodes) {
+    if (node.kind === NodeKind.Group) {
+      append(
+        node.routes,
+        [...layouts, ...node.layouts],
+        [...middleware, ...node.middleware],
+        routes,
+      );
+      continue;
+    }
+    routes.push({
+      kind: NodeKind.Route,
+      path: node.path,
+      handler: node.handler,
+      layouts: [...layouts, ...node.layouts],
+      middleware: [...middleware, ...node.middleware],
+    });
+  }
 }
