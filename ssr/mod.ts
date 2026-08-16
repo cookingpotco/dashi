@@ -27,16 +27,17 @@ export function getRenderStore(): RenderStore {
 interface RenderRouteOptions {
   req: Request;
   layouts: Layout[];
+  params: Record<string, string>;
 }
 
 export async function renderRoute(
-  handler: Handler,
+  handler: Handler<Record<string, string>>,
   options: RenderRouteOptions,
 ): Promise<Element> {
   const [layout, ...rest] = options.layouts;
 
   if (!layout || options.req.headers.has(REQUEST_HEADERS.FRAGMENT)) {
-    return handler(options.req);
+    return handler(options.req, options.params);
   }
 
   return layout(

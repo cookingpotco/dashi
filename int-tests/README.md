@@ -13,10 +13,12 @@ way `examples/` do.
 ## Add a case
 
 If the fixture already has the route, append an `IntegrationTestCase` in
-`app_test.ts` and stop. One request, several asserts: status, headers, `select`
-(parsed DOM text/attributes; use child combinators when the tree matters),
-`bodyIncludes` / `bodyExcludes` (raw bytes — use these for escaping, DOCTYPE,
-and leftover `{{fragment:` markers). Every case is parsed as HTML.
+`app_test.ts` and stop. If it needs a new path, add a `route()` row in the
+fixture `main.ts` (repeat wrap lists on the leaf) and import the handler. One
+request, several asserts: status, headers, `select` (parsed DOM text/attributes;
+use child combinators when the tree matters), `bodyIncludes` / `bodyExcludes`
+(raw bytes — use these for escaping, DOCTYPE, and leftover `{{fragment:`
+markers). Every case is parsed as HTML.
 
 `runCase` executes that data. Flows that are not one request (redirect chains,
 cookies, concurrent requests) use `boot` / `App.fetch` from `harness.ts` inside
@@ -28,8 +30,7 @@ a `t.step`.
 folder next to it only when the behaviour cannot live on that app. Do not add a
 fixture as its own workspace member.
 
-Each fixture is a `main.ts` that calls `serveFileBased({ port: 0 })` and a
-`routes/` tree, the same shape as `examples/`.
-
-The runner is keyed by the fixture's `main.ts` path. `app_test.ts` boots
-`fixtures/app` once and runs its cases as `t.step`s.
+Each fixture is a `main.ts` that calls `serve({ routes })` with `route()` rows
+and `port: 0`. Repeat wrap lists on every leaf. The runner is keyed by the
+fixture's `main.ts` path. `app_test.ts` boots `fixtures/app` once and runs its
+cases as `t.step`s.

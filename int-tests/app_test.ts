@@ -5,7 +5,7 @@ import { boot, formatIntegrationFailure } from "./harness.ts";
 const appCases: IntegrationTestCase[] = [
   {
     name: "nested page wraps in both layouts",
-    request: { path: "/nested/" },
+    request: { path: "/nested" },
     status: 200,
     headers: { "content-type": "text/html", "x-mw": "ok" },
     bodyIncludes: ["<!DOCTYPE html>"],
@@ -77,11 +77,26 @@ const appCases: IntegrationTestCase[] = [
     bodyIncludes: ["Not found"],
   },
   {
-    name: "named export does not replace the default handler",
-    request: { path: "/decoy" },
+    name: "static /posts/new beats /posts/:id",
+    request: { path: "/posts/new" },
     status: 200,
-    bodyIncludes: ["default-body"],
-    bodyExcludes: ["decoy-body"],
+    headers: { "content-type": "text/html", "x-mw": "ok" },
+    select: [
+      { selector: "html > body > h1", text: "Website Title" },
+      { selector: "html > body > p#new-post", text: "new-post" },
+      { selector: "html > body > #pre", text: "from-mw" },
+    ],
+  },
+  {
+    name: "param route renders params.id",
+    request: { path: "/posts/abc" },
+    status: 200,
+    headers: { "content-type": "text/html", "x-mw": "ok" },
+    select: [
+      { selector: "html > body > h1", text: "Website Title" },
+      { selector: "html > body > p#post", text: "abc" },
+      { selector: "html > body > #pre", text: "from-mw" },
+    ],
   },
 ];
 
