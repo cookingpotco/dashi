@@ -14,12 +14,12 @@ way `examples/` do.
 
 If the fixture already has the route, append an `IntegrationTestCase` in
 `app_test.ts` and stop. If it needs a new path, add a `route()` leaf in the
-fixture `main.ts` under the shared root wraps, or a nested `group` when it
-needs extra wraps, and import the handler. One
-request, several asserts: status, headers, `select` (parsed DOM text/attributes;
-use child combinators when the tree matters), `bodyIncludes` / `bodyExcludes`
-(raw bytes — use these for escaping, DOCTYPE, and leftover `{{fragment:`
-markers). Every case is parsed as HTML.
+fixture `main.ts` under the shared root wraps, or a nested `group` when it needs
+extra wraps, and import the handler. One request, several asserts: status,
+headers, `select` (parsed DOM text/attributes; use child combinators when the
+tree matters), `bodyIncludes` / `bodyExcludes` (raw bytes — use these for
+escaping, DOCTYPE, and leftover `{{fragment:` markers). Every case is parsed as
+HTML.
 
 `runCase` executes that data. Flows that are not one request (redirect chains,
 cookies, concurrent requests) use `boot` / `App.fetch` from `harness.ts` inside

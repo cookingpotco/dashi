@@ -19,8 +19,8 @@ export {
   group,
   type ParamsOf,
   type Route,
-  type RouteTable,
   route,
+  type RouteTable,
 } from "./path.ts";
 
 let compiled: CompiledTable = { staticByPath: new Map(), dynamic: [] };
