@@ -1,4 +1,4 @@
-import { route, serve } from "dashi";
+import { group, route, serve } from "dashi";
 import home from "./routes/index.tsx";
 import root from "./routes/_layout.tsx";
 import logger from "./routes/_middleware.ts";
@@ -13,18 +13,19 @@ import post from "./routes/post.tsx";
 if (import.meta.main) {
   serve({
     port: 0,
-    // TODO(COO-14): table shape — grouping, and whether wraps are inherited or listed on every leaf
+    layouts: [root],
+    middleware: [logger],
     routes: [
-      route("/", home, { layouts: [root], middleware: [logger] }),
-      route("/nested", nested, {
-        layouts: [root, nestedLayout],
-        middleware: [logger],
+      route("/", home),
+      group({
+        layouts: [nestedLayout],
+        routes: [route("/nested", nested)],
       }),
-      route("/echo", echo, { layouts: [root], middleware: [logger] }),
-      route("/embed", embed, { layouts: [root], middleware: [logger] }),
-      route("/fragment", fragment, { layouts: [root], middleware: [logger] }),
-      route("/posts/new", postsNew, { layouts: [root], middleware: [logger] }),
-      route("/posts/:id", post, { layouts: [root], middleware: [logger] }),
+      route("/echo", echo),
+      route("/embed", embed),
+      route("/fragment", fragment),
+      route("/posts/new", postsNew),
+      route("/posts/:id", post),
     ],
   });
 }

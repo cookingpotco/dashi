@@ -6,10 +6,11 @@ import fragment from "./routes/fragment.tsx";
 
 if (import.meta.main) {
   serve({
-    // TODO(COO-14): table shape — grouping, and whether wraps are inherited or listed on every leaf
+    layouts: [root],
+    middleware: [logger],
     routes: [
-      route("/", home, { layouts: [root], middleware: [logger] }),
-      route("/fragment", fragment, { layouts: [root], middleware: [logger] }),
+      route("/", home),
+      route("/fragment", fragment),
     ],
   });
 }

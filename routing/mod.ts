@@ -1,6 +1,12 @@
 import { REQUEST_HEADERS } from "../shared/mod.ts";
 import { info } from "../logging/mod.ts";
-import { compile, type CompiledTable, match, type Route } from "./path.ts";
+import {
+  compile,
+  type CompiledTable,
+  flatten,
+  match,
+  type RouteTable,
+} from "./path.ts";
 import {
   getRenderStore,
   renderRoute,
@@ -8,7 +14,14 @@ import {
   runWithRenderStore,
 } from "../ssr/mod.ts";
 
-export { type ParamsOf, type Route, route } from "./path.ts";
+export {
+  type Group,
+  group,
+  type ParamsOf,
+  type Route,
+  type RouteTable,
+  route,
+} from "./path.ts";
 
 let compiled: CompiledTable = { staticByPath: new Map(), dynamic: [] };
 
@@ -70,7 +83,8 @@ function internalHandle(
   return run();
 }
 
-export function init(routes: Route[]) {
+export function init(table: RouteTable) {
+  const routes = flatten(table);
   compiled = compile(routes);
   for (const r of routes) {
     info(`[ROUTE]      ${r.path}`);

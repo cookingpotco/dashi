@@ -13,8 +13,9 @@ way `examples/` do.
 ## Add a case
 
 If the fixture already has the route, append an `IntegrationTestCase` in
-`app_test.ts` and stop. If it needs a new path, add a `route()` row in the
-fixture `main.ts` (repeat wrap lists on the leaf) and import the handler. One
+`app_test.ts` and stop. If it needs a new path, add a `route()` leaf in the
+fixture `main.ts` under the shared root wraps, or a nested `group` when it
+needs extra wraps, and import the handler. One
 request, several asserts: status, headers, `select` (parsed DOM text/attributes;
 use child combinators when the tree matters), `bodyIncludes` / `bodyExcludes`
 (raw bytes — use these for escaping, DOCTYPE, and leftover `{{fragment:`
@@ -30,7 +31,7 @@ a `t.step`.
 folder next to it only when the behaviour cannot live on that app. Do not add a
 fixture as its own workspace member.
 
-Each fixture is a `main.ts` that calls `serve({ routes })` with `route()` rows
-and `port: 0`. Repeat wrap lists on every leaf. The runner is keyed by the
-fixture's `main.ts` path. `app_test.ts` boots `fixtures/app` once and runs its
-cases as `t.step`s.
+Each fixture is a `main.ts` that calls `serve({ layouts, middleware, routes })`
+with `route()` leaves and `port: 0`. Shared wraps live on `serve` or a nested
+`group`. The runner is keyed by the fixture's `main.ts` path. `app_test.ts`
+boots `fixtures/app` once and runs its cases as `t.step`s.

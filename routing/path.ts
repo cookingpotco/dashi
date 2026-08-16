@@ -4,6 +4,9 @@ import { type ParamsOf, type PathError } from "./path_types.ts";
 
 export type { ParamsOf } from "./path_types.ts";
 
+const routeBrand: unique symbol = Symbol("dashi.route");
+const groupBrand: unique symbol = Symbol("dashi.group");
+
 const enum SegmentKind {
   Static = "static",
   Param = "param",
@@ -28,6 +31,7 @@ type ConcreteSegment =
   | { kind: SegmentKind.Catchall; name: string };
 
 export interface Route {
+  readonly [routeBrand]: true;
   path: string;
   handler: (
     req: Request,
@@ -35,6 +39,19 @@ export interface Route {
   ) => Element | Promise<Element>;
   layouts: Layout[];
   middleware: Middleware[];
+}
+
+export interface Group {
+  readonly [groupBrand]: true;
+  layouts: Layout[];
+  middleware: Middleware[];
+  routes: Array<Route | Group>;
+}
+
+export interface RouteTable {
+  layouts?: Layout[];
+  middleware?: Middleware[];
+  routes: Array<Route | Group>;
 }
 
 export interface CompiledRoute {
@@ -326,12 +343,66 @@ export function match(
 export function route<Path extends string>(
   path: [PathError<Path>] extends [never] ? Path : PathError<Path>,
   handler: Handler<ParamsOf<Path>>,
-  wraps?: { layouts?: Layout[]; middleware?: Middleware[] },
 ): Route {
   return {
+    [routeBrand]: true,
     path,
     handler: handler as Route["handler"],
-    layouts: wraps?.layouts ?? [],
-    middleware: wraps?.middleware ?? [],
+    layouts: [],
+    middleware: [],
   };
+}
+
+/**
+ * Nested wrap lists. Parent layouts and middleware run first; this group's
+ * lists append. Paths stay fully written on each `route()`.
+ */
+export function group(opts: RouteTable): Group {
+  return {
+    [groupBrand]: true,
+    layouts: opts.layouts ?? [],
+    middleware: opts.middleware ?? [],
+    routes: opts.routes,
+  };
+}
+
+function isGroup(node: Route | Group): node is Group {
+  return groupBrand in node;
+}
+
+export function flatten(table: RouteTable): Route[] {
+  const routes: Route[] = [];
+  append(
+    table.routes,
+    table.layouts ?? [],
+    table.middleware ?? [],
+    routes,
+  );
+  return routes;
+}
+
+function append(
+  nodes: Array<Route | Group>,
+  layouts: Layout[],
+  middleware: Middleware[],
+  routes: Route[],
+): void {
+  for (const node of nodes) {
+    if (isGroup(node)) {
+      append(
+        node.routes,
+        [...layouts, ...node.layouts],
+        [...middleware, ...node.middleware],
+        routes,
+      );
+      continue;
+    }
+    routes.push({
+      [routeBrand]: true,
+      path: node.path,
+      handler: node.handler,
+      layouts: [...layouts, ...node.layouts],
+      middleware: [...middleware, ...node.middleware],
+    });
+  }
 }

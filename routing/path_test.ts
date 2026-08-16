@@ -1,6 +1,14 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import { type Element } from "../jsx-runtime/jsx_types.ts";
-import { compile, match, type ParamsOf, route } from "./path.ts";
+import { type Middleware } from "../shared/shared_types.ts";
+import {
+  compile,
+  flatten,
+  group,
+  match,
+  type ParamsOf,
+  route,
+} from "./path.ts";
 
 type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends
   (<T>() => T extends B ? 1 : 2) ? true : false;
@@ -40,6 +48,8 @@ function typechecks() {
   route("/a/:id/b/:id", noop);
   // @ts-expect-error catch-all must be named
   route("/files/*", noop);
+  // @ts-expect-error wraps belong on group(), not route()
+  route("/", noop, { layouts: [] });
 }
 
 Deno.test("ParamsOf infers params from path literals", () => {
@@ -136,4 +146,61 @@ Deno.test("compile rejects duplicate and invalid paths", () => {
     Error,
     "Catch-all must be named",
   );
+});
+
+Deno.test("flatten inherits wraps outermost-first and preserves declaration order", () => {
+  const rootLayout = () => "" as Element;
+  const nestedLayout = () => "" as Element;
+  const rootMw: Middleware = (_req, next) => next();
+  const nestedMw: Middleware = (_req, next) => next();
+  const home = () => "" as Element;
+  const nested = () => "" as Element;
+  const secret = () => "" as Element;
+  const postsNew = () => "" as Element;
+  const postsId = () => "" as Element;
+
+  const routes = flatten({
+    layouts: [rootLayout],
+    middleware: [rootMw],
+    routes: [
+      route("/", home),
+      group({
+        layouts: [nestedLayout],
+        middleware: [nestedMw],
+        routes: [route("/nested", nested)],
+      }),
+      route("/secret", secret),
+      route("/posts/new", postsNew),
+      route("/posts/:id", postsId),
+    ],
+  });
+
+  assertEquals(routes.map((r) => r.path), [
+    "/",
+    "/nested",
+    "/secret",
+    "/posts/new",
+    "/posts/:id",
+  ]);
+
+  const compiled = compile(routes);
+
+  const homeMatch = match(compiled, "/");
+  assertEquals(homeMatch?.handler, home);
+  assertEquals(homeMatch?.layouts, [rootLayout]);
+  assertEquals(homeMatch?.middleware, [rootMw]);
+
+  const nestedMatch = match(compiled, "/nested");
+  assertEquals(nestedMatch?.handler, nested);
+  assertEquals(nestedMatch?.layouts, [rootLayout, nestedLayout]);
+  assertEquals(nestedMatch?.middleware, [rootMw, nestedMw]);
+
+  const secretMatch = match(compiled, "/secret");
+  assertEquals(secretMatch?.handler, secret);
+  assertEquals(secretMatch?.layouts, [rootLayout]);
+  assertEquals(secretMatch?.middleware, [rootMw]);
+
+  assertEquals(match(compiled, "/posts/new")?.handler, postsNew);
+  assertEquals(match(compiled, "/posts/abc")?.handler, postsId);
+  assertEquals(match(compiled, "/posts/abc")?.params, { id: "abc" });
 });
