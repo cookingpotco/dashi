@@ -1,5 +1,6 @@
 import { REQUEST_HEADERS } from "../shared/mod.ts";
-import { RoutingPath } from "../shared/shared_types.ts";
+import { info } from "../logging/mod.ts";
+import { compile, type CompiledRoute, match, type Route } from "./path.ts";
 import {
   getRenderStore,
   renderRoute,
@@ -7,7 +8,7 @@ import {
   runWithRenderStore,
 } from "../ssr/mod.ts";
 
-let paths: RoutingPath[];
+let compiled: CompiledRoute[] = [];
 
 interface InternalHandleOptions {
   nested?: boolean;
@@ -19,7 +20,7 @@ function internalHandle(
 ): Promise<{ html: string; res: Response } | null> {
   const run = async () => {
     // TODO: Error handling
-    const matched = paths.find((path) => !!path.pattern.exec(req.url));
+    const matched = match(compiled, new URL(req.url).pathname);
     if (!matched) {
       return null;
     }
@@ -31,6 +32,7 @@ function internalHandle(
         await renderRoute(matched.handler, {
           req,
           layouts: matched.layouts,
+          params: matched.params,
         }),
       );
       if (!options.nested) {
@@ -48,16 +50,11 @@ function internalHandle(
         throw new Error("next() called multiple times");
       }
       index = i;
-      const mw = matched.middlewares[i];
+      const mw = matched.middleware[i];
       if (!mw) {
         return terminal();
       }
-      const out = await mw(req, () => dispatch(i + 1));
-      // TODO(COO-12): drop once the table type-checks middleware; the walker casts any function.
-      if (!(out instanceof Response)) {
-        throw new Error("middleware must return a Response");
-      }
-      return out;
+      return await mw(req, () => dispatch(i + 1));
     };
 
     const res = await dispatch(0);
@@ -71,8 +68,11 @@ function internalHandle(
   return run();
 }
 
-export function init(p: RoutingPath[]) {
-  paths = p;
+export function init(routes: Route[]) {
+  compiled = compile(routes);
+  for (const r of routes) {
+    info(`[ROUTE]      ${r.path}`);
+  }
 }
 
 export async function handle(
