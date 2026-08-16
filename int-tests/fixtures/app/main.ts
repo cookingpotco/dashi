@@ -12,7 +12,6 @@ import post from "./routes/post.tsx";
 
 if (import.meta.main) {
   serve({
-    port: 0,
     layouts: [root],
     middleware: [logger],
     routes: [
@@ -27,5 +26,5 @@ if (import.meta.main) {
       route("/posts/new", postsNew),
       route("/posts/:id", post),
     ],
-  });
+  }, { port: 0 });
 }

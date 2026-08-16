@@ -4,8 +4,10 @@ import { type ParamsOf, type PathError } from "./path_types.ts";
 
 export type { ParamsOf } from "./path_types.ts";
 
-const routeBrand: unique symbol = Symbol("dashi.route");
-const groupBrand: unique symbol = Symbol("dashi.group");
+const enum NodeKind {
+  Route = "route",
+  Group = "group",
+}
 
 const enum SegmentKind {
   Static = "static",
@@ -31,7 +33,7 @@ type ConcreteSegment =
   | { kind: SegmentKind.Catchall; name: string };
 
 export interface Route {
-  readonly [routeBrand]: true;
+  kind: NodeKind.Route;
   path: string;
   handler: (
     req: Request,
@@ -42,7 +44,7 @@ export interface Route {
 }
 
 export interface Group {
-  readonly [groupBrand]: true;
+  kind: NodeKind.Group;
   layouts: Layout[];
   middleware: Middleware[];
   routes: Array<Route | Group>;
@@ -345,7 +347,7 @@ export function route<Path extends string>(
   handler: Handler<ParamsOf<Path>>,
 ): Route {
   return {
-    [routeBrand]: true,
+    kind: NodeKind.Route,
     path,
     handler: handler as Route["handler"],
     layouts: [],
@@ -354,20 +356,16 @@ export function route<Path extends string>(
 }
 
 /**
- * Nested wrap lists. Parent layouts and middleware run first; this group's
- * lists append. Paths stay fully written on each `route()`.
+ * A group of routes sharing middlewares and layouts. The parent's run first.
+ * Doesn't affect paths.
  */
 export function group(opts: RouteTable): Group {
   return {
-    [groupBrand]: true,
+    kind: NodeKind.Group,
     layouts: opts.layouts ?? [],
     middleware: opts.middleware ?? [],
     routes: opts.routes,
   };
-}
-
-function isGroup(node: Route | Group): node is Group {
-  return groupBrand in node;
 }
 
 export function flatten(table: RouteTable): Route[] {
@@ -388,7 +386,7 @@ function append(
   routes: Route[],
 ): void {
   for (const node of nodes) {
-    if (isGroup(node)) {
+    if (node.kind === NodeKind.Group) {
       append(
         node.routes,
         [...layouts, ...node.layouts],
@@ -398,7 +396,7 @@ function append(
       continue;
     }
     routes.push({
-      [routeBrand]: true,
+      kind: NodeKind.Route,
       path: node.path,
       handler: node.handler,
       layouts: [...layouts, ...node.layouts],

@@ -1,14 +1,15 @@
 import { handle, init, type RouteTable } from "../routing/mod.ts";
 
 /**
- * Root wrap lists plus nested `group()` / `route()` nodes. Parent wraps run
- * first. Remaining options go to `Deno.serve` except `handler`, which is
- * always the router.
+ * Starts the HTTP server.
+ *
+ * @param table Root layouts, middleware, and nested routes.
+ * @param options Forwarded to `Deno.serve`. `handler` is always the router.
  */
 export function serve(
-  options: Omit<Deno.ServeTcpOptions & Deno.ServeInit, "handler"> & RouteTable,
+  table: RouteTable,
+  options?: Omit<Deno.ServeTcpOptions & Deno.ServeInit, "handler">,
 ) {
-  const { layouts, middleware, routes, ...serveOptions } = options;
-  init({ layouts, middleware, routes });
-  Deno.serve({ ...serveOptions, handler: handle });
+  init(table);
+  Deno.serve({ ...options, handler: handle });
 }

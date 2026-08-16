@@ -31,7 +31,8 @@ a `t.step`.
 folder next to it only when the behaviour cannot live on that app. Do not add a
 fixture as its own workspace member.
 
-Each fixture is a `main.ts` that calls `serve({ layouts, middleware, routes })`
-with `route()` leaves and `port: 0`. Shared wraps live on `serve` or a nested
-`group`. The runner is keyed by the fixture's `main.ts` path. `app_test.ts`
-boots `fixtures/app` once and runs its cases as `t.step`s.
+Each fixture is a `main.ts` that calls
+`serve({ layouts, middleware, routes }, { port: 0 })` with `route()` leaves.
+Shared wraps live on `serve` or a nested `group`. The runner is keyed by the
+fixture's `main.ts` path. `app_test.ts` boots `fixtures/app` once and runs its
+cases as `t.step`s.
