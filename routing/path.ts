@@ -52,8 +52,9 @@ export interface Group {
 
 export interface RouteTable {
   /**
-   * Wraps a full-page hit, outermost first. Does not run on fragment
-   * renders (eager `<RouteFragment>` or a lazy fetch).
+   * UI that wraps the route on document render, outermost first. Does
+   * not run on fragment renders (eager `<RouteFragment>` or a lazy
+   * fetch).
    */
   layouts?: Layout[];
   /**
@@ -367,10 +368,10 @@ export function route<Path extends string>(
  * Groups routes that share layouts and middleware. Parent lists run first.
  * Does not prefix paths.
  *
- * Layouts wrap a full-page hit, outermost first, and do not run on
- * fragment renders (eager `<RouteFragment>` or a lazy fetch). Middleware
- * is the request pipeline, outermost first, and runs for document hits
- * and fragment hits.
+ * Layouts are UI that wraps the route on document render, outermost
+ * first, and do not run on fragment renders (eager `<RouteFragment>` or
+ * a lazy fetch). Middleware is the request pipeline, outermost first,
+ * and runs for document hits and fragment hits.
  */
 export function group(opts: RouteTable): Group {
   return {

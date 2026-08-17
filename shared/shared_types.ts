@@ -6,8 +6,8 @@ export type Handler<P = Record<string, never>> = (
 ) => Element | Promise<Element>;
 
 /**
- * Wraps a full-page hit, outermost first. Does not run on fragment
- * renders (eager `<RouteFragment>` or a lazy fetch).
+ * UI that wraps the route on document render, outermost first. Does not
+ * run on fragment renders (eager `<RouteFragment>` or a lazy fetch).
  */
 export type Layout = (
   req: Request,
