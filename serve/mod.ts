@@ -3,10 +3,10 @@ import { handle, init, type RouteTable } from "../routing/mod.ts";
 /**
  * Starts the HTTP server.
  *
- * Layouts are page chrome, outermost first, and do not run on fragment
- * renders (eager `<RouteFragment>` or a lazy fetch). Middleware is the
- * request pipeline, outermost first, and runs for document hits and
- * fragment hits.
+ * Layouts wrap a full-page hit, outermost first, and do not run on
+ * fragment renders (eager `<RouteFragment>` or a lazy fetch). Middleware
+ * is the request pipeline, outermost first, and runs for document hits
+ * and fragment hits.
  *
  * @param table Root layouts, middleware, and nested routes.
  * @param options Forwarded to `Deno.serve`. `handler` is always the router.
