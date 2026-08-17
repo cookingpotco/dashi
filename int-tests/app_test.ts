@@ -40,6 +40,7 @@ const appCases: IntegrationTestCase[] = [
       {
         selector: "route-fragment:not([lazy]) #frag",
         text: "eager-fragment-body",
+        attr: { "data-pre": "from-mw" },
       },
       { selector: "route-fragment[lazy] #fallback", text: "Loading..." },
       { selector: "route-fragment[lazy] #frag", exists: false },

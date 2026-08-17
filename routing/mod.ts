@@ -25,62 +25,46 @@ export {
 
 let compiled: CompiledTable = { staticByPath: new Map(), dynamic: [] };
 
-interface InternalHandleOptions {
-  nested?: boolean;
-}
-
-function internalHandle(
+async function runRoute(
   req: Request,
-  options: InternalHandleOptions = {},
-): Promise<{ html: string; res: Response } | null> {
-  const run = async () => {
-    // TODO: Error handling
-    const matched = match(compiled, new URL(req.url).pathname);
-    if (!matched) {
-      return null;
-    }
-
-    const isFragment = req.headers.has(REQUEST_HEADERS.FRAGMENT);
-    let html = "";
-    const terminal = async () => {
-      html = String(
-        await renderRoute(matched.handler, {
-          req,
-          layouts: matched.layouts,
-          params: matched.params,
-        }),
-      );
-      if (!options.nested) {
-        html = await replaceFragmentSlots(html);
-      }
-      const text = isFragment ? html : `<!DOCTYPE html>${html}`;
-      const res = new Response(text);
-      res.headers.set("Content-Type", "text/html");
-      return res;
-    };
-
-    let index = -1;
-    const dispatch = async (i: number): Promise<Response> => {
-      if (i <= index) {
-        throw new Error("next() called multiple times");
-      }
-      index = i;
-      const mw = matched.middleware[i];
-      if (!mw) {
-        return terminal();
-      }
-      return await mw(req, () => dispatch(i + 1));
-    };
-
-    const res = await dispatch(0);
-    return { html, res };
-  };
-
-  if (!options.nested) {
-    return runWithRenderStore(req, run);
+  isFragment: boolean,
+): Promise<{ html: string | undefined; res: Response } | null> {
+  const matched = match(compiled, new URL(req.url).pathname);
+  if (!matched) {
+    return null;
   }
 
-  return run();
+  let html: string | undefined;
+  const terminal = async () => {
+    html = String(
+      await renderRoute(matched.handler, {
+        req,
+        layouts: matched.layouts,
+        params: matched.params,
+        isFragment,
+      }),
+    );
+    const text = isFragment ? html : `<!DOCTYPE html>${html}`;
+    const res = new Response(text);
+    res.headers.set("Content-Type", "text/html");
+    return res;
+  };
+
+  let index = -1;
+  const dispatch = async (i: number): Promise<Response> => {
+    if (i <= index) {
+      throw new Error("next() called multiple times");
+    }
+    index = i;
+    const mw = matched.middleware[i];
+    if (!mw) {
+      return terminal();
+    }
+    return await mw(req, () => dispatch(i + 1));
+  };
+
+  const res = await dispatch(0);
+  return { html, res };
 }
 
 export function init(table: RouteTable) {
@@ -103,13 +87,22 @@ export async function handle(
   // TODO(COO-13): drop the clone; mutable request data will live on ctx.state.
   const req = new Request(incoming);
 
-  const result = await internalHandle(req);
-
-  if (!result) {
-    return new Response("Not found", { status: 404 });
-  }
-
-  return result.res;
+  return await runWithRenderStore(req, async () => {
+    const isFragment = req.headers.has(REQUEST_HEADERS.FRAGMENT);
+    const result = await runRoute(req, isFragment);
+    if (!result) {
+      return new Response("Not found", { status: 404 });
+    }
+    if (result.html === undefined) {
+      return result.res;
+    }
+    const html = await replaceFragmentSlots(result.html);
+    const text = isFragment ? html : `<!DOCTYPE html>${html}`;
+    return new Response(text, {
+      status: result.res.status,
+      headers: result.res.headers,
+    });
+  });
 }
 
 export function requestEagerFragment(src: string) {
@@ -129,12 +122,9 @@ export function requestEagerFragment(src: string) {
   if (authorization !== null) {
     headers.set("authorization", authorization);
   }
-  headers.set(REQUEST_HEADERS.FRAGMENT, "1");
 
-  const nestedReq = new Request(url, { method: "GET", headers });
-  const promise = internalHandle(nestedReq, { nested: true }).then((
-    res,
-  ) => res ? res.html : res);
+  const req = new Request(url, { method: "GET", headers });
+  const promise = runRoute(req, true).then((result) => result?.html ?? null);
 
   store.inflightFragments.set(src, promise);
 }
