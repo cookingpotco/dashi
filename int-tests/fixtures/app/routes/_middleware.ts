@@ -1,9 +1,12 @@
+import type { WrapCtx } from "dashi";
+import type { AppState } from "../state.ts";
+
 export default async function root(
-  req: Request,
+  ctx: WrapCtx<AppState>,
   next: () => Promise<Response>,
 ): Promise<Response> {
   await new Promise((resolve) => setTimeout(resolve, 25));
-  req.headers.set("x-pre", "from-mw");
+  ctx.state.pre = "from-mw";
   const res = await next();
   res.headers.set("x-mw", "ok");
   return res;

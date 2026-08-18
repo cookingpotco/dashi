@@ -1,8 +1,8 @@
-import type { ParamsOf } from "dashi";
+import type { Ctx, ParamsOf } from "dashi";
+import type { AppState } from "../state.ts";
 
 export default function Post(
-  _req: Request,
-  params: ParamsOf<"/posts/:id">,
+  ctx: Ctx<ParamsOf<"/posts/:id">, AppState>,
 ) {
-  return <p id="post">{params.id}</p>;
+  return <p id="post">{ctx.params.id}</p>;
 }

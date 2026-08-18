@@ -1,10 +1,14 @@
-import { type Element } from "dashi";
+import { type Element, type WrapCtx } from "dashi";
+import type { AppState } from "../state.ts";
 
-export default function RootLayout(req: Request, children: Element): Element {
+export default function RootLayout(
+  ctx: WrapCtx<AppState>,
+  children: Element,
+): Element {
   return (
     <html>
       <h1>Website Title</h1>
-      <p id="pre">{req.headers.get("x-pre")}</p>
+      <p id="pre">{ctx.state.pre}</p>
       {children}
     </html>
   );

@@ -1,18 +1,32 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { type Element } from "../jsx-runtime/jsx_types.ts";
-import { Handler, Layout } from "../shared/mod.ts";
+import { type Ctx, type Handler, type Layout } from "../shared/mod.ts";
 
 interface RenderStore {
-  req: Request;
+  pageReq: Request;
   inflightFragments: Map<string, Promise<string | null>>;
+  currentState: Partial<Record<string, unknown>>;
 }
 
 const als = new AsyncLocalStorage<RenderStore>();
 
 export function runWithRenderStore<T>(req: Request, fn: () => T): T {
   return als.run({
-    req,
+    pageReq: req,
     inflightFragments: new Map(),
+    currentState: {},
+  }, fn);
+}
+
+export function runWithNestedRenderStore<T>(
+  currentState: Partial<Record<string, unknown>>,
+  fn: () => T,
+): T {
+  const parent = getRenderStore();
+  return als.run({
+    pageReq: parent.pageReq,
+    inflightFragments: parent.inflightFragments,
+    currentState,
   }, fn);
 }
 
@@ -24,25 +38,27 @@ export function getRenderStore(): RenderStore {
   return store;
 }
 
-interface RenderRouteOptions {
-  req: Request;
-  layouts: Layout[];
-  params: Record<string, string>;
-  isFragment: boolean;
+interface RenderRouteOptions<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> {
+  ctx: Ctx<Record<string, string>, State>;
+  layouts: Layout<State>[];
 }
 
-export async function renderRoute(
-  handler: Handler<Record<string, string>>,
-  options: RenderRouteOptions,
+export async function renderRoute<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+>(
+  handler: Handler<Record<string, string>, State>,
+  options: RenderRouteOptions<State>,
 ): Promise<Element> {
   const [layout, ...rest] = options.layouts;
 
-  if (!layout || options.isFragment) {
-    return handler(options.req, options.params);
+  if (!layout || options.ctx.isFragment) {
+    return handler(options.ctx);
   }
 
   return layout(
-    options.req,
+    options.ctx,
     await renderRoute(handler, { ...options, layouts: rest }),
   );
 }

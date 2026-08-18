@@ -40,7 +40,20 @@ const appCases: IntegrationTestCase[] = [
       {
         selector: "route-fragment:not([lazy]) #frag",
         text: "eager-fragment-body",
-        attr: { "data-pre": "from-mw" },
+        attr: {
+          "data-pre": "from-mw",
+          "data-embed-only": "yes",
+          "data-frag-only": "yes",
+          "data-frag": "1",
+        },
+      },
+      {
+        selector: "#peer",
+        text: "peer-body",
+        attr: {
+          "data-embed-only": "yes",
+          "data-frag-only": "",
+        },
       },
       { selector: "route-fragment[lazy] #fallback", text: "Loading..." },
       { selector: "route-fragment[lazy] #frag", exists: false },
@@ -54,7 +67,15 @@ const appCases: IntegrationTestCase[] = [
     bodyIncludes: ["<!DOCTYPE html>"],
     select: [
       { selector: "html > body > h1", text: "Website Title" },
-      { selector: "html > body > #frag", text: "eager-fragment-body" },
+      {
+        selector: "html > body > #frag",
+        text: "eager-fragment-body",
+        attr: {
+          "data-embed-only": "",
+          "data-frag-only": "yes",
+          "data-frag": "0",
+        },
+      },
     ],
   },
   {
@@ -67,7 +88,15 @@ const appCases: IntegrationTestCase[] = [
     headers: { "content-type": "text/html" },
     bodyExcludes: ["<!DOCTYPE html>"],
     select: [
-      { selector: "#frag", text: "eager-fragment-body" },
+      {
+        selector: "#frag",
+        text: "eager-fragment-body",
+        attr: {
+          "data-embed-only": "",
+          "data-frag-only": "yes",
+          "data-frag": "1",
+        },
+      },
       { selector: "h1", exists: false },
     ],
   },

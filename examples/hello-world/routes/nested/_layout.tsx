@@ -1,7 +1,7 @@
-import { type Element } from "dashi";
+import { type Element, type WrapCtx } from "dashi";
 
 export default function NestedLayout(
-  _req: Request,
+  _ctx: WrapCtx,
   children: Element,
 ): Element {
   return (

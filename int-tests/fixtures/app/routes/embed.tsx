@@ -5,6 +5,7 @@ export default function Embed() {
     <div>
       <section id="eager">
         <RouteFragment src="/fragment" />
+        <RouteFragment src="/peer" />
       </section>
       <section id="lazy">
         <RouteFragment
