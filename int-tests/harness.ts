@@ -4,8 +4,10 @@ const READY_POLL_MS = 25;
 const KILL_WAIT_MS = 2_000;
 
 export interface AppRequest {
+  method?: string;
   path: string;
   headers?: Record<string, string>;
+  body?: string | URLSearchParams | FormData;
 }
 
 async function readStream(
@@ -70,7 +72,9 @@ export class App implements AsyncDisposable {
 
   fetch(request: AppRequest): Promise<Response> {
     return globalThis.fetch(new URL(request.path, this.origin), {
+      method: request.method ?? "GET",
       headers: request.headers,
+      body: request.body,
       redirect: "manual",
     });
   }
@@ -197,7 +201,7 @@ export function formatIntegrationFailure(
     .map(([name, value]) => `  ${name}: ${value}`)
     .join("\n");
   return [
-    `Integration case failed for ${request.path}`,
+    `Integration case failed for ${request.method ?? "GET"} ${request.path}`,
     `status: ${res.status}`,
     `headers:\n${headers}`,
     `body:\n${body}`,

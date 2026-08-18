@@ -50,17 +50,19 @@ export async function renderRoute<
 >(
   handler: Handler<Record<string, string>, State>,
   options: RenderRouteOptions<State>,
-): Promise<Element> {
+): Promise<Element | Response> {
   const [layout, ...rest] = options.layouts;
 
   if (!layout || options.ctx.isFragment) {
     return handler(options.ctx);
   }
 
-  return layout(
-    options.ctx,
-    await renderRoute(handler, { ...options, layouts: rest }),
-  );
+  const inner = await renderRoute(handler, { ...options, layouts: rest });
+  if (inner instanceof Response) {
+    return inner;
+  }
+
+  return layout(options.ctx, inner);
 }
 
 export function getFragmentSlot(src: string) {

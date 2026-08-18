@@ -9,8 +9,8 @@ if (import.meta.main) {
     layouts: [root],
     middleware: [logger],
     routes: [
-      route("/", home),
-      route("/fragment", fragment),
+      route("/", { GET: home }),
+      route("/fragment", { GET: fragment }),
     ],
   });
 }

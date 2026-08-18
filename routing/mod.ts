@@ -5,6 +5,8 @@ import {
   type CompiledTable,
   flatten,
   match,
+  type Method,
+  METHODS,
   type RouteTable,
 } from "./path.ts";
 import {
@@ -18,6 +20,8 @@ import {
 export {
   type Group,
   group,
+  type Method,
+  type MethodHandlers,
   type ParamsOf,
   type Route,
   route,
@@ -28,6 +32,20 @@ let compiled: CompiledTable<Record<string, unknown>> = {
   staticByPath: new Map(),
   dynamic: [],
 };
+
+function isMethod(method: string): method is Method {
+  return (METHODS as readonly string[]).includes(method);
+}
+
+function methodNotAllowed(
+  handlers: { readonly [M in Method]?: unknown },
+): Response {
+  const allow = METHODS.filter((method) => handlers[method]).join(", ");
+  return new Response("Method Not Allowed", {
+    status: 405,
+    headers: { Allow: allow },
+  });
+}
 
 function createCtx<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
@@ -69,12 +87,21 @@ async function runRoute<
   return await runWithNestedRenderStore(ctx.state, async () => {
     let html: string | undefined;
     const terminal = async () => {
-      html = String(
-        await renderRoute(matched.handler, {
-          ctx,
-          layouts: matched.layouts,
-        }),
-      );
+      const method = ctx.req.method;
+      const handler = isMethod(method) ? matched.handlers[method] : undefined;
+      if (!handler) {
+        return methodNotAllowed(matched.handlers);
+      }
+
+      const rendered = await renderRoute(handler, {
+        ctx,
+        layouts: matched.layouts,
+      });
+      if (rendered instanceof Response) {
+        return rendered;
+      }
+
+      html = String(rendered);
       const text = isFragment ? html : `<!DOCTYPE html>${html}`;
       const res = new Response(text);
       res.headers.set("Content-Type", "text/html");
@@ -107,7 +134,8 @@ export function init<
   // whose state bag is the object createCtx received.
   compiled = compile(routes) as CompiledTable<Record<string, unknown>>;
   for (const r of routes) {
-    info(`[ROUTE]      ${r.path}`);
+    const methods = METHODS.filter((method) => r.handlers[method]).join(",");
+    info(`[ROUTE]      ${methods} ${r.path}`);
   }
 }
 
