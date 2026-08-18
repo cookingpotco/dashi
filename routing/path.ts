@@ -1,4 +1,3 @@
-import { type Element } from "../jsx-runtime/jsx_types.ts";
 import { Handler, Layout, Middleware } from "../shared/shared_types.ts";
 import { type ParamsOf, type PathError } from "./path_types.ts";
 
@@ -32,53 +31,56 @@ type ConcreteSegment =
   | { kind: SegmentKind.Param; name: string }
   | { kind: SegmentKind.Catchall; name: string };
 
-export interface Route {
+export interface Route<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> {
   kind: NodeKind.Route;
   path: string;
-  handler: (
-    req: Request,
-    params: Record<string, string>,
-  ) => Element | Promise<Element>;
-  layouts: Layout[];
-  middleware: Middleware[];
+  handler: Handler<Record<string, string>, State>;
+  layouts: Layout<State>[];
+  middleware: Middleware<State>[];
 }
 
-export interface Group {
+export interface Group<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> {
   kind: NodeKind.Group;
-  layouts: Layout[];
-  middleware: Middleware[];
-  routes: Array<Route | Group>;
+  layouts: Layout<State>[];
+  middleware: Middleware<State>[];
+  routes: Array<Route<State> | Group<State>>;
 }
 
-export interface RouteTable {
+export interface RouteTable<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> {
   /**
    * UI that wraps the route on document render, outermost first. Does
    * not run on fragment renders (eager `<RouteFragment>` or a lazy
    * fetch).
    */
-  layouts?: Layout[];
+  layouts?: Layout<State>[];
   /**
    * Request pipeline, outermost first. Runs for document hits and
    * fragment hits.
    */
-  middleware?: Middleware[];
-  routes: Array<Route | Group>;
+  middleware?: Middleware<State>[];
+  routes: Array<Route<State> | Group<State>>;
 }
 
 export interface CompiledRoute {
   segments: ConcreteSegment[];
-  handler: Route["handler"];
-  layouts: Layout[];
-  middleware: Middleware[];
+  handler: Handler<Record<string, string>, Record<string, unknown>>;
+  layouts: Layout<Record<string, unknown>>[];
+  middleware: Middleware<Record<string, unknown>>[];
   declarationIndex: number;
   path: string;
 }
 
 export interface MatchedRoute {
-  handler: Route["handler"];
+  handler: Handler<Record<string, string>, Record<string, unknown>>;
   params: Record<string, string>;
-  layouts: Layout[];
-  middleware: Middleware[];
+  layouts: Layout<Record<string, unknown>>[];
+  middleware: Middleware<Record<string, unknown>>[];
 }
 
 const NAME_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
@@ -234,7 +236,9 @@ function staticPathname(segments: ConcreteSegment[]): string | null {
   return pathname === "" ? "/" : pathname;
 }
 
-export function compile(routes: Route[]): CompiledTable {
+export function compile<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+>(routes: Route<State>[]): CompiledTable {
   const compiled: CompiledRoute[] = [];
   const seen = new Map<string, string>();
 
@@ -253,9 +257,9 @@ export function compile(routes: Route[]): CompiledTable {
       seen.set(key, declared.path);
       compiled.push({
         segments,
-        handler: declared.handler,
-        layouts: declared.layouts,
-        middleware: declared.middleware,
+        handler: declared.handler as CompiledRoute["handler"],
+        layouts: declared.layouts as CompiledRoute["layouts"],
+        middleware: declared.middleware as CompiledRoute["middleware"],
         declarationIndex: i,
         path: declared.path,
       });
@@ -351,14 +355,17 @@ export function match(
   return null;
 }
 
-export function route<Path extends string>(
+export function route<
+  Path extends string,
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+>(
   path: [PathError<Path>] extends [never] ? Path : PathError<Path>,
-  handler: Handler<ParamsOf<Path>>,
-): Route {
+  handler: Handler<ParamsOf<Path>, State>,
+): Route<State> {
   return {
     kind: NodeKind.Route,
     path,
-    handler: handler as Route["handler"],
+    handler: handler as Route<State>["handler"],
     layouts: [],
     middleware: [],
   };
@@ -373,7 +380,9 @@ export function route<Path extends string>(
  * a lazy fetch). Middleware is the request pipeline, outermost first,
  * and runs for document hits and fragment hits.
  */
-export function group(opts: RouteTable): Group {
+export function group<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+>(opts: RouteTable<State>): Group<State> {
   return {
     kind: NodeKind.Group,
     layouts: opts.layouts ?? [],
@@ -382,8 +391,10 @@ export function group(opts: RouteTable): Group {
   };
 }
 
-export function flatten(table: RouteTable): Route[] {
-  const routes: Route[] = [];
+export function flatten<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+>(table: RouteTable<State>): Route<State>[] {
+  const routes: Route<State>[] = [];
   append(
     table.routes,
     table.layouts ?? [],
@@ -393,11 +404,13 @@ export function flatten(table: RouteTable): Route[] {
   return routes;
 }
 
-function append(
-  nodes: Array<Route | Group>,
-  layouts: Layout[],
-  middleware: Middleware[],
-  routes: Route[],
+function append<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+>(
+  nodes: Array<Route<State> | Group<State>>,
+  layouts: Layout<State>[],
+  middleware: Middleware<State>[],
+  routes: Route<State>[],
 ): void {
   for (const node of nodes) {
     if (node.kind === NodeKind.Group) {

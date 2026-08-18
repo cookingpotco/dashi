@@ -11,8 +11,10 @@ import { handle, init, type RouteTable } from "../routing/mod.ts";
  * @param table Root layouts, middleware, and nested routes.
  * @param options Forwarded to `Deno.serve`. `handler` is always the router.
  */
-export function serve(
-  table: RouteTable,
+export function serve<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+>(
+  table: RouteTable<State>,
   options?: Omit<Deno.ServeTcpOptions & Deno.ServeInit, "handler">,
 ) {
   init(table);

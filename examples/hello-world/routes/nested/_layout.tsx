@@ -1,13 +1,12 @@
-import { type Element } from "dashi";
+import { type Layout } from "dashi";
 
-export default function NestedLayout(
-  _req: Request,
-  children: Element,
-): Element {
+const NestedLayout: Layout = (_ctx, children) => {
   return (
     <div>
       <h2>Nested</h2>
       {children}
     </div>
   );
-}
+};
+
+export default NestedLayout;

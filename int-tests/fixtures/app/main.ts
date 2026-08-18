@@ -1,4 +1,5 @@
-import { group, route, serve } from "dashi";
+import { group, type Middleware, route, serve } from "dashi";
+import type { AppState } from "./state.ts";
 import home from "./routes/index.tsx";
 import root from "./routes/_layout.tsx";
 import logger from "./routes/_middleware.ts";
@@ -10,8 +11,13 @@ import fragment from "./routes/fragment.tsx";
 import postsNew from "./routes/posts_new.tsx";
 import post from "./routes/post.tsx";
 
+const embedOnly: Middleware<AppState> = (ctx, next) => {
+  ctx.state.embedOnly = "yes";
+  return next();
+};
+
 if (import.meta.main) {
-  serve({
+  serve<AppState>({
     layouts: [root],
     middleware: [logger],
     routes: [
@@ -21,7 +27,10 @@ if (import.meta.main) {
         routes: [route("/nested", nested)],
       }),
       route("/echo", echo),
-      route("/embed", embed),
+      group({
+        middleware: [embedOnly],
+        routes: [route("/embed", embed)],
+      }),
       route("/fragment", fragment),
       route("/posts/new", postsNew),
       route("/posts/:id", post),

@@ -1,18 +1,22 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { type Element } from "../jsx-runtime/jsx_types.ts";
-import { Handler, Layout } from "../shared/mod.ts";
+import { type Ctx, type Handler, type Layout } from "../shared/mod.ts";
+
+type AnyState = Record<string, unknown>;
 
 interface RenderStore {
-  req: Request;
+  pageReq: Request;
   inflightFragments: Map<string, Promise<string | null>>;
+  currentState: AnyState;
 }
 
 const als = new AsyncLocalStorage<RenderStore>();
 
 export function runWithRenderStore<T>(req: Request, fn: () => T): T {
   return als.run({
-    req,
+    pageReq: req,
     inflightFragments: new Map(),
+    currentState: {},
   }, fn);
 }
 
@@ -25,24 +29,22 @@ export function getRenderStore(): RenderStore {
 }
 
 interface RenderRouteOptions {
-  req: Request;
-  layouts: Layout[];
-  params: Record<string, string>;
-  isFragment: boolean;
+  ctx: Ctx<Record<string, string>, AnyState>;
+  layouts: Layout<AnyState>[];
 }
 
 export async function renderRoute(
-  handler: Handler<Record<string, string>>,
+  handler: Handler<Record<string, string>, AnyState>,
   options: RenderRouteOptions,
 ): Promise<Element> {
   const [layout, ...rest] = options.layouts;
 
-  if (!layout || options.isFragment) {
-    return handler(options.req, options.params);
+  if (!layout || options.ctx.isFragment) {
+    return handler(options.ctx);
   }
 
   return layout(
-    options.req,
+    options.ctx,
     await renderRoute(handler, { ...options, layouts: rest }),
   );
 }

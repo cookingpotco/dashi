@@ -1,6 +1,6 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import { type Element } from "../jsx-runtime/jsx_types.ts";
-import { type Middleware } from "../shared/shared_types.ts";
+import { type Ctx, type Middleware } from "../shared/shared_types.ts";
 import {
   compile,
   flatten,
@@ -26,11 +26,20 @@ function typechecks() {
   type _root = Expect<Equal<ParamsOf<"/">, Record<string, never>>>;
   type _static = Expect<Equal<ParamsOf<"/posts/new">, Record<string, never>>>;
 
+  type User = { name: string };
+  type AppState = { user: User };
+  type _stateUser = Expect<
+    Equal<
+      Ctx<Record<string, never>, AppState>["state"]["user"],
+      User | undefined
+    >
+  >;
+
   route("/", noop);
-  route("/posts/:id", (_req, params) => {
-    params.id;
+  route("/posts/:id", (ctx) => {
+    ctx.params.id;
     // @ts-expect-error only declared params exist
-    params.slug;
+    ctx.params.slug;
     return "" as Element;
   });
 
@@ -151,8 +160,8 @@ Deno.test("compile rejects duplicate and invalid paths", () => {
 Deno.test("flatten inherits wraps outermost-first and preserves declaration order", () => {
   const rootLayout = () => "" as Element;
   const nestedLayout = () => "" as Element;
-  const rootMw: Middleware = (_req, next) => next();
-  const nestedMw: Middleware = (_req, next) => next();
+  const rootMw: Middleware = (_ctx, next) => next();
+  const nestedMw: Middleware = (_ctx, next) => next();
   const home = () => "" as Element;
   const nested = () => "" as Element;
   const secret = () => "" as Element;
