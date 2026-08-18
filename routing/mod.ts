@@ -1,12 +1,15 @@
-import { type Ctx, REQUEST_HEADERS } from "../shared/mod.ts";
+import {
+  type Ctx,
+  type Method,
+  METHODS,
+  REQUEST_HEADERS,
+} from "../shared/mod.ts";
 import { info } from "../logging/mod.ts";
 import {
   compile,
   type CompiledTable,
   flatten,
   match,
-  type Method,
-  METHODS,
   type RouteTable,
 } from "./path.ts";
 import {
@@ -93,15 +96,16 @@ async function runRoute<
         return methodNotAllowed(matched.handlers);
       }
 
-      const rendered = await renderRoute(handler, {
-        ctx,
-        layouts: matched.layouts,
-      });
-      if (rendered instanceof Response) {
-        return rendered;
+      const out = await handler(ctx);
+      if (out instanceof Response) {
+        return out;
       }
-
-      html = String(rendered);
+      html = String(
+        ctx.isFragment ? out : await renderRoute(out, {
+          ctx,
+          layouts: matched.layouts,
+        }),
+      );
       const text = isFragment ? html : `<!DOCTYPE html>${html}`;
       const res = new Response(text);
       res.headers.set("Content-Type", "text/html");

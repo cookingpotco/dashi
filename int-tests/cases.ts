@@ -26,10 +26,7 @@ export interface IntegrationTestCase {
     bodyExcludes?: string[];
     select?: SelectExpect[];
   };
-  json?: {
-    equals?: unknown;
-    contains?: Record<string, unknown>;
-  };
+  json?: unknown;
 }
 
 function parseHtml(body: string) {
@@ -93,7 +90,7 @@ export async function runCase(
         assertHeader(res, name, value, app.origin);
       }
     }
-    if (!testCase.html && !testCase.json) {
+    if (!testCase.html && testCase.json === undefined) {
       assertBodySnippets(body, testCase.bodyIncludes, testCase.bodyExcludes);
     }
     if (testCase.html) {
@@ -132,16 +129,8 @@ export async function runCase(
         }
       }
     }
-    if (testCase.json) {
-      const parsed = JSON.parse(body);
-      if (testCase.json.equals !== undefined) {
-        assertEquals(parsed, testCase.json.equals);
-      }
-      if (testCase.json.contains) {
-        for (const [key, value] of Object.entries(testCase.json.contains)) {
-          assertEquals(parsed[key], value);
-        }
-      }
+    if (testCase.json !== undefined) {
+      assertEquals(JSON.parse(body), testCase.json);
     }
   } catch (error) {
     const dump = formatIntegrationFailure(app, testCase.request, res, body);

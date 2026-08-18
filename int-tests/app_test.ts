@@ -158,7 +158,7 @@ const appCases: IntegrationTestCase[] = [
     request: { path: "/ok" },
     status: 200,
     headers: { "content-type": "application/json" },
-    json: { equals: { ok: true } },
+    json: { ok: true },
   },
   {
     name: "POST /guestbook urlencoded redirects",

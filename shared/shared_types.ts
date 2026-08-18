@@ -36,7 +36,8 @@ export type Handler<
   ctx: Ctx<Params, State>,
 ) => Element | Response | Promise<Element | Response>;
 
-export type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+export const METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const;
+export type Method = typeof METHODS[number];
 
 export type MethodHandlers<
   Params extends Record<string, string> = Record<string, never>,

@@ -18,9 +18,9 @@ fixture `main.ts` under the shared root wraps, or a nested `group` when it needs
 extra wraps, and import the handler. One request, several asserts: status,
 headers, then at most one of `html` or `json`. `html` covers parsed DOM `select`
 plus raw `bodyIncludes` / `bodyExcludes` (escaping, DOCTYPE, leftover
-`{{fragment:` markers). `json` parses the body. Raw top-level `bodyIncludes` /
-`bodyExcludes` are for responses that are neither (404, 405, empty 303).
-`runCase` parses HTML only when `html` is set.
+`{{fragment:` markers). `json` is the expected parsed object. Raw top-level
+`bodyIncludes` / `bodyExcludes` are for responses that are neither (404, 405,
+empty 303). `runCase` parses HTML only when `html` is set.
 
 `runCase` executes that data. Flows that are not one request (cookies,
 concurrent requests) use `boot` / `App.fetch` from `harness.ts` inside a

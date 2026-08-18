@@ -1,21 +1,13 @@
 import {
   Layout,
-  type Method,
   type MethodHandlers,
+  METHODS,
   Middleware,
 } from "../shared/shared_types.ts";
 import { type ParamsOf, type PathError } from "./path_types.ts";
 
 export type { Method, MethodHandlers } from "../shared/shared_types.ts";
 export type { ParamsOf } from "./path_types.ts";
-
-export const METHODS: readonly Method[] = [
-  "GET",
-  "POST",
-  "PUT",
-  "PATCH",
-  "DELETE",
-];
 
 const enum NodeKind {
   Route = "route",
