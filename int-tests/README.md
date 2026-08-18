@@ -31,10 +31,12 @@ by a GET that observes it.
 
 `fixtures/app` is the M1 app: one small tree covering the cases above. Put a new
 folder next to it only when the behaviour cannot live on that app. Do not add a
-fixture as its own workspace member.
+fixture as its own workspace member. `error-defaults` and
+`error-fallback-response` cover omitted `notFound` / `errorFallback` and an
+`errorFallback` `Response`, which cannot share the main app's `serve()` table.
 
-Each fixture is a `main.ts` that calls
+Each fixture is a `main.ts` or `main.tsx` that calls
 `serve({ layouts, middleware, routes }, { port: 0 })` with `route()` leaves.
 Shared wraps live on `serve` or a nested `group`. The runner is keyed by the
-fixture's `main.ts` path. `app_test.ts` boots `fixtures/app` once and runs its
+fixture's `main.ts` path. `app_test.ts` boots each fixture it needs and runs its
 cases as `t.step`s.

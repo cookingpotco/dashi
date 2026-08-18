@@ -1,16 +1,19 @@
+import { type Element } from "../jsx-runtime/jsx_types.ts";
+import { error as logError, info } from "../logging/mod.ts";
 import {
   type Ctx,
   type Method,
   METHODS,
   REQUEST_HEADERS,
 } from "../shared/mod.ts";
-import { info } from "../logging/mod.ts";
 import {
   compile,
   type CompiledTable,
   flatten,
+  type GroupBoundary,
   match,
-  type RouteTable,
+  type MatchedRoute,
+  type ServeTable,
 } from "./path.ts";
 import {
   getRenderStore,
@@ -29,11 +32,18 @@ export {
   type Route,
   route,
   type RouteTable,
+  type ServeTable,
 } from "./path.ts";
+
+const EMPTY_PAGE = "" as Element;
+const DEFAULT_NOT_FOUND_BODY = "Not found";
+const DEFAULT_ERROR_FALLBACK_BODY = "Something Went Wrong";
 
 let compiled: CompiledTable<Record<string, unknown>> = {
   staticByPath: new Map(),
   dynamic: [],
+  rootLayouts: [],
+  rootMiddleware: [],
 };
 
 function isMethod(method: string): method is Method {
@@ -67,17 +77,249 @@ function createCtx<
   };
 }
 
-async function runRoute<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
->(
-  table: CompiledTable<State>,
+function htmlResponse(body: string, status: number): Response {
+  const res = new Response(body, { status });
+  res.headers.set("Content-Type", "text/html");
+  return res;
+}
+
+function lastResort(isFragment: boolean): Response {
+  if (isFragment) {
+    return new Response("", { status: 500 });
+  }
+  const fallback = compiled.errorFallback;
+  if (fallback === undefined) {
+    return new Response(DEFAULT_ERROR_FALLBACK_BODY, { status: 500 });
+  }
+  if (fallback instanceof Response) {
+    return fallback;
+  }
+  return htmlResponse(`<!DOCTYPE html>${fallback}`, 500);
+}
+
+function rootBoundaries(): GroupBoundary<Record<string, unknown>>[] {
+  return [{ layouts: compiled.rootLayouts, error: compiled.rootError }];
+}
+
+async function recoverFragment(
+  thrown: unknown,
+  startIndex: number,
+  ctx: Ctx<Record<string, string>, Record<string, unknown>>,
+  boundaries: GroupBoundary<Record<string, unknown>>[],
+  bag: { html: string | undefined },
+): Promise<Response> {
+  const boundary = startIndex >= 0 ? boundaries[startIndex] : undefined;
+  try {
+    if (!boundary?.error) {
+      bag.html = undefined;
+      return new Response("", { status: 500 });
+    }
+    const page = await boundary.error(ctx, thrown);
+    if (page instanceof Response) {
+      bag.html = undefined;
+      return page;
+    }
+    bag.html = String(page);
+    return htmlResponse(bag.html, 500);
+  } catch (nextThrown) {
+    logError(nextThrown);
+    bag.html = undefined;
+    return new Response("", { status: 500 });
+  }
+}
+
+async function recover(
+  thrown: unknown,
+  startIndex: number,
+  ctx: Ctx<Record<string, string>, Record<string, unknown>>,
+  boundaries: GroupBoundary<Record<string, unknown>>[],
+  bag: { html: string | undefined },
+): Promise<Response> {
+  logError(thrown);
+
+  if (ctx.isFragment) {
+    return await recoverFragment(thrown, startIndex, ctx, boundaries, bag);
+  }
+
+  for (let i = startIndex; i >= 0; i--) {
+    const boundary = boundaries[i]!;
+    let page: Element | Response;
+    try {
+      page = boundary.error ? await boundary.error(ctx, thrown) : EMPTY_PAGE;
+    } catch (nextThrown) {
+      thrown = nextThrown;
+      logError(thrown);
+      continue;
+    }
+    if (page instanceof Response) {
+      bag.html = undefined;
+      return page;
+    }
+
+    let wrapped = page;
+    let layoutFailedAt: number | undefined;
+    for (let j = i; j >= 0; j--) {
+      try {
+        wrapped = await renderRoute(wrapped, {
+          ctx,
+          layouts: boundaries[j]!.layouts,
+        });
+      } catch (layoutThrown) {
+        thrown = layoutThrown;
+        logError(thrown);
+        layoutFailedAt = j;
+        break;
+      }
+    }
+    if (layoutFailedAt !== undefined) {
+      i = layoutFailedAt;
+      continue;
+    }
+
+    bag.html = String(wrapped);
+    return htmlResponse(`<!DOCTYPE html>${bag.html}`, 500);
+  }
+
+  bag.html = undefined;
+  return lastResort(false);
+}
+
+async function runHandlerTerminal(
+  ctx: Ctx<Record<string, string>, Record<string, unknown>>,
+  matched: MatchedRoute<Record<string, unknown>>,
+  bag: { html: string | undefined },
+): Promise<Response> {
+  const method = ctx.req.method;
+  const handler = isMethod(method) ? matched.handlers[method] : undefined;
+  if (!handler) {
+    return methodNotAllowed(matched.handlers);
+  }
+
+  const boundaries = matched.boundaries;
+  let page: Element;
+  try {
+    const out = await handler(ctx);
+    if (out instanceof Response) {
+      return out;
+    }
+    page = out;
+  } catch (thrown) {
+    return await recover(
+      thrown,
+      boundaries.length - 1,
+      ctx,
+      boundaries,
+      bag,
+    );
+  }
+
+  if (ctx.isFragment) {
+    bag.html = String(page);
+    return htmlResponse(bag.html, 200);
+  }
+
+  for (let j = boundaries.length - 1; j >= 0; j--) {
+    try {
+      page = await renderRoute(page, {
+        ctx,
+        layouts: boundaries[j]!.layouts,
+      });
+    } catch (thrown) {
+      return await recover(thrown, j - 1, ctx, boundaries, bag);
+    }
+  }
+
+  bag.html = String(page);
+  return htmlResponse(`<!DOCTYPE html>${bag.html}`, 200);
+}
+
+async function runNotFoundTerminal(
+  ctx: Ctx<Record<string, string>, Record<string, unknown>>,
+  bag: { html: string | undefined },
+): Promise<Response> {
+  const boundaries = rootBoundaries();
+  let page: Element;
+  try {
+    const notFound = compiled.notFound;
+    if (!notFound) {
+      return new Response(DEFAULT_NOT_FOUND_BODY, { status: 404 });
+    }
+    const out = await notFound(ctx);
+    if (out instanceof Response) {
+      return out;
+    }
+    page = out;
+  } catch (thrown) {
+    return await recover(thrown, 0, ctx, boundaries, bag);
+  }
+
+  if (ctx.isFragment) {
+    bag.html = undefined;
+    return new Response("", { status: 404 });
+  }
+
+  for (let j = boundaries.length - 1; j >= 0; j--) {
+    try {
+      page = await renderRoute(page, {
+        ctx,
+        layouts: boundaries[j]!.layouts,
+      });
+    } catch (thrown) {
+      return await recover(thrown, j - 1, ctx, boundaries, bag);
+    }
+  }
+
+  bag.html = String(page);
+  return htmlResponse(`<!DOCTYPE html>${bag.html}`, 404);
+}
+
+async function runPipeline(
+  ctx: Ctx<Record<string, string>, Record<string, unknown>>,
+  middleware: MatchedRoute<Record<string, unknown>>["middleware"],
+  runTerminal: (bag: { html: string | undefined }) => Promise<Response>,
+): Promise<{ html: string | undefined; res: Response }> {
+  return await runWithNestedRenderStore(ctx.state, async () => {
+    const bag: { html: string | undefined } = { html: undefined };
+    let index = -1;
+    const dispatch = async (i: number): Promise<Response> => {
+      if (i <= index) {
+        throw new Error("next() called multiple times");
+      }
+      index = i;
+      const mw = middleware[i];
+      const res = mw
+        ? await mw(ctx, () => dispatch(i + 1))
+        : await runTerminal(bag);
+      return new Response(res.body, res);
+    };
+    const res = await dispatch(0);
+    return { html: bag.html, res };
+  });
+}
+
+async function runRoute(
+  table: CompiledTable<Record<string, unknown>>,
   req: Request,
   isFragment: boolean,
-  state: Partial<State>,
+  state: Partial<Record<string, unknown>>,
+  recoverMiss: boolean,
 ): Promise<{ html: string | undefined; res: Response } | null> {
   const matched = match(table, new URL(req.url).pathname);
   if (!matched) {
-    return null;
+    if (!recoverMiss) {
+      return null;
+    }
+    const ctx = createCtx({
+      req,
+      params: {},
+      isFragment,
+      state,
+    });
+    return await runPipeline(
+      ctx,
+      table.rootMiddleware,
+      (bag) => runNotFoundTerminal(ctx, bag),
+    );
   }
 
   const ctx = createCtx({
@@ -86,56 +328,27 @@ async function runRoute<
     isFragment,
     state,
   });
-
-  return await runWithNestedRenderStore(ctx.state, async () => {
-    let html: string | undefined;
-    const terminal = async () => {
-      const method = ctx.req.method;
-      const handler = isMethod(method) ? matched.handlers[method] : undefined;
-      if (!handler) {
-        return methodNotAllowed(matched.handlers);
-      }
-
-      const out = await handler(ctx);
-      if (out instanceof Response) {
-        return out;
-      }
-      html = String(
-        ctx.isFragment ? out : await renderRoute(out, {
-          ctx,
-          layouts: matched.layouts,
-        }),
-      );
-      const text = isFragment ? html : `<!DOCTYPE html>${html}`;
-      const res = new Response(text);
-      res.headers.set("Content-Type", "text/html");
-      return res;
-    };
-
-    let index = -1;
-    const dispatch = async (i: number): Promise<Response> => {
-      if (i <= index) {
-        throw new Error("next() called multiple times");
-      }
-      index = i;
-      const mw = matched.middleware[i];
-      const res = mw ? await mw(ctx, () => dispatch(i + 1)) : await terminal();
-      // Response.redirect freezes headers; copy so outer middleware can set().
-      return new Response(res.body, res);
-    };
-
-    const res = await dispatch(0);
-    return { html, res };
-  });
+  return await runPipeline(
+    ctx,
+    matched.middleware,
+    (bag) => runHandlerTerminal(ctx, matched, bag),
+  );
 }
 
 export function init<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
->(table: RouteTable<State>) {
+>(table: ServeTable<State>) {
   const routes = flatten(table);
   // handle() has no State parameter. The table is only invoked with a ctx
   // whose state bag is the object createCtx received.
-  compiled = compile(routes) as CompiledTable<Record<string, unknown>>;
+  compiled = {
+    ...compile(routes),
+    rootLayouts: table.layouts ?? [],
+    rootMiddleware: table.middleware ?? [],
+    rootError: table.error,
+    notFound: table.notFound,
+    errorFallback: table.errorFallback,
+  } as CompiledTable<Record<string, unknown>>;
   for (const r of routes) {
     const methods = METHODS.filter((method) => r.handlers[method]).join(",");
     info(`[ROUTE]      ${methods} ${r.path}`);
@@ -152,19 +365,21 @@ export async function handle(
 
   return await runWithRenderStore(req, async () => {
     const isFragment = req.headers.has(REQUEST_HEADERS.FRAGMENT);
-    const result = await runRoute(compiled, req, isFragment, {});
-    if (!result) {
-      return new Response("Not found", { status: 404 });
+    try {
+      const result = await runRoute(compiled, req, isFragment, {}, true);
+      if (!result || result.html === undefined) {
+        return result?.res ?? lastResort(isFragment);
+      }
+      const html = await replaceFragmentSlots(result.html);
+      const text = isFragment ? html : `<!DOCTYPE html>${html}`;
+      return new Response(text, {
+        status: result.res.status,
+        headers: result.res.headers,
+      });
+    } catch (thrown) {
+      logError(thrown);
+      return lastResort(isFragment);
     }
-    if (result.html === undefined) {
-      return result.res;
-    }
-    const html = await replaceFragmentSlots(result.html);
-    const text = isFragment ? html : `<!DOCTYPE html>${html}`;
-    return new Response(text, {
-      status: result.res.status,
-      headers: result.res.headers,
-    });
   });
 }
 
@@ -187,8 +402,18 @@ export function requestEagerFragment(src: string) {
   }
 
   const req = new Request(url, { method: "GET", headers });
-  const promise = runRoute(compiled, req, true, { ...store.currentState })
-    .then((result) => result?.html ?? null);
+  const promise = runRoute(
+    compiled,
+    req,
+    true,
+    { ...store.currentState },
+    false,
+  )
+    .then((result) => result?.html ?? null)
+    .catch((thrown) => {
+      logError(thrown);
+      return null;
+    });
 
   store.inflightFragments.set(src, promise);
 }

@@ -1,0 +1,49 @@
+import {
+  type Element,
+  type Middleware,
+  route,
+  serve,
+  type WrapperCtx,
+} from "dashi";
+
+const logger: Middleware = async (_ctx, next) => {
+  const res = await next();
+  res.headers.set("x-mw", "ok");
+  return res;
+};
+
+function rootLayout(ctx: WrapperCtx, children: Element): Element {
+  if (ctx.url.pathname === "/root-layout-throws") {
+    throw new Error("root-layout");
+  }
+  return (
+    <html>
+      <h1>Defaults</h1>
+      {children}
+    </html>
+  );
+}
+
+function home(): Element {
+  return <p id="home">home</p>;
+}
+
+function boom(): Element {
+  throw new Error("handler-boom");
+}
+
+function okPage(): Element {
+  return <p id="ok-page">ok</p>;
+}
+
+if (import.meta.main) {
+  serve({
+    layouts: [rootLayout],
+    middleware: [logger],
+    routes: [
+      route("/", { GET: home }),
+      route("/throw", { GET: boom }),
+      route("/root-layout-throws", { GET: okPage }),
+    ],
+  }, { port: 0 });
+}

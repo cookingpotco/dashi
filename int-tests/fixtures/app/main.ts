@@ -17,6 +17,29 @@ import {
 } from "./routes/guestbook.tsx";
 import ok from "./routes/ok.ts";
 import gated from "./routes/gated.tsx";
+import notFound from "./routes/not_found.tsx";
+import rootError from "./routes/error.tsx";
+import errorFallback from "./routes/error_fallback.tsx";
+import {
+  compactError,
+  embedFragError,
+  embedFragErrorResponse,
+  embedFragErrorThrows,
+  embedFragMiss,
+  embedFragThrow,
+  jsonError,
+  nestedError,
+  nestedErrorLayout,
+  nestedMw,
+  noErrorLayout,
+  okPage,
+  responseError,
+  throwErrorHandlerBoom,
+  throwHandler,
+  throwingError,
+  throwingLayout,
+  throwingMw,
+} from "./routes/errors.tsx";
 
 const embedOnly: Middleware<AppState> = (ctx, next) => {
   ctx.state.embedOnly = "yes";
@@ -39,6 +62,9 @@ if (import.meta.main) {
   serve<AppState>({
     layouts: [root],
     middleware: [logger],
+    notFound,
+    error: rootError,
+    errorFallback,
     routes: [
       route("/", { GET: home }),
       group({
@@ -63,6 +89,60 @@ if (import.meta.main) {
         middleware: [requireSession],
         routes: [route("/gated", { GET: gated })],
       }),
+      route("/throw", { GET: throwHandler }),
+      route("/root-layout-throws", { GET: okPage }),
+      route("/root-error-throws", { GET: throwErrorHandlerBoom }),
+      group({
+        layouts: [noErrorLayout],
+        routes: [route("/throw-no-error", { GET: throwHandler })],
+      }),
+      group({
+        layouts: [nestedErrorLayout],
+        middleware: [nestedMw],
+        error: nestedError,
+        routes: [route("/nested-error", { GET: throwHandler })],
+      }),
+      group({
+        layouts: [throwingLayout],
+        error: nestedError,
+        routes: [route("/nested-layout-throws", { GET: okPage })],
+      }),
+      group({
+        layouts: [throwingLayout],
+        routes: [route("/nested-layout-throws-no-error", { GET: okPage })],
+      }),
+      group({
+        error: throwingError,
+        routes: [route("/nested-error-throws", { GET: throwHandler })],
+      }),
+      group({
+        middleware: [throwingMw],
+        routes: [route("/mw-throws", { GET: okPage })],
+      }),
+      group({
+        error: jsonError,
+        routes: [route("/json-throw", { GET: throwHandler })],
+      }),
+      group({
+        routes: [route("/frag-throw", { GET: throwHandler })],
+      }),
+      group({
+        error: compactError,
+        routes: [route("/frag-error", { GET: throwHandler })],
+      }),
+      group({
+        error: responseError,
+        routes: [route("/frag-error-response", { GET: throwHandler })],
+      }),
+      group({
+        error: throwingError,
+        routes: [route("/frag-error-throws", { GET: throwHandler })],
+      }),
+      route("/embed-frag-throw", { GET: embedFragThrow }),
+      route("/embed-frag-error", { GET: embedFragError }),
+      route("/embed-frag-error-response", { GET: embedFragErrorResponse }),
+      route("/embed-frag-error-throws", { GET: embedFragErrorThrows }),
+      route("/embed-frag-miss", { GET: embedFragMiss }),
     ],
   }, { port: 0 });
 }

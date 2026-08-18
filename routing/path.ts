@@ -1,4 +1,7 @@
+import { type Element } from "../jsx-runtime/jsx_types.ts";
 import {
+  type ErrorHandler,
+  type Handler,
   Layout,
   type MethodHandlers,
   METHODS,
@@ -6,8 +9,24 @@ import {
 } from "../shared/shared_types.ts";
 import { type ParamsOf, type PathError } from "./path_types.ts";
 
-export type { Method, MethodHandlers } from "../shared/shared_types.ts";
+export type {
+  ErrorHandler,
+  Method,
+  MethodHandlers,
+} from "../shared/shared_types.ts";
 export type { ParamsOf } from "./path_types.ts";
+
+/**
+ * One group's layouts and optional `error`, outermost group first on
+ * each compiled route. A group's `error` catches handler throws and
+ * inner group failures; it does not catch that group's own layouts.
+ */
+export interface GroupBoundary<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> {
+  layouts: Layout<State>[];
+  error?: ErrorHandler<State>;
+}
 
 const enum NodeKind {
   Route = "route",
@@ -43,7 +62,7 @@ export interface Route<
   kind: NodeKind.Route;
   path: string;
   handlers: MethodHandlers<Record<string, string>, State>;
-  layouts: Layout<State>[];
+  boundaries: GroupBoundary<State>[];
   middleware: Middleware<State>[];
 }
 
@@ -53,6 +72,7 @@ export interface Group<
   kind: NodeKind.Group;
   layouts: Layout<State>[];
   middleware: Middleware<State>[];
+  error?: ErrorHandler<State>;
   routes: Array<Route<State> | Group<State>>;
 }
 
@@ -70,7 +90,33 @@ export interface RouteTable<
    * fragment hits.
    */
   middleware?: Middleware<State>[];
+  /**
+   * Catches handler throws and inner group failures. Does not catch
+   * this group's own layouts. A one-off is a one-route `group()`.
+   */
+  error?: ErrorHandler<State>;
   routes: Array<Route<State> | Group<State>>;
+}
+
+/**
+ * Root table for `serve()` / `init()`. `notFound` and `errorFallback`
+ * are not on `group()`.
+ */
+export interface ServeTable<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> extends RouteTable<State> {
+  /**
+   * Miss handler. `Element` becomes a 404 document with root layouts;
+   * `Response` is sent as-is. Omitted: `new Response("Not found", {
+   * status: 404 })`.
+   */
+  notFound?: Handler<Record<string, string>, State>;
+  /**
+   * Last-resort 500 value: no layouts, no `ctx`, no `thrown`. `Element`
+   * becomes 500 HTML with DOCTYPE; `Response` is sent as-is. Omitted:
+   * `new Response("Something Went Wrong", { status: 500 })`.
+   */
+  errorFallback?: Element | Response;
 }
 
 export interface CompiledRoute<
@@ -78,7 +124,7 @@ export interface CompiledRoute<
 > {
   segments: ConcreteSegment[];
   handlers: MethodHandlers<Record<string, string>, State>;
-  layouts: Layout<State>[];
+  boundaries: GroupBoundary<State>[];
   middleware: Middleware<State>[];
   declarationIndex: number;
   path: string;
@@ -91,6 +137,7 @@ export interface MatchedRoute<
   params: Record<string, string>;
   layouts: Layout<State>[];
   middleware: Middleware<State>[];
+  boundaries: GroupBoundary<State>[];
 }
 
 export interface CompiledTable<
@@ -98,6 +145,11 @@ export interface CompiledTable<
 > {
   staticByPath: Map<string, CompiledRoute<State>>;
   dynamic: CompiledRoute<State>[];
+  rootLayouts: Layout<State>[];
+  rootMiddleware: Middleware<State>[];
+  rootError?: ErrorHandler<State>;
+  notFound?: Handler<Record<string, string>, State>;
+  errorFallback?: Element | Response;
 }
 
 const NAME_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
@@ -273,7 +325,7 @@ export function compile<
       compiled.push({
         segments,
         handlers: declared.handlers,
-        layouts: declared.layouts,
+        boundaries: declared.boundaries,
         middleware: declared.middleware,
         declarationIndex: i,
         path: declared.path,
@@ -292,7 +344,12 @@ export function compile<
     }
   }
   dynamic.sort(compareCompiled);
-  return { staticByPath, dynamic };
+  return {
+    staticByPath,
+    dynamic,
+    rootLayouts: [],
+    rootMiddleware: [],
+  };
 }
 
 function matchPattern(
@@ -348,8 +405,9 @@ function matched<
   return {
     handlers: compiledRoute.handlers,
     params,
-    layouts: compiledRoute.layouts,
+    layouts: compiledRoute.boundaries.flatMap((boundary) => boundary.layouts),
     middleware: compiledRoute.middleware,
+    boundaries: compiledRoute.boundaries,
   };
 }
 
@@ -396,19 +454,21 @@ export function route<
     // Path literals prove narrower params than Route stores; match only
     // fills the declared keys, so this widening is safe.
     handlers: handlers as Route<State>["handlers"],
-    layouts: [],
+    boundaries: [],
     middleware: [],
   };
 }
 
 /**
- * Groups routes that share layouts and middleware. Parent lists run first.
- * Does not prefix paths.
+ * Groups routes that share layouts, middleware, and error UI. Parent
+ * lists run first. Does not prefix paths.
  *
  * Layouts are UI that wraps the route on document render, outermost
  * first, and do not run on fragment renders (eager `<RouteFragment>` or
  * a lazy fetch). Middleware is the request pipeline, outermost first,
- * and runs for document hits and fragment hits.
+ * and runs for document hits and fragment hits. `error` catches handler
+ * throws and inner group failures; it does not catch this group's own
+ * layouts.
  */
 export function group<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
@@ -417,6 +477,7 @@ export function group<
     kind: NodeKind.Group,
     layouts: opts.layouts ?? [],
     middleware: opts.middleware ?? [],
+    error: opts.error,
     routes: opts.routes,
   };
 }
@@ -427,7 +488,7 @@ export function flatten<
   const routes: Route<State>[] = [];
   append(
     table.routes,
-    table.layouts ?? [],
+    [{ layouts: table.layouts ?? [], error: table.error }],
     table.middleware ?? [],
     routes,
   );
@@ -438,7 +499,7 @@ function append<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(
   nodes: Array<Route<State> | Group<State>>,
-  layouts: Layout<State>[],
+  boundaries: GroupBoundary<State>[],
   middleware: Middleware<State>[],
   routes: Route<State>[],
 ): void {
@@ -446,7 +507,7 @@ function append<
     if (node.kind === NodeKind.Group) {
       append(
         node.routes,
-        [...layouts, ...node.layouts],
+        [...boundaries, { layouts: node.layouts, error: node.error }],
         [...middleware, ...node.middleware],
         routes,
       );
@@ -456,7 +517,7 @@ function append<
       kind: NodeKind.Route,
       path: node.path,
       handlers: node.handlers,
-      layouts: [...layouts, ...node.layouts],
+      boundaries: [...boundaries, ...node.boundaries],
       middleware: [...middleware, ...node.middleware],
     });
   }

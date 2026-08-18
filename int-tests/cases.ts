@@ -27,6 +27,8 @@ export interface IntegrationTestCase {
     select?: SelectExpect[];
   };
   json?: unknown;
+  /** Exact body match. Use for empty 404/500 bodies. */
+  bodyExact?: string;
 }
 
 function parseHtml(body: string) {
@@ -90,7 +92,9 @@ export async function runCase(
         assertHeader(res, name, value, app.origin);
       }
     }
-    if (!testCase.html && testCase.json === undefined) {
+    if (testCase.bodyExact !== undefined) {
+      assertEquals(body, testCase.bodyExact);
+    } else if (!testCase.html && testCase.json === undefined) {
       assertBodySnippets(body, testCase.bodyIncludes, testCase.bodyExcludes);
     }
     if (testCase.html) {

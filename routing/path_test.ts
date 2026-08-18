@@ -205,11 +205,18 @@ Deno.test("flatten inherits wraps outermost-first and preserves declaration orde
   assertEquals(homeMatch?.handlers.GET, home);
   assertEquals(homeMatch?.layouts, [rootLayout]);
   assertEquals(homeMatch?.middleware, [rootMw]);
+  assertEquals(homeMatch?.boundaries, [
+    { layouts: [rootLayout], error: undefined },
+  ]);
 
   const nestedMatch = match(compiled, "/nested");
   assertEquals(nestedMatch?.handlers.GET, nested);
   assertEquals(nestedMatch?.layouts, [rootLayout, nestedLayout]);
   assertEquals(nestedMatch?.middleware, [rootMw, nestedMw]);
+  assertEquals(nestedMatch?.boundaries, [
+    { layouts: [rootLayout], error: undefined },
+    { layouts: [nestedLayout], error: undefined },
+  ]);
 
   const secretMatch = match(compiled, "/secret");
   assertEquals(secretMatch?.handlers.GET, secret);
@@ -219,6 +226,28 @@ Deno.test("flatten inherits wraps outermost-first and preserves declaration orde
   assertEquals(match(compiled, "/posts/new")?.handlers.GET, postsNew);
   assertEquals(match(compiled, "/posts/abc")?.handlers.GET, postsId);
   assertEquals(match(compiled, "/posts/abc")?.params, { id: "abc" });
+});
+
+Deno.test("flatten keeps per-group error on the boundary chain", () => {
+  const rootError = () => "" as Element;
+  const nestedError = () => "" as Element;
+  const page = () => "" as Element;
+
+  const routes = flatten({
+    error: rootError,
+    routes: [
+      group({
+        error: nestedError,
+        routes: [route("/x", { GET: page })],
+      }),
+    ],
+  });
+  const compiled = compile(routes);
+  const matched = match(compiled, "/x");
+  assertEquals(matched?.boundaries, [
+    { layouts: [], error: rootError },
+    { layouts: [], error: nestedError },
+  ]);
 });
 
 Deno.test("GET+POST share one path; empty map throws", () => {
