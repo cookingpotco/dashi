@@ -1,4 +1,9 @@
-import { type Ctx, REQUEST_HEADERS } from "../shared/mod.ts";
+import {
+  type Ctx,
+  type Method,
+  METHODS,
+  REQUEST_HEADERS,
+} from "../shared/mod.ts";
 import { info } from "../logging/mod.ts";
 import {
   compile,
@@ -18,6 +23,8 @@ import {
 export {
   type Group,
   group,
+  type Method,
+  type MethodHandlers,
   type ParamsOf,
   type Route,
   route,
@@ -28,6 +35,20 @@ let compiled: CompiledTable<Record<string, unknown>> = {
   staticByPath: new Map(),
   dynamic: [],
 };
+
+function isMethod(method: string): method is Method {
+  return (METHODS as readonly string[]).includes(method);
+}
+
+function methodNotAllowed(
+  handlers: { readonly [M in Method]?: unknown },
+): Response {
+  const allow = METHODS.filter((method) => handlers[method]).join(", ");
+  return new Response("Method Not Allowed", {
+    status: 405,
+    headers: { Allow: allow },
+  });
+}
 
 function createCtx<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
@@ -69,8 +90,18 @@ async function runRoute<
   return await runWithNestedRenderStore(ctx.state, async () => {
     let html: string | undefined;
     const terminal = async () => {
+      const method = ctx.req.method;
+      const handler = isMethod(method) ? matched.handlers[method] : undefined;
+      if (!handler) {
+        return methodNotAllowed(matched.handlers);
+      }
+
+      const out = await handler(ctx);
+      if (out instanceof Response) {
+        return out;
+      }
       html = String(
-        await renderRoute(matched.handler, {
+        ctx.isFragment ? out : await renderRoute(out, {
           ctx,
           layouts: matched.layouts,
         }),
@@ -88,10 +119,9 @@ async function runRoute<
       }
       index = i;
       const mw = matched.middleware[i];
-      if (!mw) {
-        return terminal();
-      }
-      return await mw(ctx, () => dispatch(i + 1));
+      const res = mw ? await mw(ctx, () => dispatch(i + 1)) : await terminal();
+      // Response.redirect freezes headers; copy so outer middleware can set().
+      return new Response(res.body, res);
     };
 
     const res = await dispatch(0);
@@ -107,7 +137,8 @@ export function init<
   // whose state bag is the object createCtx received.
   compiled = compile(routes) as CompiledTable<Record<string, unknown>>;
   for (const r of routes) {
-    info(`[ROUTE]      ${r.path}`);
+    const methods = METHODS.filter((method) => r.handlers[method]).join(",");
+    info(`[ROUTE]      ${methods} ${r.path}`);
   }
 }
 

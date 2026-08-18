@@ -25,10 +25,26 @@ export type WrapCtx<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = Ctx<Record<string, string>, State>;
 
+/**
+ * Route function. A returned `Response` is sent as-is: no layouts,
+ * DOCTYPE, or fragment splice.
+ */
 export type Handler<
   Params extends Record<string, string> = Record<string, never>,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
-> = (ctx: Ctx<Params, State>) => Element | Promise<Element>;
+> = (
+  ctx: Ctx<Params, State>,
+) => Element | Response | Promise<Element | Response>;
+
+export const METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const;
+export type Method = typeof METHODS[number];
+
+export type MethodHandlers<
+  Params extends Record<string, string> = Record<string, never>,
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> = {
+  [M in Method]?: Handler<Params, State>;
+};
 
 /**
  * UI that wraps the route on document render, outermost first. Does not

@@ -2,19 +2,24 @@ import { assertEquals, assertFalse, assertStringIncludes } from "@std/assert";
 import { type IntegrationTestCase, runCase } from "./cases.ts";
 import { boot, formatIntegrationFailure } from "./harness.ts";
 
+const guestbookMultipart = new FormData();
+guestbookMultipart.set("body", "from-formdata");
+
 const appCases: IntegrationTestCase[] = [
   {
     name: "nested page wraps in both layouts",
     request: { path: "/nested" },
     status: 200,
     headers: { "content-type": "text/html", "x-mw": "ok" },
-    bodyIncludes: ["<!DOCTYPE html>"],
-    select: [
-      { selector: "html > body > h1", text: "Website Title" },
-      { selector: "html > body > div > h2", text: "Nested" },
-      { selector: "html > body > div > div > code", text: "nested" },
-      { selector: "html > body > #pre", text: "from-mw" },
-    ],
+    html: {
+      bodyIncludes: ["<!DOCTYPE html>"],
+      select: [
+        { selector: "html > body > h1", text: "Website Title" },
+        { selector: "html > body > div > h2", text: "Nested" },
+        { selector: "html > body > div > div > code", text: "nested" },
+        { selector: "html > body > #pre", text: "from-mw" },
+      ],
+    },
   },
   {
     name: "interpolated XSS payload is inert",
@@ -22,61 +27,67 @@ const appCases: IntegrationTestCase[] = [
       path: '/?q=<script>alert(1)</script>&title=" onload="alert(1)',
     },
     status: 200,
-    bodyIncludes: [
-      "&lt;script&gt;alert(1)&lt;/script&gt;",
-      "&quot; onload=&quot;alert(1)",
-    ],
-    bodyExcludes: [
-      "<script>alert(1)</script>",
-      '" onload="alert(1)',
-    ],
+    html: {
+      bodyIncludes: [
+        "&lt;script&gt;alert(1)&lt;/script&gt;",
+        "&quot; onload=&quot;alert(1)",
+      ],
+      bodyExcludes: [
+        "<script>alert(1)</script>",
+        '" onload="alert(1)',
+      ],
+    },
   },
   {
     name: "eager fragment substitutes; lazy keeps fallback",
     request: { path: "/embed" },
     status: 200,
-    bodyExcludes: ["{{fragment:"],
-    select: [
-      {
-        selector: "route-fragment:not([lazy]) #frag",
-        text: "eager-fragment-body",
-        attr: {
-          "data-pre": "from-mw",
-          "data-embed-only": "yes",
-          "data-frag-only": "yes",
-          "data-frag": "1",
+    html: {
+      bodyExcludes: ["{{fragment:"],
+      select: [
+        {
+          selector: "route-fragment:not([lazy]) #frag",
+          text: "eager-fragment-body",
+          attr: {
+            "data-pre": "from-mw",
+            "data-embed-only": "yes",
+            "data-frag-only": "yes",
+            "data-frag": "1",
+          },
         },
-      },
-      {
-        selector: "#peer",
-        text: "peer-body",
-        attr: {
-          "data-embed-only": "yes",
-          "data-frag-only": "",
+        {
+          selector: "#peer",
+          text: "peer-body",
+          attr: {
+            "data-embed-only": "yes",
+            "data-frag-only": "",
+          },
         },
-      },
-      { selector: "route-fragment[lazy] #fallback", text: "Loading..." },
-      { selector: "route-fragment[lazy] #frag", exists: false },
-    ],
+        { selector: "route-fragment[lazy] #fallback", text: "Loading..." },
+        { selector: "route-fragment[lazy] #frag", exists: false },
+      ],
+    },
   },
   {
     name: "fragment as document includes layouts and doctype",
     request: { path: "/fragment" },
     status: 200,
     headers: { "content-type": "text/html" },
-    bodyIncludes: ["<!DOCTYPE html>"],
-    select: [
-      { selector: "html > body > h1", text: "Website Title" },
-      {
-        selector: "html > body > #frag",
-        text: "eager-fragment-body",
-        attr: {
-          "data-embed-only": "",
-          "data-frag-only": "yes",
-          "data-frag": "0",
+    html: {
+      bodyIncludes: ["<!DOCTYPE html>"],
+      select: [
+        { selector: "html > body > h1", text: "Website Title" },
+        {
+          selector: "html > body > #frag",
+          text: "eager-fragment-body",
+          attr: {
+            "data-embed-only": "",
+            "data-frag-only": "yes",
+            "data-frag": "0",
+          },
         },
-      },
-    ],
+      ],
+    },
   },
   {
     name: "fragment as fragment omits layouts and doctype",
@@ -86,19 +97,21 @@ const appCases: IntegrationTestCase[] = [
     },
     status: 200,
     headers: { "content-type": "text/html" },
-    bodyExcludes: ["<!DOCTYPE html>"],
-    select: [
-      {
-        selector: "#frag",
-        text: "eager-fragment-body",
-        attr: {
-          "data-embed-only": "",
-          "data-frag-only": "yes",
-          "data-frag": "1",
+    html: {
+      bodyExcludes: ["<!DOCTYPE html>"],
+      select: [
+        {
+          selector: "#frag",
+          text: "eager-fragment-body",
+          attr: {
+            "data-embed-only": "",
+            "data-frag-only": "yes",
+            "data-frag": "1",
+          },
         },
-      },
-      { selector: "h1", exists: false },
-    ],
+        { selector: "h1", exists: false },
+      ],
+    },
   },
   {
     name: "unmatched path is 404",
@@ -111,22 +124,90 @@ const appCases: IntegrationTestCase[] = [
     request: { path: "/posts/new" },
     status: 200,
     headers: { "content-type": "text/html", "x-mw": "ok" },
-    select: [
-      { selector: "html > body > h1", text: "Website Title" },
-      { selector: "html > body > p#new-post", text: "new-post" },
-      { selector: "html > body > #pre", text: "from-mw" },
-    ],
+    html: {
+      select: [
+        { selector: "html > body > h1", text: "Website Title" },
+        { selector: "html > body > p#new-post", text: "new-post" },
+        { selector: "html > body > #pre", text: "from-mw" },
+      ],
+    },
   },
   {
     name: "param route renders params.id",
     request: { path: "/posts/abc" },
     status: 200,
     headers: { "content-type": "text/html", "x-mw": "ok" },
-    select: [
-      { selector: "html > body > h1", text: "Website Title" },
-      { selector: "html > body > p#post", text: "abc" },
-      { selector: "html > body > #pre", text: "from-mw" },
-    ],
+    html: {
+      select: [
+        { selector: "html > body > h1", text: "Website Title" },
+        { selector: "html > body > p#post", text: "abc" },
+        { selector: "html > body > #pre", text: "from-mw" },
+      ],
+    },
+  },
+  {
+    name: "POST to GET-only / is 405",
+    request: { method: "POST", path: "/" },
+    status: 405,
+    headers: { allow: "GET" },
+    bodyIncludes: ["Method Not Allowed"],
+    bodyExcludes: ["<!DOCTYPE html>"],
+  },
+  {
+    name: "GET /ok is JSON",
+    request: { path: "/ok" },
+    status: 200,
+    headers: { "content-type": "application/json" },
+    json: { ok: true },
+  },
+  {
+    name: "POST /guestbook urlencoded redirects",
+    request: {
+      method: "POST",
+      path: "/guestbook",
+      body: new URLSearchParams({ body: "hello" }),
+    },
+    status: 303,
+    headers: { location: "/guestbook" },
+  },
+  {
+    name: "GET /guestbook after POST lists the entry",
+    request: { path: "/guestbook" },
+    status: 200,
+    html: {
+      bodyIncludes: ["hello"],
+      select: [
+        { selector: "form", attr: { method: "POST", action: "/guestbook" } },
+        { selector: "#entries", text: "hello" },
+      ],
+    },
+  },
+  {
+    name: "POST /guestbook multipart redirects",
+    request: {
+      method: "POST",
+      path: "/guestbook",
+      body: guestbookMultipart,
+    },
+    status: 303,
+    headers: { location: "/guestbook" },
+  },
+  {
+    name: "gated path redirects without session cookie",
+    request: { path: "/gated" },
+    status: 303,
+    headers: { location: "/" },
+  },
+  {
+    name: "gated path renders with session cookie",
+    request: {
+      path: "/gated",
+      headers: { cookie: "session=1" },
+    },
+    status: 200,
+    html: {
+      select: [{ selector: "#gated", text: "welcome" }],
+    },
   },
 ];
 

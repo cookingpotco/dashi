@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { type Element } from "../jsx-runtime/jsx_types.ts";
-import { type Ctx, type Handler, type Layout } from "../shared/mod.ts";
+import { type Ctx, type Layout } from "../shared/mod.ts";
 
 interface RenderStore {
   pageReq: Request;
@@ -48,18 +48,16 @@ interface RenderRouteOptions<
 export async function renderRoute<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(
-  handler: Handler<Record<string, string>, State>,
+  page: Element,
   options: RenderRouteOptions<State>,
 ): Promise<Element> {
   const [layout, ...rest] = options.layouts;
-
-  if (!layout || options.ctx.isFragment) {
-    return handler(options.ctx);
+  if (!layout) {
+    return page;
   }
-
   return layout(
     options.ctx,
-    await renderRoute(handler, { ...options, layouts: rest }),
+    await renderRoute(page, { ...options, layouts: rest }),
   );
 }
 

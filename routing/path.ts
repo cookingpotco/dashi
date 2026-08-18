@@ -1,6 +1,12 @@
-import { Handler, Layout, Middleware } from "../shared/shared_types.ts";
+import {
+  Layout,
+  type MethodHandlers,
+  METHODS,
+  Middleware,
+} from "../shared/shared_types.ts";
 import { type ParamsOf, type PathError } from "./path_types.ts";
 
+export type { Method, MethodHandlers } from "../shared/shared_types.ts";
 export type { ParamsOf } from "./path_types.ts";
 
 const enum NodeKind {
@@ -36,7 +42,7 @@ export interface Route<
 > {
   kind: NodeKind.Route;
   path: string;
-  handler: Handler<Record<string, string>, State>;
+  handlers: MethodHandlers<Record<string, string>, State>;
   layouts: Layout<State>[];
   middleware: Middleware<State>[];
 }
@@ -71,7 +77,7 @@ export interface CompiledRoute<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
   segments: ConcreteSegment[];
-  handler: Handler<Record<string, string>, State>;
+  handlers: MethodHandlers<Record<string, string>, State>;
   layouts: Layout<State>[];
   middleware: Middleware<State>[];
   declarationIndex: number;
@@ -81,7 +87,7 @@ export interface CompiledRoute<
 export interface MatchedRoute<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
-  handler: Handler<Record<string, string>, State>;
+  handlers: MethodHandlers<Record<string, string>, State>;
   params: Record<string, string>;
   layouts: Layout<State>[];
   middleware: Middleware<State>[];
@@ -266,7 +272,7 @@ export function compile<
       seen.set(key, declared.path);
       compiled.push({
         segments,
-        handler: declared.handler,
+        handlers: declared.handlers,
         layouts: declared.layouts,
         middleware: declared.middleware,
         declarationIndex: i,
@@ -340,7 +346,7 @@ function matched<
   params: Record<string, string>,
 ): MatchedRoute<State> {
   return {
-    handler: compiledRoute.handler,
+    handlers: compiledRoute.handlers,
     params,
     layouts: compiledRoute.layouts,
     middleware: compiledRoute.middleware,
@@ -368,19 +374,28 @@ export function match<
   return null;
 }
 
+/**
+ * Declares a path with per-method handlers. Two `route()` calls for the
+ * same path are a compile error; GET and POST share one row.
+ */
 export function route<
   Path extends string,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(
   path: [PathError<Path>] extends [never] ? Path : PathError<Path>,
-  handler: Handler<ParamsOf<Path>, State>,
+  handlers: MethodHandlers<ParamsOf<Path>, State>,
 ): Route<State> {
+  if (!METHODS.some((method) => handlers[method])) {
+    throw new Error(
+      `Route ${JSON.stringify(path)} has no method handlers`,
+    );
+  }
   return {
     kind: NodeKind.Route,
     path,
     // Path literals prove narrower params than Route stores; match only
     // fills the declared keys, so this widening is safe.
-    handler: handler as Route<State>["handler"],
+    handlers: handlers as Route<State>["handlers"],
     layouts: [],
     middleware: [],
   };
@@ -440,7 +455,7 @@ function append<
     routes.push({
       kind: NodeKind.Route,
       path: node.path,
-      handler: node.handler,
+      handlers: node.handlers,
       layouts: [...layouts, ...node.layouts],
       middleware: [...middleware, ...node.middleware],
     });

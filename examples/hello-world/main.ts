@@ -5,18 +5,23 @@ import logger from "./routes/_middleware.ts";
 import nested from "./routes/nested/index.tsx";
 import nestedLayout from "./routes/nested/_layout.tsx";
 import secret from "./routes/secret.tsx";
+import {
+  add as addGuestbook,
+  list as listGuestbook,
+} from "./routes/guestbook.tsx";
 
 if (import.meta.main) {
   serve({
     layouts: [root],
     middleware: [logger],
     routes: [
-      route("/", home),
+      route("/", { GET: home }),
       group({
         layouts: [nestedLayout],
-        routes: [route("/nested", nested)],
+        routes: [route("/nested", { GET: nested })],
       }),
-      route("/secret", secret),
+      route("/secret", { GET: secret }),
+      route("/guestbook", { GET: listGuestbook, POST: addGuestbook }),
     ],
   });
 }
