@@ -1,12 +1,13 @@
-import { type Layout } from "dashi";
+import { type Element, type LayoutCtx } from "dashi";
 
-const RootLayout: Layout = (_ctx, children) => {
+export default function RootLayout(
+  _ctx: LayoutCtx,
+  children: Element,
+): Element {
   return (
     <html>
       <h1>Website Title</h1>
       {children}
     </html>
   );
-};
-
-export default RootLayout;
+}

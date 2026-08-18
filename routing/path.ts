@@ -67,20 +67,31 @@ export interface RouteTable<
   routes: Array<Route<State> | Group<State>>;
 }
 
-export interface CompiledRoute {
+export interface CompiledRoute<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> {
   segments: ConcreteSegment[];
-  handler: Handler<Record<string, string>, Record<string, unknown>>;
-  layouts: Layout<Record<string, unknown>>[];
-  middleware: Middleware<Record<string, unknown>>[];
+  handler: Handler<Record<string, string>, State>;
+  layouts: Layout<State>[];
+  middleware: Middleware<State>[];
   declarationIndex: number;
   path: string;
 }
 
-export interface MatchedRoute {
-  handler: Handler<Record<string, string>, Record<string, unknown>>;
+export interface MatchedRoute<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> {
+  handler: Handler<Record<string, string>, State>;
   params: Record<string, string>;
-  layouts: Layout<Record<string, unknown>>[];
-  middleware: Middleware<Record<string, unknown>>[];
+  layouts: Layout<State>[];
+  middleware: Middleware<State>[];
+}
+
+export interface CompiledTable<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> {
+  staticByPath: Map<string, CompiledRoute<State>>;
+  dynamic: CompiledRoute<State>[];
 }
 
 const NAME_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
@@ -201,7 +212,10 @@ function rank(kind: ConcreteSegment["kind"]): number {
   return 2;
 }
 
-function compareCompiled(a: CompiledRoute, b: CompiledRoute): number {
+function compareCompiled(
+  a: { segments: ConcreteSegment[]; declarationIndex: number },
+  b: { segments: ConcreteSegment[]; declarationIndex: number },
+): number {
   const n = Math.max(a.segments.length, b.segments.length);
   for (let i = 0; i < n; i++) {
     const sa = a.segments[i];
@@ -220,11 +234,6 @@ function compareCompiled(a: CompiledRoute, b: CompiledRoute): number {
   return a.declarationIndex - b.declarationIndex;
 }
 
-export interface CompiledTable {
-  staticByPath: Map<string, CompiledRoute>;
-  dynamic: CompiledRoute[];
-}
-
 function staticPathname(segments: ConcreteSegment[]): string | null {
   let pathname = "";
   for (const segment of segments) {
@@ -238,8 +247,8 @@ function staticPathname(segments: ConcreteSegment[]): string | null {
 
 export function compile<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
->(routes: Route<State>[]): CompiledTable {
-  const compiled: CompiledRoute[] = [];
+>(routes: Route<State>[]): CompiledTable<State> {
+  const compiled: CompiledRoute<State>[] = [];
   const seen = new Map<string, string>();
 
   for (let i = 0; i < routes.length; i++) {
@@ -257,17 +266,17 @@ export function compile<
       seen.set(key, declared.path);
       compiled.push({
         segments,
-        handler: declared.handler as CompiledRoute["handler"],
-        layouts: declared.layouts as CompiledRoute["layouts"],
-        middleware: declared.middleware as CompiledRoute["middleware"],
+        handler: declared.handler,
+        layouts: declared.layouts,
+        middleware: declared.middleware,
         declarationIndex: i,
         path: declared.path,
       });
     }
   }
 
-  const staticByPath = new Map<string, CompiledRoute>();
-  const dynamic: CompiledRoute[] = [];
+  const staticByPath = new Map<string, CompiledRoute<State>>();
+  const dynamic: CompiledRoute<State>[] = [];
   for (const compiledRoute of compiled) {
     const pathname = staticPathname(compiledRoute.segments);
     if (pathname !== null) {
@@ -324,10 +333,12 @@ function matchPattern(
   return params;
 }
 
-function matched(
-  compiledRoute: CompiledRoute,
+function matched<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+>(
+  compiledRoute: CompiledRoute<State>,
   params: Record<string, string>,
-): MatchedRoute {
+): MatchedRoute<State> {
   return {
     handler: compiledRoute.handler,
     params,
@@ -336,10 +347,12 @@ function matched(
   };
 }
 
-export function match(
-  compiled: CompiledTable,
+export function match<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+>(
+  compiled: CompiledTable<State>,
   pathname: string,
-): MatchedRoute | null {
+): MatchedRoute<State> | null {
   const exact = compiled.staticByPath.get(pathname);
   if (exact) {
     return matched(exact, {});
@@ -365,6 +378,8 @@ export function route<
   return {
     kind: NodeKind.Route,
     path,
+    // Path literals prove narrower params than Route stores; match only
+    // fills the declared keys, so this widening is safe.
     handler: handler as Route<State>["handler"],
     layouts: [],
     middleware: [],

@@ -1,10 +1,11 @@
-import type { Middleware } from "dashi";
+import type { LayoutCtx } from "dashi";
 
-const logger: Middleware = async (ctx, next) => {
+export default async function logger(
+  ctx: LayoutCtx,
+  next: () => Promise<Response>,
+): Promise<Response> {
   console.log("Request on", ctx.req.url);
   const res = await next();
   console.log("Resposne OK", res.ok);
   return res;
-};
-
-export default logger;
+}

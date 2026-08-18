@@ -43,7 +43,16 @@ const appCases: IntegrationTestCase[] = [
         attr: {
           "data-pre": "from-mw",
           "data-embed-only": "yes",
+          "data-frag-only": "yes",
           "data-frag": "1",
+        },
+      },
+      {
+        selector: "#peer",
+        text: "peer-body",
+        attr: {
+          "data-embed-only": "yes",
+          "data-frag-only": "",
         },
       },
       { selector: "route-fragment[lazy] #fallback", text: "Loading..." },
@@ -61,7 +70,11 @@ const appCases: IntegrationTestCase[] = [
       {
         selector: "html > body > #frag",
         text: "eager-fragment-body",
-        attr: { "data-embed-only": "", "data-frag": "0" },
+        attr: {
+          "data-embed-only": "",
+          "data-frag-only": "yes",
+          "data-frag": "0",
+        },
       },
     ],
   },
@@ -78,7 +91,11 @@ const appCases: IntegrationTestCase[] = [
       {
         selector: "#frag",
         text: "eager-fragment-body",
-        attr: { "data-embed-only": "", "data-frag": "1" },
+        attr: {
+          "data-embed-only": "",
+          "data-frag-only": "yes",
+          "data-frag": "1",
+        },
       },
       { selector: "h1", exists: false },
     ],

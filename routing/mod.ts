@@ -12,6 +12,7 @@ import {
   renderRoute,
   replaceFragmentSlots,
   runWithRenderStore,
+  runWithRouteStore,
 } from "../ssr/mod.ts";
 
 export {
@@ -23,14 +24,19 @@ export {
   type RouteTable,
 } from "./path.ts";
 
-let compiled: CompiledTable = { staticByPath: new Map(), dynamic: [] };
+let compiled: CompiledTable<Record<string, unknown>> = {
+  staticByPath: new Map(),
+  dynamic: [],
+};
 
-function createCtx(options: {
+function createCtx<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+>(options: {
   req: Request;
   params: Record<string, string>;
   isFragment: boolean;
-  state: Record<string, unknown>;
-}): Ctx<Record<string, string>, Record<string, unknown>> {
+  state: Partial<State>;
+}): Ctx<Record<string, string>, State> {
   return {
     req: options.req,
     url: new URL(options.req.url),
@@ -40,12 +46,15 @@ function createCtx(options: {
   };
 }
 
-async function runRoute(
+async function runRoute<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+>(
+  table: CompiledTable<State>,
   req: Request,
   isFragment: boolean,
-  state: Record<string, unknown>,
+  state: Partial<State>,
 ): Promise<{ html: string | undefined; res: Response } | null> {
-  const matched = match(compiled, new URL(req.url).pathname);
+  const matched = match(table, new URL(req.url).pathname);
   if (!matched) {
     return null;
   }
@@ -57,11 +66,7 @@ async function runRoute(
     state,
   });
 
-  const store = getRenderStore();
-  const previousState = store.currentState;
-  store.currentState = ctx.state;
-
-  try {
+  return await runWithRouteStore(ctx.state, async () => {
     let html: string | undefined;
     const terminal = async () => {
       html = String(
@@ -91,16 +96,16 @@ async function runRoute(
 
     const res = await dispatch(0);
     return { html, res };
-  } finally {
-    store.currentState = previousState;
-  }
+  });
 }
 
 export function init<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(table: RouteTable<State>) {
   const routes = flatten(table);
-  compiled = compile(routes);
+  // handle() has no State parameter. The table is only invoked with a ctx
+  // whose state bag is the object createCtx received.
+  compiled = compile(routes) as CompiledTable<Record<string, unknown>>;
   for (const r of routes) {
     info(`[ROUTE]      ${r.path}`);
   }
@@ -116,7 +121,7 @@ export async function handle(
 
   return await runWithRenderStore(req, async () => {
     const isFragment = req.headers.has(REQUEST_HEADERS.FRAGMENT);
-    const result = await runRoute(req, isFragment, {});
+    const result = await runRoute(compiled, req, isFragment, {});
     if (!result) {
       return new Response("Not found", { status: 404 });
     }
@@ -151,9 +156,8 @@ export function requestEagerFragment(src: string) {
   }
 
   const req = new Request(url, { method: "GET", headers });
-  const promise = runRoute(req, true, { ...store.currentState }).then(
-    (result) => result?.html ?? null,
-  );
+  const promise = runRoute(compiled, req, true, { ...store.currentState })
+    .then((result) => result?.html ?? null);
 
   store.inflightFragments.set(src, promise);
 }

@@ -16,6 +16,15 @@ export interface Ctx<
   readonly state: Partial<State>;
 }
 
+/**
+ * `Ctx` as seen by a layout or middleware. Params are a wide string
+ * record so one wrap can cover `/` and `/posts/:id`. Same object as the
+ * handler's ctx at runtime; precise keys stay on the handler.
+ */
+export type LayoutCtx<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> = Ctx<Record<string, string>, State>;
+
 export type Handler<
   Params extends Record<string, string> = Record<string, never>,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
@@ -28,7 +37,7 @@ export type Handler<
 export type Layout<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
-  ctx: Ctx<Record<string, string>, State>,
+  ctx: LayoutCtx<State>,
   children: Element,
 ) => Element | Promise<Element>;
 
@@ -39,6 +48,6 @@ export type Layout<
 export type Middleware<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
-  ctx: Ctx<Record<string, string>, State>,
+  ctx: LayoutCtx<State>,
   next: () => Promise<Response>,
 ) => Response | Promise<Response>;

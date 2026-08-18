@@ -1,13 +1,14 @@
-import { type Layout } from "dashi";
+import { type Element, type LayoutCtx } from "dashi";
 import type { AppState } from "../../state.ts";
 
-const NestedLayout: Layout<AppState> = (_ctx, children) => {
+export default function NestedLayout(
+  _ctx: LayoutCtx<AppState>,
+  children: Element,
+): Element {
   return (
     <div>
       <h2>Nested</h2>
       {children}
     </div>
   );
-};
-
-export default NestedLayout;
+}

@@ -1,7 +1,10 @@
-import { type Layout } from "dashi";
+import { type Element, type LayoutCtx } from "dashi";
 import type { AppState } from "../state.ts";
 
-const RootLayout: Layout<AppState> = (ctx, children) => {
+export default function RootLayout(
+  ctx: LayoutCtx<AppState>,
+  children: Element,
+): Element {
   return (
     <html>
       <h1>Website Title</h1>
@@ -9,6 +12,4 @@ const RootLayout: Layout<AppState> = (ctx, children) => {
       {children}
     </html>
   );
-};
-
-export default RootLayout;
+}

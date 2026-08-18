@@ -2,12 +2,10 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { type Element } from "../jsx-runtime/jsx_types.ts";
 import { type Ctx, type Handler, type Layout } from "../shared/mod.ts";
 
-type AnyState = Record<string, unknown>;
-
 interface RenderStore {
   pageReq: Request;
   inflightFragments: Map<string, Promise<string | null>>;
-  currentState: AnyState;
+  currentState: Partial<Record<string, unknown>>;
 }
 
 const als = new AsyncLocalStorage<RenderStore>();
@@ -20,6 +18,18 @@ export function runWithRenderStore<T>(req: Request, fn: () => T): T {
   }, fn);
 }
 
+export function runWithRouteStore<T>(
+  currentState: Partial<Record<string, unknown>>,
+  fn: () => T,
+): T {
+  const parent = getRenderStore();
+  return als.run({
+    pageReq: parent.pageReq,
+    inflightFragments: parent.inflightFragments,
+    currentState,
+  }, fn);
+}
+
 export function getRenderStore(): RenderStore {
   const store = als.getStore();
   if (!store) {
@@ -28,14 +38,18 @@ export function getRenderStore(): RenderStore {
   return store;
 }
 
-interface RenderRouteOptions {
-  ctx: Ctx<Record<string, string>, AnyState>;
-  layouts: Layout<AnyState>[];
+interface RenderRouteOptions<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> {
+  ctx: Ctx<Record<string, string>, State>;
+  layouts: Layout<State>[];
 }
 
-export async function renderRoute(
-  handler: Handler<Record<string, string>, AnyState>,
-  options: RenderRouteOptions,
+export async function renderRoute<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+>(
+  handler: Handler<Record<string, string>, State>,
+  options: RenderRouteOptions<State>,
 ): Promise<Element> {
   const [layout, ...rest] = options.layouts;
 
