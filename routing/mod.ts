@@ -115,10 +115,9 @@ async function runRoute<
       }
       index = i;
       const mw = matched.middleware[i];
-      if (!mw) {
-        return terminal();
-      }
-      return await mw(ctx, () => dispatch(i + 1));
+      const res = mw ? await mw(ctx, () => dispatch(i + 1)) : await terminal();
+      // Response.redirect freezes headers; copy so outer middleware can set().
+      return new Response(res.body, res);
     };
 
     const res = await dispatch(0);
