@@ -1,7 +1,7 @@
-import { type Element, type LayoutCtx } from "dashi";
+import { type Element, type WrapCtx } from "dashi";
 
 export default function RootLayout(
-  _ctx: LayoutCtx,
+  _ctx: WrapCtx,
   children: Element,
 ): Element {
   return (

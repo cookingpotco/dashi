@@ -1,8 +1,8 @@
-import { type Element, type LayoutCtx } from "dashi";
+import { type Element, type WrapCtx } from "dashi";
 import type { AppState } from "../../state.ts";
 
 export default function NestedLayout(
-  _ctx: LayoutCtx<AppState>,
+  _ctx: WrapCtx<AppState>,
   children: Element,
 ): Element {
   return (

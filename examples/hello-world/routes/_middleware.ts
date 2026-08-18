@@ -1,7 +1,7 @@
-import type { LayoutCtx } from "dashi";
+import type { WrapCtx } from "dashi";
 
 export default async function logger(
-  ctx: LayoutCtx,
+  ctx: WrapCtx,
   next: () => Promise<Response>,
 ): Promise<Response> {
   console.log("Request on", ctx.req.url);

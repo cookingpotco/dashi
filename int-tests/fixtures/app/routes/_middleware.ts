@@ -1,8 +1,8 @@
-import type { LayoutCtx } from "dashi";
+import type { WrapCtx } from "dashi";
 import type { AppState } from "../state.ts";
 
 export default async function root(
-  ctx: LayoutCtx<AppState>,
+  ctx: WrapCtx<AppState>,
   next: () => Promise<Response>,
 ): Promise<Response> {
   await new Promise((resolve) => setTimeout(resolve, 25));

@@ -18,7 +18,7 @@ export function runWithRenderStore<T>(req: Request, fn: () => T): T {
   }, fn);
 }
 
-export function runWithRouteStore<T>(
+export function runWithNestedRenderStore<T>(
   currentState: Partial<Record<string, unknown>>,
   fn: () => T,
 ): T {

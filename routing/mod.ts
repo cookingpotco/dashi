@@ -11,8 +11,8 @@ import {
   getRenderStore,
   renderRoute,
   replaceFragmentSlots,
+  runWithNestedRenderStore,
   runWithRenderStore,
-  runWithRouteStore,
 } from "../ssr/mod.ts";
 
 export {
@@ -66,7 +66,7 @@ async function runRoute<
     state,
   });
 
-  return await runWithRouteStore(ctx.state, async () => {
+  return await runWithNestedRenderStore(ctx.state, async () => {
     let html: string | undefined;
     const terminal = async () => {
       html = String(

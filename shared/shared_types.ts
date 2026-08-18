@@ -21,7 +21,7 @@ export interface Ctx<
  * record so one wrap can cover `/` and `/posts/:id`. Same object as the
  * handler's ctx at runtime; precise keys stay on the handler.
  */
-export type LayoutCtx<
+export type WrapCtx<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = Ctx<Record<string, string>, State>;
 
@@ -37,7 +37,7 @@ export type Handler<
 export type Layout<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
-  ctx: LayoutCtx<State>,
+  ctx: WrapCtx<State>,
   children: Element,
 ) => Element | Promise<Element>;
 
@@ -48,6 +48,6 @@ export type Layout<
 export type Middleware<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
-  ctx: LayoutCtx<State>,
+  ctx: WrapCtx<State>,
   next: () => Promise<Response>,
 ) => Response | Promise<Response>;
