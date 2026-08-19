@@ -2,7 +2,7 @@ import { type Ctx } from "../shared/shared_types.ts";
 
 const NOT_FOUND_BODY = "Not found";
 
-const TYPES: Record<string, string> = {
+const TYPES: Record<Lowercase<string>, string> = {
   css: "text/css; charset=utf-8",
   js: "text/javascript; charset=utf-8",
   mjs: "text/javascript; charset=utf-8",
@@ -34,25 +34,25 @@ function basename(path: string): string {
   return slash === -1 ? path : path.slice(slash + 1);
 }
 
-export function contentType(path: string): string {
+function contentType(path: string): string {
   const base = basename(path);
   const dot = base.lastIndexOf(".");
   if (dot <= 0) {
     return "application/octet-stream";
   }
-  return TYPES[base.slice(dot + 1).toLowerCase()] ??
-    "application/octet-stream";
+  const ext = base.slice(dot + 1).toLowerCase() as Lowercase<string>;
+  return TYPES[ext] ?? "application/octet-stream";
 }
 
-export function isFingerprinted(path: string): boolean {
+function isFingerprinted(path: string): boolean {
   return FINGERPRINT_RE.test(basename(path));
 }
 
-export function etag(size: number, mtimeMs: number): string {
+function etag(size: number, mtimeMs: number): string {
   return `W/"${size}-${mtimeMs}"`;
 }
 
-export function ifNoneMatch(header: string | null, tag: string): boolean {
+function etagMatches(header: string | null, tag: string): boolean {
   if (header === null) {
     return false;
   }
@@ -65,7 +65,7 @@ export function ifNoneMatch(header: string | null, tag: string): boolean {
   return false;
 }
 
-export function decodeRelative(relative: string): string | null {
+function decodeRelative(relative: string): string | null {
   if (relative.includes("\0")) {
     return null;
   }
@@ -80,7 +80,7 @@ export function decodeRelative(relative: string): string | null {
   }
 }
 
-export function isInsideRoot(root: string, resolved: string): boolean {
+function isInsideRoot(root: string, resolved: string): boolean {
   return resolved === root || resolved.startsWith(`${root}/`);
 }
 
@@ -106,10 +106,13 @@ async function realPath(path: string): Promise<string | null> {
 }
 
 /**
- * Serve a file under `dir` at `relative`. Relative `dir` is resolved
- * against `Deno.cwd()`; pass `${import.meta.dirname}/static` so the
- * folder travels with the module. GET streams the file; HEAD returns
- * the same headers with an empty body.
+ * GET streams the file; HEAD returns the same headers with an empty body.
+ *
+ * @param ctx Method and `If-None-Match` come from `ctx.req`.
+ * @param dir Directory to read from. Relative paths resolve against
+ *   `Deno.cwd()`; pass `${import.meta.dirname}/static` so the folder
+ *   travels with the module.
+ * @param relative Path under `dir`, typically a catch-all route param.
  */
 export async function staticFile(
   ctx: Ctx<Record<string, string>, Record<string, unknown>>,
@@ -150,7 +153,7 @@ export async function staticFile(
     ? "public, max-age=31536000, immutable"
     : "no-cache";
 
-  if (ifNoneMatch(ctx.req.headers.get("if-none-match"), tag)) {
+  if (etagMatches(ctx.req.headers.get("if-none-match"), tag)) {
     return new Response(null, {
       status: 304,
       headers: {

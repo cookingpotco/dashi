@@ -24,7 +24,8 @@ or the compiler hits. Do not stub, mock, or stand up a narrower entry point to
 approximate a flow whose natural test is further out. If that outer layer is
 HTTP, add a case in `int-tests/` — declarative when it is one request, or a
 `t.step` on the same harness helpers when it is not. Do not invent a second
-harness.
+harness. Do not export a private helper so a unit test can import it, and do not
+inject a fake filesystem to unit-test a function whose real path is `Deno.open`.
 
 **Don't test what never happens.** A situation the product never produces is not
 coverage.
@@ -39,9 +40,10 @@ error), not on routing or SSR internals. For JSX, the outer layer that runs is
 compiled JSX (a parallel `jsx()` call for the same markup is the same layer, not
 a narrower one).
 
-**Unit tests** only for small, pure functions that are the behaviour: the JSX
-runtime exports, escaping, anything that is a calculation. Other modules do not
-get a parallel suite of that density.
+**Unit tests** only for functions that are themselves the public surface: the
+JSX runtime exports, escaping, anything a caller imports. A helper that exists
+only to serve that surface is not a second test suite. Other modules do not get
+a parallel suite of that density.
 
 Do not add a second HTTP harness; extend `int-tests/`.
 

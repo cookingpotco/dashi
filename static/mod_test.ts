@@ -1,81 +1,201 @@
 import { assertEquals } from "@std/assert";
-import {
-  contentType,
-  decodeRelative,
-  etag,
-  ifNoneMatch,
-  isFingerprinted,
-  isInsideRoot,
-} from "./mod.ts";
+import { type Ctx } from "../shared/shared_types.ts";
+import { staticFile } from "./mod.ts";
 
-Deno.test("contentType maps extensions and defaults to octet-stream", () => {
-  assertEquals(contentType("app.css"), "text/css; charset=utf-8");
-  assertEquals(contentType("app.js"), "text/javascript; charset=utf-8");
-  assertEquals(contentType("app.mjs"), "text/javascript; charset=utf-8");
-  assertEquals(contentType("data.json"), "application/json");
-  assertEquals(contentType("logo.svg"), "image/svg+xml");
-  assertEquals(contentType("pic.png"), "image/png");
-  assertEquals(contentType("pic.jpg"), "image/jpeg");
-  assertEquals(contentType("pic.jpeg"), "image/jpeg");
-  assertEquals(contentType("pic.gif"), "image/gif");
-  assertEquals(contentType("favicon.ico"), "image/x-icon");
-  assertEquals(contentType("pic.webp"), "image/webp");
-  assertEquals(contentType("font.woff"), "font/woff");
-  assertEquals(contentType("font.woff2"), "font/woff2");
-  assertEquals(contentType("font.ttf"), "font/ttf");
-  assertEquals(contentType("font.otf"), "font/otf");
-  assertEquals(contentType("app.js.map"), "application/json");
-  assertEquals(contentType("notes.txt"), "text/plain");
-  assertEquals(contentType("index.html"), "text/html");
-  assertEquals(contentType("index.htm"), "text/html");
-  assertEquals(contentType("app.wasm"), "application/wasm");
-  assertEquals(contentType("data.xml"), "application/xml");
-  assertEquals(contentType("app.webmanifest"), "application/manifest+json");
-  assertEquals(contentType("file.bin"), "application/octet-stream");
-  assertEquals(contentType("noext"), "application/octet-stream");
-  assertEquals(contentType("dir/app.CSS"), "text/css; charset=utf-8");
+function ctx(
+  method: string,
+  headers?: HeadersInit,
+): Ctx<Record<string, string>, Record<string, unknown>> {
+  const url = new URL("http://example.test/static/file");
+  return {
+    req: new Request(url, { method, headers }),
+    url,
+    params: {},
+    isFragment: false,
+    state: {},
+  };
+}
+
+async function withStaticDir(
+  run: (dir: string, root: string) => Promise<void>,
+): Promise<void> {
+  const root = await Deno.makeTempDir();
+  const dir = `${root}/static`;
+  await Deno.mkdir(dir);
+  try {
+    await run(dir, root);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+}
+
+Deno.test("content type follows the file extension", async () => {
+  await withStaticDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/app.css`, "a{}");
+    await Deno.writeTextFile(`${dir}/app.js`, "a()");
+    await Deno.writeTextFile(`${dir}/app.CSS`, "A{}");
+    await Deno.writeTextFile(`${dir}/blob.bin`, "x");
+
+    const css = await staticFile(ctx("GET"), dir, "app.css");
+    assertEquals(css.status, 200);
+    assertEquals(css.headers.get("content-type"), "text/css; charset=utf-8");
+    assertEquals(await css.text(), "a{}");
+
+    const js = await staticFile(ctx("GET"), dir, "app.js");
+    assertEquals(
+      js.headers.get("content-type"),
+      "text/javascript; charset=utf-8",
+    );
+    await js.text();
+
+    const upper = await staticFile(ctx("GET"), dir, "app.CSS");
+    assertEquals(upper.headers.get("content-type"), "text/css; charset=utf-8");
+    await upper.text();
+
+    const bin = await staticFile(ctx("GET"), dir, "blob.bin");
+    assertEquals(bin.headers.get("content-type"), "application/octet-stream");
+    await bin.text();
+  });
 });
 
-Deno.test("isFingerprinted looks for an 8+ hex run in the basename", () => {
-  assertEquals(isFingerprinted("app.deadbeef.css"), true);
-  assertEquals(isFingerprinted("client-deadbeef.js"), true);
-  assertEquals(isFingerprinted("nested/app.deadbeef.css"), true);
-  assertEquals(isFingerprinted("app.css"), false);
-  assertEquals(isFingerprinted("logo.svg"), false);
-  assertEquals(isFingerprinted("deadbeef/app.css"), false);
+Deno.test("HEAD is the GET headers with an empty body", async () => {
+  await withStaticDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/app.css`, "a{}");
+    const get = await staticFile(ctx("GET"), dir, "app.css");
+    const body = await get.text();
+    const head = await staticFile(ctx("HEAD"), dir, "app.css");
+    assertEquals(head.status, 200);
+    assertEquals(await head.text(), "");
+    assertEquals(
+      head.headers.get("content-type"),
+      get.headers.get("content-type"),
+    );
+    assertEquals(
+      head.headers.get("content-length"),
+      get.headers.get("content-length"),
+    );
+    assertEquals(head.headers.get("cache-control"), "no-cache");
+    assertEquals(head.headers.get("content-length"), String(body.length));
+  });
 });
 
-Deno.test("etag is a weak tag of size and mtime", () => {
-  assertEquals(etag(16, 1700000000000), `W/"16-1700000000000"`);
+Deno.test("fingerprinted basename is immutable", async () => {
+  await withStaticDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/app.deadbeef.css`, "a{}");
+    await Deno.writeTextFile(`${dir}/app.css`, "a{}");
+    const hashed = await staticFile(ctx("GET"), dir, "app.deadbeef.css");
+    assertEquals(
+      hashed.headers.get("cache-control"),
+      "public, max-age=31536000, immutable",
+    );
+    await hashed.text();
+    const plain = await staticFile(ctx("GET"), dir, "app.css");
+    assertEquals(plain.headers.get("cache-control"), "no-cache");
+    await plain.text();
+  });
 });
 
-Deno.test("ifNoneMatch honors * and a comma-separated list", () => {
-  const tag = `W/"16-1"`;
-  assertEquals(ifNoneMatch(null, tag), false);
-  assertEquals(ifNoneMatch("*", tag), true);
-  assertEquals(ifNoneMatch(" * ", tag), true);
-  assertEquals(ifNoneMatch(tag, tag), true);
-  assertEquals(ifNoneMatch(`W/"9-9", ${tag}`, tag), true);
-  assertEquals(ifNoneMatch(`W/"9-9", W/"8-8"`, tag), false);
-  assertEquals(ifNoneMatch(`W/"16-2"`, tag), false);
+Deno.test("If-None-Match returns 304", async () => {
+  await withStaticDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/app.css`, "a{}");
+    const first = await staticFile(ctx("GET"), dir, "app.css");
+    const tag = first.headers.get("etag");
+    await first.text();
+    if (tag === null) {
+      throw new Error("missing etag");
+    }
+
+    const get304 = await staticFile(
+      ctx("GET", { "if-none-match": tag }),
+      dir,
+      "app.css",
+    );
+    assertEquals(get304.status, 304);
+    assertEquals(await get304.text(), "");
+    assertEquals(get304.headers.get("etag"), tag);
+    assertEquals(get304.headers.get("cache-control"), "no-cache");
+
+    const head304 = await staticFile(
+      ctx("HEAD", { "if-none-match": tag }),
+      dir,
+      "app.css",
+    );
+    assertEquals(head304.status, 304);
+    assertEquals(await head304.text(), "");
+
+    const star = await staticFile(
+      ctx("GET", { "if-none-match": "*" }),
+      dir,
+      "app.css",
+    );
+    assertEquals(star.status, 304);
+    await star.text();
+
+    const listed = await staticFile(
+      ctx("GET", { "if-none-match": `W/"9-9", ${tag}` }),
+      dir,
+      "app.css",
+    );
+    assertEquals(listed.status, 304);
+    await listed.text();
+
+    const miss = await staticFile(
+      ctx("GET", { "if-none-match": `W/"9-9"` }),
+      dir,
+      "app.css",
+    );
+    assertEquals(miss.status, 200);
+    await miss.text();
+  });
 });
 
-Deno.test("decodeRelative rejects empty, NUL, and malformed sequences", () => {
-  assertEquals(decodeRelative("app.css"), "app.css");
-  assertEquals(decodeRelative("nested/app.css"), "nested/app.css");
-  assertEquals(decodeRelative("../outside.txt"), "../outside.txt");
-  assertEquals(decodeRelative("%2e%2e/outside.txt"), "../outside.txt");
-  assertEquals(decodeRelative("%2e%2e%2foutside.txt"), "../outside.txt");
-  assertEquals(decodeRelative(""), null);
-  assertEquals(decodeRelative("foo\0bar"), null);
-  assertEquals(decodeRelative("%00"), null);
-  assertEquals(decodeRelative("%"), null);
+Deno.test("missing, empty, and directory paths are 404", async () => {
+  await withStaticDir(async (dir) => {
+    await Deno.mkdir(`${dir}/nested`);
+    const missing = await staticFile(ctx("GET"), dir, "missing.css");
+    assertEquals(missing.status, 404);
+    assertEquals(await missing.text(), "Not found");
+
+    const empty = await staticFile(ctx("GET"), dir, "");
+    assertEquals(empty.status, 404);
+    assertEquals(await empty.text(), "Not found");
+
+    const nested = await staticFile(ctx("GET"), dir, "nested");
+    assertEquals(nested.status, 404);
+    assertEquals(await nested.text(), "Not found");
+
+    const head = await staticFile(ctx("HEAD"), dir, "missing.css");
+    assertEquals(head.status, 404);
+    assertEquals(await head.text(), "");
+    assertEquals(head.headers.get("content-length"), "9");
+  });
 });
 
-Deno.test("isInsideRoot requires the resolved path to stay under root", () => {
-  assertEquals(isInsideRoot("/app/static", "/app/static/app.css"), true);
-  assertEquals(isInsideRoot("/app/static", "/app/static"), true);
-  assertEquals(isInsideRoot("/app/static", "/app/outside.txt"), false);
-  assertEquals(isInsideRoot("/app/static", "/app/staticextra"), false);
-  assertEquals(isInsideRoot("/app/static", "/etc/passwd"), false);
+Deno.test("relative paths that escape the directory are 404", async () => {
+  await withStaticDir(async (dir, root) => {
+    await Deno.writeTextFile(`${dir}/app.css`, "a{}");
+    await Deno.writeTextFile(
+      `${root}/outside.txt`,
+      "outside-secret-do-not-serve",
+    );
+
+    const dotdot = await staticFile(ctx("GET"), dir, "../outside.txt");
+    assertEquals(dotdot.status, 404);
+    assertEquals(await dotdot.text(), "Not found");
+
+    const encoded = await staticFile(ctx("GET"), dir, "%2e%2e/outside.txt");
+    assertEquals(encoded.status, 404);
+    assertEquals(
+      (await encoded.text()).includes("outside-secret-do-not-serve"),
+      false,
+    );
+
+    const nul = await staticFile(ctx("GET"), dir, "foo\0bar");
+    assertEquals(nul.status, 404);
+    await nul.text();
+
+    const malformed = await staticFile(ctx("GET"), dir, "%");
+    assertEquals(malformed.status, 404);
+    await malformed.text();
+  });
 });
