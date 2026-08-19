@@ -1,8 +1,9 @@
 import { type Ctx } from "../shared/shared_types.ts";
 
 const NOT_FOUND_BODY = "Not found";
+const IMMUTABLE = "public, max-age=31536000, immutable";
 
-const TYPES: Record<string, Lowercase<string>> = {
+const TYPES: Record<Lowercase<string>, Lowercase<string>> = {
   css: "text/css; charset=utf-8",
   js: "text/javascript; charset=utf-8",
   mjs: "text/javascript; charset=utf-8",
@@ -27,7 +28,14 @@ const TYPES: Record<string, Lowercase<string>> = {
   webmanifest: "application/manifest+json",
 };
 
-const FINGERPRINT_RE = /[0-9a-f]{8,}/i;
+/**
+ * Cache-Control for a static file. Omitted `staticFile` cache is
+ * immutable.
+ */
+export type StaticFileCacheConfig =
+  | { strategy: "immutable" }
+  | { strategy: "public"; maxAge: number }
+  | { strategy: "private" };
 
 function basename(path: string): string {
   const slash = path.lastIndexOf("/");
@@ -40,12 +48,18 @@ function contentType(path: string): string {
   if (dot <= 0) {
     return "application/octet-stream";
   }
-  return TYPES[base.slice(dot + 1).toLowerCase()] ??
-    "application/octet-stream";
+  const ext = base.slice(dot + 1).toLowerCase() as Lowercase<string>;
+  return TYPES[ext] ?? "application/octet-stream";
 }
 
-function isFingerprinted(path: string): boolean {
-  return FINGERPRINT_RE.test(basename(path));
+function cacheControl(cache: StaticFileCacheConfig): string {
+  if (cache.strategy === "immutable") {
+    return IMMUTABLE;
+  }
+  if (cache.strategy === "private") {
+    return "private";
+  }
+  return `public, max-age=${cache.maxAge}`;
 }
 
 function etag(size: number, mtimeMs: number): string {
@@ -113,11 +127,13 @@ async function realPath(path: string): Promise<string | null> {
  *   `Deno.cwd()`; pass `${import.meta.dirname}/static` so the folder
  *   travels with the module.
  * @param relative Path under `dir`, typically a catch-all route param.
+ * @param cache Cache-Control. Defaults to immutable.
  */
 export async function staticFile(
   ctx: Ctx<Record<string, string>, Record<string, unknown>>,
   dir: string,
   relative: string,
+  cache: StaticFileCacheConfig = { strategy: "immutable" },
 ): Promise<Response> {
   const method = ctx.req.method;
   const decoded = decodeRelative(relative);
@@ -149,16 +165,14 @@ export async function staticFile(
   }
 
   const tag = etag(info.size, info.mtime?.getTime() ?? 0);
-  const cacheControl = isFingerprinted(decoded)
-    ? "public, max-age=31536000, immutable"
-    : "no-cache";
+  const cacheHeader = cacheControl(cache);
 
   if (etagMatches(ctx.req.headers.get("if-none-match"), tag)) {
     return new Response(null, {
       status: 304,
       headers: {
         ETag: tag,
-        "Cache-Control": cacheControl,
+        "Cache-Control": cacheHeader,
       },
     });
   }
@@ -167,7 +181,7 @@ export async function staticFile(
     "Content-Type": contentType(decoded),
     "Content-Length": String(info.size),
     ETag: tag,
-    "Cache-Control": cacheControl,
+    "Cache-Control": cacheHeader,
   };
 
   if (method === "HEAD") {

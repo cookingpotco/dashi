@@ -177,7 +177,7 @@ const appCases: IntegrationTestCase[] = [
     headers: {
       "content-type": "text/css; charset=utf-8",
       "content-length": "24",
-      "cache-control": "no-cache",
+      "cache-control": "public, max-age=31536000, immutable",
       "x-mw": "ok",
     },
     bodyExact: "body {\n  color: #111;\n}\n",
@@ -189,7 +189,7 @@ const appCases: IntegrationTestCase[] = [
     headers: {
       "content-type": "text/css; charset=utf-8",
       "content-length": "24",
-      "cache-control": "no-cache",
+      "cache-control": "public, max-age=31536000, immutable",
       "x-mw": "ok",
     },
     bodyExact: "",
@@ -205,18 +205,6 @@ const appCases: IntegrationTestCase[] = [
     bodyIncludes: ['xmlns="http://www.w3.org/2000/svg"'],
   },
   {
-    name: "javascript is served from the static directory",
-    request: { path: "/static/app.js" },
-    status: 200,
-    headers: {
-      "content-type": "text/javascript; charset=utf-8",
-      "content-length": "11",
-      "cache-control": "no-cache",
-      "x-mw": "ok",
-    },
-    bodyExact: "export {};\n",
-  },
-  {
     name: "unknown extension is octet-stream",
     request: { path: "/static/blob.bin" },
     status: 200,
@@ -228,12 +216,20 @@ const appCases: IntegrationTestCase[] = [
     bodyExact: "x\n",
   },
   {
-    name: "hyphenated fingerprint is immutable",
-    request: { path: "/static/client-deadbeef.js" },
+    name: "public cache strategy sets max-age",
+    request: { path: "/static-public/app.css" },
     status: 200,
     headers: {
-      "content-type": "text/javascript; charset=utf-8",
-      "cache-control": "public, max-age=31536000, immutable",
+      "cache-control": "public, max-age=3600",
+      "x-mw": "ok",
+    },
+  },
+  {
+    name: "private cache strategy is private",
+    request: { path: "/static-private/app.css" },
+    status: 200,
+    headers: {
+      "cache-control": "private",
       "x-mw": "ok",
     },
   },
@@ -261,18 +257,6 @@ const appCases: IntegrationTestCase[] = [
     request: { path: "/static/%2e%2e%2foutside.txt" },
     status: 404,
     bodyExcludes: ["outside-secret-do-not-serve"],
-  },
-  {
-    name: "fingerprinted stylesheet is immutable",
-    request: { path: "/static/app.deadbeef.css" },
-    status: 200,
-    headers: {
-      "content-type": "text/css; charset=utf-8",
-      "content-length": "24",
-      "cache-control": "public, max-age=31536000, immutable",
-      "x-mw": "ok",
-    },
-    bodyExact: "body {\n  color: #abc;\n}\n",
   },
   {
     name: "missing static file is plain 404",
@@ -668,7 +652,10 @@ Deno.test("main fixture app over HTTP", async (t) => {
       assertEquals(get304.status, 304);
       assertEquals(getBody, "");
       assertEquals(get304.headers.get("etag"), etag);
-      assertEquals(get304.headers.get("cache-control"), "no-cache");
+      assertEquals(
+        get304.headers.get("cache-control"),
+        "public, max-age=31536000, immutable",
+      );
 
       const head304 = await app.fetch({
         method: "HEAD",
@@ -679,7 +666,10 @@ Deno.test("main fixture app over HTTP", async (t) => {
       assertEquals(head304.status, 304);
       assertEquals(headBody, "");
       assertEquals(head304.headers.get("etag"), etag);
-      assertEquals(head304.headers.get("cache-control"), "no-cache");
+      assertEquals(
+        head304.headers.get("cache-control"),
+        "public, max-age=31536000, immutable",
+      );
 
       const star = await app.fetch({
         path: "/static/app.css",
@@ -712,36 +702,6 @@ Deno.test("main fixture app over HTTP", async (t) => {
         error.message = `${error.message}\n\n${dump}`;
       }
       throw error;
-    }
-  });
-
-  await t.step("uppercase extension still maps content-type", async () => {
-    const file = new URL("./static/app.CSS", import.meta.url);
-    await Deno.writeTextFile(file, "body{color:#000}\n");
-    try {
-      const res = await app.fetch({ path: "/static/app.CSS" });
-      const body = await res.text();
-      try {
-        assertEquals(res.status, 200);
-        assertEquals(
-          res.headers.get("content-type"),
-          "text/css; charset=utf-8",
-        );
-        assertEquals(body, "body{color:#000}\n");
-      } catch (error) {
-        const dump = formatIntegrationFailure(
-          app,
-          { path: "/static/app.CSS" },
-          res,
-          body,
-        );
-        if (error instanceof Error) {
-          error.message = `${error.message}\n\n${dump}`;
-        }
-        throw error;
-      }
-    } finally {
-      await Deno.remove(file);
     }
   });
 

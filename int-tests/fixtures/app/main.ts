@@ -65,8 +65,16 @@ const requireSession: Middleware<AppState> = (ctx, next) => {
   return next();
 };
 
+const staticDir = `${import.meta.dirname}/static`;
 const files = (ctx: Ctx<{ path: string }, AppState>) =>
-  staticFile(ctx, `${import.meta.dirname}/static`, ctx.params.path);
+  staticFile(ctx, staticDir, ctx.params.path);
+const hour = (ctx: Ctx<{ path: string }, AppState>) =>
+  staticFile(ctx, staticDir, ctx.params.path, {
+    strategy: "public",
+    maxAge: 3600,
+  });
+const priv = (ctx: Ctx<{ path: string }, AppState>) =>
+  staticFile(ctx, staticDir, ctx.params.path, { strategy: "private" });
 
 if (import.meta.main) {
   serve<AppState>({
@@ -96,6 +104,8 @@ if (import.meta.main) {
       route("/guestbook", { GET: listGuestbook, POST: addGuestbook }),
       route("/ok", { GET: ok }),
       route("/static/:path*", { GET: files, HEAD: files }),
+      route("/static-public/:path*", { GET: hour, HEAD: hour }),
+      route("/static-private/:path*", { GET: priv, HEAD: priv }),
       group({
         middleware: [requireSession],
         routes: [route("/gated", { GET: gated })],
