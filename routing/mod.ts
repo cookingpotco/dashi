@@ -331,6 +331,7 @@ export function requestEagerFragment(src: string) {
     try {
       await runPipeline(ctx, matched.middleware, async () => {
         let out: Element | Response;
+        let status = 200;
         try {
           out = await runHandler(ctx, matched);
         } catch (thrown) {
@@ -340,12 +341,15 @@ export function requestEagerFragment(src: string) {
             ctx,
             compiled.errorFallback,
           );
+          status = 500;
         }
         if (out instanceof Response) {
           return out;
         }
         html = String(out);
-        return new Response();
+        const res = new Response(html, { status });
+        res.headers.set("Content-Type", "text/html");
+        return res;
       });
     } catch (thrown) {
       logError(thrown);
