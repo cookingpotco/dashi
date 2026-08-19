@@ -6,17 +6,17 @@ import { renderBoundaries, RenderKind } from "../ssr/mod.ts";
 
 const DEFAULT_ERROR_FALLBACK_BODY = "Something Went Wrong";
 
-export function lastResort(
-  isFragment: boolean,
-  errorFallback: Element | Response | undefined,
-): Element | Response {
-  if (isFragment) {
+export function lastResort(options: {
+  isFragment: boolean;
+  errorFallback: Element | Response | undefined;
+}): Element | Response {
+  if (options.isFragment) {
     return new Response("", { status: 500 });
   }
-  if (errorFallback === undefined) {
+  if (options.errorFallback === undefined) {
     return new Response(DEFAULT_ERROR_FALLBACK_BODY, { status: 500 });
   }
-  return errorFallback;
+  return options.errorFallback;
 }
 
 async function recoverFragment<
@@ -29,12 +29,12 @@ async function recoverFragment<
 ): Promise<Element | Response> {
   try {
     if (!boundary?.error) {
-      return lastResort(true, errorFallback);
+      return lastResort({ isFragment: true, errorFallback });
     }
     return await boundary.error(ctx, thrown);
   } catch (nextThrown) {
     logError(nextThrown);
-    return lastResort(true, errorFallback);
+    return lastResort({ isFragment: true, errorFallback });
   }
 }
 
@@ -88,5 +88,5 @@ export async function recover<
     return wrapped.page;
   }
 
-  return lastResort(false, errorFallback);
+  return lastResort({ isFragment: false, errorFallback });
 }
