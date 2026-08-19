@@ -7,11 +7,6 @@ import { renderBoundaries } from "../ssr/mod.ts";
 const EMPTY_PAGE = "" as Element;
 const DEFAULT_ERROR_FALLBACK_BODY = "Something Went Wrong";
 
-export type RouteResult = {
-  html: string | undefined;
-  res: Response;
-};
-
 export function htmlResponse(body: string, status: number): Response {
   const res = new Response(body, { status });
   res.headers.set("Content-Type", "text/html");
@@ -41,20 +36,15 @@ async function recoverFragment<
   boundary: GroupBoundary<State> | undefined,
   ctx: Ctx<Record<string, string>, State>,
   errorFallback: Element | Response | undefined,
-): Promise<RouteResult> {
+): Promise<Element | Response> {
   try {
     if (!boundary?.error) {
-      return { html: undefined, res: lastResort(true, errorFallback) };
+      return lastResort(true, errorFallback);
     }
-    const errorResult = await boundary.error(ctx, thrown);
-    if (errorResult instanceof Response) {
-      return { html: undefined, res: errorResult };
-    }
-    const html = String(errorResult);
-    return { html, res: htmlResponse(html, 500) };
+    return await boundary.error(ctx, thrown);
   } catch (nextThrown) {
     logError(nextThrown);
-    return { html: undefined, res: lastResort(true, errorFallback) };
+    return lastResort(true, errorFallback);
   }
 }
 
@@ -65,7 +55,7 @@ export async function recover<
   boundary: GroupBoundary<State> | undefined,
   ctx: Ctx<Record<string, string>, State>,
   errorFallback: Element | Response | undefined,
-): Promise<RouteResult> {
+): Promise<Element | Response> {
   logError(thrown);
 
   if (ctx.isFragment) {
@@ -86,7 +76,7 @@ export async function recover<
       continue;
     }
     if (errorResult instanceof Response) {
-      return { html: undefined, res: errorResult };
+      return errorResult;
     }
 
     const wrapped = await renderBoundaries(errorResult, {
@@ -100,9 +90,8 @@ export async function recover<
       continue;
     }
 
-    const html = String(wrapped.page);
-    return { html, res: htmlResponse(`<!DOCTYPE html>${html}`, 500) };
+    return wrapped.page;
   }
 
-  return { html: undefined, res: lastResort(false, errorFallback) };
+  return lastResort(false, errorFallback);
 }
