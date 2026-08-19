@@ -14,11 +14,11 @@ published yet.
 - `<RouteFragment>` for composing another route into the current page (eager
   during SSR, or client-fetched when `lazy`)
 - Example apps under `examples/`
+- Static files from a directory via `staticFile` in a route handler
 
 ## Not yet
 
 - JSR publish
-- Static asset serving
 - Production-ready SSR
 
 ## Development

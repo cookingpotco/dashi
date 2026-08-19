@@ -1,4 +1,11 @@
-import { group, type Middleware, route, serve } from "dashi";
+import {
+  type Ctx,
+  group,
+  type Middleware,
+  route,
+  serve,
+  staticFile,
+} from "dashi";
 import type { AppState } from "./state.ts";
 import home from "./routes/index.tsx";
 import root from "./routes/_layout.tsx";
@@ -58,6 +65,9 @@ const requireSession: Middleware<AppState> = (ctx, next) => {
   return next();
 };
 
+const files = (ctx: Ctx<{ path: string }, AppState>) =>
+  staticFile(ctx, `${import.meta.dirname}/static`, ctx.params.path);
+
 if (import.meta.main) {
   serve<AppState>({
     layouts: [root],
@@ -85,6 +95,7 @@ if (import.meta.main) {
       route("/posts/:id", { GET: post }),
       route("/guestbook", { GET: listGuestbook, POST: addGuestbook }),
       route("/ok", { GET: ok }),
+      route("/static/:path*", { GET: files, HEAD: files }),
       group({
         middleware: [requireSession],
         routes: [route("/gated", { GET: gated })],

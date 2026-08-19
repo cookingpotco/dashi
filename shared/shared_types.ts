@@ -49,7 +49,14 @@ export type ErrorHandler<
   thrown: unknown,
 ) => Element | Response | Promise<Element | Response>;
 
-export const METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const;
+export const METHODS = [
+  "GET",
+  "HEAD",
+  "POST",
+  "PUT",
+  "PATCH",
+  "DELETE",
+] as const;
 export type Method = typeof METHODS[number];
 
 export type MethodHandlers<

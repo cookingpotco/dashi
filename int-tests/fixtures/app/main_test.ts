@@ -171,6 +171,90 @@ const appCases: IntegrationTestCase[] = [
     json: { ok: true },
   },
   {
+    name: "stylesheet is served from the static directory",
+    request: { path: "/static/app.css" },
+    status: 200,
+    headers: {
+      "content-type": "text/css; charset=utf-8",
+      "content-length": "24",
+      "cache-control": "no-cache",
+      "x-mw": "ok",
+    },
+    bodyExact: "body {\n  color: #111;\n}\n",
+  },
+  {
+    name: "HEAD stylesheet is 200 with empty body",
+    request: { method: "HEAD", path: "/static/app.css" },
+    status: 200,
+    headers: {
+      "content-type": "text/css; charset=utf-8",
+      "content-length": "24",
+      "cache-control": "no-cache",
+      "x-mw": "ok",
+    },
+    bodyExact: "",
+  },
+  {
+    name: "svg is served from the static directory",
+    request: { path: "/static/logo.svg" },
+    status: 200,
+    headers: {
+      "content-type": "image/svg+xml",
+      "x-mw": "ok",
+    },
+    bodyIncludes: ['xmlns="http://www.w3.org/2000/svg"'],
+  },
+  {
+    name: "fingerprinted stylesheet is immutable",
+    request: { path: "/static/app.deadbeef.css" },
+    status: 200,
+    headers: {
+      "content-type": "text/css; charset=utf-8",
+      "content-length": "24",
+      "cache-control": "public, max-age=31536000, immutable",
+      "x-mw": "ok",
+    },
+    bodyExact: "body {\n  color: #abc;\n}\n",
+  },
+  {
+    name: "missing static file is plain 404",
+    request: { path: "/static/missing.css" },
+    status: 404,
+    bodyExact: "Not found",
+  },
+  {
+    name: "favicon.ico is HTML 404",
+    request: { path: "/favicon.ico" },
+    status: 404,
+    headers: { "content-type": "text/html", "x-mw": "ok" },
+    html: {
+      select: [
+        { selector: "html > body > h1", text: "Website Title" },
+        { selector: "html > body > #not-found", text: "custom-404" },
+      ],
+    },
+  },
+  {
+    name: "POST to static file route is 405",
+    request: { method: "POST", path: "/static/app.css" },
+    status: 405,
+    headers: { allow: "GET, HEAD" },
+    bodyIncludes: ["Method Not Allowed"],
+    bodyExcludes: ["<!DOCTYPE html>"],
+  },
+  {
+    name: "dot-dot traversal does not serve a sibling file",
+    request: { path: "/static/../outside.txt" },
+    status: 404,
+    bodyExcludes: ["outside-secret-do-not-serve"],
+  },
+  {
+    name: "encoded dot-dot traversal does not serve a sibling file",
+    request: { path: "/static/%2e%2e/outside.txt" },
+    status: 404,
+    bodyExcludes: ["outside-secret-do-not-serve"],
+  },
+  {
     name: "POST /guestbook urlencoded redirects",
     request: {
       method: "POST",
@@ -508,6 +592,49 @@ Deno.test("main fixture app over HTTP", async (t) => {
 
   await runCases(t, app, appCases);
   await runCases(t, app, errorCases, stillServes);
+
+  await t.step("conditional GET and HEAD of a stylesheet are 304", async () => {
+    const first = await app.fetch({ path: "/static/app.css" });
+    const firstBody = await first.text();
+    const etag = first.headers.get("etag");
+    try {
+      assertEquals(first.status, 200);
+      if (etag === null) {
+        throw new Error("missing etag");
+      }
+      const get304 = await app.fetch({
+        path: "/static/app.css",
+        headers: { "if-none-match": etag },
+      });
+      const getBody = await get304.text();
+      assertEquals(get304.status, 304);
+      assertEquals(getBody, "");
+      assertEquals(get304.headers.get("etag"), etag);
+      assertEquals(get304.headers.get("cache-control"), "no-cache");
+
+      const head304 = await app.fetch({
+        method: "HEAD",
+        path: "/static/app.css",
+        headers: { "if-none-match": etag },
+      });
+      const headBody = await head304.text();
+      assertEquals(head304.status, 304);
+      assertEquals(headBody, "");
+      assertEquals(head304.headers.get("etag"), etag);
+      assertEquals(head304.headers.get("cache-control"), "no-cache");
+    } catch (error) {
+      const dump = formatIntegrationFailure(
+        app,
+        { path: "/static/app.css" },
+        first,
+        firstBody,
+      );
+      if (error instanceof Error) {
+        error.message = `${error.message}\n\n${dump}`;
+      }
+      throw error;
+    }
+  });
 
   await t.step("custom 404 does not run nested group middleware", async () => {
     const res = await app.fetch({ path: "/no-such-page" });

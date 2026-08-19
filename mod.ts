@@ -12,3 +12,4 @@ export {
   type ParamsOf,
   route,
 } from "./routing/mod.ts";
+export { staticFile } from "./static/mod.ts";
