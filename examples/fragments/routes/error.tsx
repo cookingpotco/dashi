@@ -1,0 +1,15 @@
+import { type Element, type WrapperCtx } from "dashi";
+
+export default function ErrorPage(
+  _ctx: WrapperCtx,
+  thrown: unknown,
+): Element {
+  const message = thrown instanceof Error ? thrown.message : "Unknown error";
+  return <p id="error">{message}</p>;
+}
+
+export const errorFallback = (
+  <html>
+    <body>Something went wrong</body>
+  </html>
+);

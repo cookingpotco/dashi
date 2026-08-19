@@ -51,7 +51,6 @@ introduces a new instance of the same class elsewhere.
 
 | Location                  | Defect                                                                   | Issue     |
 | ------------------------- | ------------------------------------------------------------------------ | --------- |
-| `routing/mod.ts`          | 404 is a bare `Response`; a throw during render is unhandled             | COO-16    |
 | `routing/mod.ts`          | Hardcoded `favicon.ico` check standing in for static asset serving       | COO-17    |
 | `client/routeFragment.ts` | Never bundled or served, so it is currently dead code                    | COO-18    |
 | `deno.json` (all three)   | The `dev` task has no permission flags and relies on interactive prompts | untracked |

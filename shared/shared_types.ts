@@ -17,11 +17,12 @@ export interface Ctx<
 }
 
 /**
- * `Ctx` as seen by a layout or middleware. Params are a wide string
- * record so one wrap can cover `/` and `/posts/:id`. Same object as the
- * handler's ctx at runtime; precise keys stay on the handler.
+ * `Ctx` as seen by a layout, middleware, or error handler. Params are a
+ * wide string record so one wrap can cover `/` and `/posts/:id`. Same
+ * object as the handler's ctx at runtime; precise keys stay on the
+ * handler.
  */
-export type WrapCtx<
+export type WrapperCtx<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = Ctx<Record<string, string>, State>;
 
@@ -34,6 +35,18 @@ export type Handler<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
   ctx: Ctx<Params, State>,
+) => Element | Response | Promise<Element | Response>;
+
+/**
+ * Group error UI. `thrown` is the raw value. A returned `Response` is
+ * sent as-is; `Element` is wrapped in remaining parent layouts (skipped
+ * on fragment hits).
+ */
+export type ErrorHandler<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> = (
+  ctx: WrapperCtx<State>,
+  thrown: unknown,
 ) => Element | Response | Promise<Element | Response>;
 
 export const METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const;
@@ -53,7 +66,7 @@ export type MethodHandlers<
 export type Layout<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
-  ctx: WrapCtx<State>,
+  ctx: WrapperCtx<State>,
   children: Element,
 ) => Element | Promise<Element>;
 
@@ -64,6 +77,6 @@ export type Layout<
 export type Middleware<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
-  ctx: WrapCtx<State>,
+  ctx: WrapperCtx<State>,
   next: () => Promise<Response>,
 ) => Response | Promise<Response>;

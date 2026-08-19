@@ -1,20 +1,23 @@
+import { type Element } from "../jsx-runtime/jsx_types.ts";
+import { error as logError, info } from "../logging/mod.ts";
 import {
   type Ctx,
   type Method,
   METHODS,
   REQUEST_HEADERS,
 } from "../shared/mod.ts";
-import { info } from "../logging/mod.ts";
 import {
   compile,
   type CompiledTable,
-  flatten,
   match,
-  type RouteTable,
-} from "./path.ts";
+  type MatchedRoute,
+  type ServeTable,
+} from "./table.ts";
+import { lastResort, recover } from "./recovery.ts";
 import {
   getRenderStore,
-  renderRoute,
+  renderBoundaries,
+  RenderKind,
   replaceFragmentSlots,
   runWithNestedRenderStore,
   runWithRenderStore,
@@ -29,11 +32,16 @@ export {
   type Route,
   route,
   type RouteTable,
-} from "./path.ts";
+  type ServeTable,
+} from "./table.ts";
+
+const DEFAULT_NOT_FOUND_BODY = "Not found";
 
 let compiled: CompiledTable<Record<string, unknown>> = {
   staticByPath: new Map(),
   dynamic: [],
+  rootBoundary: { layouts: [] },
+  rootMiddleware: [],
 };
 
 function isMethod(method: string): method is Method {
@@ -50,93 +58,200 @@ function methodNotAllowed(
   });
 }
 
-function createCtx<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
->(options: {
-  req: Request;
-  params: Record<string, string>;
-  isFragment: boolean;
-  state: Partial<State>;
-}): Ctx<Record<string, string>, State> {
-  return {
-    req: options.req,
-    url: new URL(options.req.url),
-    params: options.params,
-    isFragment: options.isFragment,
-    state: options.state,
-  };
+async function routeResponse(
+  out: Element | Response,
+  options: { status: number; isFragment: boolean },
+): Promise<Response> {
+  if (out instanceof Response) {
+    return out;
+  }
+  const html = await replaceFragmentSlots(String(out));
+  const res = new Response(
+    options.isFragment ? html : `<!DOCTYPE html>${html}`,
+    { status: options.status },
+  );
+  res.headers.set("Content-Type", "text/html");
+  return res;
 }
 
-async function runRoute<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
->(
-  table: CompiledTable<State>,
-  req: Request,
-  isFragment: boolean,
-  state: Partial<State>,
-): Promise<{ html: string | undefined; res: Response } | null> {
-  const matched = match(table, new URL(req.url).pathname);
-  if (!matched) {
-    return null;
+async function runHandler(
+  ctx: Ctx<Record<string, string>, Record<string, unknown>>,
+  matched: MatchedRoute<Record<string, unknown>>,
+): Promise<Element | Response> {
+  const method = ctx.req.method;
+  const handler = isMethod(method) ? matched.handlers[method] : undefined;
+  if (!handler) {
+    return methodNotAllowed(matched.handlers);
   }
+  return await handler(ctx);
+}
 
-  const ctx = createCtx({
-    req,
-    params: matched.params,
-    isFragment,
-    state,
-  });
-
-  return await runWithNestedRenderStore(ctx.state, async () => {
-    let html: string | undefined;
-    const terminal = async () => {
-      const method = ctx.req.method;
-      const handler = isMethod(method) ? matched.handlers[method] : undefined;
-      if (!handler) {
-        return methodNotAllowed(matched.handlers);
-      }
-
-      const out = await handler(ctx);
-      if (out instanceof Response) {
-        return out;
-      }
-      html = String(
-        ctx.isFragment ? out : await renderRoute(out, {
+async function runHandlerTerminal(
+  ctx: Ctx<Record<string, string>, Record<string, unknown>>,
+  matched: MatchedRoute<Record<string, unknown>>,
+): Promise<Response> {
+  try {
+    const out = await runHandler(ctx, matched);
+    if (out instanceof Response) {
+      return out;
+    }
+    if (ctx.isFragment) {
+      return await routeResponse(out, { status: 200, isFragment: true });
+    }
+    const wrapped = await renderBoundaries(out, {
+      ctx,
+      boundary: matched.boundary,
+    });
+    if (wrapped.kind === RenderKind.Thrown) {
+      return await routeResponse(
+        await recover(
+          wrapped.thrown,
+          wrapped.parent,
           ctx,
-          layouts: matched.layouts,
-        }),
+          compiled.errorFallback,
+        ),
+        { status: 500, isFragment: false },
       );
-      const text = isFragment ? html : `<!DOCTYPE html>${html}`;
-      const res = new Response(text);
-      res.headers.set("Content-Type", "text/html");
-      return res;
-    };
+    }
+    return await routeResponse(wrapped.page, {
+      status: 200,
+      isFragment: false,
+    });
+  } catch (thrown) {
+    return await routeResponse(
+      await recover(
+        thrown,
+        matched.boundary,
+        ctx,
+        compiled.errorFallback,
+      ),
+      { status: 500, isFragment: ctx.isFragment },
+    );
+  }
+}
 
+async function runNotFoundTerminal(
+  ctx: Ctx<Record<string, string>, Record<string, unknown>>,
+): Promise<Response> {
+  if (ctx.isFragment) {
+    return new Response("", { status: 404 });
+  }
+  const boundary = compiled.rootBoundary;
+  try {
+    const notFound = compiled.notFound;
+    if (!notFound) {
+      return new Response(DEFAULT_NOT_FOUND_BODY, { status: 404 });
+    }
+    const out = await notFound(ctx);
+    if (out instanceof Response) {
+      return out;
+    }
+    const wrapped = await renderBoundaries(out, { ctx, boundary });
+    if (wrapped.kind === RenderKind.Thrown) {
+      return await routeResponse(
+        await recover(
+          wrapped.thrown,
+          wrapped.parent,
+          ctx,
+          compiled.errorFallback,
+        ),
+        { status: 500, isFragment: false },
+      );
+    }
+    return await routeResponse(wrapped.page, {
+      status: 404,
+      isFragment: false,
+    });
+  } catch (thrown) {
+    return await routeResponse(
+      await recover(thrown, boundary, ctx, compiled.errorFallback),
+      { status: 500, isFragment: false },
+    );
+  }
+}
+
+async function runPipeline(
+  ctx: Ctx<Record<string, string>, Record<string, unknown>>,
+  middleware: MatchedRoute<Record<string, unknown>>["middleware"],
+  runTerminal: () => Promise<Response>,
+): Promise<Response> {
+  return await runWithNestedRenderStore(ctx.state, async () => {
     let index = -1;
     const dispatch = async (i: number): Promise<Response> => {
       if (i <= index) {
         throw new Error("next() called multiple times");
       }
       index = i;
-      const mw = matched.middleware[i];
-      const res = mw ? await mw(ctx, () => dispatch(i + 1)) : await terminal();
-      // Response.redirect freezes headers; copy so outer middleware can set().
+      const mw = middleware[i];
+      if (mw) {
+        const res = await mw(ctx, () => dispatch(i + 1));
+        return new Response(res.body, res);
+      }
+      const res = await runTerminal();
       return new Response(res.body, res);
     };
-
-    const res = await dispatch(0);
-    return { html, res };
+    return await dispatch(0);
   });
+}
+
+async function runRoute(
+  table: CompiledTable<Record<string, unknown>>,
+  req: Request,
+  options: {
+    isFragment: boolean;
+    state: Partial<Record<string, unknown>>;
+    recoverMiss: boolean;
+  },
+): Promise<Response | null> {
+  const matched = match(table, new URL(req.url).pathname);
+  if (!matched) {
+    if (!options.recoverMiss) {
+      return null;
+    }
+    const ctx: Ctx<Record<string, string>, Record<string, unknown>> = {
+      req,
+      url: new URL(req.url),
+      params: {},
+      isFragment: options.isFragment,
+      state: options.state,
+    };
+    return await runPipeline(
+      ctx,
+      table.rootMiddleware,
+      () => runNotFoundTerminal(ctx),
+    );
+  }
+
+  const ctx: Ctx<Record<string, string>, Record<string, unknown>> = {
+    req,
+    url: new URL(req.url),
+    params: matched.params,
+    isFragment: options.isFragment,
+    state: options.state,
+  };
+  return await runPipeline(
+    ctx,
+    matched.middleware,
+    () => runHandlerTerminal(ctx, matched),
+  );
 }
 
 export function init<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
->(table: RouteTable<State>) {
-  const routes = flatten(table);
+>(table: ServeTable<State>) {
   // handle() has no State parameter. The table is only invoked with a ctx
-  // whose state bag is the object createCtx received.
-  compiled = compile(routes) as CompiledTable<Record<string, unknown>>;
-  for (const r of routes) {
+  // whose state bag is the object the request created.
+  compiled = compile(table) as CompiledTable<Record<string, unknown>>;
+  const declared = [
+    ...compiled.staticByPath.values(),
+    ...compiled.dynamic,
+  ].sort((a, b) => a.declarationIndex - b.declarationIndex);
+  let prev = -1;
+  for (const r of declared) {
+    if (r.declarationIndex === prev) {
+      continue;
+    }
+    prev = r.declarationIndex;
     const methods = METHODS.filter((method) => r.handlers[method]).join(",");
     info(`[ROUTE]      ${methods} ${r.path}`);
   }
@@ -152,19 +267,32 @@ export async function handle(
 
   return await runWithRenderStore(req, async () => {
     const isFragment = req.headers.has(REQUEST_HEADERS.FRAGMENT);
-    const result = await runRoute(compiled, req, isFragment, {});
-    if (!result) {
-      return new Response("Not found", { status: 404 });
+    try {
+      const res = await runRoute(compiled, req, {
+        isFragment,
+        state: {},
+        recoverMiss: true,
+      });
+      if (res) {
+        return res;
+      }
+      return await routeResponse(
+        lastResort({
+          isFragment,
+          errorFallback: compiled.errorFallback,
+        }),
+        { status: 500, isFragment },
+      );
+    } catch (thrown) {
+      logError(thrown);
+      return await routeResponse(
+        lastResort({
+          isFragment,
+          errorFallback: compiled.errorFallback,
+        }),
+        { status: 500, isFragment },
+      );
     }
-    if (result.html === undefined) {
-      return result.res;
-    }
-    const html = await replaceFragmentSlots(result.html);
-    const text = isFragment ? html : `<!DOCTYPE html>${html}`;
-    return new Response(text, {
-      status: result.res.status,
-      headers: result.res.headers,
-    });
   });
 }
 
@@ -187,8 +315,48 @@ export function requestEagerFragment(src: string) {
   }
 
   const req = new Request(url, { method: "GET", headers });
-  const promise = runRoute(compiled, req, true, { ...store.currentState })
-    .then((result) => result?.html ?? null);
+  const matched = match(compiled, url.pathname);
+  const promise = (async (): Promise<string | null> => {
+    if (!matched) {
+      return null;
+    }
+    const ctx: Ctx<Record<string, string>, Record<string, unknown>> = {
+      req,
+      url: new URL(req.url),
+      params: matched.params,
+      isFragment: true,
+      state: { ...store.currentState },
+    };
+    let html: string | null = null;
+    try {
+      await runPipeline(ctx, matched.middleware, async () => {
+        let out: Element | Response;
+        let status = 200;
+        try {
+          out = await runHandler(ctx, matched);
+        } catch (thrown) {
+          out = await recover(
+            thrown,
+            matched.boundary,
+            ctx,
+            compiled.errorFallback,
+          );
+          status = 500;
+        }
+        if (out instanceof Response) {
+          return out;
+        }
+        html = String(out);
+        const res = new Response(html, { status });
+        res.headers.set("Content-Type", "text/html");
+        return res;
+      });
+    } catch (thrown) {
+      logError(thrown);
+      return null;
+    }
+    return html;
+  })();
 
   store.inflightFragments.set(src, promise);
 }

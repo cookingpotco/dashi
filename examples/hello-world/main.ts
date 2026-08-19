@@ -9,11 +9,15 @@ import {
   add as addGuestbook,
   list as listGuestbook,
 } from "./routes/guestbook.tsx";
+import notFound, { errorFallback, ErrorPage } from "./routes/errors.tsx";
 
 if (import.meta.main) {
   serve({
     layouts: [root],
     middleware: [logger],
+    notFound,
+    error: ErrorPage,
+    errorFallback,
     routes: [
       route("/", { GET: home }),
       group({

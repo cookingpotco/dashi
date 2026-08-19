@@ -1,14 +1,7 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import { type Element } from "../jsx-runtime/jsx_types.ts";
 import { type Ctx, type Middleware } from "../shared/shared_types.ts";
-import {
-  compile,
-  flatten,
-  group,
-  match,
-  type ParamsOf,
-  route,
-} from "./path.ts";
+import { compile, group, match, type ParamsOf, route } from "./table.ts";
 
 type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends
   (<T>() => T extends B ? 1 : 2) ? true : false;
@@ -77,15 +70,17 @@ Deno.test("match ranks routes and extracts params", () => {
   const firstTie = () => "" as Element;
   const secondTie = () => "" as Element;
 
-  const compiled = compile([
-    route("/posts/:path*", { GET: postsRest }),
-    route("/posts/:id", { GET: postsId }),
-    route("/posts/new", { GET: postsNew }),
-    route("/opt/:id?", { GET: optional }),
-    route("/files/:path*", { GET: files }),
-    route("/tie/:id", { GET: firstTie }),
-    route("/other/:id", { GET: secondTie }),
-  ]);
+  const compiled = compile({
+    routes: [
+      route("/posts/:path*", { GET: postsRest }),
+      route("/posts/:id", { GET: postsId }),
+      route("/posts/new", { GET: postsNew }),
+      route("/opt/:id?", { GET: optional }),
+      route("/files/:path*", { GET: files }),
+      route("/tie/:id", { GET: firstTie }),
+      route("/other/:id", { GET: secondTie }),
+    ],
+  });
 
   const postsNewMatch = match(compiled, "/posts/new");
   assertEquals(postsNewMatch?.handlers.GET, postsNew);
@@ -115,56 +110,61 @@ Deno.test("match ranks routes and extracts params", () => {
 Deno.test("compile rejects duplicate and invalid paths", () => {
   assertThrows(
     () =>
-      compile([
-        route("/posts/:id", { GET: noop }),
-        route("/posts/:slug", { GET: noop }),
-      ]),
+      compile({
+        routes: [
+          route("/posts/:id", { GET: noop }),
+          route("/posts/:slug", { GET: noop }),
+        ],
+      }),
     Error,
     "Duplicate or unreachable route",
   );
   assertThrows(
-    () => compile([route("/", { GET: noop }), route("/:id?", { GET: noop })]),
+    () =>
+      compile({
+        routes: [route("/", { GET: noop }), route("/:id?", { GET: noop })],
+      }),
     Error,
     "Duplicate or unreachable route",
   );
   assertThrows(
-    () => compile([route("/a/:b?/c" as never, { GET: noop })]),
+    () => compile({ routes: [route("/a/:b?/c" as never, { GET: noop })] }),
     Error,
     "Optional and catch-all are only allowed as the last segment",
   );
   assertThrows(
-    () => compile([route("/a/:b*/c" as never, { GET: noop })]),
+    () => compile({ routes: [route("/a/:b*/c" as never, { GET: noop })] }),
     Error,
     "Optional and catch-all are only allowed as the last segment",
   );
   assertThrows(
-    () => compile([route("/nested/" as never, { GET: noop })]),
+    () => compile({ routes: [route("/nested/" as never, { GET: noop })] }),
     Error,
     `No trailing slash except "/"`,
   );
   assertThrows(
-    () => compile([route("/posts/:1id" as never, { GET: noop })]),
+    () => compile({ routes: [route("/posts/:1id" as never, { GET: noop })] }),
     Error,
     "Invalid param name",
   );
   assertThrows(
-    () => compile([route("/posts/:id-x" as never, { GET: noop })]),
+    () => compile({ routes: [route("/posts/:id-x" as never, { GET: noop })] }),
     Error,
     "Invalid param name",
   );
   assertThrows(
-    () => compile([route("/a/:id/b/:id" as never, { GET: noop })]),
+    () => compile({ routes: [route("/a/:id/b/:id" as never, { GET: noop })] }),
     Error,
     "Duplicate param name",
   );
   assertThrows(
-    () => compile([route("/files/*" as never, { GET: noop })]),
+    () => compile({ routes: [route("/files/*" as never, { GET: noop })] }),
     Error,
     "Catch-all must be named",
   );
 });
 
-Deno.test("flatten inherits wraps outermost-first and preserves declaration order", () => {
+Deno.test("compile inherits wraps outermost-first and preserves declaration order", () => {
   const rootLayout = () => "" as Element;
   const nestedLayout = () => "" as Element;
   const rootMw: Middleware = (_ctx, next) => next();
@@ -175,7 +175,7 @@ Deno.test("flatten inherits wraps outermost-first and preserves declaration orde
   const postsNew = () => "" as Element;
   const postsId = () => "" as Element;
 
-  const routes = flatten({
+  const compiled = compile({
     layouts: [rootLayout],
     middleware: [rootMw],
     routes: [
@@ -191,7 +191,14 @@ Deno.test("flatten inherits wraps outermost-first and preserves declaration orde
     ],
   });
 
-  assertEquals(routes.map((r) => r.path), [
+  const declaredPaths = [
+    ...compiled.staticByPath.values(),
+    ...compiled.dynamic,
+  ]
+    .sort((a, b) => a.declarationIndex - b.declarationIndex)
+    .map((r) => r.path)
+    .filter((path, i, paths) => paths.indexOf(path) === i);
+  assertEquals(declaredPaths, [
     "/",
     "/nested",
     "/secret",
@@ -199,34 +206,60 @@ Deno.test("flatten inherits wraps outermost-first and preserves declaration orde
     "/posts/:id",
   ]);
 
-  const compiled = compile(routes);
-
   const homeMatch = match(compiled, "/");
   assertEquals(homeMatch?.handlers.GET, home);
-  assertEquals(homeMatch?.layouts, [rootLayout]);
   assertEquals(homeMatch?.middleware, [rootMw]);
+  assertEquals(homeMatch?.boundary, compiled.rootBoundary);
+  assertEquals(homeMatch?.boundary?.layouts, [rootLayout]);
+  assertEquals(homeMatch?.boundary?.parent, undefined);
 
   const nestedMatch = match(compiled, "/nested");
   assertEquals(nestedMatch?.handlers.GET, nested);
-  assertEquals(nestedMatch?.layouts, [rootLayout, nestedLayout]);
   assertEquals(nestedMatch?.middleware, [rootMw, nestedMw]);
+  assertEquals(nestedMatch?.boundary?.layouts, [nestedLayout]);
+  assertEquals(nestedMatch?.boundary?.parent, compiled.rootBoundary);
+  assertEquals(nestedMatch?.boundary?.parent?.layouts, [rootLayout]);
+  assertEquals(nestedMatch?.boundary?.parent?.parent, undefined);
 
   const secretMatch = match(compiled, "/secret");
   assertEquals(secretMatch?.handlers.GET, secret);
-  assertEquals(secretMatch?.layouts, [rootLayout]);
   assertEquals(secretMatch?.middleware, [rootMw]);
+  assertEquals(secretMatch?.boundary, compiled.rootBoundary);
 
   assertEquals(match(compiled, "/posts/new")?.handlers.GET, postsNew);
   assertEquals(match(compiled, "/posts/abc")?.handlers.GET, postsId);
   assertEquals(match(compiled, "/posts/abc")?.params, { id: "abc" });
 });
 
+Deno.test("compile keeps per-group error on the boundary chain", () => {
+  const rootError = () => "" as Element;
+  const nestedError = () => "" as Element;
+  const page = () => "" as Element;
+
+  const compiled = compile({
+    error: rootError,
+    routes: [
+      group({
+        error: nestedError,
+        routes: [route("/x", { GET: page })],
+      }),
+    ],
+  });
+  const matched = match(compiled, "/x");
+  assertEquals(matched?.boundary?.error, nestedError);
+  assertEquals(matched?.boundary?.parent, compiled.rootBoundary);
+  assertEquals(matched?.boundary?.parent?.error, rootError);
+  assertEquals(matched?.boundary?.parent?.parent, undefined);
+});
+
 Deno.test("GET+POST share one path; empty map throws", () => {
   const list = () => "" as Element;
   const add = () => "" as Element;
-  const compiled = compile([
-    route("/guestbook", { GET: list, POST: add }),
-  ]);
+  const compiled = compile({
+    routes: [
+      route("/guestbook", { GET: list, POST: add }),
+    ],
+  });
   const matched = match(compiled, "/guestbook");
   assertEquals(matched?.handlers.GET, list);
   assertEquals(matched?.handlers.POST, add);
