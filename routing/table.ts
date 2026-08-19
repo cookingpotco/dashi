@@ -145,9 +145,8 @@ export interface CompiledTable<
 > {
   staticByPath: Map<string, CompiledRoute<State>>;
   dynamic: CompiledRoute<State>[];
-  rootLayouts: Layout<State>[];
+  rootBoundary: GroupBoundary<State>;
   rootMiddleware: Middleware<State>[];
-  rootError?: ErrorHandler<State>;
   notFound?: Handler<Record<string, string>, State>;
   errorFallback?: Element | Response;
 }
@@ -305,7 +304,19 @@ function staticPathname(segments: ConcreteSegment[]): string | null {
 
 export function compile<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
->(routes: Route<State>[]): CompiledTable<State> {
+>(table: ServeTable<State>): CompiledTable<State> {
+  const rootBoundary: GroupBoundary<State> = {
+    layouts: table.layouts ?? [],
+    error: table.error,
+  };
+  const routes: Route<State>[] = [];
+  append(
+    table.routes,
+    rootBoundary,
+    table.middleware ?? [],
+    routes,
+  );
+
   const compiled: CompiledRoute<State>[] = [];
   const seen = new Map<string, string>();
 
@@ -347,8 +358,10 @@ export function compile<
   return {
     staticByPath,
     dynamic,
-    rootLayouts: [],
-    rootMiddleware: [],
+    rootBoundary,
+    rootMiddleware: table.middleware ?? [],
+    notFound: table.notFound,
+    errorFallback: table.errorFallback,
   };
 }
 
@@ -478,19 +491,6 @@ export function group<
     error: opts.error,
     routes: opts.routes,
   };
-}
-
-export function flatten<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
->(table: RouteTable<State>): Route<State>[] {
-  const routes: Route<State>[] = [];
-  append(
-    table.routes,
-    { layouts: table.layouts ?? [], error: table.error },
-    table.middleware ?? [],
-    routes,
-  );
-  return routes;
 }
 
 function append<

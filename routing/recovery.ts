@@ -6,26 +6,17 @@ import { renderBoundaries, RenderKind } from "../ssr/mod.ts";
 
 const DEFAULT_ERROR_FALLBACK_BODY = "Something Went Wrong";
 
-export function htmlResponse(body: string, status: number): Response {
-  const res = new Response(body, { status });
-  res.headers.set("Content-Type", "text/html");
-  return res;
-}
-
 export function lastResort(
   isFragment: boolean,
   errorFallback: Element | Response | undefined,
-): Response {
+): Element | Response {
   if (isFragment) {
     return new Response("", { status: 500 });
   }
   if (errorFallback === undefined) {
     return new Response(DEFAULT_ERROR_FALLBACK_BODY, { status: 500 });
   }
-  if (errorFallback instanceof Response) {
-    return errorFallback;
-  }
-  return htmlResponse(`<!DOCTYPE html>${errorFallback}`, 500);
+  return errorFallback;
 }
 
 async function recoverFragment<
