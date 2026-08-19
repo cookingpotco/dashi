@@ -275,16 +275,16 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     },
   },
   {
-    name: "handler throws with no error uses remaining layouts",
+    name: "handler throws with no group error uses parent error",
     request: { path: "/throw-no-error" },
     status: 500,
     headers: { "content-type": "text/html", "x-mw": "ok" },
     html: {
-      bodyExcludes: ["root-error"],
+      bodyExcludes: ["no-error-wrap"],
       select: [
         { selector: "html > body > h1", text: "Website Title" },
-        { selector: "html > body > #no-error-wrap", exists: true },
-        { selector: "#root-error", exists: false },
+        { selector: "html > body > #root-error", text: "root-error" },
+        { selector: "#no-error-wrap", exists: false },
       ],
     },
     stillServes: true,

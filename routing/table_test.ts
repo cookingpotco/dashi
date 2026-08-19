@@ -8,7 +8,7 @@ import {
   match,
   type ParamsOf,
   route,
-} from "./path.ts";
+} from "./table.ts";
 
 type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends
   (<T>() => T extends B ? 1 : 2) ? true : false;
@@ -203,14 +203,12 @@ Deno.test("flatten inherits wraps outermost-first and preserves declaration orde
 
   const homeMatch = match(compiled, "/");
   assertEquals(homeMatch?.handlers.GET, home);
-  assertEquals(homeMatch?.layouts, [rootLayout]);
   assertEquals(homeMatch?.middleware, [rootMw]);
   assertEquals(homeMatch?.boundary?.layouts, [rootLayout]);
   assertEquals(homeMatch?.boundary?.parent, undefined);
 
   const nestedMatch = match(compiled, "/nested");
   assertEquals(nestedMatch?.handlers.GET, nested);
-  assertEquals(nestedMatch?.layouts, [rootLayout, nestedLayout]);
   assertEquals(nestedMatch?.middleware, [rootMw, nestedMw]);
   assertEquals(nestedMatch?.boundary?.layouts, [nestedLayout]);
   assertEquals(nestedMatch?.boundary?.parent?.layouts, [rootLayout]);
@@ -218,8 +216,8 @@ Deno.test("flatten inherits wraps outermost-first and preserves declaration orde
 
   const secretMatch = match(compiled, "/secret");
   assertEquals(secretMatch?.handlers.GET, secret);
-  assertEquals(secretMatch?.layouts, [rootLayout]);
   assertEquals(secretMatch?.middleware, [rootMw]);
+  assertEquals(secretMatch?.boundary?.layouts, [rootLayout]);
 
   assertEquals(match(compiled, "/posts/new")?.handlers.GET, postsNew);
   assertEquals(match(compiled, "/posts/abc")?.handlers.GET, postsId);

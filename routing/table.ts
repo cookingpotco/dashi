@@ -136,7 +136,6 @@ export interface MatchedRoute<
 > {
   handlers: MethodHandlers<Record<string, string>, State>;
   params: Record<string, string>;
-  layouts: Layout<State>[];
   middleware: Middleware<State>[];
   boundary?: GroupBoundary<State>;
 }
@@ -397,19 +396,6 @@ function matchPattern(
   return params;
 }
 
-function layoutsOf<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
->(
-  boundary: GroupBoundary<State> | undefined,
-): Layout<State>[] {
-  const groups: Layout<State>[][] = [];
-  for (let current = boundary; current; current = current.parent) {
-    groups.push(current.layouts);
-  }
-  groups.reverse();
-  return groups.flat();
-}
-
 function matched<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(
@@ -419,7 +405,6 @@ function matched<
   return {
     handlers: compiledRoute.handlers,
     params,
-    layouts: layoutsOf(compiledRoute.boundary),
     middleware: compiledRoute.middleware,
     boundary: compiledRoute.boundary,
   };

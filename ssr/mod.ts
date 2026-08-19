@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { type Element } from "../jsx-runtime/jsx_types.ts";
 import { type Ctx, type Layout } from "../shared/mod.ts";
-import { type GroupBoundary } from "../routing/path.ts";
+import { type GroupBoundary } from "../routing/table.ts";
 
 interface RenderStore {
   pageReq: Request;
@@ -62,6 +62,11 @@ export async function renderRoute<
   );
 }
 
+export const enum RenderKind {
+  Page = "page",
+  Thrown = "thrown",
+}
+
 /**
  * Wraps `page` in each group's layouts, innermost group first. If a
  * group's layouts throw, `parent` is the next group out — that group's
@@ -76,25 +81,24 @@ export async function renderBoundaries<
     boundary?: GroupBoundary<State>;
   },
 ): Promise<
-  | { page: Element }
-  | { thrown: unknown; parent?: GroupBoundary<State> }
+  | { kind: RenderKind.Page; page: Element }
+  | { kind: RenderKind.Thrown; thrown: unknown; parent?: GroupBoundary<State> }
 > {
-  let wrapped = page;
   for (
     let boundary = options.boundary;
     boundary;
     boundary = boundary.parent
   ) {
     try {
-      wrapped = await renderRoute(wrapped, {
+      page = await renderRoute(page, {
         ctx: options.ctx,
         layouts: boundary.layouts,
       });
     } catch (thrown) {
-      return { thrown, parent: boundary.parent };
+      return { kind: RenderKind.Thrown, thrown, parent: boundary.parent };
     }
   }
-  return { page: wrapped };
+  return { kind: RenderKind.Page, page };
 }
 
 export function getFragmentSlot(src: string) {

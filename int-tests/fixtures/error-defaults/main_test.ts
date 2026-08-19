@@ -25,17 +25,11 @@ Deno.test("error-defaults fixture over HTTP", async (t) => {
       bodyExact: "Not found",
     },
     {
-      name: "handler throws with no error uses remaining layouts",
+      name: "handler throws with no error uses errorFallback",
       request: { path: "/throw" },
       status: 500,
       headers: { "x-mw": "ok" },
-      html: {
-        bodyExcludes: ["crash-fallback", "Something Went Wrong"],
-        select: [
-          { selector: "html > body > h1", text: "Defaults" },
-          { selector: "#home", exists: false },
-        ],
-      },
+      bodyExact: "Something Went Wrong",
       stillServes: true,
     },
     {

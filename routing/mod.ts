@@ -14,11 +14,12 @@ import {
   match,
   type MatchedRoute,
   type ServeTable,
-} from "./path.ts";
-import { htmlResponse, lastResort, recover } from "./recover.ts";
+} from "./table.ts";
+import { htmlResponse, lastResort, recover } from "./recovery.ts";
 import {
   getRenderStore,
   renderBoundaries,
+  RenderKind,
   replaceFragmentSlots,
   runWithNestedRenderStore,
   runWithRenderStore,
@@ -34,7 +35,7 @@ export {
   route,
   type RouteTable,
   type ServeTable,
-} from "./path.ts";
+} from "./table.ts";
 
 const DEFAULT_NOT_FOUND_BODY = "Not found";
 
@@ -139,7 +140,7 @@ async function runHandlerTerminal(
       ctx,
       boundary: matched.boundary,
     });
-    if ("thrown" in wrapped) {
+    if (wrapped.kind === RenderKind.Thrown) {
       return await pageResponse(
         await recover(
           wrapped.thrown,
@@ -183,7 +184,7 @@ async function runNotFoundTerminal(
       return new Response("", { status: 404 });
     }
     const wrapped = await renderBoundaries(out, { ctx, boundary });
-    if ("thrown" in wrapped) {
+    if (wrapped.kind === RenderKind.Thrown) {
       return await pageResponse(
         await recover(
           wrapped.thrown,

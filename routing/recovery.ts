@@ -1,10 +1,9 @@
 import { type Element } from "../jsx-runtime/jsx_types.ts";
 import { error as logError } from "../logging/mod.ts";
 import { type Ctx } from "../shared/mod.ts";
-import { type GroupBoundary } from "./path.ts";
-import { renderBoundaries } from "../ssr/mod.ts";
+import { type GroupBoundary } from "./table.ts";
+import { renderBoundaries, RenderKind } from "../ssr/mod.ts";
 
-const EMPTY_PAGE = "" as Element;
 const DEFAULT_ERROR_FALLBACK_BODY = "Something Went Wrong";
 
 export function htmlResponse(body: string, status: number): Response {
@@ -62,17 +61,20 @@ export async function recover<
     return await recoverFragment(thrown, boundary, ctx, errorFallback);
   }
 
-  let current = boundary;
-  while (current) {
+  for (
+    let current = boundary;
+    current;
+    current = current.parent
+  ) {
+    if (!current.error) {
+      continue;
+    }
     let errorResult: Element | Response;
     try {
-      errorResult = current.error
-        ? await current.error(ctx, thrown)
-        : EMPTY_PAGE;
+      errorResult = await current.error(ctx, thrown);
     } catch (nextThrown) {
       thrown = nextThrown;
       logError(thrown);
-      current = current.parent;
       continue;
     }
     if (errorResult instanceof Response) {
@@ -83,11 +85,13 @@ export async function recover<
       ctx,
       boundary: current,
     });
-    if ("thrown" in wrapped) {
-      thrown = wrapped.thrown;
-      logError(thrown);
-      current = wrapped.parent;
-      continue;
+    if (wrapped.kind === RenderKind.Thrown) {
+      return await recover(
+        wrapped.thrown,
+        wrapped.parent,
+        ctx,
+        errorFallback,
+      );
     }
 
     return wrapped.page;
