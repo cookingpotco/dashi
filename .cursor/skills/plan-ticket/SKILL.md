@@ -32,10 +32,20 @@ stop: tell the human rather than silently substituting another issue.
 
 ## The loop
 
-1. **Discuss and research** before planning. Verify the ticket's claims against
-   the code; tickets are written from memory and go stale.
+1. **Discuss and research** before planning. Stay in the current mode; do not
+   switch to plan mode yet. Verify the ticket's claims against the code; tickets
+   are written from memory and go stale.
+
+   Surface every major decision, consideration, and fork — anywhere there are
+   multiple possible directions — as a question to the human. Do not pick a
+   direction yourself. Batch the questions into one pass, wait for answers, then
+   move on. If a question has discrete options, use `AskQuestion`. Skip this
+   only when the code and ticket leave no real choice.
+
 2. **Plan** in plan mode, iterating until the human approves. Skip this for
-   S-pointed issues whose ticket already reads like a plan.
+   S-pointed issues whose ticket already reads like a plan. Present the full
+   plan in the chat. After every alteration, show the full plan again — do not
+   describe the delta and leave the plan implied.
 3. **Start the implementor.** After approval, post the plan as a Linear comment
    that begins with `@Cursor`, then the full approved plan. That mention is the
    only handoff: Linear puts this comment in the agent's prompt and starts one
