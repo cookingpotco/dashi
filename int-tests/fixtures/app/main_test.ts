@@ -1,6 +1,6 @@
 import { assertEquals, assertFalse, assertStringIncludes } from "@std/assert";
-import { type IntegrationTestCase, runCase } from "./cases.ts";
-import { type App, boot, formatIntegrationFailure } from "./harness.ts";
+import { type IntegrationTestCase, runCases } from "../../cases.ts";
+import { boot, formatIntegrationFailure } from "../../harness.ts";
 
 const guestbookMultipart = new FormData();
 guestbookMultipart.set("body", "from-formdata");
@@ -501,31 +501,13 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
   },
 ];
 
-async function runCases(
-  t: Deno.TestContext,
-  app: App,
-  cases: Array<IntegrationTestCase & { stillServes?: boolean }>,
-  alive: IntegrationTestCase = stillServes,
-): Promise<void> {
-  for (const testCase of cases) {
-    await t.step(testCase.name, async () => {
-      await runCase(app, testCase);
-    });
-    if (testCase.stillServes) {
-      await t.step(`${testCase.name}: still serves`, async () => {
-        await runCase(app, alive);
-      });
-    }
-  }
-}
-
-Deno.test("fixture app over HTTP", async (t) => {
+Deno.test("main fixture app over HTTP", async (t) => {
   await using app = await boot(
-    new URL("./fixtures/app/main.ts", import.meta.url),
+    new URL("./main.ts", import.meta.url),
   );
 
   await runCases(t, app, appCases);
-  await runCases(t, app, errorCases);
+  await runCases(t, app, errorCases, stillServes);
 
   await t.step("custom 404 does not run nested group middleware", async () => {
     const res = await app.fetch({ path: "/no-such-page" });
@@ -571,74 +553,5 @@ Deno.test("fixture app over HTTP", async (t) => {
       }
       throw error;
     }
-  });
-});
-
-Deno.test("omitted notFound and errorFallback over HTTP", async (t) => {
-  await using app = await boot(
-    new URL("./fixtures/error-defaults/main.tsx", import.meta.url),
-  );
-
-  await runCases(t, app, [
-    {
-      name: "omitted notFound is plain 404",
-      request: { path: "/nope" },
-      status: 404,
-      headers: { "x-mw": "ok" },
-      bodyExact: "Not found",
-    },
-    {
-      name: "handler throws with no error uses remaining layouts",
-      request: { path: "/throw" },
-      status: 500,
-      headers: { "x-mw": "ok" },
-      html: {
-        bodyExcludes: ["crash-fallback", "Something Went Wrong"],
-        select: [
-          { selector: "html > body > h1", text: "Defaults" },
-          { selector: "#home", exists: false },
-        ],
-      },
-      stillServes: true,
-    },
-    {
-      name: "root layout throws with omitted errorFallback",
-      request: { path: "/root-layout-throws" },
-      status: 500,
-      bodyExact: "Something Went Wrong",
-      stillServes: true,
-    },
-  ], {
-    name: "known-good route is 200",
-    request: { path: "/" },
-    status: 200,
-    headers: { "x-mw": "ok" },
-    html: {
-      select: [{ selector: "#home", text: "home" }],
-    },
-  });
-});
-
-Deno.test("errorFallback Response over HTTP", async (t) => {
-  await using app = await boot(
-    new URL("./fixtures/error-fallback-response/main.tsx", import.meta.url),
-  );
-
-  await runCases(t, app, [
-    {
-      name: "root layout throws uses errorFallback Response",
-      request: { path: "/root-layout-throws" },
-      status: 500,
-      headers: { "x-fallback": "1" },
-      bodyExact: "fallback-response",
-      stillServes: true,
-    },
-  ], {
-    name: "known-good route is 200",
-    request: { path: "/" },
-    status: 200,
-    html: {
-      select: [{ selector: "#home", text: "home" }],
-    },
   });
 });

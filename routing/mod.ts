@@ -1,4 +1,3 @@
-import { type Element } from "../jsx-runtime/jsx_types.ts";
 import { error as logError, info } from "../logging/mod.ts";
 import {
   type Ctx,
@@ -16,8 +15,14 @@ import {
   type ServeTable,
 } from "./path.ts";
 import {
+  htmlResponse,
+  lastResort,
+  recover,
+  type RouteResult,
+} from "./recover.ts";
+import {
   getRenderStore,
-  renderRoute,
+  renderBoundaries,
   replaceFragmentSlots,
   runWithNestedRenderStore,
   runWithRenderStore,
@@ -35,9 +40,7 @@ export {
   type ServeTable,
 } from "./path.ts";
 
-const EMPTY_PAGE = "" as Element;
 const DEFAULT_NOT_FOUND_BODY = "Not found";
-const DEFAULT_ERROR_FALLBACK_BODY = "Something Went Wrong";
 
 let compiled: CompiledTable<Record<string, unknown>> = {
   staticByPath: new Map(),
@@ -77,209 +80,105 @@ function createCtx<
   };
 }
 
-function htmlResponse(body: string, status: number): Response {
-  const res = new Response(body, { status });
-  res.headers.set("Content-Type", "text/html");
-  return res;
-}
-
-function lastResort(isFragment: boolean): Response {
-  if (isFragment) {
-    return new Response("", { status: 500 });
-  }
-  const fallback = compiled.errorFallback;
-  if (fallback === undefined) {
-    return new Response(DEFAULT_ERROR_FALLBACK_BODY, { status: 500 });
-  }
-  if (fallback instanceof Response) {
-    return fallback;
-  }
-  return htmlResponse(`<!DOCTYPE html>${fallback}`, 500);
-}
-
-function rootBoundaries(): GroupBoundary<Record<string, unknown>>[] {
-  return [{ layouts: compiled.rootLayouts, error: compiled.rootError }];
-}
-
-async function recoverFragment(
-  thrown: unknown,
-  startIndex: number,
-  ctx: Ctx<Record<string, string>, Record<string, unknown>>,
-  boundaries: GroupBoundary<Record<string, unknown>>[],
-  bag: { html: string | undefined },
-): Promise<Response> {
-  const boundary = startIndex >= 0 ? boundaries[startIndex] : undefined;
-  try {
-    if (!boundary?.error) {
-      bag.html = undefined;
-      return new Response("", { status: 500 });
-    }
-    const page = await boundary.error(ctx, thrown);
-    if (page instanceof Response) {
-      bag.html = undefined;
-      return page;
-    }
-    bag.html = String(page);
-    return htmlResponse(bag.html, 500);
-  } catch (nextThrown) {
-    logError(nextThrown);
-    bag.html = undefined;
-    return new Response("", { status: 500 });
-  }
-}
-
-async function recover(
-  thrown: unknown,
-  startIndex: number,
-  ctx: Ctx<Record<string, string>, Record<string, unknown>>,
-  boundaries: GroupBoundary<Record<string, unknown>>[],
-  bag: { html: string | undefined },
-): Promise<Response> {
-  logError(thrown);
-
-  if (ctx.isFragment) {
-    return await recoverFragment(thrown, startIndex, ctx, boundaries, bag);
-  }
-
-  for (let i = startIndex; i >= 0; i--) {
-    const boundary = boundaries[i]!;
-    let page: Element | Response;
-    try {
-      page = boundary.error ? await boundary.error(ctx, thrown) : EMPTY_PAGE;
-    } catch (nextThrown) {
-      thrown = nextThrown;
-      logError(thrown);
-      continue;
-    }
-    if (page instanceof Response) {
-      bag.html = undefined;
-      return page;
-    }
-
-    let wrapped = page;
-    let layoutFailedAt: number | undefined;
-    for (let j = i; j >= 0; j--) {
-      try {
-        wrapped = await renderRoute(wrapped, {
-          ctx,
-          layouts: boundaries[j]!.layouts,
-        });
-      } catch (layoutThrown) {
-        thrown = layoutThrown;
-        logError(thrown);
-        layoutFailedAt = j;
-        break;
-      }
-    }
-    if (layoutFailedAt !== undefined) {
-      i = layoutFailedAt;
-      continue;
-    }
-
-    bag.html = String(wrapped);
-    return htmlResponse(`<!DOCTYPE html>${bag.html}`, 500);
-  }
-
-  bag.html = undefined;
-  return lastResort(false);
+function rootBoundary(): GroupBoundary<Record<string, unknown>> {
+  return { layouts: compiled.rootLayouts, error: compiled.rootError };
 }
 
 async function runHandlerTerminal(
   ctx: Ctx<Record<string, string>, Record<string, unknown>>,
   matched: MatchedRoute<Record<string, unknown>>,
-  bag: { html: string | undefined },
-): Promise<Response> {
+): Promise<RouteResult> {
   const method = ctx.req.method;
   const handler = isMethod(method) ? matched.handlers[method] : undefined;
   if (!handler) {
-    return methodNotAllowed(matched.handlers);
+    return { html: undefined, res: methodNotAllowed(matched.handlers) };
   }
 
-  const boundaries = matched.boundaries;
-  let page: Element;
+  let page;
   try {
     const out = await handler(ctx);
     if (out instanceof Response) {
-      return out;
+      return { html: undefined, res: out };
     }
     page = out;
   } catch (thrown) {
     return await recover(
       thrown,
-      boundaries.length - 1,
+      matched.boundary,
       ctx,
-      boundaries,
-      bag,
+      compiled.errorFallback,
     );
   }
 
   if (ctx.isFragment) {
-    bag.html = String(page);
-    return htmlResponse(bag.html, 200);
+    const html = String(page);
+    return { html, res: htmlResponse(html, 200) };
   }
 
-  for (let j = boundaries.length - 1; j >= 0; j--) {
-    try {
-      page = await renderRoute(page, {
-        ctx,
-        layouts: boundaries[j]!.layouts,
-      });
-    } catch (thrown) {
-      return await recover(thrown, j - 1, ctx, boundaries, bag);
-    }
+  const wrapped = await renderBoundaries(page, {
+    ctx,
+    boundary: matched.boundary,
+  });
+  if ("thrown" in wrapped) {
+    return await recover(
+      wrapped.thrown,
+      wrapped.parent,
+      ctx,
+      compiled.errorFallback,
+    );
   }
 
-  bag.html = String(page);
-  return htmlResponse(`<!DOCTYPE html>${bag.html}`, 200);
+  const html = String(wrapped.page);
+  return { html, res: htmlResponse(`<!DOCTYPE html>${html}`, 200) };
 }
 
 async function runNotFoundTerminal(
   ctx: Ctx<Record<string, string>, Record<string, unknown>>,
-  bag: { html: string | undefined },
-): Promise<Response> {
-  const boundaries = rootBoundaries();
-  let page: Element;
+): Promise<RouteResult> {
+  const boundary = rootBoundary();
+  let page;
   try {
     const notFound = compiled.notFound;
     if (!notFound) {
-      return new Response(DEFAULT_NOT_FOUND_BODY, { status: 404 });
+      return {
+        html: undefined,
+        res: new Response(DEFAULT_NOT_FOUND_BODY, { status: 404 }),
+      };
     }
     const out = await notFound(ctx);
     if (out instanceof Response) {
-      return out;
+      return { html: undefined, res: out };
     }
     page = out;
   } catch (thrown) {
-    return await recover(thrown, 0, ctx, boundaries, bag);
+    return await recover(thrown, boundary, ctx, compiled.errorFallback);
   }
 
   if (ctx.isFragment) {
-    bag.html = undefined;
-    return new Response("", { status: 404 });
+    return { html: undefined, res: new Response("", { status: 404 }) };
   }
 
-  for (let j = boundaries.length - 1; j >= 0; j--) {
-    try {
-      page = await renderRoute(page, {
-        ctx,
-        layouts: boundaries[j]!.layouts,
-      });
-    } catch (thrown) {
-      return await recover(thrown, j - 1, ctx, boundaries, bag);
-    }
+  const wrapped = await renderBoundaries(page, { ctx, boundary });
+  if ("thrown" in wrapped) {
+    return await recover(
+      wrapped.thrown,
+      wrapped.parent,
+      ctx,
+      compiled.errorFallback,
+    );
   }
 
-  bag.html = String(page);
-  return htmlResponse(`<!DOCTYPE html>${bag.html}`, 404);
+  const html = String(wrapped.page);
+  return { html, res: htmlResponse(`<!DOCTYPE html>${html}`, 404) };
 }
 
 async function runPipeline(
   ctx: Ctx<Record<string, string>, Record<string, unknown>>,
   middleware: MatchedRoute<Record<string, unknown>>["middleware"],
-  runTerminal: (bag: { html: string | undefined }) => Promise<Response>,
-): Promise<{ html: string | undefined; res: Response }> {
+  runTerminal: () => Promise<RouteResult>,
+): Promise<RouteResult> {
   return await runWithNestedRenderStore(ctx.state, async () => {
-    const bag: { html: string | undefined } = { html: undefined };
+    let result: RouteResult | undefined;
     let index = -1;
     const dispatch = async (i: number): Promise<Response> => {
       if (i <= index) {
@@ -287,13 +186,15 @@ async function runPipeline(
       }
       index = i;
       const mw = middleware[i];
-      const res = mw
-        ? await mw(ctx, () => dispatch(i + 1))
-        : await runTerminal(bag);
-      return new Response(res.body, res);
+      if (mw) {
+        const res = await mw(ctx, () => dispatch(i + 1));
+        return new Response(res.body, res);
+      }
+      result = await runTerminal();
+      return new Response(result.res.body, result.res);
     };
     const res = await dispatch(0);
-    return { html: bag.html, res };
+    return { html: result?.html, res };
   });
 }
 
@@ -303,7 +204,7 @@ async function runRoute(
   isFragment: boolean,
   state: Partial<Record<string, unknown>>,
   recoverMiss: boolean,
-): Promise<{ html: string | undefined; res: Response } | null> {
+): Promise<RouteResult | null> {
   const matched = match(table, new URL(req.url).pathname);
   if (!matched) {
     if (!recoverMiss) {
@@ -318,7 +219,7 @@ async function runRoute(
     return await runPipeline(
       ctx,
       table.rootMiddleware,
-      (bag) => runNotFoundTerminal(ctx, bag),
+      () => runNotFoundTerminal(ctx),
     );
   }
 
@@ -331,7 +232,7 @@ async function runRoute(
   return await runPipeline(
     ctx,
     matched.middleware,
-    (bag) => runHandlerTerminal(ctx, matched, bag),
+    () => runHandlerTerminal(ctx, matched),
   );
 }
 
@@ -368,7 +269,7 @@ export async function handle(
     try {
       const result = await runRoute(compiled, req, isFragment, {}, true);
       if (!result || result.html === undefined) {
-        return result?.res ?? lastResort(isFragment);
+        return result?.res ?? lastResort(isFragment, compiled.errorFallback);
       }
       const html = await replaceFragmentSlots(result.html);
       const text = isFragment ? html : `<!DOCTYPE html>${html}`;
@@ -378,7 +279,7 @@ export async function handle(
       });
     } catch (thrown) {
       logError(thrown);
-      return lastResort(isFragment);
+      return lastResort(isFragment, compiled.errorFallback);
     }
   });
 }

@@ -12,12 +12,12 @@ way `examples/` do.
 
 ## Add a case
 
-If the fixture already has the route, append an `IntegrationTestCase` in
-`app_test.ts` and stop. If it needs a new path, add a `route()` leaf in the
-fixture `main.ts` under the shared root wraps, or a nested `group` when it needs
-extra wraps, and import the handler. One request, several asserts: status,
-headers, then at most one of `html` or `json`. `html` covers parsed DOM `select`
-plus raw `bodyIncludes` / `bodyExcludes` (escaping, DOCTYPE, leftover
+If the fixture already has the route, append an `IntegrationTestCase` in that
+fixture's `main_test.ts` and stop. If it needs a new path, add a `route()` leaf
+in the fixture `main.ts` under the shared root wraps, or a nested `group` when
+it needs extra wraps, and import the handler. One request, several asserts:
+status, headers, then at most one of `html` or `json`. `html` covers parsed DOM
+`select` plus raw `bodyIncludes` / `bodyExcludes` (escaping, DOCTYPE, leftover
 `{{fragment:` markers). `json` is the expected parsed object. Raw top-level
 `bodyIncludes` / `bodyExcludes` are for responses that are neither (404, 405,
 empty 303). `runCase` parses HTML only when `html` is set.
@@ -29,14 +29,13 @@ by a GET that observes it.
 
 ## Add a fixture app
 
-`fixtures/app` is the M1 app: one small tree covering the cases above. Put a new
-folder next to it only when the behaviour cannot live on that app. Do not add a
-fixture as its own workspace member. `error-defaults` and
+`fixtures/app` is the main fixture: one small tree covering the cases above. Put
+a new folder next to it only when the behaviour cannot live on that app. Do not
+add a fixture as its own workspace member. `error-defaults` and
 `error-fallback-response` cover omitted `notFound` / `errorFallback` and an
 `errorFallback` `Response`, which cannot share the main app's `serve()` table.
 
 Each fixture is a `main.ts` or `main.tsx` that calls
-`serve({ layouts, middleware, routes }, { port: 0 })` with `route()` leaves.
-Shared wraps live on `serve` or a nested `group`. The runner is keyed by the
-fixture's `main.ts` path. `app_test.ts` boots each fixture it needs and runs its
-cases as `t.step`s.
+`serve({ layouts, middleware, routes }, { port: 0 })` with `route()` leaves,
+plus a co-located `main_test.ts`. Shared wraps live on `serve` or a nested
+`group`. `deno task test:int` picks up every `*_test.ts` under `int-tests/`.

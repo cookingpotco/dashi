@@ -17,15 +17,16 @@ export type {
 export type { ParamsOf } from "./path_types.ts";
 
 /**
- * One group's layouts and optional `error`, outermost group first on
- * each compiled route. A group's `error` catches handler throws and
- * inner group failures; it does not catch that group's own layouts.
+ * One group's layouts and optional `error`. `parent` is the enclosing
+ * group, if any. A group's `error` catches handler throws and inner
+ * group failures; it does not catch that group's own layouts.
  */
 export interface GroupBoundary<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
   layouts: Layout<State>[];
   error?: ErrorHandler<State>;
+  parent?: GroupBoundary<State>;
 }
 
 const enum NodeKind {
@@ -62,7 +63,7 @@ export interface Route<
   kind: NodeKind.Route;
   path: string;
   handlers: MethodHandlers<Record<string, string>, State>;
-  boundaries: GroupBoundary<State>[];
+  boundary?: GroupBoundary<State>;
   middleware: Middleware<State>[];
 }
 
@@ -124,7 +125,7 @@ export interface CompiledRoute<
 > {
   segments: ConcreteSegment[];
   handlers: MethodHandlers<Record<string, string>, State>;
-  boundaries: GroupBoundary<State>[];
+  boundary?: GroupBoundary<State>;
   middleware: Middleware<State>[];
   declarationIndex: number;
   path: string;
@@ -137,7 +138,7 @@ export interface MatchedRoute<
   params: Record<string, string>;
   layouts: Layout<State>[];
   middleware: Middleware<State>[];
-  boundaries: GroupBoundary<State>[];
+  boundary?: GroupBoundary<State>;
 }
 
 export interface CompiledTable<
@@ -325,7 +326,7 @@ export function compile<
       compiled.push({
         segments,
         handlers: declared.handlers,
-        boundaries: declared.boundaries,
+        boundary: declared.boundary,
         middleware: declared.middleware,
         declarationIndex: i,
         path: declared.path,
@@ -396,6 +397,19 @@ function matchPattern(
   return params;
 }
 
+function layoutsOf<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+>(
+  boundary: GroupBoundary<State> | undefined,
+): Layout<State>[] {
+  const groups: Layout<State>[][] = [];
+  for (let current = boundary; current; current = current.parent) {
+    groups.push(current.layouts);
+  }
+  groups.reverse();
+  return groups.flat();
+}
+
 function matched<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(
@@ -405,9 +419,9 @@ function matched<
   return {
     handlers: compiledRoute.handlers,
     params,
-    layouts: compiledRoute.boundaries.flatMap((boundary) => boundary.layouts),
+    layouts: layoutsOf(compiledRoute.boundary),
     middleware: compiledRoute.middleware,
-    boundaries: compiledRoute.boundaries,
+    boundary: compiledRoute.boundary,
   };
 }
 
@@ -454,7 +468,6 @@ export function route<
     // Path literals prove narrower params than Route stores; match only
     // fills the declared keys, so this widening is safe.
     handlers: handlers as Route<State>["handlers"],
-    boundaries: [],
     middleware: [],
   };
 }
@@ -488,7 +501,7 @@ export function flatten<
   const routes: Route<State>[] = [];
   append(
     table.routes,
-    [{ layouts: table.layouts ?? [], error: table.error }],
+    { layouts: table.layouts ?? [], error: table.error },
     table.middleware ?? [],
     routes,
   );
@@ -499,7 +512,7 @@ function append<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(
   nodes: Array<Route<State> | Group<State>>,
-  boundaries: GroupBoundary<State>[],
+  parent: GroupBoundary<State>,
   middleware: Middleware<State>[],
   routes: Route<State>[],
 ): void {
@@ -507,7 +520,7 @@ function append<
     if (node.kind === NodeKind.Group) {
       append(
         node.routes,
-        [...boundaries, { layouts: node.layouts, error: node.error }],
+        { layouts: node.layouts, error: node.error, parent },
         [...middleware, ...node.middleware],
         routes,
       );
@@ -517,7 +530,7 @@ function append<
       kind: NodeKind.Route,
       path: node.path,
       handlers: node.handlers,
-      boundaries: [...boundaries, ...node.boundaries],
+      boundary: parent,
       middleware: [...middleware, ...node.middleware],
     });
   }

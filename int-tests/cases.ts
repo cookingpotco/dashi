@@ -29,6 +29,8 @@ export interface IntegrationTestCase {
   json?: unknown;
   /** Exact body match. Use for empty 404/500 bodies. */
   bodyExact?: string;
+  /** After this case, also GET a known-good route that must stay 200. */
+  stillServes?: boolean;
 }
 
 function parseHtml(body: string) {
@@ -142,5 +144,30 @@ export async function runCase(
       error.message = `${error.message}\n\n${dump}`;
     }
     throw error;
+  }
+}
+
+export async function runCases(
+  t: Deno.TestContext,
+  app: App,
+  cases: IntegrationTestCase[],
+  alive?: IntegrationTestCase,
+): Promise<void> {
+  for (const testCase of cases) {
+    await t.step(testCase.name, async () => {
+      await runCase(app, testCase);
+    });
+    if (testCase.stillServes) {
+      if (!alive) {
+        throw new Error(
+          `stillServes is set on ${
+            JSON.stringify(testCase.name)
+          } with no alive case`,
+        );
+      }
+      await t.step(`${testCase.name}: still serves`, async () => {
+        await runCase(app, alive);
+      });
+    }
   }
 }
