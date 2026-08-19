@@ -1,3 +1,4 @@
+import { error as logError } from "../logging/mod.ts";
 import { type Ctx } from "../shared/shared_types.ts";
 
 const NOT_FOUND_BODY = "Not found";
@@ -28,14 +29,24 @@ const TYPES: Record<Lowercase<string>, Lowercase<string>> = {
   webmanifest: "application/manifest+json",
 };
 
+export const enum StaticFileCacheStrategy {
+  Immutable = "immutable",
+  Public = "public",
+  Private = "private",
+}
+
 /**
  * Cache-Control for a static file. Omitted `staticFile` cache is
  * immutable.
  */
 export type StaticFileCacheConfig =
-  | { strategy: "immutable" }
-  | { strategy: "public"; maxAge: number }
-  | { strategy: "private" };
+  | { strategy: StaticFileCacheStrategy.Immutable }
+  | {
+    strategy: StaticFileCacheStrategy.Public;
+    maxAge: number;
+    sMaxAge?: number;
+  }
+  | { strategy: StaticFileCacheStrategy.Private };
 
 function basename(path: string): string {
   const slash = path.lastIndexOf("/");
@@ -53,13 +64,17 @@ function contentType(path: string): string {
 }
 
 function cacheControl(cache: StaticFileCacheConfig): string {
-  if (cache.strategy === "immutable") {
+  if (cache.strategy === StaticFileCacheStrategy.Immutable) {
     return IMMUTABLE;
   }
-  if (cache.strategy === "private") {
+  if (cache.strategy === StaticFileCacheStrategy.Private) {
     return "private";
   }
-  return `public, max-age=${cache.maxAge}`;
+  let header = `public, max-age=${cache.maxAge}`;
+  if (cache.sMaxAge !== undefined) {
+    header += `, s-maxage=${cache.sMaxAge}`;
+  }
+  return header;
 }
 
 function etag(size: number, mtimeMs: number): string {
@@ -122,7 +137,7 @@ async function realPath(path: string): Promise<string | null> {
 /**
  * GET streams the file; HEAD returns the same headers with an empty body.
  *
- * @param ctx Method and `If-None-Match` come from `ctx.req`.
+ * @param ctx
  * @param dir Directory to read from. Relative paths resolve against
  *   `Deno.cwd()`; pass `${import.meta.dirname}/static` so the folder
  *   travels with the module.
@@ -133,7 +148,9 @@ export async function staticFile(
   ctx: Ctx<Record<string, string>, Record<string, unknown>>,
   dir: string,
   relative: string,
-  cache: StaticFileCacheConfig = { strategy: "immutable" },
+  cache: StaticFileCacheConfig = {
+    strategy: StaticFileCacheStrategy.Immutable,
+  },
 ): Promise<Response> {
   const method = ctx.req.method;
   const decoded = decodeRelative(relative);
@@ -143,6 +160,7 @@ export async function staticFile(
 
   const root = await realPath(dir);
   if (root === null) {
+    logError(`staticFile: directory not found: ${dir}`);
     return notFound(method);
   }
 

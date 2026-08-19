@@ -5,6 +5,7 @@ import {
   route,
   serve,
   staticFile,
+  StaticFileCacheStrategy,
 } from "dashi";
 import type { AppState } from "./state.ts";
 import home from "./routes/index.tsx";
@@ -70,11 +71,20 @@ const files = (ctx: Ctx<{ path: string }, AppState>) =>
   staticFile(ctx, staticDir, ctx.params.path);
 const hour = (ctx: Ctx<{ path: string }, AppState>) =>
   staticFile(ctx, staticDir, ctx.params.path, {
-    strategy: "public",
+    strategy: StaticFileCacheStrategy.Public,
     maxAge: 3600,
+    sMaxAge: 86400,
   });
 const priv = (ctx: Ctx<{ path: string }, AppState>) =>
-  staticFile(ctx, staticDir, ctx.params.path, { strategy: "private" });
+  staticFile(ctx, staticDir, ctx.params.path, {
+    strategy: StaticFileCacheStrategy.Private,
+  });
+const missingDir = (ctx: Ctx<{ path: string }, AppState>) =>
+  staticFile(
+    ctx,
+    `${import.meta.dirname}/no-such-static`,
+    ctx.params.path,
+  );
 
 if (import.meta.main) {
   serve<AppState>({
@@ -106,6 +116,10 @@ if (import.meta.main) {
       route("/static/:path*", { GET: files, HEAD: files }),
       route("/static-public/:path*", { GET: hour, HEAD: hour }),
       route("/static-private/:path*", { GET: priv, HEAD: priv }),
+      route("/static-missing-dir/:path*", {
+        GET: missingDir,
+        HEAD: missingDir,
+      }),
       group({
         middleware: [requireSession],
         routes: [route("/gated", { GET: gated })],

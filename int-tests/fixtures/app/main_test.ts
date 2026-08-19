@@ -205,6 +205,17 @@ const appCases: IntegrationTestCase[] = [
     bodyIncludes: ['xmlns="http://www.w3.org/2000/svg"'],
   },
   {
+    name: "javascript is served from the static directory",
+    request: { path: "/static/app.js" },
+    status: 200,
+    headers: {
+      "content-type": "text/javascript; charset=utf-8",
+      "content-length": "11",
+      "x-mw": "ok",
+    },
+    bodyExact: "export {};\n",
+  },
+  {
     name: "unknown extension is octet-stream",
     request: { path: "/static/blob.bin" },
     status: 200,
@@ -216,11 +227,11 @@ const appCases: IntegrationTestCase[] = [
     bodyExact: "x\n",
   },
   {
-    name: "public cache strategy sets max-age",
+    name: "public cache strategy sets max-age and s-maxage",
     request: { path: "/static-public/app.css" },
     status: 200,
     headers: {
-      "cache-control": "public, max-age=3600",
+      "cache-control": "public, max-age=3600, s-maxage=86400",
       "x-mw": "ok",
     },
   },
@@ -697,6 +708,58 @@ Deno.test("main fixture app over HTTP", async (t) => {
         { path: "/static/app.css" },
         first,
         firstBody,
+      );
+      if (error instanceof Error) {
+        error.message = `${error.message}\n\n${dump}`;
+      }
+      throw error;
+    }
+  });
+
+  await t.step("uppercase extension still maps content-type", async () => {
+    const file = new URL("./static/app.CSS", import.meta.url);
+    await Deno.writeTextFile(file, "body{color:#000}\n");
+    try {
+      const res = await app.fetch({ path: "/static/app.CSS" });
+      const body = await res.text();
+      try {
+        assertEquals(res.status, 200);
+        assertEquals(
+          res.headers.get("content-type"),
+          "text/css; charset=utf-8",
+        );
+        assertEquals(body, "body{color:#000}\n");
+      } catch (error) {
+        const dump = formatIntegrationFailure(
+          app,
+          { path: "/static/app.CSS" },
+          res,
+          body,
+        );
+        if (error instanceof Error) {
+          error.message = `${error.message}\n\n${dump}`;
+        }
+        throw error;
+      }
+    } finally {
+      await Deno.remove(file);
+    }
+  });
+
+  await t.step("missing static directory is 404 and logs", async () => {
+    const res = await app.fetch({ path: "/static-missing-dir/app.css" });
+    const body = await res.text();
+    try {
+      assertEquals(res.status, 404);
+      assertEquals(body, "Not found");
+      assertStringIncludes(app.stderr, "staticFile: directory not found:");
+      assertStringIncludes(app.stderr, "no-such-static");
+    } catch (error) {
+      const dump = formatIntegrationFailure(
+        app,
+        { path: "/static-missing-dir/app.css" },
+        res,
+        body,
       );
       if (error instanceof Error) {
         error.message = `${error.message}\n\n${dump}`;
