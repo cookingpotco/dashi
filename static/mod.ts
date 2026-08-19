@@ -2,7 +2,7 @@ import { type Ctx } from "../shared/shared_types.ts";
 
 const NOT_FOUND_BODY = "Not found";
 
-const TYPES: Record<Lowercase<string>, string> = {
+const TYPES: Record<string, Lowercase<string>> = {
   css: "text/css; charset=utf-8",
   js: "text/javascript; charset=utf-8",
   mjs: "text/javascript; charset=utf-8",
@@ -40,8 +40,8 @@ function contentType(path: string): string {
   if (dot <= 0) {
     return "application/octet-stream";
   }
-  const ext = base.slice(dot + 1).toLowerCase() as Lowercase<string>;
-  return TYPES[ext] ?? "application/octet-stream";
+  return TYPES[base.slice(dot + 1).toLowerCase()] ??
+    "application/octet-stream";
 }
 
 function isFingerprinted(path: string): boolean {

@@ -205,6 +205,64 @@ const appCases: IntegrationTestCase[] = [
     bodyIncludes: ['xmlns="http://www.w3.org/2000/svg"'],
   },
   {
+    name: "javascript is served from the static directory",
+    request: { path: "/static/app.js" },
+    status: 200,
+    headers: {
+      "content-type": "text/javascript; charset=utf-8",
+      "content-length": "11",
+      "cache-control": "no-cache",
+      "x-mw": "ok",
+    },
+    bodyExact: "export {};\n",
+  },
+  {
+    name: "unknown extension is octet-stream",
+    request: { path: "/static/blob.bin" },
+    status: 200,
+    headers: {
+      "content-type": "application/octet-stream",
+      "content-length": "2",
+      "x-mw": "ok",
+    },
+    bodyExact: "x\n",
+  },
+  {
+    name: "hyphenated fingerprint is immutable",
+    request: { path: "/static/client-deadbeef.js" },
+    status: 200,
+    headers: {
+      "content-type": "text/javascript; charset=utf-8",
+      "cache-control": "public, max-age=31536000, immutable",
+      "x-mw": "ok",
+    },
+  },
+  {
+    name: "empty static catch-all is plain 404",
+    request: { path: "/static" },
+    status: 404,
+    bodyExact: "Not found",
+  },
+  {
+    name: "static directory is plain 404",
+    request: { path: "/static/nested" },
+    status: 404,
+    bodyExact: "Not found",
+  },
+  {
+    name: "HEAD missing static file is 404 with empty body",
+    request: { method: "HEAD", path: "/static/missing.css" },
+    status: 404,
+    headers: { "content-length": "9" },
+    bodyExact: "",
+  },
+  {
+    name: "encoded slash traversal does not serve a sibling file",
+    request: { path: "/static/%2e%2e%2foutside.txt" },
+    status: 404,
+    bodyExcludes: ["outside-secret-do-not-serve"],
+  },
+  {
     name: "fingerprinted stylesheet is immutable",
     request: { path: "/static/app.deadbeef.css" },
     status: 200,
@@ -622,6 +680,27 @@ Deno.test("main fixture app over HTTP", async (t) => {
       assertEquals(headBody, "");
       assertEquals(head304.headers.get("etag"), etag);
       assertEquals(head304.headers.get("cache-control"), "no-cache");
+
+      const star = await app.fetch({
+        path: "/static/app.css",
+        headers: { "if-none-match": "*" },
+      });
+      assertEquals(star.status, 304);
+      assertEquals(await star.text(), "");
+
+      const listed = await app.fetch({
+        path: "/static/app.css",
+        headers: { "if-none-match": `W/"9-9", ${etag}` },
+      });
+      assertEquals(listed.status, 304);
+      assertEquals(await listed.text(), "");
+
+      const miss = await app.fetch({
+        path: "/static/app.css",
+        headers: { "if-none-match": `W/"9-9"` },
+      });
+      assertEquals(miss.status, 200);
+      await miss.text();
     } catch (error) {
       const dump = formatIntegrationFailure(
         app,
@@ -633,6 +712,36 @@ Deno.test("main fixture app over HTTP", async (t) => {
         error.message = `${error.message}\n\n${dump}`;
       }
       throw error;
+    }
+  });
+
+  await t.step("uppercase extension still maps content-type", async () => {
+    const file = new URL("./static/app.CSS", import.meta.url);
+    await Deno.writeTextFile(file, "body{color:#000}\n");
+    try {
+      const res = await app.fetch({ path: "/static/app.CSS" });
+      const body = await res.text();
+      try {
+        assertEquals(res.status, 200);
+        assertEquals(
+          res.headers.get("content-type"),
+          "text/css; charset=utf-8",
+        );
+        assertEquals(body, "body{color:#000}\n");
+      } catch (error) {
+        const dump = formatIntegrationFailure(
+          app,
+          { path: "/static/app.CSS" },
+          res,
+          body,
+        );
+        if (error instanceof Error) {
+          error.message = `${error.message}\n\n${dump}`;
+        }
+        throw error;
+      }
+    } finally {
+      await Deno.remove(file);
     }
   });
 
