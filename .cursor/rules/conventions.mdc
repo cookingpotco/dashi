@@ -1,0 +1,32 @@
+---
+description: >-
+  TypeScript and module conventions: mod.ts imports, const enums, interface
+  vs type, when a helper earns its keep
+alwaysApply: true
+---
+
+# Conventions
+
+## Directory surface
+
+A directory's public surface is its `mod.ts`. Import that file from outside
+the directory. Do not reach into a sibling module (`routing/pipeline.ts`,
+`shared/shared_types.ts`). Same-directory imports are fine.
+
+## Discriminants
+
+A closed set of cases is a `const enum`. Comparisons use the enum member, not
+a string literal. Use a plain `enum` only when a const enum cannot (it must
+exist at runtime as an object).
+
+## Object types
+
+An object shape is an `interface`. `type` is for unions, aliases, mapped
+types, and everything that is not a single object shape.
+
+## Helpers
+
+Extract a function when the code is not obvious, or when the same non-trivial
+shape is repeated. A short, unmistakable check used twice stays inline. A
+longer or non-obvious body (`withoutContent`) is a function even at one call
+site.

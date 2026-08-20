@@ -1,6 +1,6 @@
 import { DashiNode, HTMLAttributes, jsx } from "dashi/jsx-runtime";
 import { error as logError } from "../logging/mod.ts";
-import { runRoute } from "../routing/pipeline.ts";
+import { runRoute } from "../routing/mod.ts";
 import { getFragmentSlot, getRenderStore } from "../ssr/mod.ts";
 
 // So document.querySelector("route-fragment") is HTMLElement.
@@ -71,7 +71,11 @@ function requestEagerFragment(src: string) {
       });
       return out?.html ?? null;
     } catch (thrown) {
-      logError(thrown);
+      logError(
+        `[fragments] eager fragment failed: ${
+          thrown instanceof Error ? thrown.message : thrown
+        }`,
+      );
       return null;
     }
   })();

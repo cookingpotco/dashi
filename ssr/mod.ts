@@ -47,11 +47,18 @@ interface Boundary<
   parent?: Boundary<State>;
 }
 
+export const enum RenderKind {
+  Page = "page",
+  Recovered = "recovered",
+  Response = "response",
+  Exhausted = "exhausted",
+}
+
 export type RenderResult =
-  | { kind: "page"; page: Element }
-  | { kind: "recovered"; page: Element }
-  | { kind: "response"; response: Response }
-  | { kind: "exhausted" };
+  | { kind: RenderKind.Page; page: Element }
+  | { kind: RenderKind.Recovered; page: Element }
+  | { kind: RenderKind.Response; response: Response }
+  | { kind: RenderKind.Exhausted };
 
 /**
  * Wraps `page` in each group's layouts (innermost first) and recovers
@@ -79,7 +86,7 @@ export async function renderWithRecovery<
   }
   const wrapped = await wrapBoundaries(page, options.ctx, options.boundary);
   if (wrapped.ok) {
-    return { kind: "page", page: wrapped.page };
+    return { kind: RenderKind.Page, page: wrapped.page };
   }
   return await recover(wrapped.thrown, wrapped.parent, options.ctx);
 }
@@ -118,21 +125,29 @@ async function recover<
   boundary: Boundary<State> | undefined,
   ctx: Ctx<Record<string, string>, State>,
 ): Promise<RenderResult> {
-  logError(thrown);
+  logError(
+    `[ssr] render recovering from: ${
+      thrown instanceof Error ? thrown.message : thrown
+    }`,
+  );
 
   if (ctx.isFragment) {
     try {
       if (!boundary?.error) {
-        return { kind: "exhausted" };
+        return { kind: RenderKind.Exhausted };
       }
       const errorResult = await boundary.error(ctx, thrown);
       if (errorResult instanceof Response) {
-        return { kind: "response", response: errorResult };
+        return { kind: RenderKind.Response, response: errorResult };
       }
-      return { kind: "recovered", page: errorResult };
+      return { kind: RenderKind.Recovered, page: errorResult };
     } catch (nextThrown) {
-      logError(nextThrown);
-      return { kind: "exhausted" };
+      logError(
+        `[ssr] render recovering from: ${
+          nextThrown instanceof Error ? nextThrown.message : nextThrown
+        }`,
+      );
+      return { kind: RenderKind.Exhausted };
     }
   }
 
@@ -149,21 +164,25 @@ async function recover<
       errorResult = await current.error(ctx, thrown);
     } catch (nextThrown) {
       thrown = nextThrown;
-      logError(thrown);
+      logError(
+        `[ssr] render recovering from: ${
+          thrown instanceof Error ? thrown.message : thrown
+        }`,
+      );
       continue;
     }
     if (errorResult instanceof Response) {
-      return { kind: "response", response: errorResult };
+      return { kind: RenderKind.Response, response: errorResult };
     }
 
     const wrapped = await wrapBoundaries(errorResult, ctx, current);
     if (wrapped.ok) {
-      return { kind: "recovered", page: wrapped.page };
+      return { kind: RenderKind.Recovered, page: wrapped.page };
     }
     return await recover(wrapped.thrown, wrapped.parent, ctx);
   }
 
-  return { kind: "exhausted" };
+  return { kind: RenderKind.Exhausted };
 }
 
 export function getFragmentSlot(src: string) {

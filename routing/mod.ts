@@ -10,4 +10,4 @@ export {
   type ServeTable,
 } from "./table.ts";
 
-export { handle, init } from "./pipeline.ts";
+export { handle, init, runRoute } from "./pipeline.ts";

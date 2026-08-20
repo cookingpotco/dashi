@@ -15,6 +15,7 @@ import {
 } from "./table.ts";
 import {
   getRenderStore,
+  RenderKind,
   type RenderResult,
   renderWithRecovery,
   replaceFragmentSlots,
@@ -32,10 +33,10 @@ let compiled: CompiledTable<Record<string, unknown>> = {
   rootMiddleware: [],
 };
 
-type Executed = {
+interface Executed {
   response: Response;
   html: string | null;
-};
+}
 
 type RequestCtx = Ctx<Record<string, string>, Record<string, unknown>>;
 
@@ -63,15 +64,6 @@ function advertisedMethods(
     }
   }
   return listed;
-}
-
-function methodNotAllowed(
-  handlers: { readonly [M in Exclude<Method, "HEAD" | "OPTIONS">]?: unknown },
-): Response {
-  return new Response("Method Not Allowed", {
-    status: 405,
-    headers: { Allow: advertisedMethods(handlers).join(", ") },
-  });
 }
 
 async function withoutContent(res: Response): Promise<Response> {
@@ -136,21 +128,21 @@ async function respond(
 ): Promise<Executed> {
   const { ctx } = options;
   switch (result.kind) {
-    case "page":
+    case RenderKind.Page:
       return await htmlResponse(result.page, {
         status: options.pageStatus,
         isFragment: ctx.isFragment,
         req: ctx.req,
       });
-    case "recovered":
+    case RenderKind.Recovered:
       return await htmlResponse(result.page, {
         status: 500,
         isFragment: ctx.isFragment,
         req: ctx.req,
       });
-    case "response":
+    case RenderKind.Response:
       return { response: result.response, html: null };
-    case "exhausted":
+    case RenderKind.Exhausted:
       return await htmlResponse(
         lastResort({
           isFragment: ctx.isFragment,
@@ -179,7 +171,10 @@ async function runHandler(
     handler = matched.handlers[method];
   }
   if (!handler) {
-    return methodNotAllowed(matched.handlers);
+    return new Response("Method Not Allowed", {
+      status: 405,
+      headers: { Allow: advertisedMethods(matched.handlers).join(", ") },
+    });
   }
   return await handler(ctx);
 }
@@ -263,23 +258,6 @@ async function runPipeline(
   });
 }
 
-function makeCtx(
-  req: Request,
-  options: {
-    params: Record<string, string>;
-    isFragment: boolean;
-    state: Partial<Record<string, unknown>>;
-  },
-): RequestCtx {
-  return {
-    req,
-    url: new URL(req.url),
-    params: options.params,
-    isFragment: options.isFragment,
-    state: options.state,
-  };
-}
-
 export async function runRoute(
   req: Request,
   options: {
@@ -293,11 +271,13 @@ export async function runRoute(
     if (!options.recoverMiss) {
       return null;
     }
-    const ctx = makeCtx(req, {
+    const ctx: RequestCtx = {
+      req,
+      url: new URL(req.url),
       params: {},
       isFragment: options.isFragment,
       state: options.state,
-    });
+    };
     return await runPipeline(
       ctx,
       compiled.rootMiddleware,
@@ -305,11 +285,13 @@ export async function runRoute(
     );
   }
 
-  const ctx = makeCtx(req, {
+  const ctx: RequestCtx = {
+    req,
+    url: new URL(req.url),
     params: matched.params,
     isFragment: options.isFragment,
     state: options.state,
-  });
+  };
   return await runPipeline(
     ctx,
     matched.middleware,
@@ -351,7 +333,11 @@ export async function handle(
       });
       return out!.response;
     } catch (thrown) {
-      logError(thrown);
+      logError(
+        `[routing] handle recovering from: ${
+          thrown instanceof Error ? thrown.message : thrown
+        }`,
+      );
       return (await htmlResponse(
         lastResort({
           isFragment,
