@@ -12,7 +12,12 @@
  *     --repo cookingpotstudio/dashi --pr 19 --review-id 123456 --wait
  */
 
-import { apiKeyFromEnv, CursorApiError, CursorClient } from "./lib/cursor.ts";
+import {
+  apiKeyFromEnv,
+  CursorApiError,
+  CursorClient,
+  RunStatus,
+} from "./lib/mod.ts";
 
 interface ReviewContext {
   repo: string;
@@ -219,7 +224,7 @@ async function main(): Promise<number> {
       if (result.result) {
         console.log(result.result);
       }
-      return result.status === "FINISHED" ? 0 : 2;
+      return result.status === RunStatus.Finished ? 0 : 2;
     }
     return 0;
   } catch (error) {

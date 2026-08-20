@@ -1,4 +1,4 @@
-import { type Element } from "../jsx-runtime/jsx_types.ts";
+import { type Element } from "../jsx-runtime/mod.ts";
 import { error as logError, info } from "../logging/mod.ts";
 import {
   type Ctx,

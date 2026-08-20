@@ -1,6 +1,10 @@
 import { assertEquals, assertStringIncludes } from "@std/assert";
-import { type IntegrationTestCase, runCases } from "../../cases.ts";
-import { boot, formatIntegrationFailure } from "../../harness.ts";
+import {
+  boot,
+  formatIntegrationFailure,
+  type IntegrationTestCase,
+  runCases,
+} from "../../mod.ts";
 
 const corsCases: IntegrationTestCase[] = [
   {

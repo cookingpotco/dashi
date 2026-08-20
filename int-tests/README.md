@@ -23,9 +23,9 @@ status, headers, then at most one of `html` or `json`. `html` covers parsed DOM
 empty 303). `runCase` parses HTML only when `html` is set.
 
 `runCase` executes that data. Flows that are not one request (cookies,
-concurrent requests) use `boot` / `App.fetch` from `harness.ts` inside a
-`t.step`. Sequential cases share the fixture process, so a POST can be followed
-by a GET that observes it.
+concurrent requests) use `boot` / `App.fetch` from `mod.ts` inside a `t.step`.
+Sequential cases share the fixture process, so a POST can be followed by a GET
+that observes it.
 
 ## Add a fixture app
 

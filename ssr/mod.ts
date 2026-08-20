@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { type Element } from "../jsx-runtime/jsx_types.ts";
+import { type Element } from "../jsx-runtime/mod.ts";
 import { error as logError } from "../logging/mod.ts";
 import { type Ctx, type ErrorHandler, type Layout } from "../shared/mod.ts";
 

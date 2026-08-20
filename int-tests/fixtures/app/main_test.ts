@@ -1,6 +1,11 @@
 import { assertEquals, assertFalse, assertStringIncludes } from "@std/assert";
-import { type IntegrationTestCase, runCases } from "../../cases.ts";
-import { type App, boot, formatIntegrationFailure } from "../../harness.ts";
+import {
+  type App,
+  boot,
+  formatIntegrationFailure,
+  type IntegrationTestCase,
+  runCases,
+} from "../../mod.ts";
 
 const guestbookMultipart = new FormData();
 guestbookMultipart.set("body", "from-formdata");
