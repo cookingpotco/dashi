@@ -20,12 +20,9 @@ function typechecks() {
   type _root = Expect<Equal<ParamsOf<"/">, Record<string, never>>>;
   type _static = Expect<Equal<ParamsOf<"/posts/new">, Record<string, never>>>;
 
-  interface User {
-    name: string;
-  }
-  interface AppState {
-    user: User;
-  }
+  // `type` so this satisfies `State extends Record<string, unknown>`.
+  type User = { name: string };
+  type AppState = { user: User };
   type _stateUser = Expect<
     Equal<
       Ctx<Record<string, never>, AppState>["state"]["user"],
