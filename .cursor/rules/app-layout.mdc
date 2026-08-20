@@ -9,6 +9,9 @@ Examples and the main int-test fixture are a flat folder. `main.ts` is the
 route table. Handlers, layouts, and middleware sit beside it as one module
 each.
 
+TODO(COO-47): whether this stays a flat folder or becomes module-scoped
+folders.
+
 ## File names
 
 Deno snake_case. Role in the suffix: `home_route.tsx`, `root_layout.tsx`,
@@ -22,9 +25,11 @@ No `layouts/`, `middleware/`, or feature folders.
 
 ## Exports
 
-Named exports: `import { Home } from "./home_route.tsx"`. One route per file.
-`/guestbook` is one file with `list` and `add` (two methods, one route). Do
-not colocate several routes in `main.ts`.
+Named exports: `import { Home } from "./home_route.tsx"`. A component that
+returns `Element` is PascalCase (`Home`, `RootLayout`, `ErrorPage`).
+Middleware and per-method handlers are camelCase (`logger`, `list`, `add`).
+One route per file. `/guestbook` is one file with `list` and `add` (two
+methods, one route). Do not colocate several routes in `main.ts`.
 
 A route file exports the handler(s) plus local helpers and types it needs.
 Path, layouts, and middleware stay in the table in `main.ts`. A file named
