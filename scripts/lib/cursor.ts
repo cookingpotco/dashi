@@ -8,17 +8,21 @@
 
 const API_BASE = "https://api.cursor.com";
 
-export const TERMINAL_RUN_STATUSES = [
-  "FINISHED",
-  "ERROR",
-  "CANCELLED",
-  "EXPIRED",
-] as const;
+export const enum RunStatus {
+  Creating = "CREATING",
+  Running = "RUNNING",
+  Finished = "FINISHED",
+  Error = "ERROR",
+  Cancelled = "CANCELLED",
+  Expired = "EXPIRED",
+}
 
-export type RunStatus =
-  | "CREATING"
-  | "RUNNING"
-  | typeof TERMINAL_RUN_STATUSES[number];
+export const TERMINAL_RUN_STATUSES: readonly RunStatus[] = [
+  RunStatus.Finished,
+  RunStatus.Error,
+  RunStatus.Cancelled,
+  RunStatus.Expired,
+];
 
 export interface Agent {
   id: string;
@@ -144,7 +148,7 @@ export class CursorClient {
     const deadline = Date.now() + timeoutMs;
     while (true) {
       const run = await this.getRun(agentId, runId);
-      if ((TERMINAL_RUN_STATUSES as readonly string[]).includes(run.status)) {
+      if (TERMINAL_RUN_STATUSES.includes(run.status)) {
         return run;
       }
       if (Date.now() > deadline) {
@@ -168,7 +172,7 @@ export class CursorClient {
         return;
       }
       const run = await this.getRun(agentId, agent.latestRunId);
-      if ((TERMINAL_RUN_STATUSES as readonly string[]).includes(run.status)) {
+      if (TERMINAL_RUN_STATUSES.includes(run.status)) {
         return;
       }
       if (Date.now() > deadline) {

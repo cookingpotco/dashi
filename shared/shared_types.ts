@@ -1,4 +1,4 @@
-import { type Element } from "../jsx-runtime/jsx_types.ts";
+import { type Element } from "../jsx-runtime/mod.ts";
 
 /**
  * Per-invocation request context. `state` is a `Partial` bag: mutate

@@ -1,6 +1,6 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { type Element } from "../jsx-runtime/jsx_types.ts";
-import { type Ctx, type Middleware } from "../shared/shared_types.ts";
+import { type Element } from "../jsx-runtime/mod.ts";
+import { type Ctx, type Middleware } from "../shared/mod.ts";
 import { compile, group, match, type ParamsOf, route } from "./table.ts";
 
 type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends
@@ -20,6 +20,7 @@ function typechecks() {
   type _root = Expect<Equal<ParamsOf<"/">, Record<string, never>>>;
   type _static = Expect<Equal<ParamsOf<"/posts/new">, Record<string, never>>>;
 
+  // `type` so this satisfies `State extends Record<string, unknown>`.
   type User = { name: string };
   type AppState = { user: User };
   type _stateUser = Expect<

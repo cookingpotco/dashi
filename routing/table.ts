@@ -1,4 +1,4 @@
-import { type Element } from "../jsx-runtime/jsx_types.ts";
+import { type Element } from "../jsx-runtime/mod.ts";
 import {
   type ErrorHandler,
   type Handler,
@@ -6,14 +6,10 @@ import {
   type MethodHandlers,
   METHODS,
   Middleware,
-} from "../shared/shared_types.ts";
+} from "../shared/mod.ts";
 import { type ParamsOf, type PathError } from "./path_types.ts";
 
-export type {
-  ErrorHandler,
-  Method,
-  MethodHandlers,
-} from "../shared/shared_types.ts";
+export type { ErrorHandler, Method, MethodHandlers } from "../shared/mod.ts";
 export type { ParamsOf } from "./path_types.ts";
 
 /**

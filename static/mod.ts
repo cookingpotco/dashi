@@ -1,5 +1,5 @@
 import { error as logError } from "../logging/mod.ts";
-import { type Ctx } from "../shared/shared_types.ts";
+import { type Ctx } from "../shared/mod.ts";
 
 const NOT_FOUND_BODY = "Not found";
 const IMMUTABLE = "public, max-age=31536000, immutable";

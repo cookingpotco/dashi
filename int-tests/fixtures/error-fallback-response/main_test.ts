@@ -1,5 +1,4 @@
-import { type IntegrationTestCase, runCases } from "../../cases.ts";
-import { boot } from "../../harness.ts";
+import { boot, type IntegrationTestCase, runCases } from "../../mod.ts";
 
 const stillServes: IntegrationTestCase = {
   name: "known-good route is 200",
