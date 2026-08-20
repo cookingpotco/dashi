@@ -38,6 +38,9 @@ interpolated HTML, and its request path runs concurrently under `Deno.serve`.
 - **A missing unit test of routing, SSR, or other glue** when the change is
   already visible in rendered HTML, or when the right coverage is an HTTP case
   in `int-tests/`. Do not ask for a one-off harness; ask for a case there.
+- **Exporting a private helper so a unit test can import it.** Cover the public
+  function or an HTTP case. Do not ask for an IO seam to make that helper
+  reachable.
 - **Several asserts on one input.** That is covering a flow. Do not ask to split
   them.
 - **The known defects listed below.** They are tracked, and restating them is
@@ -51,7 +54,6 @@ introduces a new instance of the same class elsewhere.
 
 | Location                  | Defect                                                                   | Issue     |
 | ------------------------- | ------------------------------------------------------------------------ | --------- |
-| `routing/mod.ts`          | Hardcoded `favicon.ico` check standing in for static asset serving       | COO-17    |
 | `client/routeFragment.ts` | Never bundled or served, so it is currently dead code                    | COO-18    |
 | `deno.json` (all three)   | The `dev` task has no permission flags and relies on interactive prompts | untracked |
 

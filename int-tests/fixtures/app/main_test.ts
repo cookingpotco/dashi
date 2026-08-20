@@ -171,6 +171,143 @@ const appCases: IntegrationTestCase[] = [
     json: { ok: true },
   },
   {
+    name: "stylesheet is served from the static directory",
+    request: { path: "/static/app.css" },
+    status: 200,
+    headers: {
+      "content-type": "text/css; charset=utf-8",
+      "content-length": "24",
+      "cache-control": "public, max-age=31536000, immutable",
+      "x-mw": "ok",
+    },
+    bodyExact: "body {\n  color: #111;\n}\n",
+  },
+  {
+    name: "HEAD stylesheet is 200 with empty body",
+    request: { method: "HEAD", path: "/static/app.css" },
+    status: 200,
+    headers: {
+      "content-type": "text/css; charset=utf-8",
+      "content-length": "24",
+      "cache-control": "public, max-age=31536000, immutable",
+      "x-mw": "ok",
+    },
+    bodyExact: "",
+  },
+  {
+    name: "svg is served from the static directory",
+    request: { path: "/static/logo.svg" },
+    status: 200,
+    headers: {
+      "content-type": "image/svg+xml",
+      "x-mw": "ok",
+    },
+    bodyIncludes: ['xmlns="http://www.w3.org/2000/svg"'],
+  },
+  {
+    name: "javascript is served from the static directory",
+    request: { path: "/static/app.js" },
+    status: 200,
+    headers: {
+      "content-type": "text/javascript; charset=utf-8",
+      "content-length": "11",
+      "x-mw": "ok",
+    },
+    bodyExact: "export {};\n",
+  },
+  {
+    name: "unknown extension is octet-stream",
+    request: { path: "/static/blob.bin" },
+    status: 200,
+    headers: {
+      "content-type": "application/octet-stream",
+      "content-length": "2",
+      "x-mw": "ok",
+    },
+    bodyExact: "x\n",
+  },
+  {
+    name: "public cache strategy sets max-age and s-maxage",
+    request: { path: "/static-public/app.css" },
+    status: 200,
+    headers: {
+      "cache-control": "public, max-age=3600, s-maxage=86400",
+      "x-mw": "ok",
+    },
+  },
+  {
+    name: "private cache strategy is private",
+    request: { path: "/static-private/app.css" },
+    status: 200,
+    headers: {
+      "cache-control": "private",
+      "x-mw": "ok",
+    },
+  },
+  {
+    name: "empty static catch-all is plain 404",
+    request: { path: "/static" },
+    status: 404,
+    bodyExact: "Not found",
+  },
+  {
+    name: "static directory is plain 404",
+    request: { path: "/static/nested" },
+    status: 404,
+    bodyExact: "Not found",
+  },
+  {
+    name: "HEAD missing static file is 404 with empty body",
+    request: { method: "HEAD", path: "/static/missing.css" },
+    status: 404,
+    headers: { "content-length": "9" },
+    bodyExact: "",
+  },
+  {
+    name: "encoded slash traversal does not serve a sibling file",
+    request: { path: "/static/%2e%2e%2foutside.txt" },
+    status: 404,
+    bodyExcludes: ["outside-secret-do-not-serve"],
+  },
+  {
+    name: "missing static file is plain 404",
+    request: { path: "/static/missing.css" },
+    status: 404,
+    bodyExact: "Not found",
+  },
+  {
+    name: "favicon.ico is HTML 404",
+    request: { path: "/favicon.ico" },
+    status: 404,
+    headers: { "content-type": "text/html", "x-mw": "ok" },
+    html: {
+      select: [
+        { selector: "html > body > h1", text: "Website Title" },
+        { selector: "html > body > #not-found", text: "custom-404" },
+      ],
+    },
+  },
+  {
+    name: "POST to static file route is 405",
+    request: { method: "POST", path: "/static/app.css" },
+    status: 405,
+    headers: { allow: "GET, HEAD" },
+    bodyIncludes: ["Method Not Allowed"],
+    bodyExcludes: ["<!DOCTYPE html>"],
+  },
+  {
+    name: "dot-dot traversal does not serve a sibling file",
+    request: { path: "/static/../outside.txt" },
+    status: 404,
+    bodyExcludes: ["outside-secret-do-not-serve"],
+  },
+  {
+    name: "encoded dot-dot traversal does not serve a sibling file",
+    request: { path: "/static/%2e%2e/outside.txt" },
+    status: 404,
+    bodyExcludes: ["outside-secret-do-not-serve"],
+  },
+  {
     name: "POST /guestbook urlencoded redirects",
     request: {
       method: "POST",
@@ -508,6 +645,128 @@ Deno.test("main fixture app over HTTP", async (t) => {
 
   await runCases(t, app, appCases);
   await runCases(t, app, errorCases, stillServes);
+
+  await t.step("conditional GET and HEAD of a stylesheet are 304", async () => {
+    const first = await app.fetch({ path: "/static/app.css" });
+    const firstBody = await first.text();
+    const etag = first.headers.get("etag");
+    try {
+      assertEquals(first.status, 200);
+      if (etag === null) {
+        throw new Error("missing etag");
+      }
+      const get304 = await app.fetch({
+        path: "/static/app.css",
+        headers: { "if-none-match": etag },
+      });
+      const getBody = await get304.text();
+      assertEquals(get304.status, 304);
+      assertEquals(getBody, "");
+      assertEquals(get304.headers.get("etag"), etag);
+      assertEquals(
+        get304.headers.get("cache-control"),
+        "public, max-age=31536000, immutable",
+      );
+
+      const head304 = await app.fetch({
+        method: "HEAD",
+        path: "/static/app.css",
+        headers: { "if-none-match": etag },
+      });
+      const headBody = await head304.text();
+      assertEquals(head304.status, 304);
+      assertEquals(headBody, "");
+      assertEquals(head304.headers.get("etag"), etag);
+      assertEquals(
+        head304.headers.get("cache-control"),
+        "public, max-age=31536000, immutable",
+      );
+
+      const star = await app.fetch({
+        path: "/static/app.css",
+        headers: { "if-none-match": "*" },
+      });
+      assertEquals(star.status, 304);
+      assertEquals(await star.text(), "");
+
+      const listed = await app.fetch({
+        path: "/static/app.css",
+        headers: { "if-none-match": `W/"9-9", ${etag}` },
+      });
+      assertEquals(listed.status, 304);
+      assertEquals(await listed.text(), "");
+
+      const miss = await app.fetch({
+        path: "/static/app.css",
+        headers: { "if-none-match": `W/"9-9"` },
+      });
+      assertEquals(miss.status, 200);
+      await miss.text();
+    } catch (error) {
+      const dump = formatIntegrationFailure(
+        app,
+        { path: "/static/app.css" },
+        first,
+        firstBody,
+      );
+      if (error instanceof Error) {
+        error.message = `${error.message}\n\n${dump}`;
+      }
+      throw error;
+    }
+  });
+
+  await t.step("uppercase extension still maps content-type", async () => {
+    const file = new URL("./static/app.CSS", import.meta.url);
+    await Deno.writeTextFile(file, "body{color:#000}\n");
+    try {
+      const res = await app.fetch({ path: "/static/app.CSS" });
+      const body = await res.text();
+      try {
+        assertEquals(res.status, 200);
+        assertEquals(
+          res.headers.get("content-type"),
+          "text/css; charset=utf-8",
+        );
+        assertEquals(body, "body{color:#000}\n");
+      } catch (error) {
+        const dump = formatIntegrationFailure(
+          app,
+          { path: "/static/app.CSS" },
+          res,
+          body,
+        );
+        if (error instanceof Error) {
+          error.message = `${error.message}\n\n${dump}`;
+        }
+        throw error;
+      }
+    } finally {
+      await Deno.remove(file);
+    }
+  });
+
+  await t.step("missing static directory is 404 and logs", async () => {
+    const res = await app.fetch({ path: "/static-missing-dir/app.css" });
+    const body = await res.text();
+    try {
+      assertEquals(res.status, 404);
+      assertEquals(body, "Not found");
+      assertStringIncludes(app.stderr, "staticFile: directory not found:");
+      assertStringIncludes(app.stderr, "no-such-static");
+    } catch (error) {
+      const dump = formatIntegrationFailure(
+        app,
+        { path: "/static-missing-dir/app.css" },
+        res,
+        body,
+      );
+      if (error instanceof Error) {
+        error.message = `${error.message}\n\n${dump}`;
+      }
+      throw error;
+    }
+  });
 
   await t.step("custom 404 does not run nested group middleware", async () => {
     const res = await app.fetch({ path: "/no-such-page" });

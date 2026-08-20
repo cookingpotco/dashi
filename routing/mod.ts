@@ -260,11 +260,6 @@ export function init<
 export async function handle(
   req: Request,
 ) {
-  // TODO: Remove hardcoded stuff
-  if (req.url.match("favicon.ico")) {
-    return new Response();
-  }
-
   return await runWithRenderStore(req, async () => {
     const isFragment = req.headers.has(REQUEST_HEADERS.FRAGMENT);
     try {

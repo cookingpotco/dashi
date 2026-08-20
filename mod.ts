@@ -12,3 +12,8 @@ export {
   type ParamsOf,
   route,
 } from "./routing/mod.ts";
+export {
+  staticFile,
+  type StaticFileCacheConfig,
+  StaticFileCacheStrategy,
+} from "./static/mod.ts";
