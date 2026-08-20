@@ -69,8 +69,8 @@ stop: tell the human rather than silently substituting another issue.
   HTTP, plan an `int-tests/` case (declarative when it is one request, or a
   `t.step` on the same harness helpers when it is not). Do not invent a
   substitute harness.
-- **Prefer the simpler design**, even when it repeats. If a bit extra work
-  could simplify this or additional areas, consider it as well.
+- **Prefer the simpler design**, even when it repeats. If a bit extra work could
+  simplify this or additional areas, consider it as well.
 - **Conventions.** Agents already follow `.cursor/rules/conventions.mdc`.
   Consider whether this work requires updating that rule — a new pattern, a
   conflicting use case, or existing code that should align.
