@@ -1,4 +1,4 @@
-import { group, serve } from "dashi";
+import { serve } from "dashi";
 import { Home } from "./home_route.tsx";
 import { RootLayout } from "./root_layout.tsx";
 import { logger } from "./logger_middleware.ts";
@@ -6,16 +6,13 @@ import { Fragment } from "./fragment_route.tsx";
 import { errorFallback, ErrorPage } from "./errors.tsx";
 
 if (import.meta.main) {
-  serve(
-    group(({ route }) => ({
-      layouts: [RootLayout],
-      middleware: [logger],
-      error: ErrorPage,
-      routes: [
-        route("/", { GET: Home }),
-        route("/fragment", { GET: Fragment }),
-      ],
-    })),
-    { errorFallback },
-  );
+  serve(({ route }) => ({
+    layouts: [RootLayout],
+    middleware: [logger],
+    error: ErrorPage,
+    routes: [
+      route("/", { GET: Home }),
+      route("/fragment", { GET: Fragment }),
+    ],
+  }), { errorFallback });
 }

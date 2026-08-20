@@ -2,6 +2,7 @@ export {
   type Group,
   group,
   type GroupBag,
+  type GroupFields,
   type Method,
   type MethodHandlers,
   type ParamsOf,

@@ -1,10 +1,4 @@
-import {
-  type Element,
-  group,
-  type Middleware,
-  serve,
-  type WrapperCtx,
-} from "dashi";
+import { type Element, type Middleware, serve, type WrapperCtx } from "dashi";
 
 const logger: Middleware = async (_ctx, next) => {
   const res = await next();
@@ -37,16 +31,13 @@ function okPage(): Element {
 }
 
 if (import.meta.main) {
-  serve(
-    group(({ route }) => ({
-      layouts: [rootLayout],
-      middleware: [logger],
-      routes: [
-        route("/", { GET: home }),
-        route("/throw", { GET: boom }),
-        route("/root-layout-throws", { GET: okPage }),
-      ],
-    })),
-    { port: 0 },
-  );
+  serve(({ route }) => ({
+    layouts: [rootLayout],
+    middleware: [logger],
+    routes: [
+      route("/", { GET: home }),
+      route("/throw", { GET: boom }),
+      route("/root-layout-throws", { GET: okPage }),
+    ],
+  }), { port: 0 });
 }

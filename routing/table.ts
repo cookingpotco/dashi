@@ -88,7 +88,7 @@ export interface Group<
   routes: Array<Route<State> | Group<State>>;
 }
 
-interface GroupFields<
+export interface GroupFields<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
   /**

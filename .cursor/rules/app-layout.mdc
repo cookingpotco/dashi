@@ -19,7 +19,7 @@ Deno snake_case. Role in the suffix: `home_route.tsx`, `root_layout.tsx`,
 
 `errors.tsx` holds the named `notFound`, `error`, and `errorFallback`
 exports. Those are not routes. `main.ts` puts `notFound` and `error` on
-the root `group()` and `errorFallback` on `serve()`.
+the `serve()` callback and `errorFallback` on `serve()` options.
 
 Ordinary extra modules (`state.ts`, later `db.ts`) sit beside the handlers.
 No `layouts/`, `middleware/`, or feature folders.
@@ -39,9 +39,10 @@ not exported from a route or feature file.
 
 ## Table
 
-`main.ts` imports the modules and calls `serve(group(…), { errorFallback })`.
-The callback bag's `route` and `group` bind paths. That is the only place
-that binds a handler to a path.
+`main.ts` imports the modules and calls
+`serve(({ route, group }) => …, { errorFallback })`. The callback's
+`route` and `group` bind paths. That is the only place that binds a
+handler to a path.
 
 ## Fixtures
 

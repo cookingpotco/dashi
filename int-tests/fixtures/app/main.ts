@@ -1,6 +1,5 @@
 import {
   type Ctx,
-  group,
   type Middleware,
   serve,
   staticFile,
@@ -95,119 +94,116 @@ const missingDir = (ctx: Ctx<{ path: string }, AppState>) =>
   );
 
 if (import.meta.main) {
-  serve<AppState>(
-    group(({ route, group }) => ({
-      layouts: [RootLayout],
-      middleware: [root],
-      notFound: NotFound,
-      error: RootError,
-      routes: [
-        route("/", { GET: Home }),
-        group(({ route }) => ({
-          layouts: [NestedLayout],
-          routes: [route("/nested", { GET: Nested })],
-        })),
-        route("/echo", { GET: Echo }),
-        group(({ route }) => ({
-          middleware: [embedOnly],
-          routes: [route("/embed", { GET: Embed })],
-        })),
-        group(({ route }) => ({
-          middleware: [fragOnly],
-          routes: [route("/fragment", { GET: Fragment })],
-        })),
-        route("/peer", { GET: Peer }),
-        route("/posts/new", { GET: PostsNew }),
-        route("/posts/:id", { GET: Post }),
-        route("/guestbook", { GET: listGuestbook, POST: addGuestbook }),
-        route("/ok", { GET: ok }),
-        group("/api", ({ route }) => ({
-          layouts: [ApiLayout],
-          middleware: [apiMw],
-          notFound: ApiNotFound,
-          routes: [route("/ok", { GET: ok })],
-        })),
-        group(({ route }) => ({
-          middleware: [cors()],
-          routes: [route("/cors-star", { GET: ok })],
-        })),
-        group(({ route }) => ({
-          middleware: [cors({
-            origin: ["https://app.example", "https://other.example"],
-          })],
-          routes: [route("/cors-list", { GET: ok })],
-        })),
-        group(({ route }) => ({
-          middleware: [cors({
-            origin: (origin) =>
-              origin === "https://app.example" ? origin : undefined,
-          })],
-          routes: [route("/cors-fn", { GET: ok })],
-        })),
-        route("/static/:path*", { GET: files }),
-        route("/static-public/:path*", { GET: hour }),
-        route("/static-private/:path*", { GET: priv }),
-        route("/static-missing-dir/:path*", { GET: missingDir }),
-        group(({ route }) => ({
-          middleware: [requireSession],
-          routes: [route("/gated", { GET: Gated })],
-        })),
-        route("/throw", { GET: throwHandler }),
-        route("/root-layout-throws", { GET: okPage }),
-        route("/root-error-throws", { GET: throwErrorHandlerBoom }),
-        group(({ route }) => ({
-          layouts: [noErrorLayout],
-          routes: [route("/throw-no-error", { GET: throwHandler })],
-        })),
-        group(({ route }) => ({
-          layouts: [nestedErrorLayout],
-          middleware: [nestedMw],
-          error: nestedError,
-          routes: [route("/nested-error", { GET: throwHandler })],
-        })),
-        group(({ route }) => ({
-          layouts: [throwingLayout],
-          error: nestedError,
-          routes: [route("/nested-layout-throws", { GET: okPage })],
-        })),
-        group(({ route }) => ({
-          layouts: [throwingLayout],
-          routes: [route("/nested-layout-throws-no-error", { GET: okPage })],
-        })),
-        group(({ route }) => ({
-          error: throwingError,
-          routes: [route("/nested-error-throws", { GET: throwHandler })],
-        })),
-        group(({ route }) => ({
-          middleware: [throwingMw],
-          routes: [route("/mw-throws", { GET: okPage })],
-        })),
-        group(({ route }) => ({
-          error: jsonError,
-          routes: [route("/json-throw", { GET: throwHandler })],
-        })),
-        group(({ route }) => ({
-          routes: [route("/frag-throw", { GET: throwHandler })],
-        })),
-        group(({ route }) => ({
-          error: compactError,
-          routes: [route("/frag-error", { GET: throwHandler })],
-        })),
-        group(({ route }) => ({
-          error: responseError,
-          routes: [route("/frag-error-response", { GET: throwHandler })],
-        })),
-        group(({ route }) => ({
-          error: throwingError,
-          routes: [route("/frag-error-throws", { GET: throwHandler })],
-        })),
-        route("/embed-frag-throw", { GET: embedFragThrow }),
-        route("/embed-frag-error", { GET: embedFragError }),
-        route("/embed-frag-error-response", { GET: embedFragErrorResponse }),
-        route("/embed-frag-error-throws", { GET: embedFragErrorThrows }),
-        route("/embed-frag-miss", { GET: embedFragMiss }),
-      ],
-    })),
-    { errorFallback, port: 0 },
-  );
+  serve<AppState>(({ route, group }) => ({
+    layouts: [RootLayout],
+    middleware: [root],
+    notFound: NotFound,
+    error: RootError,
+    routes: [
+      route("/", { GET: Home }),
+      group(({ route }) => ({
+        layouts: [NestedLayout],
+        routes: [route("/nested", { GET: Nested })],
+      })),
+      route("/echo", { GET: Echo }),
+      group(({ route }) => ({
+        middleware: [embedOnly],
+        routes: [route("/embed", { GET: Embed })],
+      })),
+      group(({ route }) => ({
+        middleware: [fragOnly],
+        routes: [route("/fragment", { GET: Fragment })],
+      })),
+      route("/peer", { GET: Peer }),
+      route("/posts/new", { GET: PostsNew }),
+      route("/posts/:id", { GET: Post }),
+      route("/guestbook", { GET: listGuestbook, POST: addGuestbook }),
+      route("/ok", { GET: ok }),
+      group("/api", ({ route }) => ({
+        layouts: [ApiLayout],
+        middleware: [apiMw],
+        notFound: ApiNotFound,
+        routes: [route("/ok", { GET: ok })],
+      })),
+      group(({ route }) => ({
+        middleware: [cors()],
+        routes: [route("/cors-star", { GET: ok })],
+      })),
+      group(({ route }) => ({
+        middleware: [cors({
+          origin: ["https://app.example", "https://other.example"],
+        })],
+        routes: [route("/cors-list", { GET: ok })],
+      })),
+      group(({ route }) => ({
+        middleware: [cors({
+          origin: (origin) =>
+            origin === "https://app.example" ? origin : undefined,
+        })],
+        routes: [route("/cors-fn", { GET: ok })],
+      })),
+      route("/static/:path*", { GET: files }),
+      route("/static-public/:path*", { GET: hour }),
+      route("/static-private/:path*", { GET: priv }),
+      route("/static-missing-dir/:path*", { GET: missingDir }),
+      group(({ route }) => ({
+        middleware: [requireSession],
+        routes: [route("/gated", { GET: Gated })],
+      })),
+      route("/throw", { GET: throwHandler }),
+      route("/root-layout-throws", { GET: okPage }),
+      route("/root-error-throws", { GET: throwErrorHandlerBoom }),
+      group(({ route }) => ({
+        layouts: [noErrorLayout],
+        routes: [route("/throw-no-error", { GET: throwHandler })],
+      })),
+      group(({ route }) => ({
+        layouts: [nestedErrorLayout],
+        middleware: [nestedMw],
+        error: nestedError,
+        routes: [route("/nested-error", { GET: throwHandler })],
+      })),
+      group(({ route }) => ({
+        layouts: [throwingLayout],
+        error: nestedError,
+        routes: [route("/nested-layout-throws", { GET: okPage })],
+      })),
+      group(({ route }) => ({
+        layouts: [throwingLayout],
+        routes: [route("/nested-layout-throws-no-error", { GET: okPage })],
+      })),
+      group(({ route }) => ({
+        error: throwingError,
+        routes: [route("/nested-error-throws", { GET: throwHandler })],
+      })),
+      group(({ route }) => ({
+        middleware: [throwingMw],
+        routes: [route("/mw-throws", { GET: okPage })],
+      })),
+      group(({ route }) => ({
+        error: jsonError,
+        routes: [route("/json-throw", { GET: throwHandler })],
+      })),
+      group(({ route }) => ({
+        routes: [route("/frag-throw", { GET: throwHandler })],
+      })),
+      group(({ route }) => ({
+        error: compactError,
+        routes: [route("/frag-error", { GET: throwHandler })],
+      })),
+      group(({ route }) => ({
+        error: responseError,
+        routes: [route("/frag-error-response", { GET: throwHandler })],
+      })),
+      group(({ route }) => ({
+        error: throwingError,
+        routes: [route("/frag-error-throws", { GET: throwHandler })],
+      })),
+      route("/embed-frag-throw", { GET: embedFragThrow }),
+      route("/embed-frag-error", { GET: embedFragError }),
+      route("/embed-frag-error-response", { GET: embedFragErrorResponse }),
+      route("/embed-frag-error-throws", { GET: embedFragErrorThrows }),
+      route("/embed-frag-miss", { GET: embedFragMiss }),
+    ],
+  }), { errorFallback, port: 0 });
 }

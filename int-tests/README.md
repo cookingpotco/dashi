@@ -14,7 +14,7 @@ way `examples/` do.
 
 If the fixture already has the route, append an `IntegrationTestCase` in that
 fixture's `main_test.ts` and stop. If it needs a new path, add a `route()` leaf
-in the fixture `main.ts` `group()` callback under the shared root wraps, or a
+in the fixture `main.ts` `serve()` callback under the shared root wraps, or a
 nested `group` when it needs extra wraps or a path prefix, and import the
 handler. One request, several asserts: status, headers, then at most one of
 `html` or `json`. `html` covers parsed DOM `select` plus raw `bodyIncludes` /
@@ -38,7 +38,7 @@ as its own workspace member. Extra fixtures (`cors`, `error-defaults`,
 cannot share the main app's `serve()` table.
 
 Each fixture calls
-`serve(group(({ route, group }) => ({ … })), { port: 0,
-errorFallback })`.
-Shared wraps live on the root group or a nested `group`. `deno task test:int`
-picks up every `*_test.ts` under `int-tests/`.
+`serve(({ route, group }) => ({ … }), { port: 0,
+errorFallback })`. Shared wraps
+live on that root callback or a nested `group`. `deno task test:int` picks up
+every `*_test.ts` under `int-tests/`.
