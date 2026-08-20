@@ -74,8 +74,23 @@ function methodNotAllowed(
 }
 
 async function withoutContent(res: Response): Promise<Response> {
-  await res.body?.cancel();
-  return new Response(null, res);
+  const headers = new Headers(res.headers);
+  if (res.body !== null) {
+    if (headers.has("content-length")) {
+      await res.body.cancel();
+    } else {
+      // Measure the discarded body so Content-Length matches GET.
+      headers.set(
+        "content-length",
+        String((await res.arrayBuffer()).byteLength),
+      );
+    }
+  }
+  return new Response(null, {
+    status: res.status,
+    statusText: res.statusText,
+    headers,
+  });
 }
 
 async function routeResponse(
