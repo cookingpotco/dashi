@@ -27,6 +27,7 @@ import { ok } from "./ok_route.ts";
 import { Gated } from "./gated_route.tsx";
 import {
   ApiNotFound,
+  ApiV2NotFound,
   compactError,
   embedFragError,
   embedFragErrorResponse,
@@ -119,11 +120,17 @@ if (import.meta.main) {
       route("/posts/:id", { GET: Post }),
       route("/guestbook", { GET: listGuestbook, POST: addGuestbook }),
       route("/ok", { GET: ok }),
-      group("/api", ({ route }) => ({
+      group("/api", ({ route, group }) => ({
         layouts: [ApiLayout],
         middleware: [apiMw],
         notFound: ApiNotFound,
-        routes: [route("/ok", { GET: ok })],
+        routes: [
+          route("/ok", { GET: ok }),
+          group("/v2", ({ route }) => ({
+            notFound: ApiV2NotFound,
+            routes: [route("/ok", { GET: ok })],
+          })),
+        ],
       })),
       group(({ route }) => ({
         middleware: [cors()],

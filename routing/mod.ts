@@ -1,6 +1,5 @@
 export {
   type Group,
-  group,
   type GroupBag,
   type GroupFields,
   type Method,

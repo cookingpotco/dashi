@@ -1,6 +1,5 @@
 import { type Element } from "../jsx-runtime/mod.ts";
 import {
-  group,
   type GroupBag,
   type GroupFields,
   handle,
@@ -10,17 +9,17 @@ import {
 /**
  * Starts the HTTP server.
  *
- * The first argument is the root table: the same callback as a pathless
- * `group()`. Nested and prefixed groups use the bag's `group`. Layouts
- * wrap the route on document render, outermost first, and do not run on
- * fragment renders. Middleware is the request pipeline, outermost
- * first, and runs for document hits and fragment hits. `error` catches
- * handler throws and inner group failures. `notFound` is the document
- * miss handler on that group. `errorFallback` is the last-resort 500
- * value when the error walk is exhausted.
+ * The first argument is the root table callback. Nested and prefixed
+ * groups use the bag's `group`. The root itself is pathless; `notFound`
+ * here is the default 404. Layouts wrap the route on document render,
+ * outermost first, and do not run on fragment renders. Middleware is
+ * the request pipeline, outermost first, and runs for document hits and
+ * fragment hits. `error` catches handler throws and inner group
+ * failures. `errorFallback` is the last-resort 500 value when the error
+ * walk is exhausted.
  *
- * @param build Root table. Typically pathless; `notFound` here is the
- * default 404.
+ * @param build Root table. Pathless; nested prefixes live on the bag's
+ * `group`.
  * @param options Forwarded to `Deno.serve`, plus `errorFallback`.
  * `handler` is always the router.
  */
@@ -39,6 +38,6 @@ export function serve<
   },
 ) {
   const { errorFallback, ...serveOptions } = options ?? {};
-  init(group(build), errorFallback);
+  init(build, errorFallback);
   Deno.serve({ ...serveOptions, handler: handle });
 }

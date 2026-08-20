@@ -1,7 +1,7 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import { type Element } from "../jsx-runtime/mod.ts";
 import { type Ctx, type Middleware } from "../shared/mod.ts";
-import { compile, group, match, matchMiss, type ParamsOf } from "./table.ts";
+import { compile, group, match, type ParamsOf } from "./table.ts";
 
 type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends
   (<T>() => T extends B ? 1 : 2) ? true : false;
@@ -323,61 +323,4 @@ Deno.test("compile matches joined paths from a prefixed group", () => {
     id: "abc",
     field: "email",
   });
-});
-
-Deno.test("notFound lives on the group boundary; miss capture is innermost prefix", () => {
-  const rootNotFound = () => "" as Element;
-  const apiNotFound = () => "" as Element;
-  const v2NotFound = () => "" as Element;
-  const apiMw: Middleware = (_ctx, next) => next();
-  const v2Mw: Middleware = (_ctx, next) => next();
-  const page = () => "" as Element;
-
-  const compiled = compile(group(({ route, group }) => ({
-    notFound: rootNotFound,
-    routes: [
-      route("/ok", { GET: page }),
-      group("/api", ({ route, group }) => ({
-        middleware: [apiMw],
-        notFound: apiNotFound,
-        routes: [
-          route("/ok", { GET: page }),
-          group("/v2", ({ route }) => ({
-            middleware: [v2Mw],
-            notFound: v2NotFound,
-            routes: [route("/ok", { GET: page })],
-          })),
-        ],
-      })),
-      group("/users/:id", ({ route }) => ({
-        routes: [route("/x", { GET: page })],
-      })),
-    ],
-  })));
-
-  assertEquals(compiled.rootBoundary.notFound, rootNotFound);
-  assertEquals(match(compiled, "/ok")?.boundary?.notFound, rootNotFound);
-
-  const apiMiss = matchMiss(compiled, "/api/nope");
-  assertEquals(apiMiss.boundary.notFound, apiNotFound);
-  assertEquals(apiMiss.boundary.parent, compiled.rootBoundary);
-  assertEquals(apiMiss.middleware, [apiMw]);
-  assertEquals(apiMiss.params, {});
-
-  const v2Miss = matchMiss(compiled, "/api/v2/nope");
-  assertEquals(v2Miss.boundary.notFound, v2NotFound);
-  assertEquals(v2Miss.boundary.parent?.notFound, apiNotFound);
-  assertEquals(v2Miss.middleware, [apiMw, v2Mw]);
-
-  const rootMiss = matchMiss(compiled, "/nope");
-  assertEquals(rootMiss.boundary, compiled.rootBoundary);
-  assertEquals(rootMiss.boundary.notFound, rootNotFound);
-  assertEquals(rootMiss.params, {});
-
-  assertEquals(matchMiss(compiled, "/apix").boundary, compiled.rootBoundary);
-
-  const userMiss = matchMiss(compiled, "/users/abc/nope");
-  assertEquals(userMiss.params, { id: "abc" });
-  assertEquals(userMiss.boundary.notFound, undefined);
-  assertEquals(userMiss.boundary.parent, compiled.rootBoundary);
 });

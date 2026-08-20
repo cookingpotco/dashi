@@ -14,6 +14,10 @@ export function ApiNotFound(): Element {
   return <p id="api-not-found">api-404</p>;
 }
 
+export function ApiV2NotFound(): Element {
+  return <p id="api-v2-not-found">api-v2-404</p>;
+}
+
 export function RootError(
   _ctx: WrapperCtx<AppState>,
   thrown: unknown,

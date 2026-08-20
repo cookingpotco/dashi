@@ -9,8 +9,10 @@ import {
 import {
   compile,
   type CompiledTable,
-  type Group,
+  group,
+  type GroupBag,
   type GroupBoundary,
+  type GroupFields,
   match,
   type MatchedRoute,
   matchMiss,
@@ -279,16 +281,16 @@ export async function runRoute(
     recoverMiss: boolean;
   },
 ): Promise<Executed | null> {
-  const pathname = new URL(req.url).pathname;
-  const matched = match(compiled, pathname);
+  const url = new URL(req.url);
+  const matched = match(compiled, url.pathname);
   if (!matched) {
     if (!options.recoverMiss) {
       return null;
     }
-    const miss = matchMiss(compiled, pathname);
+    const miss = matchMiss(compiled, url.pathname);
     const ctx: RequestCtx = {
       req,
-      url: new URL(req.url),
+      url,
       params: miss.params,
       isFragment: options.isFragment,
       state: options.state,
@@ -302,7 +304,7 @@ export async function runRoute(
 
   const ctx: RequestCtx = {
     req,
-    url: new URL(req.url),
+    url,
     params: matched.params,
     isFragment: options.isFragment,
     state: options.state,
@@ -317,12 +319,12 @@ export async function runRoute(
 export function init<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(
-  table: Group<State>,
+  build: (bag: GroupBag<"", State>) => GroupFields<State>,
   errorFallback?: Element | Response,
 ) {
   // handle() has no State parameter. The table is only invoked with a ctx
   // whose state bag is the object the request created.
-  compiled = compile(table, errorFallback) as CompiledTable<
+  compiled = compile(group(build), errorFallback) as CompiledTable<
     Record<string, unknown>
   >;
   const declared = [

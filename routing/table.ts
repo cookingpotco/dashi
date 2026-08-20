@@ -131,7 +131,7 @@ type ValidChildPrefix<Prefix extends string, ChildPrefix extends string> =
 
 /**
  * Helpers closed over the accumulated prefix. Nested `group` from this
- * bag threads that prefix; a top-level `group()` call would not.
+ * bag threads that prefix.
  */
 export interface GroupBag<
   Prefix extends string = "",

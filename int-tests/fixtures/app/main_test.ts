@@ -143,7 +143,7 @@ const appCases: IntegrationTestCase[] = [
     headers: { "content-type": "text/html", "x-mw": "ok", "x-api": "1" },
     html: {
       bodyIncludes: ["<!DOCTYPE html>"],
-      bodyExcludes: ["custom-404"],
+      bodyExcludes: ["custom-404", "api-v2-404"],
       select: [
         { selector: "html > body > h1", text: "Website Title" },
         { selector: "html > body > #pre", text: "from-mw" },
@@ -152,6 +152,37 @@ const appCases: IntegrationTestCase[] = [
           text: "api-404",
         },
         { selector: "#not-found", exists: false },
+        { selector: "#api-v2-not-found", exists: false },
+      ],
+    },
+  },
+  {
+    name: "innermost prefixed group miss uses that group's notFound",
+    request: { path: "/api/v2/nope" },
+    status: 404,
+    headers: { "content-type": "text/html", "x-mw": "ok", "x-api": "1" },
+    html: {
+      bodyExcludes: ["custom-404"],
+      select: [
+        {
+          selector: "html > body > #api-wrap > #api-v2-not-found",
+          text: "api-v2-404",
+        },
+        { selector: "#api-not-found", exists: false },
+        { selector: "#not-found", exists: false },
+      ],
+    },
+  },
+  {
+    name: "api prefix does not capture /apix",
+    request: { path: "/apix" },
+    status: 404,
+    headers: { "content-type": "text/html", "x-mw": "ok" },
+    html: {
+      bodyExcludes: ["api-404"],
+      select: [
+        { selector: "html > body > #not-found", text: "custom-404" },
+        { selector: "#api-wrap", exists: false },
       ],
     },
   },
