@@ -130,10 +130,10 @@ type ValidChildPrefix<Prefix extends string, ChildPrefix extends string> =
     : GroupPrefixError<ChildPrefix>;
 
 /**
- * Helpers closed over the accumulated prefix. Nested `group` from this
- * bag threads that prefix.
+ * `route` and `group` closed over the accumulated prefix. Nested
+ * `group` from this callback threads that prefix.
  */
-export interface GroupBag<
+export interface GroupCallback<
   Prefix extends string = "",
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
@@ -149,11 +149,11 @@ export interface GroupBag<
   group<ChildPrefix extends string>(
     prefix: ValidChildPrefix<Prefix, ChildPrefix>,
     build: (
-      bag: GroupBag<Join<Prefix, ChildPrefix>, State>,
+      cb: GroupCallback<Join<Prefix, ChildPrefix>, State>,
     ) => GroupFields<State>,
   ): Group<State>;
   group(
-    build: (bag: GroupBag<Prefix, State>) => GroupFields<State>,
+    build: (cb: GroupCallback<Prefix, State>) => GroupFields<State>,
   ): Group<State>;
 }
 
@@ -629,42 +629,44 @@ function declareRoute<
   };
 }
 
-function finishGroup<
-  State extends Record<string, unknown>,
->(prefix: string, fields: GroupFields<State>): Group<State> {
-  return {
-    kind: NodeKind.Group,
-    prefix: prefix === "/" ? "" : prefix,
-    layouts: fields.layouts ?? [],
-    middleware: fields.middleware ?? [],
-    error: fields.error,
-    notFound: fields.notFound,
-    routes: fields.routes,
-  };
-}
-
-function createBag<
+function createGroupCallback<
   Prefix extends string,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
->(prefix: Prefix): GroupBag<Prefix, State> {
+>(prefix: Prefix): GroupCallback<Prefix, State> {
   const nestedGroup = ((
     prefixOrBuild:
       | string
-      | ((bag: GroupBag<string, State>) => GroupFields<State>),
-    maybeBuild?: (bag: GroupBag<string, State>) => GroupFields<State>,
+      | ((cb: GroupCallback<string, State>) => GroupFields<State>),
+    maybeBuild?: (cb: GroupCallback<string, State>) => GroupFields<State>,
   ) => {
     if (typeof prefixOrBuild === "function") {
-      return finishGroup(
-        "",
-        prefixOrBuild(createBag<Prefix, State>(prefix)),
+      const fields = prefixOrBuild(
+        createGroupCallback<Prefix, State>(prefix),
       );
+      return {
+        kind: NodeKind.Group,
+        prefix: "",
+        layouts: fields.layouts ?? [],
+        middleware: fields.middleware ?? [],
+        error: fields.error,
+        notFound: fields.notFound,
+        routes: fields.routes,
+      };
     }
     const joined = joinPath(prefix, prefixOrBuild);
-    return finishGroup(
-      prefixOrBuild,
-      maybeBuild!(createBag<string, State>(joined)),
+    const fields = maybeBuild!(
+      createGroupCallback<string, State>(joined),
     );
-  }) as GroupBag<Prefix, State>["group"];
+    return {
+      kind: NodeKind.Group,
+      prefix: prefixOrBuild === "/" ? "" : prefixOrBuild,
+      layouts: fields.layouts ?? [],
+      middleware: fields.middleware ?? [],
+      error: fields.error,
+      notFound: fields.notFound,
+      routes: fields.routes,
+    };
+  }) as GroupCallback<Prefix, State>["group"];
 
   return {
     route: (path, handlers) =>
@@ -698,32 +700,47 @@ export function group<
 >(
   prefix: [GroupPrefixError<Prefix>] extends [never] ? Prefix
     : GroupPrefixError<Prefix>,
-  build: (bag: GroupBag<Prefix, State>) => GroupFields<State>,
+  build: (cb: GroupCallback<Prefix, State>) => GroupFields<State>,
 ): Group<State>;
 export function group<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(
-  build: (bag: GroupBag<"", State>) => GroupFields<State>,
+  build: (cb: GroupCallback<"", State>) => GroupFields<State>,
 ): Group<State>;
 export function group<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(
   prefixOrBuild:
     | string
-    | ((bag: GroupBag<string, State>) => GroupFields<State>),
-  maybeBuild?: (bag: GroupBag<string, State>) => GroupFields<State>,
+    | ((cb: GroupCallback<string, State>) => GroupFields<State>),
+  maybeBuild?: (cb: GroupCallback<string, State>) => GroupFields<State>,
 ): Group<State> {
   if (typeof prefixOrBuild === "function") {
-    return finishGroup("", prefixOrBuild(createBag<"", State>("")));
+    const fields = prefixOrBuild(createGroupCallback<"", State>(""));
+    return {
+      kind: NodeKind.Group,
+      prefix: "",
+      layouts: fields.layouts ?? [],
+      middleware: fields.middleware ?? [],
+      error: fields.error,
+      notFound: fields.notFound,
+      routes: fields.routes,
+    };
   }
-  return finishGroup(
-    prefixOrBuild,
-    maybeBuild!(
-      createBag<string, State>(
-        prefixOrBuild === "/" ? "" : prefixOrBuild,
-      ),
+  const fields = maybeBuild!(
+    createGroupCallback<string, State>(
+      prefixOrBuild === "/" ? "" : prefixOrBuild,
     ),
   );
+  return {
+    kind: NodeKind.Group,
+    prefix: prefixOrBuild === "/" ? "" : prefixOrBuild,
+    layouts: fields.layouts ?? [],
+    middleware: fields.middleware ?? [],
+    error: fields.error,
+    notFound: fields.notFound,
+    routes: fields.routes,
+  };
 }
 
 function append<

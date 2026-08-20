@@ -10,8 +10,8 @@ import {
   compile,
   type CompiledTable,
   group,
-  type GroupBag,
   type GroupBoundary,
+  type GroupCallback,
   type GroupFields,
   match,
   type MatchedRoute,
@@ -319,7 +319,7 @@ export async function runRoute(
 export function init<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(
-  build: (bag: GroupBag<"", State>) => GroupFields<State>,
+  build: (cb: GroupCallback<"", State>) => GroupFields<State>,
   errorFallback?: Element | Response,
 ) {
   // handle() has no State parameter. The table is only invoked with a ctx

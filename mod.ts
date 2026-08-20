@@ -7,7 +7,7 @@ export * from "./shared/mod.ts";
 export * from "./serve/mod.ts";
 export {
   type Group,
-  type GroupBag,
+  type GroupCallback,
   type Method,
   type MethodHandlers,
   type ParamsOf,

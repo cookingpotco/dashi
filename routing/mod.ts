@@ -1,6 +1,6 @@
 export {
   type Group,
-  type GroupBag,
+  type GroupCallback,
   type GroupFields,
   type Method,
   type MethodHandlers,

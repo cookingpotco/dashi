@@ -101,10 +101,10 @@ function typechecks() {
   });
 
   // @ts-expect-error optional cannot end a group prefix
-  group("/opt/:id?", (_bag) => ({ routes: [] }));
+  group("/opt/:id?", (_cb) => ({ routes: [] }));
 
   // @ts-expect-error catch-all cannot end a group prefix
-  group("/files/:path*", (_bag) => ({ routes: [] }));
+  group("/files/:path*", (_cb) => ({ routes: [] }));
 }
 
 Deno.test("ParamsOf infers params from path literals", () => {
