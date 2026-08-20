@@ -1,7 +1,5 @@
 ---
-description: >-
-  TypeScript and module conventions: mod.ts imports, const enums, interface
-  vs type, when a helper earns its keep
+description: TypeScript and module conventions
 alwaysApply: true
 ---
 

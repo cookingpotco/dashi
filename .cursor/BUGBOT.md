@@ -59,6 +59,9 @@ introduces a new instance of the same class elsewhere.
 
 ## Conventions
 
+These match `.cursor/rules/conventions.mdc`. They live here because Bugbot
+cannot see project rules.
+
 - Deno with JSR specifiers. Remote modules live in `vendor/`; `deno.lock` is
   frozen. Ranges in `deno.json` are intentional.
 - Tests use `Deno.test` and `@std/assert`.
