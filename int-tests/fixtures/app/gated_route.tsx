@@ -1,3 +1,3 @@
-export default function Gated() {
+export function Gated() {
   return <p id="gated">welcome</p>;
 }

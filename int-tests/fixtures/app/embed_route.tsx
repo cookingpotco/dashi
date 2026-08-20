@@ -1,6 +1,6 @@
 import { RouteFragment } from "dashi";
 
-export default function Embed() {
+export function Embed() {
   return (
     <div>
       <section id="eager">

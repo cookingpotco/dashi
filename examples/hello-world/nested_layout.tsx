@@ -1,6 +1,6 @@
 import { type Element, type WrapperCtx } from "dashi";
 
-export default function NestedLayout(
+export function NestedLayout(
   _ctx: WrapperCtx,
   children: Element,
 ): Element {

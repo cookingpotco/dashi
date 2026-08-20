@@ -1,7 +1,7 @@
 import type { WrapperCtx } from "dashi";
-import type { AppState } from "../state.ts";
+import type { AppState } from "./state.ts";
 
-export default async function root(
+export async function root(
   ctx: WrapperCtx<AppState>,
   next: () => Promise<Response>,
 ): Promise<Response> {

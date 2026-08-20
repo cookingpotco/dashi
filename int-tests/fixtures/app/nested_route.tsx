@@ -1,4 +1,4 @@
-export default function Nested() {
+export function Nested() {
   return (
     <div>
       <code>nested</code>

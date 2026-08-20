@@ -1,4 +1,4 @@
-export default async function Fragment() {
+export async function Fragment() {
   const res = await fetch(new URL("https://bored-api.appbrewery.com/random"));
 
   const json = await res.json();

@@ -29,13 +29,14 @@ by a GET that observes it.
 
 ## Add a fixture app
 
-`fixtures/app` is the main fixture: one small tree covering the cases above. Put
-a new folder next to it only when the behaviour cannot live on that app. Do not
-add a fixture as its own workspace member. `error-defaults` and
-`error-fallback-response` cover omitted `notFound` / `errorFallback` and an
-`errorFallback` `Response`, which cannot share the main app's `serve()` table.
+`fixtures/app` is the main fixture: a flat folder of `*_route` / `*_layout` /
+`*_middleware` modules plus `main.ts`, matching the examples. Put a new folder
+next to it only when the behaviour cannot live on that app. Do not add a fixture
+as its own workspace member. Extra fixtures (`cors`, `error-defaults`,
+`error-fallback-response`) are a small `main.ts` or `main.tsx` because they
+cannot share the main app's `serve()` table.
 
-Each fixture is a `main.ts` or `main.tsx` that calls
-`serve({ layouts, middleware, routes }, { port: 0 })` with `route()` leaves,
-plus a co-located `main_test.ts`. Shared wraps live on `serve` or a nested
-`group`. `deno task test:int` picks up every `*_test.ts` under `int-tests/`.
+Each fixture calls `serve({ layouts, middleware, routes }, { port: 0 })` with
+`route()` leaves, plus a co-located `main_test.ts`. Shared wraps live on `serve`
+or a nested `group`. `deno task test:int` picks up every `*_test.ts` under
+`int-tests/`.

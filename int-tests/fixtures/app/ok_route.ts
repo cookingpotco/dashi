@@ -1,3 +1,3 @@
-export default function ok() {
+export function ok() {
   return Response.json({ ok: true });
 }

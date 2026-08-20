@@ -1,7 +1,7 @@
 import { type Element, type WrapperCtx } from "dashi";
-import type { AppState } from "../state.ts";
+import type { AppState } from "./state.ts";
 
-export default function RootLayout(
+export function RootLayout(
   ctx: WrapperCtx<AppState>,
   children: Element,
 ): Element {
