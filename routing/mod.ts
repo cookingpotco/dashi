@@ -48,13 +48,19 @@ function isMethod(method: string): method is Method {
   return (METHODS as readonly string[]).includes(method);
 }
 
+function allowHeader(
+  handlers: { readonly [M in Method]?: unknown },
+): string {
+  const declared = METHODS.filter((method) => handlers[method]);
+  return [...declared, "OPTIONS"].join(", ");
+}
+
 function methodNotAllowed(
   handlers: { readonly [M in Method]?: unknown },
 ): Response {
-  const allow = METHODS.filter((method) => handlers[method]).join(", ");
   return new Response("Method Not Allowed", {
     status: 405,
-    headers: { Allow: allow },
+    headers: { Allow: allowHeader(handlers) },
   });
 }
 
@@ -78,6 +84,12 @@ async function runHandler(
   ctx: Ctx<Record<string, string>, Record<string, unknown>>,
   matched: MatchedRoute<Record<string, unknown>>,
 ): Promise<Element | Response> {
+  if (ctx.req.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: { Allow: allowHeader(matched.handlers) },
+    });
+  }
   const method = ctx.req.method;
   const handler = isMethod(method) ? matched.handlers[method] : undefined;
   if (!handler) {
