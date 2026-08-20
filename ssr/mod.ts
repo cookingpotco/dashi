@@ -73,7 +73,8 @@ export async function renderWithRecovery<
     boundary?: Boundary<State>;
   },
 ): Promise<RenderResult> {
-  if (typeof page !== "string") {
+  // Element is a String object at runtime, so `typeof` is `"object"`.
+  if (typeof page === "object" && "thrown" in page) {
     return await recover(page.thrown, options.boundary, options.ctx);
   }
   const wrapped = await wrapBoundaries(page, options.ctx, options.boundary);
