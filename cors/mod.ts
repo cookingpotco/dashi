@@ -65,7 +65,9 @@ function assignCorsHeaders(
  * OPTIONS returns 204 with CORS headers and does not call `next()`.
  * Other methods call `next()` and add CORS headers to that response.
  */
-export function cors(options: CorsOptions = {}): Middleware {
+export function cors<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+>(options: CorsOptions = {}): Middleware<State> {
   const origin = options.origin ?? "*";
   const allowMethods = (options.allowMethods ?? DEFAULT_ALLOW_METHODS)
     .join(", ");
