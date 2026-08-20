@@ -59,8 +59,20 @@ introduces a new instance of the same class elsewhere.
 
 ## Conventions
 
+These match `.cursor/rules/conventions.mdc`. They live here because Bugbot
+cannot see project rules.
+
 - Deno with JSR specifiers. Remote modules live in `vendor/`; `deno.lock` is
   frozen. Ranges in `deno.json` are intentional.
 - Tests use `Deno.test` and `@std/assert`.
 - `deno check` is the type-check command. It covers the framework, scripts, and
   example apps.
+- Cross-directory imports go through that directory's `mod.ts`. Flag an import
+  of a sibling file (`routing/pipeline.ts`, `shared/shared_types.ts`).
+- A closed set of cases is a `const enum` (plain `enum` only when it must exist
+  at runtime). Flag a string-literal union used as a discriminant.
+- An object shape is an `interface`. `type` is for unions, aliases, mapped
+  types. Flag an object shape written as a `type`.
+- Flag a helper that is a short, unmistakable check (or a one-off of a few
+  obvious lines). A longer or non-obvious body may be a function at one call
+  site.

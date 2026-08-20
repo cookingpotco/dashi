@@ -51,10 +51,12 @@ Do not add a second HTTP harness; extend `int-tests/`.
 
 ## Simpler
 
-Prefer the simpler version, even when it repeats a few lines. A helper, a type,
-or a seam has to earn its keep; one call site is not enough. If the plan
-specified machinery you then see is unnecessary, leave it out and list it under
-**Plan deviations** in the handoff comment. Leave the Linear plan as it is.
+Prefer the simpler version, even when it repeats a few lines. Extract a helper
+when the code is not obvious, or when the same non-trivial shape is repeated. A
+short, unmistakable check used twice stays inline. A longer or non-obvious body
+is a function even at one call site. If the plan specified machinery you then
+see is unnecessary, leave it out and list it under **Plan deviations** in the
+handoff comment. Leave the Linear plan as it is.
 
 ## One way
 

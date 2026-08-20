@@ -69,9 +69,11 @@ stop: tell the human rather than silently substituting another issue.
   HTTP, plan an `int-tests/` case (declarative when it is one request, or a
   `t.step` on the same harness helpers when it is not). Do not invent a
   substitute harness.
-- **Prefer the simpler design**, even when it repeats. Do not introduce a
-  helper, a type, or a seam for a single call site. If a bit extra work could
+- **Prefer the simpler design**, even when it repeats. If a bit extra work could
   simplify this or additional areas, consider it as well.
+- **Conventions.** Agents already follow `.cursor/rules/conventions.mdc`.
+  Consider whether this work requires updating that rule — a new pattern, a
+  conflicting use case, or existing code that should align.
 - **One way to do a thing.** Do not plan a parallel API, an alias, or a second
   pattern for a job that already has one. If the ticket would leave both in
   place, decide which survives before the plan is approved. Equivalent twins
