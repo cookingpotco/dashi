@@ -1,6 +1,7 @@
 import { DashiNode, HTMLAttributes, jsx } from "dashi/jsx-runtime";
-import { requestEagerFragment } from "../routing/mod.ts";
-import { getFragmentSlot } from "../ssr/mod.ts";
+import { error as logError } from "../logging/mod.ts";
+import { runRoute } from "../routing/pipeline.ts";
+import { getFragmentSlot, getRenderStore } from "../ssr/mod.ts";
 
 // So document.querySelector("route-fragment") is HTMLElement.
 declare global {
@@ -41,6 +42,42 @@ interface EagerFragmentProps extends BaseRouteFragmentProps {
 }
 
 type FragmentSlotProps = LazyFragmentProps | EagerFragmentProps;
+
+function requestEagerFragment(src: string) {
+  const store = getRenderStore();
+
+  if (store.inflightFragments.has(src)) {
+    return;
+  }
+
+  const url = new URL(src, store.pageReq.url);
+  const headers = new Headers();
+  const cookie = store.pageReq.headers.get("cookie");
+  const authorization = store.pageReq.headers.get("authorization");
+  if (cookie !== null) {
+    headers.set("cookie", cookie);
+  }
+  if (authorization !== null) {
+    headers.set("authorization", authorization);
+  }
+
+  const req = new Request(url, { method: "GET", headers });
+  const promise = (async (): Promise<string | null> => {
+    try {
+      const out = await runRoute(req, {
+        isFragment: true,
+        state: { ...store.currentState },
+        recoverMiss: false,
+      });
+      return out?.html ?? null;
+    } catch (thrown) {
+      logError(thrown);
+      return null;
+    }
+  })();
+
+  store.inflightFragments.set(src, promise);
+}
 
 export function RouteFragment(
   { src, lazy, fallback, ...rest }: FragmentSlotProps,
