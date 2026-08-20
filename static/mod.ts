@@ -113,14 +113,11 @@ function isInsideRoot(root: string, resolved: string): boolean {
   return resolved === root || resolved.startsWith(`${root}/`);
 }
 
-function notFound(method: string): Response {
-  if (method === "HEAD") {
-    return new Response(null, {
-      status: 404,
-      headers: { "Content-Length": String(NOT_FOUND_BODY.length) },
-    });
-  }
-  return new Response(NOT_FOUND_BODY, { status: 404 });
+function notFound(): Response {
+  return new Response(NOT_FOUND_BODY, {
+    status: 404,
+    headers: { "Content-Length": String(NOT_FOUND_BODY.length) },
+  });
 }
 
 async function realPath(path: string): Promise<string | null> {
@@ -135,8 +132,7 @@ async function realPath(path: string): Promise<string | null> {
 }
 
 /**
- * GET streams the file. HEAD returns those headers with an empty body
- * and does not open the file.
+ * Streams a file from `dir`.
  *
  * @param ctx
  * @param dir Directory to read from. Relative paths resolve against
@@ -153,21 +149,20 @@ export async function staticFile(
     strategy: StaticFileCacheStrategy.Immutable,
   },
 ): Promise<Response> {
-  const method = ctx.req.method;
   const decoded = decodeRelative(relative);
   if (decoded === null) {
-    return notFound(method);
+    return notFound();
   }
 
   const root = await realPath(dir);
   if (root === null) {
     logError(`staticFile: directory not found: ${dir}`);
-    return notFound(method);
+    return notFound();
   }
 
   const resolved = await realPath(`${root}/${decoded}`);
   if (resolved === null || !isInsideRoot(root, resolved)) {
-    return notFound(method);
+    return notFound();
   }
 
   let info: Deno.FileInfo;
@@ -175,12 +170,12 @@ export async function staticFile(
     info = await Deno.stat(resolved);
   } catch (error) {
     if (error instanceof Deno.errors.NotFound) {
-      return notFound(method);
+      return notFound();
     }
     throw error;
   }
   if (!info.isFile) {
-    return notFound(method);
+    return notFound();
   }
 
   const tag = etag(info.size, info.mtime?.getTime() ?? 0);
@@ -203,16 +198,12 @@ export async function staticFile(
     "Cache-Control": cacheHeader,
   };
 
-  if (method === "HEAD") {
-    return new Response(null, { status: 200, headers });
-  }
-
   try {
     const file = await Deno.open(resolved, { read: true });
     return new Response(file.readable, { status: 200, headers });
   } catch (error) {
     if (error instanceof Deno.errors.NotFound) {
-      return notFound(method);
+      return notFound();
     }
     throw error;
   }

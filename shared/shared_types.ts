@@ -50,11 +50,12 @@ export type ErrorHandler<
 ) => Element | Response | Promise<Element | Response>;
 
 /**
- * Methods a route can declare. GET also answers HEAD: the GET handler
- * runs and the response is sent with an empty body.
+ * Methods the router advertises. GET also answers HEAD; HEAD is not a
+ * handler key on the route map.
  */
 export const METHODS = [
   "GET",
+  "HEAD",
   "POST",
   "PUT",
   "PATCH",
@@ -66,7 +67,7 @@ export type MethodHandlers<
   Params extends Record<string, string> = Record<string, never>,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = {
-  [M in Method]?: Handler<Params, State>;
+  [M in Exclude<Method, "HEAD">]?: Handler<Params, State>;
 };
 
 /**

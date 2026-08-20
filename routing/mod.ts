@@ -49,23 +49,25 @@ function isMethod(method: string): method is Method {
 }
 
 function advertisedMethods(
-  handlers: { readonly [M in Method]?: unknown },
+  handlers: { readonly [M in Exclude<Method, "HEAD">]?: unknown },
 ): string[] {
   const listed: string[] = [];
   for (const method of METHODS) {
-    if (!handlers[method]) {
+    if (method === "HEAD") {
+      if (handlers.GET) {
+        listed.push(method);
+      }
       continue;
     }
-    listed.push(method);
-    if (method === "GET") {
-      listed.push("HEAD");
+    if (handlers[method]) {
+      listed.push(method);
     }
   }
   return listed;
 }
 
 function methodNotAllowed(
-  handlers: { readonly [M in Method]?: unknown },
+  handlers: { readonly [M in Exclude<Method, "HEAD">]?: unknown },
 ): Response {
   return new Response("Method Not Allowed", {
     status: 405,
@@ -75,17 +77,7 @@ function methodNotAllowed(
 
 async function withoutContent(res: Response): Promise<Response> {
   const headers = new Headers(res.headers);
-  if (res.body !== null) {
-    if (headers.has("content-length")) {
-      await res.body.cancel();
-    } else {
-      // Measure the discarded body so Content-Length matches GET.
-      headers.set(
-        "content-length",
-        String((await res.arrayBuffer()).byteLength),
-      );
-    }
-  }
+  await res.body?.cancel();
   return new Response(null, {
     status: res.status,
     statusText: res.statusText,
@@ -101,11 +93,11 @@ async function routeResponse(
     return out;
   }
   const html = await replaceFragmentSlots(String(out));
-  const res = new Response(
-    options.isFragment ? html : `<!DOCTYPE html>${html}`,
-    { status: options.status },
-  );
+  const body = options.isFragment ? html : `<!DOCTYPE html>${html}`;
+  const bytes = new TextEncoder().encode(body);
+  const res = new Response(bytes, { status: options.status });
   res.headers.set("Content-Type", "text/html");
+  res.headers.set("Content-Length", String(bytes.byteLength));
   return res;
 }
 
@@ -114,9 +106,11 @@ async function runHandler(
   matched: MatchedRoute<Record<string, unknown>>,
 ): Promise<Element | Response> {
   const method = ctx.req.method;
-  let handler = isMethod(method) ? matched.handlers[method] : undefined;
-  if (!handler && method === "HEAD") {
+  let handler;
+  if (method === "HEAD") {
     handler = matched.handlers.GET;
+  } else if (isMethod(method) && method !== "HEAD") {
+    handler = matched.handlers[method];
   }
   if (!handler) {
     return methodNotAllowed(matched.handlers);

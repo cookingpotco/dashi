@@ -456,7 +456,7 @@ export function route<
   path: [PathError<Path>] extends [never] ? Path : PathError<Path>,
   handlers: MethodHandlers<ParamsOf<Path>, State>,
 ): Route<State> {
-  if (!METHODS.some((method) => handlers[method])) {
+  if (!METHODS.some((method) => method !== "HEAD" && handlers[method])) {
     throw new Error(
       `Route ${JSON.stringify(path)} has no method handlers`,
     );
