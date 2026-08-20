@@ -77,7 +77,18 @@ function methodNotAllowed(
 
 async function withoutContent(res: Response): Promise<Response> {
   const headers = new Headers(res.headers);
-  await res.body?.cancel();
+  if (res.body !== null) {
+    if (headers.has("content-length")) {
+      await res.body.cancel();
+    } else {
+      // Response.json and similar omit Content-Length; files and HTML
+      // already set it.
+      headers.set(
+        "content-length",
+        String((await res.arrayBuffer()).byteLength),
+      );
+    }
+  }
   return new Response(null, {
     status: res.status,
     statusText: res.statusText,
