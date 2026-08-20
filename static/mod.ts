@@ -1,5 +1,5 @@
 import { error as logError } from "../logging/mod.ts";
-import { type Handler } from "../shared/shared_types.ts";
+import { type Ctx } from "../shared/shared_types.ts";
 
 const NOT_FOUND_BODY = "Not found";
 const IMMUTABLE = "public, max-age=31536000, immutable";
@@ -36,7 +36,8 @@ export const enum StaticFileCacheStrategy {
 }
 
 /**
- * Cache-Control for a static file. Omitted cache is immutable.
+ * Cache-Control for a static file. Omitted `staticFile` cache is
+ * immutable.
  */
 export type StaticFileCacheConfig =
   | { strategy: StaticFileCacheStrategy.Immutable }
@@ -131,85 +132,79 @@ async function realPath(path: string): Promise<string | null> {
 }
 
 /**
- * File handler for a directory. Bind `dir` (and cache) once; attach the
- * returned function as `{ GET }` on a `:path` or `:path*` route.
+ * Streams a file from `dir`.
  *
- * Relative paths resolve against `Deno.cwd()`; pass
- * `${import.meta.dirname}/static` so the folder travels with the module.
- * Cache-Control defaults to immutable.
+ * @param ctx
+ * @param dir Directory to read from. Relative paths resolve against
+ *   `Deno.cwd()`; pass `${import.meta.dirname}/static` so the folder
+ *   travels with the module.
+ * @param relative Path under `dir`, typically a catch-all route param.
+ * @param cache Cache-Control. Defaults to immutable.
  */
-export function staticFile<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
->(
+export async function staticFile(
+  ctx: Ctx<Record<string, string>, Record<string, unknown>>,
   dir: string,
+  relative: string,
   cache: StaticFileCacheConfig = {
     strategy: StaticFileCacheStrategy.Immutable,
   },
-): Handler<{ path: string }, State> {
-  const rootPromise = realPath(dir).then((root) => {
-    if (root === null) {
-      logError(`staticFile: directory not found: ${dir}`);
+): Promise<Response> {
+  const decoded = decodeRelative(relative);
+  if (decoded === null) {
+    return notFound();
+  }
+
+  const root = await realPath(dir);
+  if (root === null) {
+    logError(`staticFile: directory not found: ${dir}`);
+    return notFound();
+  }
+
+  const resolved = await realPath(`${root}/${decoded}`);
+  if (resolved === null || !isInsideRoot(root, resolved)) {
+    return notFound();
+  }
+
+  let info: Deno.FileInfo;
+  try {
+    info = await Deno.stat(resolved);
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) {
+      return notFound();
     }
-    return root;
-  });
+    throw error;
+  }
+  if (!info.isFile) {
+    return notFound();
+  }
+
+  const tag = etag(info.size, info.mtime?.getTime() ?? 0);
   const cacheHeader = cacheControl(cache);
 
-  return async (ctx) => {
-    const decoded = decodeRelative(ctx.params.path);
-    if (decoded === null) {
-      return notFound();
-    }
+  if (etagMatches(ctx.req.headers.get("if-none-match"), tag)) {
+    return new Response(null, {
+      status: 304,
+      headers: {
+        ETag: tag,
+        "Cache-Control": cacheHeader,
+      },
+    });
+  }
 
-    const root = await rootPromise;
-    if (root === null) {
-      return notFound();
-    }
-
-    const resolved = await realPath(`${root}/${decoded}`);
-    if (resolved === null || !isInsideRoot(root, resolved)) {
-      return notFound();
-    }
-
-    let info: Deno.FileInfo;
-    try {
-      info = await Deno.stat(resolved);
-    } catch (error) {
-      if (error instanceof Deno.errors.NotFound) {
-        return notFound();
-      }
-      throw error;
-    }
-    if (!info.isFile) {
-      return notFound();
-    }
-
-    const tag = etag(info.size, info.mtime?.getTime() ?? 0);
-
-    if (etagMatches(ctx.req.headers.get("if-none-match"), tag)) {
-      return new Response(null, {
-        status: 304,
-        headers: {
-          ETag: tag,
-          "Cache-Control": cacheHeader,
-        },
-      });
-    }
-
-    const headers = {
-      "Content-Type": contentType(decoded),
-      "Content-Length": String(info.size),
-      ETag: tag,
-      "Cache-Control": cacheHeader,
-    };
-
-    try {
-      const file = await Deno.open(resolved, { read: true });
-      return new Response(file.readable, { status: 200, headers });
-    } catch (error) {
-      if (error instanceof Deno.errors.NotFound) {
-        return notFound();
-      }
-      throw error;
-    }
+  const headers = {
+    "Content-Type": contentType(decoded),
+    "Content-Length": String(info.size),
+    ETag: tag,
+    "Cache-Control": cacheHeader,
   };
+
+  try {
+    const file = await Deno.open(resolved, { read: true });
+    return new Response(file.readable, { status: 200, headers });
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) {
+      return notFound();
+    }
+    throw error;
+  }
 }
