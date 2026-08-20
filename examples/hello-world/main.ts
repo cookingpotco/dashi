@@ -1,30 +1,30 @@
 import { group, route, serve } from "dashi";
-import home from "./routes/index.tsx";
-import root from "./routes/_layout.tsx";
-import logger from "./routes/_middleware.ts";
-import nested from "./routes/nested/index.tsx";
-import nestedLayout from "./routes/nested/_layout.tsx";
-import secret from "./routes/secret.tsx";
+import { Home } from "./home_route.tsx";
+import { RootLayout } from "./root_layout.tsx";
+import { logger } from "./logger_middleware.ts";
+import { Nested } from "./nested_route.tsx";
+import { NestedLayout } from "./nested_layout.tsx";
+import { Secret } from "./secret_route.tsx";
 import {
   add as addGuestbook,
   list as listGuestbook,
-} from "./routes/guestbook.tsx";
-import notFound, { errorFallback, ErrorPage } from "./routes/errors.tsx";
+} from "./guestbook_route.tsx";
+import { errorFallback, ErrorPage, NotFound } from "./errors.tsx";
 
 if (import.meta.main) {
   serve({
-    layouts: [root],
+    layouts: [RootLayout],
     middleware: [logger],
-    notFound,
+    notFound: NotFound,
     error: ErrorPage,
     errorFallback,
     routes: [
-      route("/", { GET: home }),
+      route("/", { GET: Home }),
       group({
-        layouts: [nestedLayout],
-        routes: [route("/nested", { GET: nested })],
+        layouts: [NestedLayout],
+        routes: [route("/nested", { GET: Nested })],
       }),
-      route("/secret", { GET: secret }),
+      route("/secret", { GET: Secret }),
       route("/guestbook", { GET: listGuestbook, POST: addGuestbook }),
     ],
   });

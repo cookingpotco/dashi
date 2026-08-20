@@ -1,5 +1,32 @@
-import { type Element, RouteFragment, type WrapperCtx } from "dashi";
-import type { AppState } from "../state.ts";
+import { type Ctx, type Element, RouteFragment, type WrapperCtx } from "dashi";
+import type { AppState } from "./state.ts";
+
+export function NotFound(
+  ctx: Ctx<Record<string, string>, AppState>,
+) {
+  if (ctx.url.pathname === "/not-found-throws") {
+    throw new Error("not-found-throws");
+  }
+  return <p id="not-found">custom-404</p>;
+}
+
+export function RootError(
+  _ctx: WrapperCtx<AppState>,
+  thrown: unknown,
+) {
+  if (thrown instanceof Error && thrown.message === "error-handler-boom") {
+    throw thrown;
+  }
+  return <p id="root-error">root-error</p>;
+}
+
+export const errorFallback = (
+  <html>
+    <body>
+      <p id="fallback">crash-fallback</p>
+    </body>
+  </html>
+);
 
 export function throwHandler(): Element {
   throw new Error("handler-boom");

@@ -1,6 +1,6 @@
 import type { WrapperCtx } from "dashi";
 
-export default async function logger(
+export async function logger(
   ctx: WrapperCtx,
   next: () => Promise<Response>,
 ): Promise<Response> {

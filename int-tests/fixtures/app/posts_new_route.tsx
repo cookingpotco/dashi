@@ -1,3 +1,3 @@
-export default function PostsNew() {
+export function PostsNew() {
   return <p id="new-post">new-post</p>;
 }

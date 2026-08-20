@@ -1,6 +1,6 @@
 import { type Element, type WrapperCtx } from "dashi";
 
-export default function RootLayout(
+export function RootLayout(
   _ctx: WrapperCtx,
   children: Element,
 ): Element {

@@ -9,26 +9,23 @@ import {
 } from "dashi";
 import { cors } from "dashi/cors";
 import type { AppState } from "./state.ts";
-import home from "./routes/index.tsx";
-import root from "./routes/_layout.tsx";
-import logger from "./routes/_middleware.ts";
-import nested from "./routes/nested/index.tsx";
-import nestedLayout from "./routes/nested/_layout.tsx";
-import echo from "./routes/echo.tsx";
-import embed from "./routes/embed.tsx";
-import fragment from "./routes/fragment.tsx";
-import peer from "./routes/peer.tsx";
-import postsNew from "./routes/posts_new.tsx";
-import post from "./routes/post.tsx";
+import { Home } from "./home_route.tsx";
+import { RootLayout } from "./root_layout.tsx";
+import { root } from "./root_middleware.ts";
+import { Nested } from "./nested_route.tsx";
+import { NestedLayout } from "./nested_layout.tsx";
+import { Echo } from "./echo_route.tsx";
+import { Embed } from "./embed_route.tsx";
+import { Fragment } from "./fragment_route.tsx";
+import { Peer } from "./peer_route.tsx";
+import { PostsNew } from "./posts_new_route.tsx";
+import { Post } from "./post_route.tsx";
 import {
   add as addGuestbook,
   list as listGuestbook,
-} from "./routes/guestbook.tsx";
-import ok from "./routes/ok.ts";
-import gated from "./routes/gated.tsx";
-import notFound from "./routes/not_found.tsx";
-import rootError from "./routes/error.tsx";
-import errorFallback from "./routes/error_fallback.tsx";
+} from "./guestbook_route.tsx";
+import { ok } from "./ok_route.ts";
+import { Gated } from "./gated_route.tsx";
 import {
   compactError,
   embedFragError,
@@ -36,19 +33,22 @@ import {
   embedFragErrorThrows,
   embedFragMiss,
   embedFragThrow,
+  errorFallback,
   jsonError,
   nestedError,
   nestedErrorLayout,
   nestedMw,
   noErrorLayout,
+  NotFound,
   okPage,
   responseError,
+  RootError,
   throwErrorHandlerBoom,
   throwHandler,
   throwingError,
   throwingLayout,
   throwingMw,
-} from "./routes/errors.tsx";
+} from "./errors.tsx";
 
 const embedOnly: Middleware<AppState> = (ctx, next) => {
   ctx.state.embedOnly = "yes";
@@ -89,29 +89,29 @@ const missingDir = (ctx: Ctx<{ path: string }, AppState>) =>
 
 if (import.meta.main) {
   serve<AppState>({
-    layouts: [root],
-    middleware: [logger],
-    notFound,
-    error: rootError,
+    layouts: [RootLayout],
+    middleware: [root],
+    notFound: NotFound,
+    error: RootError,
     errorFallback,
     routes: [
-      route("/", { GET: home }),
+      route("/", { GET: Home }),
       group({
-        layouts: [nestedLayout],
-        routes: [route("/nested", { GET: nested })],
+        layouts: [NestedLayout],
+        routes: [route("/nested", { GET: Nested })],
       }),
-      route("/echo", { GET: echo }),
+      route("/echo", { GET: Echo }),
       group({
         middleware: [embedOnly],
-        routes: [route("/embed", { GET: embed })],
+        routes: [route("/embed", { GET: Embed })],
       }),
       group({
         middleware: [fragOnly],
-        routes: [route("/fragment", { GET: fragment })],
+        routes: [route("/fragment", { GET: Fragment })],
       }),
-      route("/peer", { GET: peer }),
-      route("/posts/new", { GET: postsNew }),
-      route("/posts/:id", { GET: post }),
+      route("/peer", { GET: Peer }),
+      route("/posts/new", { GET: PostsNew }),
+      route("/posts/:id", { GET: Post }),
       route("/guestbook", { GET: listGuestbook, POST: addGuestbook }),
       route("/ok", { GET: ok }),
       group({
@@ -137,7 +137,7 @@ if (import.meta.main) {
       route("/static-missing-dir/:path*", { GET: missingDir }),
       group({
         middleware: [requireSession],
-        routes: [route("/gated", { GET: gated })],
+        routes: [route("/gated", { GET: Gated })],
       }),
       route("/throw", { GET: throwHandler }),
       route("/root-layout-throws", { GET: okPage }),

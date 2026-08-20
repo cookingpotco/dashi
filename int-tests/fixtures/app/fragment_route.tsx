@@ -1,7 +1,7 @@
 import type { Ctx } from "dashi";
-import type { AppState } from "../state.ts";
+import type { AppState } from "./state.ts";
 
-export default function Fragment(
+export function Fragment(
   ctx: Ctx<Record<string, never>, AppState>,
 ) {
   return (

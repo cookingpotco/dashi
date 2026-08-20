@@ -8,7 +8,7 @@ const TestComponent = ({ text }: { text: string }) => {
   return <footer>Test Footer {text} 2</footer>;
 };
 
-export default async function Home() {
+export async function Home() {
   const { hello } = await fetchData();
 
   return (

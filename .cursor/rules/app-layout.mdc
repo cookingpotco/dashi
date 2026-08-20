@@ -1,0 +1,49 @@
+---
+description: Copy-paste app layout for examples and fixtures
+alwaysApply: true
+---
+
+# App layout
+
+Examples and the main int-test fixture are a flat folder. `main.ts` is the
+route table. Handlers, layouts, and middleware sit beside it as one module
+each.
+
+## File names
+
+Deno snake_case. Role in the suffix: `home_route.tsx`, `root_layout.tsx`,
+`logger_middleware.ts`. No `routes/` directory and no `_` magic prefixes.
+
+`errors.tsx` holds the `serve()` options `notFound`, `error`, and
+`errorFallback` as named exports. Those are not routes.
+
+Ordinary extra modules (`state.ts`, later `db.ts`) sit beside the handlers.
+No `layouts/`, `middleware/`, or feature folders.
+
+## Exports
+
+Named exports: `import { Home } from "./home_route.tsx"`. One route per file.
+`/guestbook` is one file with `list` and `add` (two methods, one route). Do
+not colocate several routes in `main.ts`.
+
+A route file exports the handler(s) plus local helpers and types it needs.
+Path, layouts, and middleware stay in the table in `main.ts`. A file named
+`home_route.tsx` does not register `/`. `group()` is assembled in `main.ts`,
+not exported from a route or feature file.
+
+## Table
+
+`main.ts` imports the modules and calls `serve()`, `group()`, and `route()`.
+That is the only place that binds a handler to a path.
+
+## Fixtures
+
+The main fixture (`int-tests/fixtures/app/`) matches this layout. Extra
+fixtures that cannot share that `serve()` table are a small `main.ts` or
+`main.tsx` in their own folder. They are not workspace members.
+
+## Imports
+
+App code imports from `dashi`. `dashi/jsx-runtime` is the Deno
+`jsxImportSource` subpath, not a second public import style. The public vs
+internal export list and the JSR `exports` map stay COO-27.
