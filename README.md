@@ -10,7 +10,7 @@ published yet.
 
 - JSX → HTML strings with escaped XSS values
 - Explicit route table with typed params, per-method handlers, layouts, and
-  middleware
+  middleware. GET also answers HEAD (empty body, same headers)
 - `<RouteFragment>` for composing another route into the current page (eager
   during SSR, or client-fetched when `lazy`)
 - Example apps under `examples/`

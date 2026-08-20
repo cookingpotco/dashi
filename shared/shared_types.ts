@@ -49,6 +49,10 @@ export type ErrorHandler<
   thrown: unknown,
 ) => Element | Response | Promise<Element | Response>;
 
+/**
+ * Methods the router advertises. GET also answers HEAD; HEAD is not a
+ * handler key on the route map.
+ */
 export const METHODS = [
   "GET",
   "HEAD",
@@ -63,7 +67,7 @@ export type MethodHandlers<
   Params extends Record<string, string> = Record<string, never>,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = {
-  [M in Method]?: Handler<Params, State>;
+  [M in Exclude<Method, "HEAD">]?: Handler<Params, State>;
 };
 
 /**
