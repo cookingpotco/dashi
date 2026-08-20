@@ -21,6 +21,9 @@ published yet.
 
 - JSR publish
 - Production-ready SSR
+- WebSocket / SSE push into fragments, and SSR streaming: omitted from
+  friends-and-family ([COO-59](https://linear.app/cookingpot/issue/COO-59),
+  Dashi v0.5). Fragment updates in F&F are request/response only
 
 ## Development
 
