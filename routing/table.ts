@@ -575,7 +575,7 @@ export function matchMiss<
  * Join a group prefix and a child path. `""` and `"/"` add no segments;
  * a child of `"/"` is the prefix itself.
  */
-export function joinPath(prefix: string, child: string): string {
+function joinPath(prefix: string, child: string): string {
   const base = prefix === "/" || prefix === "" ? "" : prefix;
   if (child !== "" && !child.startsWith("/")) {
     throw new Error(`Path must start with "/": ${JSON.stringify(child)}`);

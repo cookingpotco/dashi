@@ -63,6 +63,48 @@ function typechecks() {
     route("/", { GET: noop }, { layouts: [] });
     return { routes: [] };
   });
+
+  group("/users/:id", ({ route }) => ({
+    routes: [
+      route("/update/:field", {
+        POST: (ctx) => {
+          ctx.params.id;
+          ctx.params.field;
+          // @ts-expect-error only declared params exist
+          ctx.params.slug;
+          return "" as Element;
+        },
+      }),
+    ],
+  }));
+
+  group("/users/:id", ({ group }) => ({
+    routes: [
+      group("/posts/:postId", ({ route }) => ({
+        routes: [
+          route("/edit", {
+            GET: (ctx) => {
+              ctx.params.id;
+              ctx.params.postId;
+              return "" as Element;
+            },
+          }),
+        ],
+      })),
+    ],
+  }));
+
+  group("/users/:id", ({ route }) => {
+    // @ts-expect-error duplicate param names across the join
+    route("/:id", get);
+    return { routes: [] };
+  });
+
+  // @ts-expect-error optional cannot end a group prefix
+  group("/opt/:id?", (_bag) => ({ routes: [] }));
+
+  // @ts-expect-error catch-all cannot end a group prefix
+  group("/files/:path*", (_bag) => ({ routes: [] }));
 }
 
 Deno.test("ParamsOf infers params from path literals", () => {
@@ -190,6 +232,30 @@ Deno.test("compile rejects duplicate and invalid paths", () => {
       }))),
     Error,
     "Catch-all must be named",
+  );
+  assertThrows(
+    () =>
+      compile(group("/users/:id", ({ route }) => ({
+        routes: [route("/:id" as never, { GET: noop })],
+      }))),
+    Error,
+    "Duplicate param name",
+  );
+  assertThrows(
+    () =>
+      compile(group("/opt/:id?" as never, ({ route }) => ({
+        routes: [route("/x", { GET: noop })],
+      }))),
+    Error,
+    "Group prefix cannot end in optional or catch-all",
+  );
+  assertThrows(
+    () =>
+      compile(group("/files/:path*" as never, ({ route }) => ({
+        routes: [route("/x", { GET: noop })],
+      }))),
+    Error,
+    "Group prefix cannot end in optional or catch-all",
   );
 });
 
