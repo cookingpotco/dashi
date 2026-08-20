@@ -1,4 +1,4 @@
-import { group, route, serve } from "dashi";
+import { group, serve } from "dashi";
 import { Home } from "./home_route.tsx";
 import { RootLayout } from "./root_layout.tsx";
 import { logger } from "./logger_middleware.ts";
@@ -12,20 +12,22 @@ import {
 import { errorFallback, ErrorPage, NotFound } from "./errors.tsx";
 
 if (import.meta.main) {
-  serve({
-    layouts: [RootLayout],
-    middleware: [logger],
-    notFound: NotFound,
-    error: ErrorPage,
-    errorFallback,
-    routes: [
-      route("/", { GET: Home }),
-      group({
-        layouts: [NestedLayout],
-        routes: [route("/nested", { GET: Nested })],
-      }),
-      route("/secret", { GET: Secret }),
-      route("/guestbook", { GET: listGuestbook, POST: addGuestbook }),
-    ],
-  });
+  serve(
+    group(({ route, group }) => ({
+      layouts: [RootLayout],
+      middleware: [logger],
+      notFound: NotFound,
+      error: ErrorPage,
+      routes: [
+        route("/", { GET: Home }),
+        group(({ route }) => ({
+          layouts: [NestedLayout],
+          routes: [route("/nested", { GET: Nested })],
+        })),
+        route("/secret", { GET: Secret }),
+        route("/guestbook", { GET: listGuestbook, POST: addGuestbook }),
+      ],
+    })),
+    { errorFallback },
+  );
 }

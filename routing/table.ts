@@ -7,21 +7,29 @@ import {
   METHODS,
   Middleware,
 } from "../shared/mod.ts";
-import { type ParamsOf, type PathError } from "./path_types.ts";
+import {
+  type GroupPrefixError,
+  type Join,
+  type ParamsOf,
+  type PathError,
+} from "./path_types.ts";
 
 export type { ErrorHandler, Method, MethodHandlers } from "../shared/mod.ts";
 export type { ParamsOf } from "./path_types.ts";
 
 /**
- * One group's layouts and optional `error`. `parent` is the enclosing
- * group, if any. A group's `error` catches handler throws and inner
- * group failures; it does not catch that group's own layouts.
+ * One group's layouts, optional `error`, and optional `notFound`.
+ * `parent` is the enclosing group, if any. A group's `error` catches
+ * handler throws and inner group failures; it does not catch that
+ * group's own layouts. `notFound` handles document misses captured
+ * here; omitted walks to the parent.
  */
 export interface GroupBoundary<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
   layouts: Layout<State>[];
   error?: ErrorHandler<State>;
+  notFound?: Handler<Record<string, string>, State>;
   parent?: GroupBoundary<State>;
 }
 
@@ -63,17 +71,24 @@ export interface Route<
   middleware: Middleware<State>[];
 }
 
+/**
+ * One node in the route tree. `prefix` is this group's own path prefix
+ * (empty if pathless). Nested groups and routes join ancestor prefixes
+ * at compile.
+ */
 export interface Group<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
   kind: NodeKind.Group;
+  prefix: string;
   layouts: Layout<State>[];
   middleware: Middleware<State>[];
   error?: ErrorHandler<State>;
+  notFound?: Handler<Record<string, string>, State>;
   routes: Array<Route<State> | Group<State>>;
 }
 
-export interface RouteTable<
+interface GroupFields<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
   /**
@@ -89,31 +104,57 @@ export interface RouteTable<
   middleware?: Middleware<State>[];
   /**
    * Catches handler throws and inner group failures. Does not catch
-   * this group's own layouts. A one-off is a one-route `group()`.
+   * this group's own layouts.
    */
   error?: ErrorHandler<State>;
+  /**
+   * Document miss handler under this group's prefix. `Element` becomes
+   * a 404 document with this group's layout chain; `Response` is sent
+   * as-is. Omitted: walk to the parent. Root remains the default.
+   */
+  notFound?: Handler<Record<string, string>, State>;
   routes: Array<Route<State> | Group<State>>;
 }
 
+type ValidChildPath<Prefix extends string, Path extends string> =
+  [PathError<Path>] extends [never]
+    ? [PathError<Join<Prefix, Path>>] extends [never] ? Path
+    : PathError<Join<Prefix, Path>>
+    : PathError<Path>;
+
+type ValidChildPrefix<Prefix extends string, ChildPrefix extends string> =
+  [GroupPrefixError<ChildPrefix>] extends [never]
+    ? [GroupPrefixError<Join<Prefix, ChildPrefix>>] extends [never]
+      ? ChildPrefix
+    : GroupPrefixError<Join<Prefix, ChildPrefix>>
+    : GroupPrefixError<ChildPrefix>;
+
 /**
- * Root table for `serve()` / `init()`. `notFound` and `errorFallback`
- * are not on `group()`.
+ * Helpers closed over the accumulated prefix. Nested `group` from this
+ * bag threads that prefix; a top-level `group()` call would not.
  */
-export interface ServeTable<
+export interface GroupBag<
+  Prefix extends string = "",
   State extends Record<string, unknown> = Record<PropertyKey, never>,
-> extends RouteTable<State> {
+> {
   /**
-   * Miss handler. `Element` becomes a 404 document with root layouts;
-   * `Response` is sent as-is. Omitted: `new Response("Not found", {
-   * status: 404 })`.
+   * Declares a path with per-method handlers. Two `route()` calls for
+   * the same joined path are a compile error; GET and POST share one
+   * row. GET also answers HEAD. Every matched path answers OPTIONS.
    */
-  notFound?: Handler<Record<string, string>, State>;
-  /**
-   * Last-resort 500 value: no layouts, no `ctx`, no `thrown`. `Element`
-   * becomes 500 HTML with DOCTYPE; `Response` is sent as-is. Omitted:
-   * `new Response("Something Went Wrong", { status: 500 })`.
-   */
-  errorFallback?: Element | Response;
+  route<Path extends string>(
+    path: ValidChildPath<Prefix, Path>,
+    handlers: MethodHandlers<ParamsOf<Join<Prefix, Path>>, State>,
+  ): Route<State>;
+  group<ChildPrefix extends string>(
+    prefix: ValidChildPrefix<Prefix, ChildPrefix>,
+    build: (
+      bag: GroupBag<Join<Prefix, ChildPrefix>, State>,
+    ) => GroupFields<State>,
+  ): Group<State>;
+  group(
+    build: (bag: GroupBag<Prefix, State>) => GroupFields<State>,
+  ): Group<State>;
 }
 
 export interface CompiledRoute<
@@ -143,8 +184,28 @@ export interface CompiledTable<
   dynamic: CompiledRoute<State>[];
   rootBoundary: GroupBoundary<State>;
   rootMiddleware: Middleware<State>[];
-  notFound?: Handler<Record<string, string>, State>;
+  prefixCaptures: PrefixCapture<State>[];
   errorFallback?: Element | Response;
+}
+
+interface PrefixCapture<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> {
+  segments: ConcreteSegment[];
+  boundary: GroupBoundary<State>;
+  middleware: Middleware<State>[];
+}
+
+/**
+ * Group that owns a document miss: the deepest prefixed group whose
+ * prefix matches, or the root when none do.
+ */
+export interface MissMatch<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> {
+  boundary: GroupBoundary<State>;
+  middleware: Middleware<State>[];
+  params: Record<string, string>;
 }
 
 const NAME_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
@@ -300,17 +361,32 @@ function staticPathname(segments: ConcreteSegment[]): string | null {
 
 export function compile<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
->(table: ServeTable<State>): CompiledTable<State> {
+>(
+  table: Group<State>,
+  errorFallback?: Element | Response,
+): CompiledTable<State> {
+  const rootPrefix = table.prefix === "/" ? "" : table.prefix;
   const rootBoundary: GroupBoundary<State> = {
-    layouts: table.layouts ?? [],
+    layouts: table.layouts,
     error: table.error,
+    notFound: table.notFound,
   };
   const routes: Route<State>[] = [];
+  const prefixCaptures: PrefixCapture<State>[] = [];
+  if (rootPrefix !== "") {
+    prefixCaptures.push({
+      segments: concretePrefix(rootPrefix),
+      boundary: rootBoundary,
+      middleware: table.middleware,
+    });
+  }
   append(
     table.routes,
     rootBoundary,
-    table.middleware ?? [],
+    table.middleware,
+    rootPrefix,
     routes,
+    prefixCaptures,
   );
 
   const compiled: CompiledRoute<State>[] = [];
@@ -355,9 +431,9 @@ export function compile<
     staticByPath,
     dynamic,
     rootBoundary,
-    rootMiddleware: table.middleware ?? [],
-    notFound: table.notFound,
-    errorFallback: table.errorFallback,
+    rootMiddleware: table.middleware,
+    prefixCaptures,
+    errorFallback,
   };
 }
 
@@ -440,17 +516,101 @@ export function match<
   return null;
 }
 
-/**
- * Declares a path with per-method handlers. Two `route()` calls for the
- * same path are a compile error; GET and POST share one row. GET also
- * answers HEAD. Every matched path answers OPTIONS.
- */
-export function route<
-  Path extends string,
+function matchPrefix(
+  segments: ConcreteSegment[],
+  parts: string[],
+): Record<string, string> | null {
+  if (parts.length < segments.length) {
+    return null;
+  }
+  const params: Record<string, string> = {};
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i]!;
+    const part = parts[i]!;
+    if (seg.kind === SegmentKind.Static) {
+      if (part !== seg.value) {
+        return null;
+      }
+    } else {
+      params[seg.name] = part;
+    }
+  }
+  return params;
+}
+
+export function matchMiss<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(
-  path: [PathError<Path>] extends [never] ? Path : PathError<Path>,
-  handlers: MethodHandlers<ParamsOf<Path>, State>,
+  compiled: CompiledTable<State>,
+  pathname: string,
+): MissMatch<State> {
+  const parts = pathname === "/" ? [] : pathname.slice(1).split("/");
+  let best: PrefixCapture<State> | undefined;
+  let bestParams: Record<string, string> = {};
+  for (const capture of compiled.prefixCaptures) {
+    const params = matchPrefix(capture.segments, parts);
+    if (
+      params &&
+      (!best || capture.segments.length >= best.segments.length)
+    ) {
+      best = capture;
+      bestParams = params;
+    }
+  }
+  if (!best) {
+    return {
+      boundary: compiled.rootBoundary,
+      middleware: compiled.rootMiddleware,
+      params: {},
+    };
+  }
+  return {
+    boundary: best.boundary,
+    middleware: best.middleware,
+    params: bestParams,
+  };
+}
+
+/**
+ * Join a group prefix and a child path. `""` and `"/"` add no segments;
+ * a child of `"/"` is the prefix itself.
+ */
+export function joinPath(prefix: string, child: string): string {
+  const base = prefix === "/" || prefix === "" ? "" : prefix;
+  if (child !== "" && !child.startsWith("/")) {
+    throw new Error(`Path must start with "/": ${JSON.stringify(child)}`);
+  }
+  if (child === "/" || child === "") {
+    return base === "" ? "/" : base;
+  }
+  if (base === "") {
+    return child;
+  }
+  return `${base}${child}`;
+}
+
+function concretePrefix(path: string): ConcreteSegment[] {
+  const segments = parsePath(path);
+  const last = segments[segments.length - 1];
+  if (
+    last?.kind === SegmentKind.Optional ||
+    last?.kind === SegmentKind.Catchall
+  ) {
+    throw new Error(
+      `Group prefix cannot end in optional or catch-all: ${
+        JSON.stringify(path)
+      }`,
+    );
+  }
+  return expand(segments)[0]!;
+}
+
+function declareRoute<
+  State extends Record<string, unknown>,
+>(
+  prefix: string,
+  path: string,
+  handlers: MethodHandlers<Record<string, string>, State>,
 ): Route<State> {
   if (
     !METHODS.some((method) =>
@@ -458,40 +618,112 @@ export function route<
     )
   ) {
     throw new Error(
-      `Route ${JSON.stringify(path)} has no method handlers`,
+      `Route ${JSON.stringify(joinPath(prefix, path))} has no method handlers`,
     );
   }
   return {
     kind: NodeKind.Route,
     path,
-    // Path literals prove narrower params than Route stores; match only
-    // fills the declared keys, so this widening is safe.
-    handlers: handlers as Route<State>["handlers"],
+    handlers,
     middleware: [],
   };
 }
 
-/**
- * Groups routes that share layouts, middleware, and error UI. Parent
- * lists run first. Does not prefix paths.
- *
- * Layouts are UI that wraps the route on document render, outermost
- * first, and do not run on fragment renders (eager `<RouteFragment>` or
- * a lazy fetch). Middleware is the request pipeline, outermost first,
- * and runs for document hits and fragment hits. `error` catches handler
- * throws and inner group failures; it does not catch this group's own
- * layouts.
- */
-export function group<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
->(opts: RouteTable<State>): Group<State> {
+function finishGroup<
+  State extends Record<string, unknown>,
+>(prefix: string, fields: GroupFields<State>): Group<State> {
   return {
     kind: NodeKind.Group,
-    layouts: opts.layouts ?? [],
-    middleware: opts.middleware ?? [],
-    error: opts.error,
-    routes: opts.routes,
+    prefix: prefix === "/" ? "" : prefix,
+    layouts: fields.layouts ?? [],
+    middleware: fields.middleware ?? [],
+    error: fields.error,
+    notFound: fields.notFound,
+    routes: fields.routes,
   };
+}
+
+function createBag<
+  Prefix extends string,
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+>(prefix: Prefix): GroupBag<Prefix, State> {
+  const nestedGroup = ((
+    prefixOrBuild:
+      | string
+      | ((bag: GroupBag<string, State>) => GroupFields<State>),
+    maybeBuild?: (bag: GroupBag<string, State>) => GroupFields<State>,
+  ) => {
+    if (typeof prefixOrBuild === "function") {
+      return finishGroup(
+        "",
+        prefixOrBuild(createBag<Prefix, State>(prefix)),
+      );
+    }
+    const joined = joinPath(prefix, prefixOrBuild);
+    return finishGroup(
+      prefixOrBuild,
+      maybeBuild!(createBag<string, State>(joined)),
+    );
+  }) as GroupBag<Prefix, State>["group"];
+
+  return {
+    route: (path, handlers) =>
+      declareRoute(
+        prefix,
+        path,
+        // Path literals prove narrower params than Route stores; match
+        // only fills the declared keys, so this widening is safe.
+        handlers as Route<State>["handlers"],
+      ),
+    group: nestedGroup,
+  };
+}
+
+/**
+ * Declares a node in the route tree. Pass a prefix to join onto child
+ * paths, or omit it (`"/"` is the same). The callback's `route` and
+ * `group` close over the accumulated prefix so handlers see joined
+ * params. `notFound` handles document misses under this prefix; omitted
+ * walks to the parent.
+ *
+ * Layouts wrap the route on document render, outermost first, and do
+ * not run on fragment renders. Middleware is the request pipeline,
+ * outermost first, and runs for document hits and fragment hits.
+ * `error` catches handler throws and inner group failures; it does not
+ * catch this group's own layouts.
+ */
+export function group<
+  Prefix extends string,
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+>(
+  prefix: [GroupPrefixError<Prefix>] extends [never] ? Prefix
+    : GroupPrefixError<Prefix>,
+  build: (bag: GroupBag<Prefix, State>) => GroupFields<State>,
+): Group<State>;
+export function group<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+>(
+  build: (bag: GroupBag<"", State>) => GroupFields<State>,
+): Group<State>;
+export function group<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+>(
+  prefixOrBuild:
+    | string
+    | ((bag: GroupBag<string, State>) => GroupFields<State>),
+  maybeBuild?: (bag: GroupBag<string, State>) => GroupFields<State>,
+): Group<State> {
+  if (typeof prefixOrBuild === "function") {
+    return finishGroup("", prefixOrBuild(createBag<"", State>("")));
+  }
+  return finishGroup(
+    prefixOrBuild,
+    maybeBuild!(
+      createBag<string, State>(
+        prefixOrBuild === "/" ? "" : prefixOrBuild,
+      ),
+    ),
+  );
 }
 
 function append<
@@ -500,21 +732,40 @@ function append<
   nodes: Array<Route<State> | Group<State>>,
   parent: GroupBoundary<State>,
   middleware: Middleware<State>[],
+  ancestorPrefix: string,
   routes: Route<State>[],
+  prefixCaptures: PrefixCapture<State>[],
 ): void {
   for (const node of nodes) {
     if (node.kind === NodeKind.Group) {
+      const joined = joinPath(ancestorPrefix, node.prefix);
+      const boundary: GroupBoundary<State> = {
+        layouts: node.layouts,
+        error: node.error,
+        notFound: node.notFound,
+        parent,
+      };
+      const stacked = [...middleware, ...node.middleware];
+      if (node.prefix !== "") {
+        prefixCaptures.push({
+          segments: concretePrefix(joined),
+          boundary,
+          middleware: stacked,
+        });
+      }
       append(
         node.routes,
-        { layouts: node.layouts, error: node.error, parent },
-        [...middleware, ...node.middleware],
+        boundary,
+        stacked,
+        joined === "/" ? "" : joined,
         routes,
+        prefixCaptures,
       );
       continue;
     }
     routes.push({
       kind: NodeKind.Route,
-      path: node.path,
+      path: joinPath(ancestorPrefix, node.path),
       handlers: node.handlers,
       boundary: parent,
       middleware: [...middleware, ...node.middleware],

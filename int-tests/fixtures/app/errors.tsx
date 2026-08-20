@@ -10,6 +10,10 @@ export function NotFound(
   return <p id="not-found">custom-404</p>;
 }
 
+export function ApiNotFound(): Element {
+  return <p id="api-not-found">api-404</p>;
+}
+
 export function RootError(
   _ctx: WrapperCtx<AppState>,
   thrown: unknown,

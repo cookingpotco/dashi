@@ -58,7 +58,7 @@ function assignCorsHeaders(
 }
 
 /**
- * CORS middleware. Attach on `serve()` or `group()`.
+ * CORS middleware. Attach on `group()`.
  *
  * OPTIONS returns 204 with CORS headers and does not call `next()`.
  * Other methods call `next()` and add CORS headers to that response.

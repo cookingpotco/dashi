@@ -1,4 +1,4 @@
-import { type Element, route, serve, type WrapperCtx } from "dashi";
+import { type Element, group, serve, type WrapperCtx } from "dashi";
 
 function rootLayout(ctx: WrapperCtx, children: Element): Element {
   if (ctx.url.pathname === "/root-layout-throws") {
@@ -21,15 +21,20 @@ function okPage(): Element {
 }
 
 if (import.meta.main) {
-  serve({
-    layouts: [rootLayout],
-    errorFallback: new Response("fallback-response", {
-      status: 500,
-      headers: { "x-fallback": "1" },
-    }),
-    routes: [
-      route("/", { GET: home }),
-      route("/root-layout-throws", { GET: okPage }),
-    ],
-  }, { port: 0 });
+  serve(
+    group(({ route }) => ({
+      layouts: [rootLayout],
+      routes: [
+        route("/", { GET: home }),
+        route("/root-layout-throws", { GET: okPage }),
+      ],
+    })),
+    {
+      errorFallback: new Response("fallback-response", {
+        status: 500,
+        headers: { "x-fallback": "1" },
+      }),
+      port: 0,
+    },
+  );
 }

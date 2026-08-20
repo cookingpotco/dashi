@@ -125,12 +125,46 @@ const appCases: IntegrationTestCase[] = [
     headers: { "content-type": "text/html", "x-mw": "ok" },
     html: {
       bodyIncludes: ["<!DOCTYPE html>"],
-      bodyExcludes: ["NestedError"],
+      bodyExcludes: ["NestedError", "api-404"],
       select: [
         { selector: "html > body > h1", text: "Website Title" },
         { selector: "html > body > #pre", text: "from-mw" },
         { selector: "html > body > #not-found", text: "custom-404" },
         { selector: "#nested-error-wrap", exists: false },
+        { selector: "#api-wrap", exists: false },
+        { selector: "#api-not-found", exists: false },
+      ],
+    },
+  },
+  {
+    name: "prefixed group miss uses that group's notFound",
+    request: { path: "/api/nope" },
+    status: 404,
+    headers: { "content-type": "text/html", "x-mw": "ok", "x-api": "1" },
+    html: {
+      bodyIncludes: ["<!DOCTYPE html>"],
+      bodyExcludes: ["custom-404"],
+      select: [
+        { selector: "html > body > h1", text: "Website Title" },
+        { selector: "html > body > #pre", text: "from-mw" },
+        {
+          selector: "html > body > #api-wrap > #api-not-found",
+          text: "api-404",
+        },
+        { selector: "#not-found", exists: false },
+      ],
+    },
+  },
+  {
+    name: "root miss uses root notFound",
+    request: { path: "/nope" },
+    status: 404,
+    headers: { "content-type": "text/html", "x-mw": "ok" },
+    html: {
+      bodyExcludes: ["api-404"],
+      select: [
+        { selector: "html > body > #not-found", text: "custom-404" },
+        { selector: "#api-wrap", exists: false },
       ],
     },
   },

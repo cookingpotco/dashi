@@ -1,7 +1,7 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import { type Element } from "../jsx-runtime/mod.ts";
 import { type Ctx, type Middleware } from "../shared/mod.ts";
-import { compile, group, match, type ParamsOf, route } from "./table.ts";
+import { compile, group, match, matchMiss, type ParamsOf } from "./table.ts";
 
 type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends
   (<T>() => T extends B ? 1 : 2) ? true : false;
@@ -30,36 +30,39 @@ function typechecks() {
     >
   >;
 
-  route("/", { GET: noop });
-  // @ts-expect-error HEAD is not a declared handler; GET answers it
-  route("/", { HEAD: noop });
-  // @ts-expect-error OPTIONS is not a declared handler; the router answers it
-  route("/", { OPTIONS: noop });
-  route("/posts/:id", {
-    GET: (ctx) => {
-      ctx.params.id;
-      // @ts-expect-error only declared params exist
-      ctx.params.slug;
-      return "" as Element;
-    },
-  });
+  group(({ route }) => {
+    route("/", { GET: noop });
+    // @ts-expect-error HEAD is not a declared handler; GET answers it
+    route("/", { HEAD: noop });
+    // @ts-expect-error OPTIONS is not a declared handler; the router answers it
+    route("/", { OPTIONS: noop });
+    route("/posts/:id", {
+      GET: (ctx) => {
+        ctx.params.id;
+        // @ts-expect-error only declared params exist
+        ctx.params.slug;
+        return "" as Element;
+      },
+    });
 
-  // @ts-expect-error trailing slash is rejected
-  route("/nested/", get);
-  // @ts-expect-error optional only as the last segment
-  route("/a/:b?/c", get);
-  // @ts-expect-error catch-all only as the last segment
-  route("/a/:b*/c", get);
-  // @ts-expect-error param names cannot start with a digit
-  route("/posts/:1id", get);
-  // @ts-expect-error param names cannot contain a hyphen
-  route("/posts/:id-x", get);
-  // @ts-expect-error duplicate param names
-  route("/a/:id/b/:id", get);
-  // @ts-expect-error catch-all must be named
-  route("/files/*", get);
-  // @ts-expect-error wraps belong on group(), not route()
-  route("/", { GET: noop }, { layouts: [] });
+    // @ts-expect-error trailing slash is rejected
+    route("/nested/", get);
+    // @ts-expect-error optional only as the last segment
+    route("/a/:b?/c", get);
+    // @ts-expect-error catch-all only as the last segment
+    route("/a/:b*/c", get);
+    // @ts-expect-error param names cannot start with a digit
+    route("/posts/:1id", get);
+    // @ts-expect-error param names cannot contain a hyphen
+    route("/posts/:id-x", get);
+    // @ts-expect-error duplicate param names
+    route("/a/:id/b/:id", get);
+    // @ts-expect-error catch-all must be named
+    route("/files/*", get);
+    // @ts-expect-error wraps belong on group(), not route()
+    route("/", { GET: noop }, { layouts: [] });
+    return { routes: [] };
+  });
 }
 
 Deno.test("ParamsOf infers params from path literals", () => {
@@ -75,7 +78,7 @@ Deno.test("match ranks routes and extracts params", () => {
   const firstTie = () => "" as Element;
   const secondTie = () => "" as Element;
 
-  const compiled = compile({
+  const compiled = compile(group(({ route }) => ({
     routes: [
       route("/posts/:path*", { GET: postsRest }),
       route("/posts/:id", { GET: postsId }),
@@ -85,7 +88,7 @@ Deno.test("match ranks routes and extracts params", () => {
       route("/tie/:id", { GET: firstTie }),
       route("/other/:id", { GET: secondTie }),
     ],
-  });
+  })));
 
   const postsNewMatch = match(compiled, "/posts/new");
   assertEquals(postsNewMatch?.handlers.GET, postsNew);
@@ -115,55 +118,76 @@ Deno.test("match ranks routes and extracts params", () => {
 Deno.test("compile rejects duplicate and invalid paths", () => {
   assertThrows(
     () =>
-      compile({
+      compile(group(({ route }) => ({
         routes: [
           route("/posts/:id", { GET: noop }),
           route("/posts/:slug", { GET: noop }),
         ],
-      }),
+      }))),
     Error,
     "Duplicate or unreachable route",
   );
   assertThrows(
     () =>
-      compile({
+      compile(group(({ route }) => ({
         routes: [route("/", { GET: noop }), route("/:id?", { GET: noop })],
-      }),
+      }))),
     Error,
     "Duplicate or unreachable route",
   );
   assertThrows(
-    () => compile({ routes: [route("/a/:b?/c" as never, { GET: noop })] }),
+    () =>
+      compile(group(({ route }) => ({
+        routes: [route("/a/:b?/c" as never, { GET: noop })],
+      }))),
     Error,
     "Optional and catch-all are only allowed as the last segment",
   );
   assertThrows(
-    () => compile({ routes: [route("/a/:b*/c" as never, { GET: noop })] }),
+    () =>
+      compile(group(({ route }) => ({
+        routes: [route("/a/:b*/c" as never, { GET: noop })],
+      }))),
     Error,
     "Optional and catch-all are only allowed as the last segment",
   );
   assertThrows(
-    () => compile({ routes: [route("/nested/" as never, { GET: noop })] }),
+    () =>
+      compile(group(({ route }) => ({
+        routes: [route("/nested/" as never, { GET: noop })],
+      }))),
     Error,
     `No trailing slash except "/"`,
   );
   assertThrows(
-    () => compile({ routes: [route("/posts/:1id" as never, { GET: noop })] }),
+    () =>
+      compile(group(({ route }) => ({
+        routes: [route("/posts/:1id" as never, { GET: noop })],
+      }))),
     Error,
     "Invalid param name",
   );
   assertThrows(
-    () => compile({ routes: [route("/posts/:id-x" as never, { GET: noop })] }),
+    () =>
+      compile(group(({ route }) => ({
+        routes: [route("/posts/:id-x" as never, { GET: noop })],
+      }))),
     Error,
     "Invalid param name",
   );
   assertThrows(
-    () => compile({ routes: [route("/a/:id/b/:id" as never, { GET: noop })] }),
+    () =>
+      compile(group(({ route }) => ({
+        routes: [route("/a/:id/b/:id" as never, { GET: noop })],
+      }))),
     Error,
     "Duplicate param name",
   );
   assertThrows(
-    () => compile({ routes: [route("/files/*" as never, { GET: noop })] }),
+    () =>
+      compile(group(({ route }) => ({
+        routes: [route("/files/*" as never, { GET: noop })],
+      }))),
     Error,
     "Catch-all must be named",
   );
@@ -180,21 +204,21 @@ Deno.test("compile inherits wraps outermost-first and preserves declaration orde
   const postsNew = () => "" as Element;
   const postsId = () => "" as Element;
 
-  const compiled = compile({
+  const compiled = compile(group(({ route, group }) => ({
     layouts: [rootLayout],
     middleware: [rootMw],
     routes: [
       route("/", { GET: home }),
-      group({
+      group(({ route }) => ({
         layouts: [nestedLayout],
         middleware: [nestedMw],
         routes: [route("/nested", { GET: nested })],
-      }),
+      })),
       route("/secret", { GET: secret }),
       route("/posts/new", { GET: postsNew }),
       route("/posts/:id", { GET: postsId }),
     ],
-  });
+  })));
 
   const declaredPaths = [
     ...compiled.staticByPath.values(),
@@ -241,15 +265,15 @@ Deno.test("compile keeps per-group error on the boundary chain", () => {
   const nestedError = () => "" as Element;
   const page = () => "" as Element;
 
-  const compiled = compile({
+  const compiled = compile(group(({ group }) => ({
     error: rootError,
     routes: [
-      group({
+      group(({ route }) => ({
         error: nestedError,
         routes: [route("/x", { GET: page })],
-      }),
+      })),
     ],
-  });
+  })));
   const matched = match(compiled, "/x");
   assertEquals(matched?.boundary?.error, nestedError);
   assertEquals(matched?.boundary?.parent, compiled.rootBoundary);
@@ -260,18 +284,100 @@ Deno.test("compile keeps per-group error on the boundary chain", () => {
 Deno.test("GET+POST share one path; empty map throws", () => {
   const list = () => "" as Element;
   const add = () => "" as Element;
-  const compiled = compile({
+  const compiled = compile(group(({ route }) => ({
     routes: [
       route("/guestbook", { GET: list, POST: add }),
     ],
-  });
+  })));
   const matched = match(compiled, "/guestbook");
   assertEquals(matched?.handlers.GET, list);
   assertEquals(matched?.handlers.POST, add);
 
   assertThrows(
-    () => route("/", {}),
+    () => group(({ route }) => ({ routes: [route("/", {})] })),
     Error,
     "has no method handlers",
   );
+});
+
+Deno.test("compile matches joined paths from a prefixed group", () => {
+  const index = () => "" as Element;
+  const field = () => "" as Element;
+  const compiled = compile(group(({ group }) => ({
+    routes: [
+      group("/users/:id", ({ route }) => ({
+        routes: [
+          route("/", { GET: index }),
+          route("/update/:field", { POST: field }),
+        ],
+      })),
+    ],
+  })));
+  assertEquals(match(compiled, "/users/abc")?.handlers.GET, index);
+  assertEquals(match(compiled, "/users/abc")?.params, { id: "abc" });
+  assertEquals(
+    match(compiled, "/users/abc/update/email")?.handlers.POST,
+    field,
+  );
+  assertEquals(match(compiled, "/users/abc/update/email")?.params, {
+    id: "abc",
+    field: "email",
+  });
+});
+
+Deno.test("notFound lives on the group boundary; miss capture is innermost prefix", () => {
+  const rootNotFound = () => "" as Element;
+  const apiNotFound = () => "" as Element;
+  const v2NotFound = () => "" as Element;
+  const apiMw: Middleware = (_ctx, next) => next();
+  const v2Mw: Middleware = (_ctx, next) => next();
+  const page = () => "" as Element;
+
+  const compiled = compile(group(({ route, group }) => ({
+    notFound: rootNotFound,
+    routes: [
+      route("/ok", { GET: page }),
+      group("/api", ({ route, group }) => ({
+        middleware: [apiMw],
+        notFound: apiNotFound,
+        routes: [
+          route("/ok", { GET: page }),
+          group("/v2", ({ route }) => ({
+            middleware: [v2Mw],
+            notFound: v2NotFound,
+            routes: [route("/ok", { GET: page })],
+          })),
+        ],
+      })),
+      group("/users/:id", ({ route }) => ({
+        routes: [route("/x", { GET: page })],
+      })),
+    ],
+  })));
+
+  assertEquals(compiled.rootBoundary.notFound, rootNotFound);
+  assertEquals(match(compiled, "/ok")?.boundary?.notFound, rootNotFound);
+
+  const apiMiss = matchMiss(compiled, "/api/nope");
+  assertEquals(apiMiss.boundary.notFound, apiNotFound);
+  assertEquals(apiMiss.boundary.parent, compiled.rootBoundary);
+  assertEquals(apiMiss.middleware, [apiMw]);
+  assertEquals(apiMiss.params, {});
+
+  const v2Miss = matchMiss(compiled, "/api/v2/nope");
+  assertEquals(v2Miss.boundary.notFound, v2NotFound);
+  assertEquals(v2Miss.boundary.parent?.notFound, apiNotFound);
+  assertEquals(v2Miss.middleware, [apiMw, v2Mw]);
+
+  const rootMiss = matchMiss(compiled, "/nope");
+  assertEquals(rootMiss.boundary, compiled.rootBoundary);
+  assertEquals(rootMiss.boundary.notFound, rootNotFound);
+  assertEquals(rootMiss.params, {});
+
+  assertEquals(matchMiss(compiled, "/apix").boundary, compiled.rootBoundary);
+
+  const userMiss = matchMiss(compiled, "/users/abc/nope");
+  assertEquals(userMiss.params, { id: "abc" });
+  assertEquals(userMiss.boundary.notFound, undefined);
+  assertEquals(userMiss.boundary.parent, compiled.rootBoundary);
 });

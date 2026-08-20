@@ -1,27 +1,37 @@
-import { handle, init, type ServeTable } from "../routing/mod.ts";
-
-export type { ServeTable };
+import { type Element } from "../jsx-runtime/mod.ts";
+import { type Group, handle, init } from "../routing/mod.ts";
 
 /**
  * Starts the HTTP server.
  *
- * Layouts are UI that wraps the route on document render, outermost
- * first, and do not run on fragment renders (eager `<RouteFragment>` or
- * a lazy fetch). Middleware is the request pipeline, outermost first,
- * and runs for document hits and fragment hits. `error` catches handler
- * throws and inner group failures. `notFound` is the miss handler;
+ * The root is a `group()`. Layouts wrap the route on document render,
+ * outermost first, and do not run on fragment renders. Middleware is
+ * the request pipeline, outermost first, and runs for document hits and
+ * fragment hits. `error` catches handler throws and inner group
+ * failures. `notFound` is the document miss handler on that group.
  * `errorFallback` is the last-resort 500 value when the error walk is
  * exhausted.
  *
- * @param table Root layouts, middleware, error UI, and nested routes.
- * @param options Forwarded to `Deno.serve`. `handler` is always the router.
+ * @param table Root group. Typically pathless; `notFound` on this group
+ * is the default 404.
+ * @param options Forwarded to `Deno.serve`, plus `errorFallback`.
+ * `handler` is always the router.
  */
 export function serve<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(
-  table: ServeTable<State>,
-  options?: Omit<Deno.ServeTcpOptions & Deno.ServeInit, "handler">,
+  table: Group<State>,
+  options?: Omit<Deno.ServeTcpOptions & Deno.ServeInit, "handler"> & {
+    /**
+     * Last-resort 500 value: no layouts, no `ctx`, no `thrown`.
+     * `Element` becomes 500 HTML with DOCTYPE; `Response` is sent
+     * as-is. Omitted: `new Response("Something Went Wrong", {
+     * status: 500 })`.
+     */
+    errorFallback?: Element | Response;
+  },
 ) {
-  init(table);
-  Deno.serve({ ...options, handler: handle });
+  const { errorFallback, ...serveOptions } = options ?? {};
+  init(table, errorFallback);
+  Deno.serve({ ...serveOptions, handler: handle });
 }

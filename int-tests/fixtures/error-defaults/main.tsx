@@ -1,7 +1,7 @@
 import {
   type Element,
+  group,
   type Middleware,
-  route,
   serve,
   type WrapperCtx,
 } from "dashi";
@@ -37,13 +37,16 @@ function okPage(): Element {
 }
 
 if (import.meta.main) {
-  serve({
-    layouts: [rootLayout],
-    middleware: [logger],
-    routes: [
-      route("/", { GET: home }),
-      route("/throw", { GET: boom }),
-      route("/root-layout-throws", { GET: okPage }),
-    ],
-  }, { port: 0 });
+  serve(
+    group(({ route }) => ({
+      layouts: [rootLayout],
+      middleware: [logger],
+      routes: [
+        route("/", { GET: home }),
+        route("/throw", { GET: boom }),
+        route("/root-layout-throws", { GET: okPage }),
+      ],
+    })),
+    { port: 0 },
+  );
 }
