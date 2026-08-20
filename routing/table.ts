@@ -446,7 +446,8 @@ export function match<
 
 /**
  * Declares a path with per-method handlers. Two `route()` calls for the
- * same path are a compile error; GET and POST share one row.
+ * same path are a compile error; GET and POST share one row. GET also
+ * answers HEAD.
  */
 export function route<
   Path extends string,

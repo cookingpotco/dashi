@@ -159,7 +159,7 @@ const appCases: IntegrationTestCase[] = [
     name: "POST to GET-only / is 405",
     request: { method: "POST", path: "/" },
     status: 405,
-    headers: { allow: "GET" },
+    headers: { allow: "GET, HEAD" },
     bodyIncludes: ["Method Not Allowed"],
     bodyExcludes: ["<!DOCTYPE html>"],
   },
@@ -169,6 +169,20 @@ const appCases: IntegrationTestCase[] = [
     status: 200,
     headers: { "content-type": "application/json" },
     json: { ok: true },
+  },
+  {
+    name: "HEAD /ok is 200 with empty body",
+    request: { method: "HEAD", path: "/ok" },
+    status: 200,
+    headers: { "content-type": "application/json", "x-mw": "ok" },
+    bodyExact: "",
+  },
+  {
+    name: "HEAD unmatched path is 404 with empty body",
+    request: { method: "HEAD", path: "/no-such-page" },
+    status: 404,
+    headers: { "content-type": "text/html", "x-mw": "ok" },
+    bodyExact: "",
   },
   {
     name: "stylesheet is served from the static directory",
@@ -645,6 +659,38 @@ Deno.test("main fixture app over HTTP", async (t) => {
 
   await runCases(t, app, appCases);
   await runCases(t, app, errorCases, stillServes);
+
+  await t.step("HEAD / matches GET headers with an empty body", async () => {
+    const get = await app.fetch({ path: "/" });
+    const getBody = await get.text();
+    const head = await app.fetch({ method: "HEAD", path: "/" });
+    const headBody = await head.text();
+    try {
+      assertEquals(get.status, 200);
+      assertEquals(head.status, 200);
+      assertEquals(headBody, "");
+      assertEquals(
+        head.headers.get("content-type"),
+        get.headers.get("content-type"),
+      );
+      assertEquals(
+        head.headers.get("content-length"),
+        get.headers.get("content-length"),
+      );
+      assertEquals(head.headers.get("x-mw"), "ok");
+      assertStringIncludes(getBody, "<!DOCTYPE html>");
+    } catch (error) {
+      throw new Error(
+        formatIntegrationFailure(
+          app,
+          { method: "HEAD", path: "/" },
+          head,
+          headBody,
+        ),
+        { cause: error },
+      );
+    }
+  });
 
   await t.step("conditional GET and HEAD of a stylesheet are 304", async () => {
     const first = await app.fetch({ path: "/static/app.css" });

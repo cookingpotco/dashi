@@ -48,14 +48,34 @@ function isMethod(method: string): method is Method {
   return (METHODS as readonly string[]).includes(method);
 }
 
+function advertisedMethods(
+  handlers: { readonly [M in Method]?: unknown },
+): string[] {
+  const listed: string[] = [];
+  for (const method of METHODS) {
+    if (!handlers[method]) {
+      continue;
+    }
+    listed.push(method);
+    if (method === "GET") {
+      listed.push("HEAD");
+    }
+  }
+  return listed;
+}
+
 function methodNotAllowed(
   handlers: { readonly [M in Method]?: unknown },
 ): Response {
-  const allow = METHODS.filter((method) => handlers[method]).join(", ");
   return new Response("Method Not Allowed", {
     status: 405,
-    headers: { Allow: allow },
+    headers: { Allow: advertisedMethods(handlers).join(", ") },
   });
+}
+
+async function withoutContent(res: Response): Promise<Response> {
+  await res.body?.cancel();
+  return new Response(null, res);
 }
 
 async function routeResponse(
@@ -79,7 +99,10 @@ async function runHandler(
   matched: MatchedRoute<Record<string, unknown>>,
 ): Promise<Element | Response> {
   const method = ctx.req.method;
-  const handler = isMethod(method) ? matched.handlers[method] : undefined;
+  let handler = isMethod(method) ? matched.handlers[method] : undefined;
+  if (!handler && method === "HEAD") {
+    handler = matched.handlers.GET;
+  }
   if (!handler) {
     return methodNotAllowed(matched.handlers);
   }
@@ -252,7 +275,7 @@ export function init<
       continue;
     }
     prev = r.declarationIndex;
-    const methods = METHODS.filter((method) => r.handlers[method]).join(",");
+    const methods = advertisedMethods(r.handlers).join(",");
     info(`[ROUTE]      ${methods} ${r.path}`);
   }
 }
@@ -260,16 +283,16 @@ export function init<
 export async function handle(
   req: Request,
 ) {
-  return await runWithRenderStore(req, async () => {
+  const res = await runWithRenderStore(req, async () => {
     const isFragment = req.headers.has(REQUEST_HEADERS.FRAGMENT);
     try {
-      const res = await runRoute(compiled, req, {
+      const out = await runRoute(compiled, req, {
         isFragment,
         state: {},
         recoverMiss: true,
       });
-      if (res) {
-        return res;
+      if (out) {
+        return out;
       }
       return await routeResponse(
         lastResort({
@@ -289,6 +312,10 @@ export async function handle(
       );
     }
   });
+  if (req.method === "HEAD") {
+    return await withoutContent(res);
+  }
+  return res;
 }
 
 export function requestEagerFragment(src: string) {

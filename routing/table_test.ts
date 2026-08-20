@@ -30,6 +30,8 @@ function typechecks() {
   >;
 
   route("/", { GET: noop });
+  // @ts-expect-error HEAD is not a declared handler; GET answers it
+  route("/", { HEAD: noop });
   route("/posts/:id", {
     GET: (ctx) => {
       ctx.params.id;

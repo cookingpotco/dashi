@@ -113,13 +113,10 @@ if (import.meta.main) {
       route("/posts/:id", { GET: post }),
       route("/guestbook", { GET: listGuestbook, POST: addGuestbook }),
       route("/ok", { GET: ok }),
-      route("/static/:path*", { GET: files, HEAD: files }),
-      route("/static-public/:path*", { GET: hour, HEAD: hour }),
-      route("/static-private/:path*", { GET: priv, HEAD: priv }),
-      route("/static-missing-dir/:path*", {
-        GET: missingDir,
-        HEAD: missingDir,
-      }),
+      route("/static/:path*", { GET: files }),
+      route("/static-public/:path*", { GET: hour }),
+      route("/static-private/:path*", { GET: priv }),
+      route("/static-missing-dir/:path*", { GET: missingDir }),
       group({
         middleware: [requireSession],
         routes: [route("/gated", { GET: gated })],

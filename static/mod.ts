@@ -135,7 +135,8 @@ async function realPath(path: string): Promise<string | null> {
 }
 
 /**
- * GET streams the file; HEAD returns the same headers with an empty body.
+ * GET streams the file. HEAD returns those headers with an empty body
+ * and does not open the file.
  *
  * @param ctx
  * @param dir Directory to read from. Relative paths resolve against

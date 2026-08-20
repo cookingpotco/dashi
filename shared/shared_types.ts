@@ -49,9 +49,12 @@ export type ErrorHandler<
   thrown: unknown,
 ) => Element | Response | Promise<Element | Response>;
 
+/**
+ * Methods a route can declare. GET also answers HEAD: the GET handler
+ * runs and the response is sent with an empty body.
+ */
 export const METHODS = [
   "GET",
-  "HEAD",
   "POST",
   "PUT",
   "PATCH",
