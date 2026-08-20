@@ -69,11 +69,10 @@ distinction no caller can miss.
 If the plan specified a twin you then see is the same job, ship the one way and
 list it under **Plan deviations**.
 
-A method handler is the resource: JSX, a `Response`, or a helper like
-`staticFile` called from `{ GET }`. Middleware is a factory attached on
-`serve()` / `group()`, like `cors`. Those are different jobs. Do not turn a
-handler helper into middleware to match the other shape, and do not call
-middleware from inside a handler to skip the onion.
+A factory binds config once and returns the function that runs per request.
+`staticFile(dir)` returns a GET handler; attach it on `route()`. `cors(opts?)`
+returns middleware; attach it on `serve()` / `group()`. Do not call middleware
+from inside a handler to skip the onion.
 
 ## Reviews
 

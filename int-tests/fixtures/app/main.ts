@@ -1,5 +1,4 @@
 import {
-  type Ctx,
   group,
   type Middleware,
   route,
@@ -68,24 +67,6 @@ const requireSession: Middleware<AppState> = (ctx, next) => {
 };
 
 const staticDir = `${import.meta.dirname}/static`;
-const files = (ctx: Ctx<{ path: string }, AppState>) =>
-  staticFile(ctx, staticDir, ctx.params.path);
-const hour = (ctx: Ctx<{ path: string }, AppState>) =>
-  staticFile(ctx, staticDir, ctx.params.path, {
-    strategy: StaticFileCacheStrategy.Public,
-    maxAge: 3600,
-    sMaxAge: 86400,
-  });
-const priv = (ctx: Ctx<{ path: string }, AppState>) =>
-  staticFile(ctx, staticDir, ctx.params.path, {
-    strategy: StaticFileCacheStrategy.Private,
-  });
-const missingDir = (ctx: Ctx<{ path: string }, AppState>) =>
-  staticFile(
-    ctx,
-    `${import.meta.dirname}/no-such-static`,
-    ctx.params.path,
-  );
 
 if (import.meta.main) {
   serve<AppState>({
@@ -131,10 +112,22 @@ if (import.meta.main) {
         })],
         routes: [route("/cors-fn", { GET: ok })],
       }),
-      route("/static/:path*", { GET: files }),
-      route("/static-public/:path*", { GET: hour }),
-      route("/static-private/:path*", { GET: priv }),
-      route("/static-missing-dir/:path*", { GET: missingDir }),
+      route("/static/:path*", { GET: staticFile(staticDir) }),
+      route("/static-public/:path*", {
+        GET: staticFile(staticDir, {
+          strategy: StaticFileCacheStrategy.Public,
+          maxAge: 3600,
+          sMaxAge: 86400,
+        }),
+      }),
+      route("/static-private/:path*", {
+        GET: staticFile(staticDir, {
+          strategy: StaticFileCacheStrategy.Private,
+        }),
+      }),
+      route("/static-missing-dir/:path*", {
+        GET: staticFile(`${import.meta.dirname}/no-such-static`),
+      }),
       group({
         middleware: [requireSession],
         routes: [route("/gated", { GET: gated })],
