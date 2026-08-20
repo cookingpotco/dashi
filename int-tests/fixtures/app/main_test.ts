@@ -1,6 +1,6 @@
 import { assertEquals, assertFalse, assertStringIncludes } from "@std/assert";
 import { type IntegrationTestCase, runCases } from "../../cases.ts";
-import { boot, formatIntegrationFailure } from "../../harness.ts";
+import { type App, boot, formatIntegrationFailure } from "../../harness.ts";
 
 const guestbookMultipart = new FormData();
 guestbookMultipart.set("body", "from-formdata");
@@ -159,7 +159,7 @@ const appCases: IntegrationTestCase[] = [
     name: "POST to GET-only / is 405",
     request: { method: "POST", path: "/" },
     status: 405,
-    headers: { allow: "GET, OPTIONS" },
+    headers: { allow: "GET, HEAD, OPTIONS" },
     bodyIncludes: ["Method Not Allowed"],
     bodyExcludes: ["<!DOCTYPE html>"],
   },
@@ -167,7 +167,7 @@ const appCases: IntegrationTestCase[] = [
     name: "OPTIONS / is 204 with Allow",
     request: { method: "OPTIONS", path: "/" },
     status: 204,
-    headers: { allow: "GET, OPTIONS", "x-mw": "ok" },
+    headers: { allow: "GET, HEAD, OPTIONS", "x-mw": "ok" },
     bodyExact: "",
   },
   {
@@ -189,6 +189,20 @@ const appCases: IntegrationTestCase[] = [
     status: 200,
     headers: { "content-type": "application/json" },
     json: { ok: true },
+  },
+  {
+    name: "HEAD /ok is 200 with empty body",
+    request: { method: "HEAD", path: "/ok" },
+    status: 200,
+    headers: { "content-type": "application/json", "x-mw": "ok" },
+    bodyExact: "",
+  },
+  {
+    name: "HEAD unmatched path is 404 with empty body",
+    request: { method: "HEAD", path: "/no-such-page" },
+    status: 404,
+    headers: { "content-type": "text/html", "x-mw": "ok" },
+    bodyExact: "",
   },
   {
     name: "stylesheet is served from the static directory",
@@ -293,6 +307,7 @@ const appCases: IntegrationTestCase[] = [
     name: "missing static file is plain 404",
     request: { path: "/static/missing.css" },
     status: 404,
+    headers: { "content-length": "9" },
     bodyExact: "Not found",
   },
   {
@@ -658,6 +673,29 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
   },
 ];
 
+async function assertHeadMatchesGet(app: App, path: string): Promise<void> {
+  const get = await app.fetch({ path });
+  const getBody = await get.text();
+  const head = await app.fetch({ method: "HEAD", path });
+  const headBody = await head.text();
+  const length = String(new TextEncoder().encode(getBody).byteLength);
+  try {
+    assertEquals(get.headers.get("content-length"), length);
+    assertEquals(head.status, get.status);
+    assertEquals(headBody, "");
+    assertEquals(head.headers.get("content-length"), length);
+    assertEquals(
+      head.headers.get("content-type"),
+      get.headers.get("content-type"),
+    );
+  } catch (error) {
+    throw new Error(
+      formatIntegrationFailure(app, { method: "HEAD", path }, head, headBody),
+      { cause: error },
+    );
+  }
+}
+
 Deno.test("main fixture app over HTTP", async (t) => {
   await using app = await boot(
     new URL("./main.ts", import.meta.url),
@@ -665,6 +703,23 @@ Deno.test("main fixture app over HTTP", async (t) => {
 
   await runCases(t, app, appCases);
   await runCases(t, app, errorCases, stillServes);
+
+  await t.step(
+    "HEAD matches GET Content-Length with an empty body",
+    async (t) => {
+      for (
+        const path of [
+          "/",
+          "/ok",
+          "/no-such-page",
+          "/static/app.css",
+          "/static/missing.css",
+        ]
+      ) {
+        await t.step(path, () => assertHeadMatchesGet(app, path));
+      }
+    },
+  );
 
   await t.step("cors() star origin is * without Vary", async () => {
     const res = await app.fetch({

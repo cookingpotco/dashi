@@ -17,8 +17,6 @@ export type CorsOptions =
   | (CorsOptionsBase & { credentials?: false })
   | (CorsOptionsBase & { origin: CorsOrigin; credentials: true });
 
-const DEFAULT_ALLOW_METHODS = [...METHODS, "OPTIONS"];
-
 function allowOrigin(
   origin: CorsOrigin,
   requestOrigin: string | null,
@@ -69,8 +67,7 @@ export function cors<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(options: CorsOptions = {}): Middleware<State> {
   const origin = options.origin ?? "*";
-  const allowMethods = (options.allowMethods ?? DEFAULT_ALLOW_METHODS)
-    .join(", ");
+  const allowMethods = (options.allowMethods ?? METHODS).join(", ");
   const exposeHeaders = options.exposeHeaders?.join(", ");
   const varyOrigin = origin !== "*";
 

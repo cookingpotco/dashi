@@ -48,19 +48,55 @@ function isMethod(method: string): method is Method {
   return (METHODS as readonly string[]).includes(method);
 }
 
-function allowHeader(
-  handlers: { readonly [M in Method]?: unknown },
-): string {
-  const declared = METHODS.filter((method) => handlers[method]);
-  return [...declared, "OPTIONS"].join(", ");
+function advertisedMethods(
+  handlers: { readonly [M in Exclude<Method, "HEAD" | "OPTIONS">]?: unknown },
+): string[] {
+  const listed: string[] = [];
+  for (const method of METHODS) {
+    if (method === "HEAD") {
+      if (handlers.GET) {
+        listed.push(method);
+      }
+      continue;
+    }
+    if (method === "OPTIONS") {
+      listed.push(method);
+      continue;
+    }
+    if (handlers[method]) {
+      listed.push(method);
+    }
+  }
+  return listed;
 }
 
 function methodNotAllowed(
-  handlers: { readonly [M in Method]?: unknown },
+  handlers: { readonly [M in Exclude<Method, "HEAD" | "OPTIONS">]?: unknown },
 ): Response {
   return new Response("Method Not Allowed", {
     status: 405,
-    headers: { Allow: allowHeader(handlers) },
+    headers: { Allow: advertisedMethods(handlers).join(", ") },
+  });
+}
+
+async function withoutContent(res: Response): Promise<Response> {
+  const headers = new Headers(res.headers);
+  if (res.body !== null) {
+    if (headers.has("content-length")) {
+      await res.body.cancel();
+    } else {
+      // Response.json and similar omit Content-Length; files and HTML
+      // already set it.
+      headers.set(
+        "content-length",
+        String((await res.arrayBuffer()).byteLength),
+      );
+    }
+  }
+  return new Response(null, {
+    status: res.status,
+    statusText: res.statusText,
+    headers,
   });
 }
 
@@ -72,11 +108,11 @@ async function routeResponse(
     return out;
   }
   const html = await replaceFragmentSlots(String(out));
-  const res = new Response(
-    options.isFragment ? html : `<!DOCTYPE html>${html}`,
-    { status: options.status },
-  );
+  const body = options.isFragment ? html : `<!DOCTYPE html>${html}`;
+  const bytes = new TextEncoder().encode(body);
+  const res = new Response(bytes, { status: options.status });
   res.headers.set("Content-Type", "text/html");
+  res.headers.set("Content-Length", String(bytes.byteLength));
   return res;
 }
 
@@ -84,14 +120,19 @@ async function runHandler(
   ctx: Ctx<Record<string, string>, Record<string, unknown>>,
   matched: MatchedRoute<Record<string, unknown>>,
 ): Promise<Element | Response> {
-  if (ctx.req.method === "OPTIONS") {
+  const method = ctx.req.method;
+  if (method === "OPTIONS") {
     return new Response(null, {
       status: 204,
-      headers: { Allow: allowHeader(matched.handlers) },
+      headers: { Allow: advertisedMethods(matched.handlers).join(", ") },
     });
   }
-  const method = ctx.req.method;
-  const handler = isMethod(method) ? matched.handlers[method] : undefined;
+  let handler;
+  if (method === "HEAD") {
+    handler = matched.handlers.GET;
+  } else if (isMethod(method) && method !== "HEAD" && method !== "OPTIONS") {
+    handler = matched.handlers[method];
+  }
   if (!handler) {
     return methodNotAllowed(matched.handlers);
   }
@@ -264,7 +305,7 @@ export function init<
       continue;
     }
     prev = r.declarationIndex;
-    const methods = METHODS.filter((method) => r.handlers[method]).join(",");
+    const methods = advertisedMethods(r.handlers).join(",");
     info(`[ROUTE]      ${methods} ${r.path}`);
   }
 }
@@ -272,16 +313,16 @@ export function init<
 export async function handle(
   req: Request,
 ) {
-  return await runWithRenderStore(req, async () => {
+  const res = await runWithRenderStore(req, async () => {
     const isFragment = req.headers.has(REQUEST_HEADERS.FRAGMENT);
     try {
-      const res = await runRoute(compiled, req, {
+      const out = await runRoute(compiled, req, {
         isFragment,
         state: {},
         recoverMiss: true,
       });
-      if (res) {
-        return res;
+      if (out) {
+        return out;
       }
       return await routeResponse(
         lastResort({
@@ -301,6 +342,10 @@ export async function handle(
       );
     }
   });
+  if (req.method === "HEAD") {
+    return await withoutContent(res);
+  }
+  return res;
 }
 
 export function requestEagerFragment(src: string) {
