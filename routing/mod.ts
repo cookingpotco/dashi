@@ -49,7 +49,7 @@ function isMethod(method: string): method is Method {
 }
 
 function advertisedMethods(
-  handlers: { readonly [M in Exclude<Method, "HEAD">]?: unknown },
+  handlers: { readonly [M in Exclude<Method, "HEAD" | "OPTIONS">]?: unknown },
 ): string[] {
   const listed: string[] = [];
   for (const method of METHODS) {
@@ -57,6 +57,10 @@ function advertisedMethods(
       if (handlers.GET) {
         listed.push(method);
       }
+      continue;
+    }
+    if (method === "OPTIONS") {
+      listed.push(method);
       continue;
     }
     if (handlers[method]) {
@@ -67,7 +71,7 @@ function advertisedMethods(
 }
 
 function methodNotAllowed(
-  handlers: { readonly [M in Exclude<Method, "HEAD">]?: unknown },
+  handlers: { readonly [M in Exclude<Method, "HEAD" | "OPTIONS">]?: unknown },
 ): Response {
   return new Response("Method Not Allowed", {
     status: 405,
@@ -117,10 +121,16 @@ async function runHandler(
   matched: MatchedRoute<Record<string, unknown>>,
 ): Promise<Element | Response> {
   const method = ctx.req.method;
+  if (method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: { Allow: advertisedMethods(matched.handlers).join(", ") },
+    });
+  }
   let handler;
   if (method === "HEAD") {
     handler = matched.handlers.GET;
-  } else if (isMethod(method) && method !== "HEAD") {
+  } else if (isMethod(method) && method !== "HEAD" && method !== "OPTIONS") {
     handler = matched.handlers[method];
   }
   if (!handler) {

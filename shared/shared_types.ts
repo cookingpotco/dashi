@@ -50,8 +50,9 @@ export type ErrorHandler<
 ) => Element | Response | Promise<Element | Response>;
 
 /**
- * Methods the router advertises. GET also answers HEAD; HEAD is not a
- * handler key on the route map.
+ * Methods the router advertises. GET also answers HEAD; every matched
+ * path answers OPTIONS. HEAD and OPTIONS are not handler keys on the
+ * route map.
  */
 export const METHODS = [
   "GET",
@@ -60,6 +61,7 @@ export const METHODS = [
   "PUT",
   "PATCH",
   "DELETE",
+  "OPTIONS",
 ] as const;
 export type Method = typeof METHODS[number];
 
@@ -67,7 +69,7 @@ export type MethodHandlers<
   Params extends Record<string, string> = Record<string, never>,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = {
-  [M in Exclude<Method, "HEAD">]?: Handler<Params, State>;
+  [M in Exclude<Method, "HEAD" | "OPTIONS">]?: Handler<Params, State>;
 };
 
 /**

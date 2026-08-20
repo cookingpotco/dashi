@@ -42,6 +42,7 @@
     "dashi/jsx-runtime": "./jsx-runtime/mod.ts"
   },
   "exports": {
-    ".": "./mod.ts"
+    ".": "./mod.ts",
+    "./cors": "./cors/mod.ts"
   }
 }

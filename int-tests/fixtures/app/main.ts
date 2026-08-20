@@ -7,6 +7,7 @@ import {
   staticFile,
   StaticFileCacheStrategy,
 } from "dashi";
+import { cors } from "dashi/cors";
 import type { AppState } from "./state.ts";
 import home from "./routes/index.tsx";
 import root from "./routes/_layout.tsx";
@@ -113,6 +114,23 @@ if (import.meta.main) {
       route("/posts/:id", { GET: post }),
       route("/guestbook", { GET: listGuestbook, POST: addGuestbook }),
       route("/ok", { GET: ok }),
+      group({
+        middleware: [cors()],
+        routes: [route("/cors-star", { GET: ok })],
+      }),
+      group({
+        middleware: [cors({
+          origin: ["https://app.example", "https://other.example"],
+        })],
+        routes: [route("/cors-list", { GET: ok })],
+      }),
+      group({
+        middleware: [cors({
+          origin: (origin) =>
+            origin === "https://app.example" ? origin : undefined,
+        })],
+        routes: [route("/cors-fn", { GET: ok })],
+      }),
       route("/static/:path*", { GET: files }),
       route("/static-public/:path*", { GET: hour }),
       route("/static-private/:path*", { GET: priv }),

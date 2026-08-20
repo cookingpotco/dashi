@@ -159,9 +159,29 @@ const appCases: IntegrationTestCase[] = [
     name: "POST to GET-only / is 405",
     request: { method: "POST", path: "/" },
     status: 405,
-    headers: { allow: "GET, HEAD" },
+    headers: { allow: "GET, HEAD, OPTIONS" },
     bodyIncludes: ["Method Not Allowed"],
     bodyExcludes: ["<!DOCTYPE html>"],
+  },
+  {
+    name: "OPTIONS / is 204 with Allow",
+    request: { method: "OPTIONS", path: "/" },
+    status: 204,
+    headers: { allow: "GET, HEAD, OPTIONS", "x-mw": "ok" },
+    bodyExact: "",
+  },
+  {
+    name: "OPTIONS miss is HTML 404",
+    request: { method: "OPTIONS", path: "/no-such-page" },
+    status: 404,
+    headers: { "content-type": "text/html", "x-mw": "ok" },
+    html: {
+      bodyIncludes: ["<!DOCTYPE html>"],
+      select: [
+        { selector: "html > body > h1", text: "Website Title" },
+        { selector: "html > body > #not-found", text: "custom-404" },
+      ],
+    },
   },
   {
     name: "GET /ok is JSON",
@@ -306,7 +326,7 @@ const appCases: IntegrationTestCase[] = [
     name: "POST to static file route is 405",
     request: { method: "POST", path: "/static/app.css" },
     status: 405,
-    headers: { allow: "GET, HEAD" },
+    headers: { allow: "GET, HEAD, OPTIONS" },
     bodyIncludes: ["Method Not Allowed"],
     bodyExcludes: ["<!DOCTYPE html>"],
   },
@@ -700,6 +720,118 @@ Deno.test("main fixture app over HTTP", async (t) => {
       }
     },
   );
+
+  await t.step("cors() star origin is * without Vary", async () => {
+    const res = await app.fetch({
+      path: "/cors-star",
+      headers: { origin: "https://app.example" },
+    });
+    const body = await res.text();
+    try {
+      assertEquals(res.status, 200);
+      assertEquals(JSON.parse(body), { ok: true });
+      assertEquals(res.headers.get("access-control-allow-origin"), "*");
+      assertEquals(res.headers.get("vary"), null);
+    } catch (error) {
+      const dump = formatIntegrationFailure(
+        app,
+        { path: "/cors-star", headers: { origin: "https://app.example" } },
+        res,
+        body,
+      );
+      if (error instanceof Error) {
+        error.message = `${error.message}\n\n${dump}`;
+      }
+      throw error;
+    }
+  });
+
+  await t.step("cors list origin match and mismatch", async () => {
+    const allowed = await app.fetch({
+      path: "/cors-list",
+      headers: { origin: "https://app.example" },
+    });
+    const allowedBody = await allowed.text();
+    const denied = await app.fetch({
+      path: "/cors-list",
+      headers: { origin: "https://evil.example" },
+    });
+    const deniedBody = await denied.text();
+    try {
+      assertEquals(allowed.status, 200);
+      assertEquals(JSON.parse(allowedBody), { ok: true });
+      assertEquals(
+        allowed.headers.get("access-control-allow-origin"),
+        "https://app.example",
+      );
+      assertEquals(allowed.headers.get("vary"), "Origin");
+      assertEquals(denied.status, 200);
+      assertEquals(JSON.parse(deniedBody), { ok: true });
+      assertEquals(denied.headers.get("access-control-allow-origin"), null);
+    } catch (error) {
+      const dump = [
+        formatIntegrationFailure(
+          app,
+          { path: "/cors-list", headers: { origin: "https://app.example" } },
+          allowed,
+          allowedBody,
+        ),
+        formatIntegrationFailure(
+          app,
+          { path: "/cors-list", headers: { origin: "https://evil.example" } },
+          denied,
+          deniedBody,
+        ),
+      ].join("\n\n");
+      if (error instanceof Error) {
+        error.message = `${error.message}\n\n${dump}`;
+      }
+      throw error;
+    }
+  });
+
+  await t.step("cors function origin allow and deny", async () => {
+    const allowed = await app.fetch({
+      path: "/cors-fn",
+      headers: { origin: "https://app.example" },
+    });
+    const allowedBody = await allowed.text();
+    const denied = await app.fetch({
+      path: "/cors-fn",
+      headers: { origin: "https://evil.example" },
+    });
+    const deniedBody = await denied.text();
+    try {
+      assertEquals(allowed.status, 200);
+      assertEquals(JSON.parse(allowedBody), { ok: true });
+      assertEquals(
+        allowed.headers.get("access-control-allow-origin"),
+        "https://app.example",
+      );
+      assertEquals(denied.status, 200);
+      assertEquals(JSON.parse(deniedBody), { ok: true });
+      assertEquals(denied.headers.get("access-control-allow-origin"), null);
+    } catch (error) {
+      const dump = [
+        formatIntegrationFailure(
+          app,
+          { path: "/cors-fn", headers: { origin: "https://app.example" } },
+          allowed,
+          allowedBody,
+        ),
+        formatIntegrationFailure(
+          app,
+          { path: "/cors-fn", headers: { origin: "https://evil.example" } },
+          denied,
+          deniedBody,
+        ),
+      ].join("\n\n");
+      if (error instanceof Error) {
+        error.message = `${error.message}\n\n${dump}`;
+      }
+      throw error;
+    }
+  });
 
   await t.step("conditional GET and HEAD of a stylesheet are 304", async () => {
     const first = await app.fetch({ path: "/static/app.css" });
