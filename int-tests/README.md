@@ -14,13 +14,14 @@ way `examples/` do.
 
 If the fixture already has the route, append an `IntegrationTestCase` in that
 fixture's `main_test.ts` and stop. If it needs a new path, add a `route()` leaf
-in the fixture `main.ts` under the shared root wraps, or a nested `group` when
-it needs extra wraps, and import the handler. One request, several asserts:
-status, headers, then at most one of `html` or `json`. `html` covers parsed DOM
-`select` plus raw `bodyIncludes` / `bodyExcludes` (escaping, DOCTYPE, leftover
-`{{fragment:` markers). `json` is the expected parsed object. Raw top-level
-`bodyIncludes` / `bodyExcludes` are for responses that are neither (404, 405,
-empty 303). `runCase` parses HTML only when `html` is set.
+in the fixture `main.ts` `serve()` callback under the shared root wraps, or a
+nested `group` when it needs extra wraps or a path prefix, and import the
+handler. One request, several asserts: status, headers, then at most one of
+`html` or `json`. `html` covers parsed DOM `select` plus raw `bodyIncludes` /
+`bodyExcludes` (escaping, DOCTYPE, leftover `{{fragment:` markers). `json` is
+the expected parsed object. Raw top-level `bodyIncludes` / `bodyExcludes` are
+for responses that are neither (404, 405, empty 303). `runCase` parses HTML only
+when `html` is set.
 
 `runCase` executes that data. Flows that are not one request (cookies,
 concurrent requests) use `boot` / `App.fetch` from `mod.ts` inside a `t.step`.
@@ -36,7 +37,8 @@ as its own workspace member. Extra fixtures (`cors`, `error-defaults`,
 `error-fallback-response`) are a small `main.ts` or `main.tsx` because they
 cannot share the main app's `serve()` table.
 
-Each fixture calls `serve({ layouts, middleware, routes }, { port: 0 })` with
-`route()` leaves, plus a co-located `main_test.ts`. Shared wraps live on `serve`
-or a nested `group`. `deno task test:int` picks up every `*_test.ts` under
-`int-tests/`.
+Each fixture calls
+`serve(({ route, group }) => ({ … }), { port: 0,
+errorFallback })`. Shared wraps
+live on that root callback or a nested `group`. `deno task test:int` picks up
+every `*_test.ts` under `int-tests/`.

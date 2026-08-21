@@ -22,6 +22,12 @@ exist at runtime as an object).
 An object shape is an `interface`. `type` is for unions, aliases, mapped
 types, and everything that is not a single object shape.
 
+## Type assertions
+
+Do not assert (`as`) to silence the checker. An assertion is allowed when
+the types cannot express the fact, and only at the use that needs it, with
+a note saying why. Prefer restructuring so the assertion is unnecessary.
+
 ## Helpers
 
 Extract a function when the code is not obvious, or when the same non-trivial

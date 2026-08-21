@@ -1,9 +1,9 @@
-import { route, serve } from "dashi";
+import { serve } from "dashi";
 import { cors } from "dashi/cors";
 
 if (import.meta.main) {
-  serve({
+  serve(({ route }) => ({
     middleware: [cors({ origin: "https://app.example" })],
     routes: [route("/", { GET: () => Response.json({ ok: true }) })],
-  }, { port: 0 });
+  }), { port: 0 });
 }

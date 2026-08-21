@@ -9,9 +9,13 @@ import {
 import {
   compile,
   type CompiledTable,
+  group,
+  type GroupBoundary,
+  type GroupCallback,
+  type GroupFields,
   match,
   type MatchedRoute,
-  type ServeTable,
+  matchMiss,
 } from "./table.ts";
 import {
   getRenderStore,
@@ -31,6 +35,7 @@ let compiled: CompiledTable<Record<string, unknown>> = {
   dynamic: [],
   rootBoundary: { layouts: [] },
   rootMiddleware: [],
+  prefixCaptures: [],
 };
 
 interface Executed {
@@ -202,12 +207,22 @@ async function executeMatched(
 
 async function executeNotFound(
   ctx: RequestCtx,
+  boundary: GroupBoundary<Record<string, unknown>>,
 ): Promise<Executed> {
   if (ctx.isFragment) {
     return { response: new Response("", { status: 404 }), html: null };
   }
-  const boundary = compiled.rootBoundary;
-  const notFound = compiled.notFound;
+  let notFound;
+  for (
+    let current: GroupBoundary<Record<string, unknown>> | undefined = boundary;
+    current;
+    current = current.parent
+  ) {
+    if (current.notFound) {
+      notFound = current.notFound;
+      break;
+    }
+  }
   if (!notFound) {
     return {
       response: new Response(DEFAULT_NOT_FOUND_BODY, { status: 404 }),
@@ -266,28 +281,30 @@ export async function runRoute(
     recoverMiss: boolean;
   },
 ): Promise<Executed | null> {
-  const matched = match(compiled, new URL(req.url).pathname);
+  const url = new URL(req.url);
+  const matched = match(compiled, url.pathname);
   if (!matched) {
     if (!options.recoverMiss) {
       return null;
     }
+    const miss = matchMiss(compiled, url.pathname);
     const ctx: RequestCtx = {
       req,
-      url: new URL(req.url),
-      params: {},
+      url,
+      params: miss.params,
       isFragment: options.isFragment,
       state: options.state,
     };
     return await runPipeline(
       ctx,
-      compiled.rootMiddleware,
-      () => executeNotFound(ctx),
+      miss.middleware,
+      () => executeNotFound(ctx, miss.boundary),
     );
   }
 
   const ctx: RequestCtx = {
     req,
-    url: new URL(req.url),
+    url,
     params: matched.params,
     isFragment: options.isFragment,
     state: options.state,
@@ -301,10 +318,15 @@ export async function runRoute(
 
 export function init<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
->(table: ServeTable<State>) {
+>(
+  build: (cb: GroupCallback<"", State>) => GroupFields<State>,
+  errorFallback?: Element | Response,
+) {
   // handle() has no State parameter. The table is only invoked with a ctx
   // whose state bag is the object the request created.
-  compiled = compile(table) as CompiledTable<Record<string, unknown>>;
+  compiled = compile(group(build), errorFallback) as CompiledTable<
+    Record<string, unknown>
+  >;
   const declared = [
     ...compiled.staticByPath.values(),
     ...compiled.dynamic,

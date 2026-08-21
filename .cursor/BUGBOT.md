@@ -76,3 +76,7 @@ cannot see project rules.
 - Flag a helper that is a short, unmistakable check (or a one-off of a few
   obvious lines). A longer or non-obvious body may be a function at one call
   site.
+- Do not use `as` to silence the checker. An assertion is allowed when the types
+  cannot express the fact, and only at the use that needs it, with a note saying
+  why. Flag a cast that can go away by restructuring, or that sits on a
+  declaration instead of the use.

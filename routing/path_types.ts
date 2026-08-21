@@ -131,6 +131,31 @@ export type PathError<Path extends string> = Path extends "/" ? never
     : WalkSegments<Split<Rest>>
   : "Invalid route path: path must start with /";
 
+type EndsWithOptionalOrCatchall<Path extends string> = Path extends `${string}?`
+  ? true
+  : Path extends `${string}*` ? true
+  : false;
+
+/** A group prefix: a valid path that does not end in optional or catch-all. */
+export type GroupPrefixError<Path extends string> = Path extends "" | "/"
+  ? never
+  : PathError<Path> extends infer Error
+    ? [Error] extends [never]
+      ? EndsWithOptionalOrCatchall<Path> extends true
+        ? "Invalid group prefix: optional and catch-all are not allowed"
+      : never
+    : Error
+  : never;
+
+/**
+ * Join a group prefix and a child path. `""` and `"/"` add no segments;
+ * a child of `"/"` is the prefix itself.
+ */
+export type Join<Prefix extends string, Path extends string> = Prefix extends
+  "" | "/" ? Path extends "" | "/" ? "/" : Path
+  : Path extends "" | "/" ? Prefix
+  : `${Prefix}${Path}`;
+
 type SegmentParams<Segment extends string> = Segment extends `:${infer Name}?`
   ? { [Key in Name]?: string }
   : Segment extends `:${infer Name}*` ? { [Key in Name]: string }
