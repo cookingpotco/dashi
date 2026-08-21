@@ -64,11 +64,12 @@ stop: tell the human rather than silently substituting another issue.
   decision and stay with the human.
 - **Name the test layer.** Follow the Tests section in `AGENTS.md`. Unit tests
   for pure functions. Behaviour at the path that actually runs — compiled JSX
-  for markup, HTTP cases in `int-tests/`. No stubs, mocks, or a narrower harness
-  to stand in for a flow that only happens further out. If the right coverage is
-  HTTP, plan an `int-tests/` case (declarative when it is one request, or a
-  `t.step` on the same harness helpers when it is not). Do not invent a
-  substitute harness.
+  for markup, HTTP cases in `int-tests/`, live DOM after JS in `e2e/`. No stubs,
+  mocks, or a narrower harness to stand in for a flow that only happens further
+  out. If the right coverage is HTTP, plan an `int-tests/` case (declarative
+  when it is one request, or a `t.step` on the same harness helpers when it is
+  not). If the right coverage is the live document after JS, plan an `e2e/`
+  case. Do not invent a substitute harness.
 - **Prefer the simpler design**, even when it repeats. If a bit extra work could
   simplify this or additional areas, consider it as well.
 - **Conventions.** Agents already follow `.cursor/rules/conventions.mdc`.

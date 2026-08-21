@@ -18,9 +18,10 @@ interpolated HTML, and its request path runs concurrently under `Deno.serve`.
 - **Unawaited async work in the request path.** A dropped promise means the
   response is built before the work finishes.
 - **New external dependencies in framework source.** The framework currently has
-  _zero_ — test files import `@std/assert`, and `int-tests/` also imports
-  `@b-fuze/deno-dom`. A new runtime dependency is a significant decision, not an
-  implementation detail.
+  _zero_ — test files import `@std/assert`, `int-tests/` also imports
+  `@b-fuze/deno-dom`, and `e2e/` imports `@astral/astral`. Astral is a test
+  dependency of that member, not a runtime dependency. A new runtime dependency
+  is a significant decision, not an implementation detail.
 - **Type assertions and `any` that hide real errors** rather than expressing
   something the compiler cannot see.
 - **A behaviour change with no test covering it.** Flag that. Do not demand a
@@ -37,9 +38,14 @@ interpolated HTML, and its request path runs concurrently under `Deno.serve`.
 - **Missing `key` props in JSX.** There is no VDOM. `jsx-key` is off.
 - **A missing unit test of routing, SSR, or other glue** when the change is
   already visible in rendered HTML, or when the right coverage is an HTTP case
-  in `int-tests/`. Do not ask for a one-off harness; ask for a case there.
-- **Vendoring a test dependency with `"vendor": true`.** Test deps stay on the
-  lockfile plus `DENO_DIR`. Do not ask to turn `"vendor": true` back on.
+  in `int-tests/` or a browser case in `e2e/`. Do not ask for a one-off harness;
+  ask for a case there.
+- **An `int-tests/` case of client behaviour** (custom element upgrade, fragment
+  swap, form intercept, History API). That is `e2e/`. HTTP cases stay on the
+  response; they cannot see whether the element upgraded.
+- **`@astral/astral` as a framework runtime dependency.** It is a test
+  dependency of `e2e/` only. Do not ask to vendor it, or any other test dep,
+  with `"vendor": true`.
 - **Exporting a private helper so a unit test can import it.** Cover the public
   function or an HTTP case. Do not ask for an IO seam to make that helper
   reachable.
@@ -65,7 +71,8 @@ These match `.cursor/rules/conventions.mdc`. They live here because Bugbot
 cannot see project rules.
 
 - Deno with JSR specifiers. `deno.lock` is frozen. Ranges in `deno.json` are
-  intentional. Test deps (`@std/assert`, `@b-fuze/deno-dom`) are lockfile plus
+  intentional. Test deps (`@std/assert`, `@b-fuze/deno-dom`, `@astral/astral`)
+  are lockfile plus
   `DENO_DIR` cache. Runtime deps (none today) are copied into the repo as source
   and imported via a local path when one exists. Do not turn `"vendor": true`
   back on, add an empty `third_party/`, or use git subtree.
