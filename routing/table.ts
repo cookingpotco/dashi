@@ -73,14 +73,14 @@ export interface Route<
 
 /**
  * One node in the route tree. `prefix` is this group's own path prefix
- * (empty if pathless). Nested groups and routes join ancestor prefixes
+ * (`null` if omitted). Nested groups and routes join ancestor prefixes
  * at compile.
  */
 export interface Group<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
   kind: NodeKind.Group;
-  prefix: string;
+  prefix: string | null;
   layouts: Layout<State>[];
   middleware: Middleware<State>[];
   error?: ErrorHandler<State>;
@@ -365,7 +365,6 @@ export function compile<
   table: Group<State>,
   errorFallback?: Element | Response,
 ): CompiledTable<State> {
-  const rootPrefix = table.prefix === "/" ? "" : table.prefix;
   const rootBoundary: GroupBoundary<State> = {
     layouts: table.layouts,
     error: table.error,
@@ -373,9 +372,9 @@ export function compile<
   };
   const routes: Route<State>[] = [];
   const prefixCaptures: PrefixCapture<State>[] = [];
-  if (rootPrefix !== "") {
+  if (table.prefix !== null && table.prefix !== "/") {
     prefixCaptures.push({
-      segments: concretePrefix(rootPrefix),
+      segments: concretePrefix(table.prefix),
       boundary: rootBoundary,
       middleware: table.middleware,
     });
@@ -384,7 +383,7 @@ export function compile<
     table.routes,
     rootBoundary,
     table.middleware,
-    rootPrefix,
+    table.prefix,
     routes,
     prefixCaptures,
   );
@@ -572,21 +571,32 @@ export function matchMiss<
 }
 
 /**
- * Join a group prefix and a child path. `""` and `"/"` add no segments;
- * a child of `"/"` is the prefix itself.
+ * Join a group prefix and a child path. `null` and `"/"` add no
+ * segments; a child of `"/"` is the prefix itself, or `"/"` when the
+ * prefix is pathless.
  */
-function joinPath(prefix: string, child: string): string {
-  const base = prefix === "/" || prefix === "" ? "" : prefix;
-  if (child !== "" && !child.startsWith("/")) {
+function joinPath(prefix: string | null, child: string): string;
+function joinPath(
+  prefix: string | null,
+  child: string | null,
+): string | null;
+function joinPath(
+  prefix: string | null,
+  child: string | null,
+): string | null {
+  if (child === null) {
+    return prefix === "/" ? null : prefix;
+  }
+  if (child === "/") {
+    return prefix === null || prefix === "/" ? "/" : prefix;
+  }
+  if (!child.startsWith("/")) {
     throw new Error(`Path must start with "/": ${JSON.stringify(child)}`);
   }
-  if (child === "/" || child === "") {
-    return base === "" ? "/" : base;
-  }
-  if (base === "") {
+  if (prefix === null || prefix === "/") {
     return child;
   }
-  return `${base}${child}`;
+  return `${prefix}${child}`;
 }
 
 function concretePrefix(path: string): ConcreteSegment[] {
@@ -608,7 +618,7 @@ function concretePrefix(path: string): ConcreteSegment[] {
 function declareRoute<
   State extends Record<string, unknown>,
 >(
-  prefix: string,
+  prefix: string | null,
   path: string,
   handlers: MethodHandlers<Record<string, string>, State>,
 ): Route<State> {
@@ -632,20 +642,29 @@ function declareRoute<
 function createGroupCallback<
   Prefix extends string,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
->(prefix: Prefix): GroupCallback<Prefix, State> {
-  const nestedGroup = ((
+>(prefix: string | null): GroupCallback<Prefix, State> {
+  function nestedGroup<ChildPrefix extends string>(
+    childPrefix: ValidChildPrefix<Prefix, ChildPrefix>,
+    build: (
+      cb: GroupCallback<Join<Prefix, ChildPrefix>, State>,
+    ) => GroupFields<State>,
+  ): Group<State>;
+  function nestedGroup(
+    build: (cb: GroupCallback<Prefix, State>) => GroupFields<State>,
+  ): Group<State>;
+  function nestedGroup(
     prefixOrBuild:
       | string
       | ((cb: GroupCallback<string, State>) => GroupFields<State>),
     maybeBuild?: (cb: GroupCallback<string, State>) => GroupFields<State>,
-  ) => {
+  ): Group<State> {
     if (typeof prefixOrBuild === "function") {
       const fields = prefixOrBuild(
         createGroupCallback<Prefix, State>(prefix),
       );
       return {
         kind: NodeKind.Group,
-        prefix: "",
+        prefix: null,
         layouts: fields.layouts ?? [],
         middleware: fields.middleware ?? [],
         error: fields.error,
@@ -653,20 +672,21 @@ function createGroupCallback<
         routes: fields.routes,
       };
     }
-    const joined = joinPath(prefix, prefixOrBuild);
     const fields = maybeBuild!(
-      createGroupCallback<string, State>(joined),
+      createGroupCallback<string, State>(
+        joinPath(prefix, prefixOrBuild),
+      ),
     );
     return {
       kind: NodeKind.Group,
-      prefix: prefixOrBuild === "/" ? "" : prefixOrBuild,
+      prefix: prefixOrBuild,
       layouts: fields.layouts ?? [],
       middleware: fields.middleware ?? [],
       error: fields.error,
       notFound: fields.notFound,
       routes: fields.routes,
     };
-  }) as GroupCallback<Prefix, State>["group"];
+  }
 
   return {
     route: (path, handlers) =>
@@ -716,10 +736,10 @@ export function group<
   maybeBuild?: (cb: GroupCallback<string, State>) => GroupFields<State>,
 ): Group<State> {
   if (typeof prefixOrBuild === "function") {
-    const fields = prefixOrBuild(createGroupCallback<"", State>(""));
+    const fields = prefixOrBuild(createGroupCallback<"", State>(null));
     return {
       kind: NodeKind.Group,
-      prefix: "",
+      prefix: null,
       layouts: fields.layouts ?? [],
       middleware: fields.middleware ?? [],
       error: fields.error,
@@ -728,13 +748,11 @@ export function group<
     };
   }
   const fields = maybeBuild!(
-    createGroupCallback<string, State>(
-      prefixOrBuild === "/" ? "" : prefixOrBuild,
-    ),
+    createGroupCallback<string, State>(prefixOrBuild),
   );
   return {
     kind: NodeKind.Group,
-    prefix: prefixOrBuild === "/" ? "" : prefixOrBuild,
+    prefix: prefixOrBuild,
     layouts: fields.layouts ?? [],
     middleware: fields.middleware ?? [],
     error: fields.error,
@@ -749,7 +767,7 @@ function append<
   nodes: Array<Route<State> | Group<State>>,
   parent: GroupBoundary<State>,
   middleware: Middleware<State>[],
-  ancestorPrefix: string,
+  ancestorPrefix: string | null,
   routes: Route<State>[],
   prefixCaptures: PrefixCapture<State>[],
 ): void {
@@ -763,9 +781,9 @@ function append<
         parent,
       };
       const stacked = [...middleware, ...node.middleware];
-      if (node.prefix !== "") {
+      if (node.prefix !== null && node.prefix !== "/") {
         prefixCaptures.push({
-          segments: concretePrefix(joined),
+          segments: concretePrefix(joinPath(ancestorPrefix, node.prefix)),
           boundary,
           middleware: stacked,
         });
@@ -774,7 +792,7 @@ function append<
         node.routes,
         boundary,
         stacked,
-        joined === "/" ? "" : joined,
+        joined,
         routes,
         prefixCaptures,
       );
