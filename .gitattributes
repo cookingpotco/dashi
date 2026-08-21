@@ -1,2 +1,0 @@
-# GitHub only collapses diffs for linguist-generated, not linguist-vendored.
-vendor/** linguist-generated
