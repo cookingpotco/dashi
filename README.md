@@ -27,8 +27,9 @@ published yet.
 
 ## Development
 
-Deno 2.9.5 (see `.tool-versions`). Remote modules are in `vendor/`. From the
-repo root:
+Deno 2.9.5 (see `.tool-versions`). Test deps (`@std/assert`, deno-dom) are the
+frozen lockfile plus `DENO_DIR` cache. Runtime deps (none today) are copied into
+the repo as source and imported via a local path. From the repo root:
 
 ```sh
 deno fmt --check .

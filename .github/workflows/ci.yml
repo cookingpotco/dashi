@@ -11,9 +11,40 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Shared with setup-deno so the cache path matches what Deno actually uses.
+  DENO_DIR: ${{ github.workspace }}/.deno
+
 jobs:
+  # Populate DENO_DIR from the lockfile and save it under a lockfile-only key
+  # so later jobs, and other branches with the same lockfile, can skip the
+  # download. setup-deno's own cache includes the job id, which would prevent
+  # that sharing.
+  deps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version-file: .tool-versions
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.DENO_DIR }}
+          key: deno-${{ runner.os }}-${{ hashFiles('deno.lock') }}
+          restore-keys: |
+            deno-${{ runner.os }}-
+
+      - name: Install locked dependencies
+        run: deno ci
+
   check:
     name: ${{ matrix.name }}
+    needs: deps
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -38,6 +69,13 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version-file: .tool-versions
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.DENO_DIR }}
+          key: deno-${{ runner.os }}-${{ hashFiles('deno.lock') }}
+          restore-keys: |
+            deno-${{ runner.os }}-
 
       - name: ${{ matrix.name }}
         run: ${{ matrix.run }}

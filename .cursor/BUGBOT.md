@@ -38,6 +38,8 @@ interpolated HTML, and its request path runs concurrently under `Deno.serve`.
 - **A missing unit test of routing, SSR, or other glue** when the change is
   already visible in rendered HTML, or when the right coverage is an HTTP case
   in `int-tests/`. Do not ask for a one-off harness; ask for a case there.
+- **Vendoring a test dependency with `"vendor": true`.** Test deps stay on the
+  lockfile plus `DENO_DIR`. Do not ask to turn `"vendor": true` back on.
 - **Exporting a private helper so a unit test can import it.** Cover the public
   function or an HTTP case. Do not ask for an IO seam to make that helper
   reachable.
@@ -62,8 +64,11 @@ introduces a new instance of the same class elsewhere.
 These match `.cursor/rules/conventions.mdc`. They live here because Bugbot
 cannot see project rules.
 
-- Deno with JSR specifiers. Remote modules live in `vendor/`; `deno.lock` is
-  frozen. Ranges in `deno.json` are intentional.
+- Deno with JSR specifiers. `deno.lock` is frozen. Ranges in `deno.json` are
+  intentional. Test deps (`@std/assert`, `@b-fuze/deno-dom`) are lockfile plus
+  `DENO_DIR` cache. Runtime deps (none today) are copied into the repo as source
+  and imported via a local path when one exists. Do not turn `"vendor": true`
+  back on, add an empty `third_party/`, or use git subtree.
 - Tests use `Deno.test` and `@std/assert`.
 - `deno check` is the type-check command. It covers the framework, scripts, and
   example apps.

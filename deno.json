@@ -12,7 +12,6 @@
     "./examples/fragments",
     "./int-tests"
   ],
-  "vendor": true,
   "lock": {
     "frozen": true
   },
