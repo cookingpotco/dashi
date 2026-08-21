@@ -37,12 +37,7 @@
     "test": "deno test -A --ignore=int-tests/,e2e/",
     "test:int": "deno test -A int-tests/",
     "test:e2e": "deno test -A --junit-path=e2e/results/junit.xml e2e/",
-    "test:e2e:visual": {
-      "command": "deno test -A e2e/",
-      "env": {
-        "DASHI_E2E_HEADED": "1"
-      }
-    }
+    "test:e2e:visual": "DASHI_E2E_HEADED=1 deno test -A e2e/"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1",
