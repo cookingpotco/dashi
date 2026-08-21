@@ -72,10 +72,9 @@ cannot see project rules.
 
 - Deno with JSR specifiers. `deno.lock` is frozen. Ranges in `deno.json` are
   intentional. Test deps (`@std/assert`, `@b-fuze/deno-dom`, `@astral/astral`)
-  are lockfile plus
-  `DENO_DIR` cache. Runtime deps (none today) are copied into the repo as source
-  and imported via a local path when one exists. Do not turn `"vendor": true`
-  back on, add an empty `third_party/`, or use git subtree.
+  are lockfile plus `DENO_DIR` cache. Runtime deps (none today) are copied into
+  the repo as source and imported via a local path when one exists. Do not turn
+  `"vendor": true` back on, add an empty `third_party/`, or use git subtree.
 - Tests use `Deno.test` and `@std/assert`.
 - `deno check` is the type-check command. It covers the framework, scripts, and
   example apps.
