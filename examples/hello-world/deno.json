@@ -2,10 +2,10 @@
   "compilerOptions": {
     "jsx": "precompile",
     "jsxImportSource": "dashi",
-    "lib": ["dom", "deno.ns"]
+    "lib": ["dom", "deno.ns", "deno.unstable"]
   },
   "tasks": {
-    "dev": "deno run --watch main.ts"
+    "dev": "deno run --watch --unstable-bundle main.ts"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1",

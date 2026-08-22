@@ -122,7 +122,7 @@ async function waitUntilAccepting(app: App): Promise<void> {
 export async function boot(mainPath: string | URL): Promise<App> {
   const spec = mainPath instanceof URL ? mainPath.href : mainPath;
   const child = new Deno.Command(Deno.execPath(), {
-    args: ["run", "-A", spec],
+    args: ["run", "-A", "--unstable-bundle", spec],
     stdin: "null",
     stdout: "piped",
     stderr: "piped",

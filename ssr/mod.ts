@@ -6,6 +6,7 @@ import { type Ctx, type ErrorHandler, type Layout } from "../shared/mod.ts";
 interface RenderStore {
   pageReq: Request;
   inflightFragments: Map<string, Promise<string | null>>;
+  clientEntries: Set<string>;
   currentState: Partial<Record<string, unknown>>;
 }
 
@@ -15,6 +16,7 @@ export function runWithRenderStore<T>(req: Request, fn: () => T): T {
   return als.run({
     pageReq: req,
     inflightFragments: new Map(),
+    clientEntries: new Set(),
     currentState: {},
   }, fn);
 }
@@ -27,6 +29,7 @@ export function runWithNestedRenderStore<T>(
   return als.run({
     pageReq: parent.pageReq,
     inflightFragments: parent.inflightFragments,
+    clientEntries: parent.clientEntries,
     currentState,
   }, fn);
 }
@@ -37,6 +40,10 @@ export function getRenderStore(): RenderStore {
     throw new Error("getRenderStore() was called outside a handle() render");
   }
   return store;
+}
+
+export function hasRenderStore(): boolean {
+  return als.getStore() !== undefined;
 }
 
 interface Boundary<

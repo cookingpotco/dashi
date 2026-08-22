@@ -16,6 +16,8 @@ published yet.
   during SSR, or client-fetched when `lazy`)
 - Example apps under `examples/`
 - Static files from a directory via `staticFile` in a route handler
+- Client TypeScript included via `client.module` / `client.element`; a page with
+  no client host ships no script
 
 ## Not yet
 

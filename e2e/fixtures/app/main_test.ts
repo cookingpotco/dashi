@@ -10,6 +10,17 @@ Deno.test("app fixture", async (t) => {
         const heading = await page.$("h1");
         assertEquals(await heading?.innerText(), "ok");
       });
+
+      await t.step("route-fragment upgrades", async () => {
+        await page.goto(`${app.origin}/embed`);
+        const result = await page.evaluate(() =>
+          customElements.whenDefined("route-fragment").then(() => ({
+            defined: customElements.get("route-fragment") != null,
+            present: document.querySelector("route-fragment") != null,
+          }))
+        );
+        assertEquals(result, { defined: true, present: true });
+      });
     },
   );
 });

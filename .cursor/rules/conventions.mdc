@@ -34,3 +34,9 @@ Extract a function when the code is not obvious, or when the same non-trivial
 shape is repeated. A short, unmistakable check used twice stays inline. A
 longer or non-obvious body (`withoutContent`) is a function even at one call
 site.
+
+## Client JS
+
+Client TypeScript attaches only via `client.module` / `client.element` at
+module scope. The factory throws during a render or after compile. Compiled
+files are served at `/_dashi/client/`. `staticFile` is app-mounted disk files.

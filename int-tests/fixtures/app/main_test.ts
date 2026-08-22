@@ -12,6 +12,17 @@ guestbookMultipart.set("body", "from-formdata");
 
 const appCases: IntegrationTestCase[] = [
   {
+    name: "home page ships no script",
+    request: { path: "/" },
+    status: 200,
+    html: {
+      bodyExcludes: ["<script"],
+      select: [
+        { selector: "script", exists: false },
+      ],
+    },
+  },
+  {
     name: "nested page wraps in both layouts",
     request: { path: "/nested" },
     status: 200,
@@ -70,6 +81,7 @@ const appCases: IntegrationTestCase[] = [
         },
         { selector: "route-fragment[lazy] #fallback", text: "Loading..." },
         { selector: "route-fragment[lazy] #frag", exists: false },
+        { selector: 'script[type="module"]', exists: true },
       ],
     },
   },
@@ -103,7 +115,7 @@ const appCases: IntegrationTestCase[] = [
     status: 200,
     headers: { "content-type": "text/html" },
     html: {
-      bodyExcludes: ["<!DOCTYPE html>"],
+      bodyExcludes: ["<!DOCTYPE html>", "<script"],
       select: [
         {
           selector: "#frag",
@@ -773,6 +785,97 @@ Deno.test("main fixture app over HTTP", async (t) => {
 
   await runCases(t, app, appCases);
   await runCases(t, app, errorCases, stillServes);
+
+  await t.step("embed page module is the route-fragment runtime", async () => {
+    const res = await app.fetch({ path: "/embed" });
+    const html = await res.text();
+    const scripts = [
+      ...html.matchAll(/<script type="module" src="([^"]+)"><\/script>/g),
+    ];
+    try {
+      assertEquals(scripts.length, 1);
+      const src = scripts[0]![1]!;
+      assertEquals(src.startsWith("/_dashi/client/"), true);
+      const js = await app.fetch({ path: src });
+      const body = await js.text();
+      assertEquals(js.status, 200);
+      assertEquals(js.headers.get("content-type"), "text/javascript");
+      assertStringIncludes(body, "customElements.define");
+      assertStringIncludes(body, "route-fragment");
+    } catch (error) {
+      const dump = formatIntegrationFailure(
+        app,
+        { path: "/embed" },
+        res,
+        html,
+      );
+      if (error instanceof Error) {
+        error.message = `${error.message}\n\n${dump}`;
+      }
+      throw error;
+    }
+  });
+
+  await t.step("fragment without a client host has no Link", async () => {
+    const res = await app.fetch({
+      path: "/fragment",
+      headers: { "x-fragment": "1" },
+    });
+    const body = await res.text();
+    try {
+      assertEquals(res.headers.get("link"), null);
+    } catch (error) {
+      const dump = formatIntegrationFailure(
+        app,
+        { path: "/fragment", headers: { "x-fragment": "1" } },
+        res,
+        body,
+      );
+      if (error instanceof Error) {
+        error.message = `${error.message}\n\n${dump}`;
+      }
+      throw error;
+    }
+  });
+
+  await t.step("client.element document script and fragment Link", async () => {
+    const page = await app.fetch({ path: "/probe" });
+    const pageHtml = await page.text();
+    const scripts = [
+      ...pageHtml.matchAll(/<script type="module" src="([^"]+)"><\/script>/g),
+    ];
+    const frag = await app.fetch({
+      path: "/probe",
+      headers: { "x-fragment": "1" },
+    });
+    const fragHtml = await frag.text();
+    try {
+      assertEquals(scripts.length, 1);
+      const src = scripts[0]![1]!;
+      assertEquals(src.startsWith("/_dashi/client/"), true);
+      assertEquals(fragHtml.includes("<script"), false);
+      const link = frag.headers.get("link");
+      if (link === null) {
+        throw new Error("missing Link");
+      }
+      assertStringIncludes(link, `rel="modulepreload"`);
+      assertStringIncludes(link, src);
+    } catch (error) {
+      const dump = [
+        formatIntegrationFailure(app, { path: "/probe" }, page, pageHtml),
+        formatIntegrationFailure(
+          app,
+          { path: "/probe", headers: { "x-fragment": "1" } },
+          frag,
+          fragHtml,
+        ),
+      ].join("\n\n");
+      if (error instanceof Error) {
+        error.message = `${error.message}\n\n${dump}`;
+      }
+      throw error;
+    }
+  });
 
   await t.step(
     "HEAD matches GET Content-Length with an empty body",

@@ -1,3 +1,8 @@
+import {
+  appendModulePreloads,
+  handleCompiledClient,
+  injectModuleScripts,
+} from "../client/mod.ts";
 import { type Element } from "../jsx-runtime/mod.ts";
 import { error as logError, info } from "../logging/mod.ts";
 import {
@@ -114,16 +119,23 @@ async function htmlResponse(
   }
   const unspliced = String(out);
   let html = unspliced;
+  const store = getRenderStore();
   // Nested eager SSR uses a synthetic request; splicing here would await
   // this fragment's own inflight promise.
-  if (getRenderStore().pageReq === options.req) {
+  if (store.pageReq === options.req) {
     html = await replaceFragmentSlots(unspliced);
+    if (!options.isFragment) {
+      html = injectModuleScripts(html, store.clientEntries);
+    }
   }
   const body = options.isFragment ? html : `<!DOCTYPE html>${html}`;
   const bytes = new TextEncoder().encode(body);
   const res = new Response(bytes, { status: options.status });
   res.headers.set("Content-Type", "text/html");
   res.headers.set("Content-Length", String(bytes.byteLength));
+  if (options.isFragment && store.pageReq === options.req) {
+    appendModulePreloads(res.headers, store.clientEntries);
+  }
   return { response: res, html: unspliced };
 }
 
@@ -345,6 +357,10 @@ export function init<
 export async function handle(
   req: Request,
 ) {
+  const compiledClient = handleCompiledClient(req);
+  if (compiledClient) {
+    return compiledClient;
+  }
   const res = await runWithRenderStore(req, async () => {
     const isFragment = req.headers.has(REQUEST_HEADERS.FRAGMENT);
     try {
