@@ -9,7 +9,7 @@
  * payload. For local testing:
  *
  *   deno run -A scripts/review_followup.ts \
- *     --repo cookingpotstudio/dashi --pr 19 --review-id 123456 --wait
+ *     --repo cookingpotco/dashi --pr 19 --review-id 123456 --wait
  */
 
 import {
