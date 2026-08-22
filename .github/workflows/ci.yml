@@ -32,7 +32,7 @@ jobs:
         with:
           deno-version-file: .tool-versions
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ${{ env.DENO_DIR }}
           key: deno-${{ runner.os }}-${{ hashFiles('deno.lock') }}
@@ -46,23 +46,32 @@ jobs:
     name: ${{ matrix.name }}
     needs: deps
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: ${{ matrix.timeout }}
     permissions:
       contents: read
+      actions: write
     strategy:
       fail-fast: false
       matrix:
         include:
           - name: Format
             run: deno fmt --check .
+            timeout: 10
           - name: Lint
             run: deno lint
+            timeout: 10
           - name: Type check
             run: deno check
+            timeout: 10
           - name: Test
             run: deno task test
+            timeout: 10
           - name: Integration
             run: deno task test:int
+            timeout: 10
+          - name: E2E
+            run: deno task test:e2e
+            timeout: 20
     steps:
       - uses: actions/checkout@v5
 
@@ -70,12 +79,27 @@ jobs:
         with:
           deno-version-file: .tool-versions
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ${{ env.DENO_DIR }}
           key: deno-${{ runner.os }}-${{ hashFiles('deno.lock') }}
           restore-keys: |
             deno-${{ runner.os }}-
 
+      - uses: actions/cache@v5
+        if: matrix.name == 'E2E'
+        with:
+          path: ~/.cache/astral
+          key: ${{ runner.os }}-astral-${{ hashFiles('deno.lock') }}
+          restore-keys: ${{ runner.os }}-astral-
+
       - name: ${{ matrix.name }}
         run: ${{ matrix.run }}
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ failure() && matrix.name == 'E2E' }}
+        with:
+          name: e2e-results
+          path: e2e/results/
+          if-no-files-found: ignore
+          retention-days: 7

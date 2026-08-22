@@ -5,3 +5,5 @@
 .DS_Store
 .idea/
 *.swp
+
+e2e/results/

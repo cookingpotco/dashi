@@ -48,7 +48,9 @@ handler to a path.
 
 The main fixture (`int-tests/fixtures/app/`) matches this layout. Extra
 fixtures that cannot share that `serve()` table are a small `main.ts` or
-`main.tsx` in their own folder. They are not workspace members.
+`main.tsx` in their own folder. They are not workspace members. The e2e
+fixture (`e2e/fixtures/app/`) uses the same flat layout; extra e2e fixtures
+follow the same rule.
 
 ## Imports
 

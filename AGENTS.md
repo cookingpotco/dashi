@@ -16,18 +16,25 @@ review follow-up. If that skill is not already available, read
 
 ## Tests
 
-Every behaviour change is covered at the layer that actually runs: a unit test
-for a pure function, compiled JSX for markup, or an `int-tests/` case for HTTP.
+Every behaviour change is covered at the layer that actually runs:
+
+- Pure functions: `Deno.test` next to the module
+- Markup: compiled JSX
+- HTTP (status, headers, HTML bytes / parsed response): `int-tests/`
+- Live DOM after JS (custom element upgrade, fetch, swap, History): `e2e/`
 
 **The path that happens.** Drive real inputs through the public surface a user
 or the compiler hits. Do not stub, mock, or stand up a narrower entry point to
 approximate a flow whose natural test is further out. If that outer layer is
 HTTP, add a case in `int-tests/` — declarative when it is one request, or a
-`t.step` on the same harness helpers when it is not. Do not invent a second
-harness. Do not export a private helper so a unit test can import it, and do not
-inject a fake filesystem to unit-test a function whose real path is `Deno.open`.
-Constructing a `Request` or `Ctx` to call a route handler is a narrower entry
-point; if the user hits it over HTTP, the case belongs in `int-tests/`.
+`t.step` on the same harness helpers when it is not. If that outer layer is the
+live document after JS, add a case in `e2e/` — a `t.step` inside that fixture's
+`withBrowser`, or a new fixture folder when the case cannot live on the existing
+app. Do not invent a second harness. Do not export a private helper so a unit
+test can import it, and do not inject a fake filesystem to unit-test a function
+whose real path is `Deno.open`. Constructing a `Request` or `Ctx` to call a
+route handler is a narrower entry point; if the user hits it over HTTP, the case
+belongs in `int-tests/`.
 
 **Don't test what never happens.** A situation the product never produces is not
 coverage.
@@ -47,7 +54,8 @@ JSX runtime exports, escaping, anything a caller imports. A helper that exists
 only to serve that surface is not a second test suite. Other modules do not get
 a parallel suite of that density.
 
-Do not add a second HTTP harness; extend `int-tests/`.
+Do not add a second HTTP harness; extend `int-tests/`. Do not put a browser
+runner in `int-tests/`, and do not re-assert HTTP in `e2e/`.
 
 ## Simpler
 

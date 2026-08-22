@@ -20,8 +20,10 @@ conflicts. Do not rebase or force-push.
 
 ## Checks
 
-`deno fmt --check .`, `deno lint`, `deno check` and `deno test -A` all pass
-locally. Those are what CI runs. Match them before you push.
+`deno fmt --check .`, `deno lint`, `deno check`, `deno task test`,
+`deno task test:int`, and `deno task test:e2e` all pass locally. Those are what
+CI runs. Match them before you push. `deno task test:e2e:headed` is local-only
+and is not a handoff gate.
 
 CI is green on the push you are handing over. `main` is green; a red check means
 you are not done. Naming another issue in the PR description is not a

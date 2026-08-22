@@ -27,9 +27,10 @@ published yet.
 
 ## Development
 
-Deno 2.9.5 (see `.tool-versions`). Test deps (`@std/assert`, deno-dom) are the
-frozen lockfile plus `DENO_DIR` cache. Runtime deps (none today) are copied into
-the repo as source and imported via a local path. From the repo root:
+Deno 2.9.5 (see `.tool-versions`). Test deps (`@std/assert`, deno-dom, Astral)
+are the frozen lockfile plus `DENO_DIR` cache. Runtime deps (none today) are
+copied into the repo as source and imported via a local path. From the repo
+root:
 
 ```sh
 deno fmt --check .
@@ -37,10 +38,13 @@ deno lint
 deno check
 deno task test
 deno task test:int
+deno task test:e2e
+deno task test:e2e:headed
 ```
 
-CI runs the same commands on every pull request and every push to `main`. Unit
-tests stay on the Test check; HTTP cases are the Integration check.
+CI runs the same commands on every pull request and every push to `main`, except
+`test:e2e:headed`, which is local-only. Unit tests stay on the Test check; HTTP
+cases are the Integration check; browser cases are the E2E check.
 
 ## License
 
