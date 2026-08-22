@@ -68,10 +68,9 @@ stop: tell the human rather than silently substituting another issue.
   mocks, or a narrower harness to stand in for a flow that only happens further
   out. If the right coverage is HTTP, plan an `int-tests/` case (declarative
   when it is one request, or a `t.step` on the same harness helpers when it is
-  not). If the right coverage is the live document after JS, plan an `e2e/`
-  case — a `t.step` inside that fixture's `withBrowser`, or a new fixture folder
-  when the case cannot live on the existing app. Do not invent a substitute
-  harness.
+  not). If the right coverage is the live document after JS, plan an `e2e/` case
+  — a `t.step` inside that fixture's `withBrowser`, or a new fixture folder when
+  the case cannot live on the existing app. Do not invent a substitute harness.
 - **Prefer the simpler design**, even when it repeats. If a bit extra work could
   simplify this or additional areas, consider it as well.
 - **Conventions.** Agents already follow `.cursor/rules/conventions.mdc`.

@@ -32,9 +32,9 @@ live document after JS, add a case in `e2e/` — a `t.step` inside that fixture'
 `withBrowser`, or a new fixture folder when the case cannot live on the existing
 app. Do not invent a second harness. Do not export a private helper so a unit
 test can import it, and do not inject a fake filesystem to unit-test a function
-whose real path is `Deno.open`.
-Constructing a `Request` or `Ctx` to call a route handler is a narrower entry
-point; if the user hits it over HTTP, the case belongs in `int-tests/`.
+whose real path is `Deno.open`. Constructing a `Request` or `Ctx` to call a
+route handler is a narrower entry point; if the user hits it over HTTP, the case
+belongs in `int-tests/`.
 
 **Don't test what never happens.** A situation the product never produces is not
 coverage.
