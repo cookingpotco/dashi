@@ -32,7 +32,7 @@ jobs:
         with:
           deno-version-file: .tool-versions
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ${{ env.DENO_DIR }}
           key: deno-${{ runner.os }}-${{ hashFiles('deno.lock') }}
@@ -79,14 +79,14 @@ jobs:
         with:
           deno-version-file: .tool-versions
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ${{ env.DENO_DIR }}
           key: deno-${{ runner.os }}-${{ hashFiles('deno.lock') }}
           restore-keys: |
             deno-${{ runner.os }}-
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         if: matrix.name == 'E2E'
         with:
           path: ~/.cache/astral
@@ -97,7 +97,7 @@ jobs:
         run: ${{ matrix.run }}
 
       - uses: actions/upload-artifact@v4
-        if: ${{ always() && matrix.name == 'E2E' }}
+        if: ${{ failure() && matrix.name == 'E2E' }}
         with:
           name: e2e-results
           path: e2e/results/

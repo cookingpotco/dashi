@@ -28,9 +28,11 @@ or the compiler hits. Do not stub, mock, or stand up a narrower entry point to
 approximate a flow whose natural test is further out. If that outer layer is
 HTTP, add a case in `int-tests/` — declarative when it is one request, or a
 `t.step` on the same harness helpers when it is not. If that outer layer is the
-live document after JS, add a case in `e2e/`. Do not invent a second harness. Do
-not export a private helper so a unit test can import it, and do not inject a
-fake filesystem to unit-test a function whose real path is `Deno.open`.
+live document after JS, add a case in `e2e/` — a `t.step` inside that fixture's
+`withBrowser`, or a new fixture folder when the case cannot live on the existing
+app. Do not invent a second harness. Do not export a private helper so a unit
+test can import it, and do not inject a fake filesystem to unit-test a function
+whose real path is `Deno.open`.
 Constructing a `Request` or `Ctx` to call a route handler is a narrower entry
 point; if the user hits it over HTTP, the case belongs in `int-tests/`.
 

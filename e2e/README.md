@@ -6,10 +6,10 @@ the live DOM after JS has run. HTTP status, headers, and HTML bytes stay in
 
 ```sh
 deno task test:e2e
-deno task test:e2e:visual
+deno task test:e2e:headed
 ```
 
-`test:e2e` is headless (what CI runs). `test:e2e:visual` is the same tests with
+`test:e2e` is headless (what CI runs). `test:e2e:headed` is the same tests with
 a visible window, for local debugging. The first run downloads Chrome into
 `~/.cache/astral` (or `$XDG_CACHE_HOME/astral`).
 
@@ -18,10 +18,10 @@ a visible window, for local debugging. The first run downloads Chrome into
 
 ## Add a case
 
-If the fixture already has the page, append a `Deno.test` in that fixture's
-`main_test.ts` that calls `withBrowser` and stop. If it needs a new path, add a
-`route()` leaf in the fixture `main.ts` `serve()` callback and import the
-handler.
+If the fixture already has the page, append a `t.step` inside that fixture's
+`withBrowser` and stop. If it needs a new path, add a `route()` leaf in the
+fixture `main.ts` `serve()` callback and import the handler. A new fixture
+folder is a new `Deno.test` that calls `withBrowser` once.
 
 `withBrowser` boots the app, launches Chromium, and gives
 `{ app, page, browser }`. Use Astral's page API (`goto`, `$`, `evaluate`,
