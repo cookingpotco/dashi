@@ -1,10 +1,10 @@
 import { type DashiNode, type HTMLAttributes } from "dashi/jsx-runtime";
-import { element } from "../client/mod.ts";
+import { client } from "../client/mod.ts";
 import { error as logError } from "../logging/mod.ts";
 import { runRoute } from "../routing/mod.ts";
 import { getFragmentSlot, getRenderStore } from "../ssr/mod.ts";
 
-const RouteFragmentElement = element(
+const RouteFragmentElement = client.element(
   "route-fragment",
   new URL("../client/routeFragment.ts", import.meta.url),
 );

@@ -15,7 +15,9 @@ folders.
 ## File names
 
 Deno snake_case. Role in the suffix: `home_route.tsx`, `root_layout.tsx`,
-`logger_middleware.ts`. No `routes/` directory and no `_` magic prefixes.
+`logger_middleware.ts`. Client modules are `*.client.ts` (`clock.client.ts`)
+and sit beside the route or component that registers them. No `routes/`
+directory, no app `client/` folder, and no `_` magic prefixes.
 
 `errors.tsx` holds the named `notFound`, `error`, and `errorFallback`
 exports. Those are not routes. `main.ts` puts `notFound` and `error` on
