@@ -1,6 +1,7 @@
 import {
   appendModulePreloads,
-  handleCompiledClient,
+  compiledClient,
+  DASHI_PREFIX,
   injectModuleScripts,
 } from "../client/mod.ts";
 import { type Element } from "../jsx-runtime/mod.ts";
@@ -328,6 +329,23 @@ export async function runRoute(
   );
 }
 
+function withCompiledClient<
+  State extends Record<string, unknown>,
+>(
+  cb: GroupCallback<"", State>,
+  fields: GroupFields<State>,
+): GroupFields<State> {
+  return {
+    ...fields,
+    routes: [
+      cb.group(DASHI_PREFIX, ({ route }) => ({
+        routes: [route("/client/:file*", { GET: compiledClient })],
+      })),
+      ...fields.routes,
+    ],
+  };
+}
+
 export function init<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(
@@ -336,7 +354,10 @@ export function init<
 ) {
   // handle() has no State parameter. The table is only invoked with a ctx
   // whose state bag is the object the request created.
-  compiled = compile(group(build), errorFallback) as CompiledTable<
+  compiled = compile(
+    group((cb: GroupCallback<"", State>) => withCompiledClient(cb, build(cb))),
+    errorFallback,
+  ) as CompiledTable<
     Record<string, unknown>
   >;
   const declared = [
@@ -357,10 +378,6 @@ export function init<
 export async function handle(
   req: Request,
 ) {
-  const compiledClient = handleCompiledClient(req);
-  if (compiledClient) {
-    return compiledClient;
-  }
   const res = await runWithRenderStore(req, async () => {
     const isFragment = req.headers.has(REQUEST_HEADERS.FRAGMENT);
     try {

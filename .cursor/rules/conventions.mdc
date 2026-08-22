@@ -41,5 +41,5 @@ Client TypeScript attaches only via `client.module` / `client.element` at
 module scope. The factory throws during a render or after compile. App files
 are `*.client.ts` and sit beside the module that registers them. The factory
 returns a PascalCase component; `client.element` takes the custom element tag
-(kebab-case). Compiled files are served at `/_dashi/client/`. `staticFile` is
-app-mounted disk files.
+(kebab-case). Compiled files are served at `/_dashi/client/` by a reserved table
+route. `staticFile` is app-mounted disk files.

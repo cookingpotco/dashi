@@ -1,9 +1,13 @@
 import { type Element, jsx, jsxTemplate } from "../jsx-runtime/mod.ts";
 import { error as logError } from "../logging/mod.ts";
+import { type Ctx } from "../shared/mod.ts";
 import { getRenderStore, hasRenderStore } from "../ssr/mod.ts";
 
+/** Reserved group for framework-served URLs. */
+export const DASHI_PREFIX = "/_dashi";
+
 /** Reserved URL prefix for compiled client modules. */
-export const CLIENT_PREFIX = "/_dashi/client";
+export const CLIENT_PREFIX = `${DASHI_PREFIX}/client`;
 
 const IMMUTABLE = "public, max-age=31536000, immutable";
 const FACTORY_SCOPE =
@@ -163,35 +167,23 @@ export async function compileClient(): Promise<void> {
   }
 }
 
-/**
- * Serves `/_dashi/client/…` from the in-memory bundle. `null` if the
- * request is not under that prefix.
- */
-export function handleCompiledClient(req: Request): Response | null {
-  const path = new URL(req.url).pathname;
-  if (path !== CLIENT_PREFIX && !path.startsWith(`${CLIENT_PREFIX}/`)) {
-    return null;
-  }
-  if (req.method !== "GET" && req.method !== "HEAD") {
-    return new Response("Method Not Allowed", {
-      status: 405,
-      headers: { Allow: "GET, HEAD" },
-    });
-  }
-  const file = compiledFiles.get(path);
+/** GET handler for `/_dashi/client/:file*`. Serves the in-memory bundle. */
+export function compiledClient(
+  ctx: Ctx<{ file: string }, Record<string, unknown>>,
+): Response {
+  const file = compiledFiles.get(`${CLIENT_PREFIX}/${ctx.params.file}`);
   if (!file) {
     return new Response("Not found", { status: 404 });
   }
-  const headers = {
-    "Content-Type": "text/javascript",
-    "Content-Length": String(file.bytes.byteLength),
-    "Cache-Control": IMMUTABLE,
-    ETag: file.etag,
-  };
-  if (req.method === "HEAD") {
-    return new Response(null, { status: 200, headers });
-  }
-  return new Response(file.bytes, { status: 200, headers });
+  return new Response(file.bytes, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/javascript",
+      "Content-Length": String(file.bytes.byteLength),
+      "Cache-Control": IMMUTABLE,
+      ETag: file.etag,
+    },
+  });
 }
 
 /** Document include: one module script per recorded entry. */
