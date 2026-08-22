@@ -37,6 +37,12 @@ Deno.test("reserved client path over HTTP", async (t) => {
       status: 404,
       bodyExact: "Not found",
     },
+    {
+      name: "other /_dashi paths are reserved 404 not the catch-all",
+      request: { path: "/_dashi/other" },
+      status: 404,
+      bodyExact: "Not found",
+    },
   ]);
 
   await t.step("compiled module is not taken by the catch-all", async () => {
@@ -74,7 +80,7 @@ Deno.test("declaring the reserved client path fails boot", async (t) => {
   await t.step("a param on the reserved prefix is rejected", async () => {
     await bootFails(
       new URL("../client-reserved-param/main.ts", import.meta.url),
-      "reserved path /_dashi/client is declared by the app",
+      "/_dashi/* is used by the framework for internal purposes, please use a different path.",
     );
   });
 });

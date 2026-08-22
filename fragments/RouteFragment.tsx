@@ -93,18 +93,19 @@ export function RouteFragment(
   { src, lazy, fallback, ...rest }: FragmentSlotProps,
 ) {
   if (lazy) {
-    return RouteFragmentElement({
-      src,
-      lazy: true,
-      ...rest,
-      children: fallback,
-    });
+    return (
+      <RouteFragmentElement src={src} lazy {...rest}>
+        {fallback}
+      </RouteFragmentElement>
+    );
   }
 
   requestEagerFragment(src);
-  return RouteFragmentElement({
-    src,
-    ...rest,
-    dangerouslySetInnerHTML: { __html: getFragmentSlot(src) },
-  });
+  return (
+    <RouteFragmentElement
+      src={src}
+      {...rest}
+      dangerouslySetInnerHTML={{ __html: getFragmentSlot(src) }}
+    />
+  );
 }

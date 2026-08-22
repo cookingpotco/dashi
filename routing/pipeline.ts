@@ -1,4 +1,11 @@
-import { CLIENT_PREFIX, DASHI_PREFIX, getCompiledFile } from "../client/mod.ts";
+import {
+  CLIENT_PREFIX,
+  DASHI_PREFIX,
+  getCompiledFile,
+  isReservedPath,
+  reservedNotFound,
+  reservedPathError,
+} from "../client/mod.ts";
 import { type Element } from "../jsx-runtime/mod.ts";
 import { error as logError, info } from "../logging/mod.ts";
 import {
@@ -326,17 +333,33 @@ export async function runRoute(
   );
 }
 
+function isFrameworkHandler(handler: unknown): boolean {
+  return handler === getCompiledFile || handler === reservedNotFound;
+}
+
 function assertReservedClient(
   table: CompiledTable<Record<string, unknown>>,
 ): void {
   for (
-    const sample of [`${CLIENT_PREFIX}/x.js`, `${CLIENT_PREFIX}/dir/x.js`]
+    const route of [
+      ...table.staticByPath.values(),
+      ...table.dynamic,
+    ]
   ) {
-    if (match(table, sample)?.handlers.GET !== getCompiledFile) {
-      throw new Error(
-        `reserved path ${CLIENT_PREFIX} is declared by the app`,
-      );
+    if (
+      !isFrameworkHandler(route.handlers.GET) &&
+      isReservedPath(route.path)
+    ) {
+      throw reservedPathError();
     }
+  }
+  if (match(table, `${DASHI_PREFIX}/x`)?.handlers.GET !== reservedNotFound) {
+    throw reservedPathError();
+  }
+  if (
+    match(table, `${CLIENT_PREFIX}/x.js`)?.handlers.GET !== getCompiledFile
+  ) {
+    throw reservedPathError();
   }
 }
 
@@ -350,7 +373,10 @@ function withCompiledClient<
     ...fields,
     routes: [
       cb.group(DASHI_PREFIX, ({ route }) => ({
-        routes: [route("/client/:file*", { GET: getCompiledFile })],
+        routes: [
+          route("/client/:file*", { GET: getCompiledFile }),
+          route("/:rest*", { GET: reservedNotFound }),
+        ],
       })),
       ...fields.routes,
     ],
