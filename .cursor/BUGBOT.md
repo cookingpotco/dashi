@@ -80,7 +80,7 @@ cannot see project rules.
 - Cross-directory imports go through that directory's `mod.ts`. Flag an import
   of a sibling file (`routing/pipeline.ts`, `shared/shared_types.ts`).
 - Client JS attaches only via `client.module` / `client.element` at module
-  scope. App files are `*.client.ts` beside the registrar. Compiled files are
+  scope. App files are `*_client.ts` beside the registrar. Compiled files are
   `/_dashi/client/` via a reserved table route. `staticFile` is app-mounted disk
   files. Flag a second include, bundle, or inject path.
 - A closed set of cases is a `const enum` (plain `enum` only when it must exist

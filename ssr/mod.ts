@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { type Element } from "../jsx-runtime/mod.ts";
+import { type Element, jsx } from "../jsx-runtime/mod.ts";
 import { error as logError } from "../logging/mod.ts";
 import { type Ctx, type ErrorHandler, type Layout } from "../shared/mod.ts";
 
@@ -42,8 +42,32 @@ export function getRenderStore(): RenderStore {
   return store;
 }
 
-export function hasRenderStore(): boolean {
-  return als.getStore() !== undefined;
+/** Document include: one module script per recorded entry. */
+export function injectModuleScripts(
+  html: string,
+  entries: Iterable<string>,
+): string {
+  const scripts = [...entries].map((src) =>
+    String(jsx("script", { type: "module", src }))
+  ).join("");
+  if (scripts === "") {
+    return html;
+  }
+  const close = html.lastIndexOf("</html>");
+  if (close === -1) {
+    return `${html}${scripts}`;
+  }
+  return `${html.slice(0, close)}${scripts}${html.slice(close)}`;
+}
+
+/** Fragment include: `Link` names each recorded entry. */
+export function appendModulePreloads(
+  headers: Headers,
+  entries: Iterable<string>,
+): void {
+  for (const src of entries) {
+    headers.append("Link", `<${src}>; rel="modulepreload"`);
+  }
 }
 
 interface Boundary<

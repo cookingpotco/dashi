@@ -1,9 +1,4 @@
-import {
-  appendModulePreloads,
-  compiledClient,
-  DASHI_PREFIX,
-  injectModuleScripts,
-} from "../client/mod.ts";
+import { CLIENT_PREFIX, DASHI_PREFIX, getCompiledFile } from "../client/mod.ts";
 import { type Element } from "../jsx-runtime/mod.ts";
 import { error as logError, info } from "../logging/mod.ts";
 import {
@@ -24,7 +19,9 @@ import {
   matchMiss,
 } from "./table.ts";
 import {
+  appendModulePreloads,
   getRenderStore,
+  injectModuleScripts,
   RenderKind,
   type RenderResult,
   renderWithRecovery,
@@ -329,6 +326,20 @@ export async function runRoute(
   );
 }
 
+function assertReservedClient(
+  table: CompiledTable<Record<string, unknown>>,
+): void {
+  for (
+    const sample of [`${CLIENT_PREFIX}/x.js`, `${CLIENT_PREFIX}/dir/x.js`]
+  ) {
+    if (match(table, sample)?.handlers.GET !== getCompiledFile) {
+      throw new Error(
+        `reserved path ${CLIENT_PREFIX} is declared by the app`,
+      );
+    }
+  }
+}
+
 function withCompiledClient<
   State extends Record<string, unknown>,
 >(
@@ -339,7 +350,7 @@ function withCompiledClient<
     ...fields,
     routes: [
       cb.group(DASHI_PREFIX, ({ route }) => ({
-        routes: [route("/client/:file*", { GET: compiledClient })],
+        routes: [route("/client/:file*", { GET: getCompiledFile })],
       })),
       ...fields.routes,
     ],
@@ -360,6 +371,7 @@ export function init<
   ) as CompiledTable<
     Record<string, unknown>
   >;
+  assertReservedClient(compiled);
   const declared = [
     ...compiled.staticByPath.values(),
     ...compiled.dynamic,

@@ -2,7 +2,7 @@ import { client } from "dashi";
 
 const Probe = client.element(
   "probe-el",
-  new URL("./probe.client.ts", import.meta.url),
+  new URL("./probe_client.ts", import.meta.url),
 );
 
 export function ProbePage() {

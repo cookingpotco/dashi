@@ -1,7 +1,7 @@
 import { type Element, jsx, jsxTemplate } from "../jsx-runtime/mod.ts";
 import { error as logError } from "../logging/mod.ts";
 import { type Ctx } from "../shared/mod.ts";
-import { getRenderStore, hasRenderStore } from "../ssr/mod.ts";
+import { getRenderStore } from "../ssr/mod.ts";
 
 /** Reserved group for framework-served URLs. */
 export const DASHI_PREFIX = "/_dashi";
@@ -21,10 +21,10 @@ interface CompiledFile {
 const registered = new Map<string, URL>();
 const publicByHref = new Map<string, string>();
 const compiledFiles = new Map<string, CompiledFile>();
-let compiled = false;
+let hasCompiled = false;
 
 function assertCanRegister(): void {
-  if (compiled || hasRenderStore()) {
+  if (hasCompiled) {
     throw new Error(FACTORY_SCOPE);
   }
 }
@@ -37,30 +37,24 @@ function recordEntry(href: string): void {
   getRenderStore().clientEntries.add(path);
 }
 
-/**
- * Registers `url` for compile and returns a component that emits no host.
- * Call at module scope.
- */
-export function module(url: URL): () => Element {
+/** Client script with no host element. Call at module scope. */
+function module(url: URL): () => Element {
   assertCanRegister();
   registered.set(url.href, url);
-  return function ClientModule() {
+  return () => {
     recordEntry(url.href);
     return jsxTemplate([""]);
   };
 }
 
-/**
- * Registers `url` for compile and returns a component that emits `tag`.
- * Call at module scope.
- */
-export function element(
+/** Custom element `tag` with a client script. Call at module scope. */
+function element(
   tag: string,
   url: URL,
 ): (props?: Record<string, unknown>) => Element {
   assertCanRegister();
   registered.set(url.href, url);
-  return function ClientElement(props?: Record<string, unknown>) {
+  return (props?: Record<string, unknown>) => {
     recordEntry(url.href);
     return jsx(tag, props);
   };
@@ -91,6 +85,9 @@ function trailingMatchScore(left: string, right: string): number {
   return score;
 }
 
+// Deno.bundle names entries by source basename and keeps a directory only
+// on collision. The result has no entry map, so match each factory URL to
+// its output path by trailing segments.
 function publicPathForEntry(url: URL, outputPaths: string[]): string {
   const want = jsPathname(url);
   let best: string | undefined;
@@ -116,12 +113,12 @@ function formatBundleMessage(message: Deno.bundle.Message): string {
 }
 
 async function bundleRegistered(): Promise<void> {
-  if (registered.size === 0) {
+  const urls = [...registered.values()];
+  if (urls.length === 0) {
     return;
   }
-  const entrypoints = [...registered.values()].map((url) => url.href);
   const result = await Deno.bundle({
-    entrypoints,
+    entrypoints: urls.map((url) => url.href),
     outputDir: CLIENT_PREFIX,
     platform: "browser",
     format: "esm",
@@ -146,7 +143,7 @@ async function bundleRegistered(): Promise<void> {
     });
     outputPaths.push(file.path);
   }
-  for (const url of registered.values()) {
+  for (const url of urls) {
     publicByHref.set(url.href, publicPathForEntry(url, outputPaths));
   }
 }
@@ -163,12 +160,12 @@ export async function compileClient(): Promise<void> {
     );
     Deno.exit(1);
   } finally {
-    compiled = true;
+    hasCompiled = true;
   }
 }
 
 /** GET handler for `/_dashi/client/:file*`. Serves the in-memory bundle. */
-export function compiledClient(
+export function getCompiledFile(
   ctx: Ctx<{ file: string }, Record<string, unknown>>,
 ): Response {
   const file = compiledFiles.get(`${CLIENT_PREFIX}/${ctx.params.file}`);
@@ -184,32 +181,4 @@ export function compiledClient(
       ETag: file.etag,
     },
   });
-}
-
-/** Document include: one module script per recorded entry. */
-export function injectModuleScripts(
-  html: string,
-  entries: Iterable<string>,
-): string {
-  const scripts = [...entries].map((src) =>
-    String(jsx("script", { type: "module", src }))
-  ).join("");
-  if (scripts === "") {
-    return html;
-  }
-  const close = html.lastIndexOf("</html>");
-  if (close === -1) {
-    return `${html}${scripts}`;
-  }
-  return `${html.slice(0, close)}${scripts}${html.slice(close)}`;
-}
-
-/** Fragment include: `Link` names each recorded entry. */
-export function appendModulePreloads(
-  headers: Headers,
-  entries: Iterable<string>,
-): void {
-  for (const src of entries) {
-    headers.append("Link", `<${src}>; rel="modulepreload"`);
-  }
 }

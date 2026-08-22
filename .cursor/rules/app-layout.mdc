@@ -15,7 +15,7 @@ folders.
 ## File names
 
 Deno snake_case. Role in the suffix: `home_route.tsx`, `root_layout.tsx`,
-`logger_middleware.ts`. Client modules are `*.client.ts` (`clock.client.ts`)
+`logger_middleware.ts`. Client modules are `*_client.ts` (`clock_client.ts`)
 and sit beside the route or component that registers them. No `routes/`
 directory, no app `client/` folder, and no `_` magic prefixes.
 
