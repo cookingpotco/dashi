@@ -2,27 +2,11 @@ const fragmentHeaders = new Headers();
 fragmentHeaders.append("Accept", "text/html");
 fragmentHeaders.append("X-Fragment", "1");
 
-async function fetchContent(src: string) {
-  const res = await fetch(src, { method: "GET", headers: fragmentHeaders });
-
-  const html = await res.text();
-  const link = res.headers.get("link") ?? "";
-  const pending: Promise<unknown>[] = [];
-  for (const match of link.matchAll(/<([^>]+)>;\s*rel="modulepreload"/g)) {
-    const href = match[1];
-    if (href !== undefined) {
-      pending.push(import(new URL(href, location.href).href));
-    }
-  }
-  await Promise.all(pending);
-
-  // TODO(COO-19): Error handling
-  return html;
-}
-
 class RouteFragment extends HTMLElement {
   private readonly lazy: boolean;
   private readonly src: string;
+  private loaded = false;
+  private abort: AbortController | null = null;
 
   constructor() {
     super();
@@ -39,15 +23,65 @@ class RouteFragment extends HTMLElement {
   }
 
   connectedCallback() {
-    if (this.lazy) {
-      fetchContent(this.src).then((html) => this.innerHTML = html);
+    if (!this.lazy || this.loaded || this.abort !== null) {
+      return;
     }
+    const abort = new AbortController();
+    this.abort = abort;
+    void this.fetchAndSwap(abort);
   }
 
   disconnectedCallback() {
+    queueMicrotask(() => {
+      if (!this.isConnected) {
+        this.abort?.abort();
+        this.abort = null;
+      }
+    });
   }
 
-  // TODO(COO-19): Add moved callback, so others don't fire each time the element is moved
+  private async fetchAndSwap(abort: AbortController) {
+    try {
+      const res = await fetch(this.src, {
+        method: "GET",
+        headers: fragmentHeaders,
+        signal: abort.signal,
+      });
+      if (abort.signal.aborted) {
+        return;
+      }
+      const html = await res.text();
+      if (abort.signal.aborted) {
+        return;
+      }
+      if (!res.ok && html === "") {
+        this.loaded = true;
+        return;
+      }
+      const link = res.headers.get("link") ?? "";
+      const pending: Promise<unknown>[] = [];
+      for (const match of link.matchAll(/<([^>]+)>;\s*rel="modulepreload"/g)) {
+        const href = match[1];
+        if (href !== undefined) {
+          pending.push(import(new URL(href, location.href).href));
+        }
+      }
+      await Promise.all(pending);
+      if (abort.signal.aborted || !this.isConnected) {
+        return;
+      }
+      this.innerHTML = html;
+      this.loaded = true;
+    } catch {
+      if (!abort.signal.aborted) {
+        this.loaded = true;
+      }
+    } finally {
+      if (this.abort === abort) {
+        this.abort = null;
+      }
+    }
+  }
 }
 
 customElements.define("route-fragment", RouteFragment);

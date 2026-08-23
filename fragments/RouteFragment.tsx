@@ -37,7 +37,8 @@ interface LazyFragmentProps extends BaseRouteFragmentProps {
    */
   lazy: true;
   /**
-   * Returned during SSR when `lazy` is set, until it's replaced by actual content
+   * Shown during SSR when `lazy` is set. Stays until a successful body or a
+   * nonempty error body replaces it.
    */
   fallback?: DashiNode;
 }
