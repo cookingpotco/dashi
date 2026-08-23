@@ -11,7 +11,7 @@ Deno.test("app fixture", async (t) => {
         assertEquals(await heading?.innerText(), "ok");
       });
 
-      await t.step("imported library runs in registered client", async () => {
+      await t.step("client.element script stamps the page", async () => {
         await page.goto(`${app.origin}/mark`);
         const text = await page.evaluate(async () => {
           await customElements.whenDefined("mark-el");
@@ -20,32 +20,59 @@ Deno.test("app fixture", async (t) => {
         assertEquals(text, "from-lib");
       });
 
-      await t.step("eager and nested fragment clients run", async () => {
-        await page.goto(`${app.origin}/embed`);
-        const result = await page.evaluate(async () => {
-          await customElements.whenDefined("route-fragment");
-          await customElements.whenDefined("eager-el");
-          await customElements.whenDefined("nested-el");
+      await t.step("client.module script stamps the page", async () => {
+        await page.goto(`${app.origin}/paint`);
+        const text = await page.evaluate(async () => {
           const start = Date.now();
-          while (document.querySelector("#lazy-ssr") === null) {
+          while (
+            document.getElementById("paint-target")?.textContent !==
+              "from-module"
+          ) {
             if (Date.now() - start > 5000) {
-              throw new Error("lazy fragment did not swap");
+              throw new Error("client.module did not stamp");
             }
             await new Promise((resolve) => setTimeout(resolve, 25));
           }
-          return {
-            defined: customElements.get("route-fragment") != null,
-            eager: document.querySelector("eager-el")?.textContent,
-            nested: document.querySelector("nested-el")?.textContent,
-            lazy: document.querySelector("#lazy-ssr")?.textContent,
-          };
+          return document.getElementById("paint-target")?.textContent;
         });
-        assertEquals(result, {
-          defined: true,
-          eager: "eager-ran",
-          nested: "nested-ran",
-          lazy: "lazy-ssr",
+        assertEquals(text, "from-module");
+      });
+
+      await t.step(
+        "eager and nested fragment scripts stamp the page",
+        async () => {
+          await page.goto(`${app.origin}/embed`);
+          const result = await page.evaluate(async () => {
+            await customElements.whenDefined("eager-el");
+            await customElements.whenDefined("nested-el");
+            return {
+              eager: document.querySelector("eager-el")?.textContent,
+              nested: document.querySelector("nested-el")?.textContent,
+            };
+          });
+          assertEquals(result, {
+            eager: "eager-ran",
+            nested: "nested-ran",
+          });
+        },
+      );
+
+      await t.step("lazy fragment script stamps the page", async () => {
+        await page.goto(`${app.origin}/embed`);
+        const text = await page.evaluate(async () => {
+          await customElements.whenDefined("route-fragment");
+          const start = Date.now();
+          while (
+            document.querySelector("lazy-el")?.textContent !== "lazy-ran"
+          ) {
+            if (Date.now() - start > 5000) {
+              throw new Error("lazy fragment client did not stamp");
+            }
+            await new Promise((resolve) => setTimeout(resolve, 25));
+          }
+          return document.querySelector("lazy-el")?.textContent;
         });
+        assertEquals(text, "lazy-ran");
       });
     },
   );

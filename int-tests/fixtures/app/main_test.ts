@@ -831,6 +831,11 @@ Deno.test("main fixture app over HTTP", async (t) => {
       for (const [key, value] of Object.entries(imports)) {
         assertEquals(key.startsWith("/_dashi/client/"), true);
         assertMatch(value, /^\/_dashi\/client\/[^/]+\-[A-Za-z0-9_-]+\.js$/);
+        const compiled = await app.fetch({ path: value });
+        const compiledBody = await compiled.text();
+        assertEquals(compiled.status, 200);
+        assertEquals(compiledBody.includes('from "../'), false);
+        assertEquals(compiledBody.includes("from '../"), false);
       }
       const js = await app.fetch({ path: src });
       const body = await js.text();
