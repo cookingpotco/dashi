@@ -129,6 +129,7 @@ export async function boot(mainPath: string | URL): Promise<App> {
     env: {
       ...Deno.env.toObject(),
       DASHI_LOG: "error",
+      DASHI_MINIFY_CLIENT: "0",
     },
   }).spawn();
 

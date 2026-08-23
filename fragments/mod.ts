@@ -1,1 +1,1 @@
-export { RouteFragment } from "./RouteFragment.ts";
+export { RouteFragment } from "./RouteFragment.tsx";

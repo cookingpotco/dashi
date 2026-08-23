@@ -1,3 +1,4 @@
+import { compileClient } from "../client/mod.ts";
 import { type Element } from "../jsx-runtime/mod.ts";
 import {
   type GroupCallback,
@@ -39,5 +40,12 @@ export function serve<
 ) {
   const { errorFallback, ...serveOptions } = options ?? {};
   init(build, errorFallback);
+  void compileThenListen(serveOptions);
+}
+
+async function compileThenListen(
+  serveOptions: Omit<Deno.ServeTcpOptions & Deno.ServeInit, "handler">,
+): Promise<void> {
+  await compileClient();
   Deno.serve({ ...serveOptions, handler: handle });
 }

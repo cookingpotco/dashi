@@ -6,8 +6,17 @@ async function fetchContent(src: string) {
   const res = await fetch(src, { method: "GET", headers: fragmentHeaders });
 
   const html = await res.text();
+  const link = res.headers.get("link") ?? "";
+  const pending: Promise<unknown>[] = [];
+  for (const match of link.matchAll(/<([^>]+)>;\s*rel="modulepreload"/g)) {
+    const href = match[1];
+    if (href !== undefined) {
+      pending.push(import(new URL(href, location.href).href));
+    }
+  }
+  await Promise.all(pending);
 
-  // TODO: Error handling
+  // TODO(COO-19): Error handling
   return html;
 }
 
@@ -38,7 +47,7 @@ class RouteFragment extends HTMLElement {
   disconnectedCallback() {
   }
 
-  // TODO: Add moved callback, so others don't fire each time the element is moved
+  // TODO(COO-19): Add moved callback, so others don't fire each time the element is moved
 }
 
 customElements.define("route-fragment", RouteFragment);

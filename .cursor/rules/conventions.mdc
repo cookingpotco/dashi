@@ -30,7 +30,24 @@ a note saying why. Prefer restructuring so the assertion is unnecessary.
 
 ## Helpers
 
-Extract a function when the code is not obvious, or when the same non-trivial
-shape is repeated. A short, unmistakable check used twice stays inline. A
-longer or non-obvious body (`withoutContent`) is a function even at one call
-site.
+Do not extract a function that is a short, obvious check or a few
+straightforward lines used once. Inline it until extraction earns its keep.
+Extract when the same non-trivial shape is repeated, or when the body is long
+or not obvious (`withoutContent`). A one-line env read used once stays at the
+call site.
+
+## Client JS
+
+Client TypeScript attaches only via `client.module` / `client.element` at
+module scope. The factory throws after compile. App files are `*_client.ts`
+and sit beside the module that registers them. The factory returns a
+PascalCase component; `client.element` takes the custom element tag
+(kebab-case). Compiled files are served at `/_dashi/client/` by a reserved
+table route. Public URLs are flat `/_dashi/client/<name>-<hash>.js`.
+Relative imports in compiled files are rewritten to the matching
+bundler path. The import map is bundler path → flat hashed URL.
+Documents get one `<script type="importmap">` for that graph;
+a module script is added only when a host rendered. A lazy fragment
+`import()`s its `Link` modulepreloads before swap.
+`DASHI_MINIFY_CLIENT=1` minifies the bundle; `deno task dev` sets it to `0`.
+`staticFile` is app-mounted disk files. `/_dashi/*` is reserved.

@@ -1,4 +1,9 @@
-import { assertEquals, assertFalse, assertStringIncludes } from "@std/assert";
+import {
+  assertEquals,
+  assertFalse,
+  assertMatch,
+  assertStringIncludes,
+} from "@std/assert";
 import {
   type App,
   boot,
@@ -10,7 +15,31 @@ import {
 const guestbookMultipart = new FormData();
 guestbookMultipart.set("body", "from-formdata");
 
+function importMapFrom(html: string): Record<string, string> {
+  const match = html.match(/<script type="importmap">([^<]*)<\/script>/);
+  if (match === null) {
+    throw new Error("missing importmap");
+  }
+  const parsed = JSON.parse(match[1]!) as { imports?: Record<string, string> };
+  if (parsed.imports === undefined) {
+    throw new Error("importmap missing imports");
+  }
+  return parsed.imports;
+}
+
 const appCases: IntegrationTestCase[] = [
+  {
+    name: "home page ships no module script",
+    request: { path: "/" },
+    status: 200,
+    html: {
+      bodyExcludes: ['<script type="module"'],
+      select: [
+        { selector: 'script[type="importmap"]', exists: true },
+        { selector: 'script[type="module"]', exists: false },
+      ],
+    },
+  },
   {
     name: "nested page wraps in both layouts",
     request: { path: "/nested" },
@@ -44,6 +73,17 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
+    name: "nested eager fragment substitutes",
+    request: { path: "/nested-embed" },
+    status: 200,
+    html: {
+      bodyExcludes: ["{{fragment:"],
+      select: [
+        { selector: "#nested-frag", text: "nested-fragment-body" },
+      ],
+    },
+  },
+  {
     name: "eager fragment substitutes; lazy keeps fallback",
     request: { path: "/embed" },
     status: 200,
@@ -70,6 +110,8 @@ const appCases: IntegrationTestCase[] = [
         },
         { selector: "route-fragment[lazy] #fallback", text: "Loading..." },
         { selector: "route-fragment[lazy] #frag", exists: false },
+        { selector: 'script[type="importmap"]', exists: true },
+        { selector: 'script[type="module"]', exists: true },
       ],
     },
   },
@@ -103,7 +145,7 @@ const appCases: IntegrationTestCase[] = [
     status: 200,
     headers: { "content-type": "text/html" },
     html: {
-      bodyExcludes: ["<!DOCTYPE html>"],
+      bodyExcludes: ["<!DOCTYPE html>", "<script"],
       select: [
         {
           selector: "#frag",
@@ -773,6 +815,108 @@ Deno.test("main fixture app over HTTP", async (t) => {
 
   await runCases(t, app, appCases);
   await runCases(t, app, errorCases, stillServes);
+
+  await t.step("embed page module is the route-fragment runtime", async () => {
+    const res = await app.fetch({ path: "/embed" });
+    const html = await res.text();
+    const scripts = [
+      ...html.matchAll(/<script type="module" src="([^"]+)"><\/script>/g),
+    ];
+    try {
+      assertEquals(scripts.length, 1);
+      const src = scripts[0]![1]!;
+      assertMatch(src, /^\/_dashi\/client\/[^/]+\-[A-Za-z0-9_-]+\.js$/);
+      const imports = importMapFrom(html);
+      assertEquals(Object.values(imports).includes(src), true);
+      for (const [key, value] of Object.entries(imports)) {
+        assertEquals(key.startsWith("/_dashi/client/"), true);
+        assertMatch(value, /^\/_dashi\/client\/[^/]+\-[A-Za-z0-9_-]+\.js$/);
+        const compiled = await app.fetch({ path: value });
+        const compiledBody = await compiled.text();
+        assertEquals(compiled.status, 200);
+        assertEquals(compiledBody.includes('from "../'), false);
+        assertEquals(compiledBody.includes("from '../"), false);
+      }
+      const js = await app.fetch({ path: src });
+      const body = await js.text();
+      assertEquals(js.status, 200);
+      assertEquals(js.headers.get("content-type"), "text/javascript");
+      assertStringIncludes(body, "customElements.define");
+      assertStringIncludes(body, "route-fragment");
+    } catch (error) {
+      const dump = formatIntegrationFailure(
+        app,
+        { path: "/embed" },
+        res,
+        html,
+      );
+      if (error instanceof Error) {
+        error.message = `${error.message}\n\n${dump}`;
+      }
+      throw error;
+    }
+  });
+
+  await t.step("fragment without a client host has no Link", async () => {
+    const res = await app.fetch({
+      path: "/fragment",
+      headers: { "x-fragment": "1" },
+    });
+    const body = await res.text();
+    try {
+      assertEquals(res.headers.get("link"), null);
+    } catch (error) {
+      const dump = formatIntegrationFailure(
+        app,
+        { path: "/fragment", headers: { "x-fragment": "1" } },
+        res,
+        body,
+      );
+      if (error instanceof Error) {
+        error.message = `${error.message}\n\n${dump}`;
+      }
+      throw error;
+    }
+  });
+
+  await t.step("client.element document script and fragment Link", async () => {
+    const page = await app.fetch({ path: "/probe" });
+    const pageHtml = await page.text();
+    const scripts = [
+      ...pageHtml.matchAll(/<script type="module" src="([^"]+)"><\/script>/g),
+    ];
+    const frag = await app.fetch({
+      path: "/probe",
+      headers: { "x-fragment": "1" },
+    });
+    const fragHtml = await frag.text();
+    try {
+      assertEquals(scripts.length, 1);
+      const src = scripts[0]![1]!;
+      assertMatch(src, /^\/_dashi\/client\/[^/]+\-[A-Za-z0-9_-]+\.js$/);
+      assertEquals(fragHtml.includes("<script"), false);
+      const link = frag.headers.get("link");
+      if (link === null) {
+        throw new Error("missing Link");
+      }
+      assertStringIncludes(link, `rel="modulepreload"`);
+      assertStringIncludes(link, src);
+    } catch (error) {
+      const dump = [
+        formatIntegrationFailure(app, { path: "/probe" }, page, pageHtml),
+        formatIntegrationFailure(
+          app,
+          { path: "/probe", headers: { "x-fragment": "1" } },
+          frag,
+          fragHtml,
+        ),
+      ].join("\n\n");
+      if (error instanceof Error) {
+        error.message = `${error.message}\n\n${dump}`;
+      }
+      throw error;
+    }
+  });
 
   await t.step(
     "HEAD matches GET Content-Length with an empty body",

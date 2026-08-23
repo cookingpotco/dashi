@@ -16,6 +16,10 @@ import { ApiLayout } from "./api_layout.tsx";
 import { Echo } from "./echo_route.tsx";
 import { Embed } from "./embed_route.tsx";
 import { Fragment } from "./fragment_route.tsx";
+import { NestEmbed } from "./nest_embed_route.tsx";
+import { NestInner } from "./nest_inner_route.tsx";
+import { NestOuter } from "./nest_outer_route.tsx";
+import { ProbePage } from "./probe_route.tsx";
 import { Peer } from "./peer_route.tsx";
 import { PostsNew } from "./posts_new_route.tsx";
 import { Post } from "./post_route.tsx";
@@ -102,6 +106,7 @@ if (import.meta.main) {
     error: RootError,
     routes: [
       route("/", { GET: Home }),
+      route("/probe", { GET: ProbePage }),
       group(({ route }) => ({
         layouts: [NestedLayout],
         routes: [route("/nested", { GET: Nested })],
@@ -111,6 +116,9 @@ if (import.meta.main) {
         middleware: [embedOnly],
         routes: [route("/embed", { GET: Embed })],
       })),
+      route("/nested-embed", { GET: NestEmbed }),
+      route("/nest-outer", { GET: NestOuter }),
+      route("/nest-inner", { GET: NestInner }),
       group(({ route }) => ({
         middleware: [fragOnly],
         routes: [route("/fragment", { GET: Fragment })],

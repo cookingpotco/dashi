@@ -60,10 +60,9 @@ These are real problems with owning issues. Do not report them as new findings.
 **Do** flag a change that touches one of them without fixing it, or that
 introduces a new instance of the same class elsewhere.
 
-| Location                  | Defect                                                                   | Issue     |
-| ------------------------- | ------------------------------------------------------------------------ | --------- |
-| `client/routeFragment.ts` | Never bundled or served, so it is currently dead code                    | COO-18    |
-| `deno.json` (all three)   | The `dev` task has no permission flags and relies on interactive prompts | untracked |
+| Location                | Defect                                                                   | Issue     |
+| ----------------------- | ------------------------------------------------------------------------ | --------- |
+| `deno.json` (all three) | The `dev` task has no permission flags and relies on interactive prompts | untracked |
 
 ## Conventions
 
@@ -80,13 +79,22 @@ cannot see project rules.
   example apps.
 - Cross-directory imports go through that directory's `mod.ts`. Flag an import
   of a sibling file (`routing/pipeline.ts`, `shared/shared_types.ts`).
+- Client JS attaches only via `client.module` / `client.element` at module
+  scope. App files are `*_client.ts` beside the registrar. Compiled files are
+  `/_dashi/client/` via a reserved table route (flat
+  `/_dashi/client/<name>-<hash>.js`). Relative imports are rewritten to the
+  bundler path; the import map is bundler path → that public URL. Documents get
+  one import map; a module script is added only when a host rendered. A lazy
+  fragment `import()`s its `Link` modulepreloads before swap. `staticFile` is
+  app-mounted disk files. Flag a second include, bundle, or inject path.
+  `/_dashi/*` is reserved.
 - A closed set of cases is a `const enum` (plain `enum` only when it must exist
   at runtime). Flag a string-literal union used as a discriminant.
 - An object shape is an `interface`. `type` is for unions, aliases, mapped
   types. Flag an object shape written as a `type`.
-- Flag a helper that is a short, unmistakable check (or a one-off of a few
-  obvious lines). A longer or non-obvious body may be a function at one call
-  site.
+- Flag a helper that is a short, obvious check or a few straightforward lines
+  used once. Inline those. A longer or non-obvious body may be a function at one
+  call site.
 - Do not use `as` to silence the checker. An assertion is allowed when the types
   cannot express the fact, and only at the use that needs it, with a note saying
   why. Flag a cast that can go away by restructuring, or that sits on a

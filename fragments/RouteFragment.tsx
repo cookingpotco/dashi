@@ -1,7 +1,13 @@
-import { DashiNode, HTMLAttributes, jsx } from "dashi/jsx-runtime";
+import { type DashiNode, type HTMLAttributes } from "dashi/jsx-runtime";
+import { client } from "../client/mod.ts";
 import { error as logError } from "../logging/mod.ts";
 import { runRoute } from "../routing/mod.ts";
 import { getFragmentSlot, getRenderStore } from "../ssr/mod.ts";
+
+const RouteFragmentElement = client.element(
+  "route-fragment",
+  new URL("./route_fragment_client.ts", import.meta.url),
+);
 
 // So document.querySelector("route-fragment") is HTMLElement.
 declare global {
@@ -87,18 +93,19 @@ export function RouteFragment(
   { src, lazy, fallback, ...rest }: FragmentSlotProps,
 ) {
   if (lazy) {
-    return jsx("route-fragment", {
-      src,
-      lazy: true,
-      ...rest,
-      children: fallback,
-    });
+    return (
+      <RouteFragmentElement src={src} lazy {...rest}>
+        {fallback}
+      </RouteFragmentElement>
+    );
   }
 
   requestEagerFragment(src);
-  return jsx("route-fragment", {
-    src,
-    ...rest,
-    dangerouslySetInnerHTML: { __html: getFragmentSlot(src) },
-  });
+  return (
+    <RouteFragmentElement
+      src={src}
+      {...rest}
+      dangerouslySetInnerHTML={{ __html: getFragmentSlot(src) }}
+    />
+  );
 }

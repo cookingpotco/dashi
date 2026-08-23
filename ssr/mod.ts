@@ -1,11 +1,12 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { type Element } from "../jsx-runtime/mod.ts";
+import { type Element, jsx } from "../jsx-runtime/mod.ts";
 import { error as logError } from "../logging/mod.ts";
 import { type Ctx, type ErrorHandler, type Layout } from "../shared/mod.ts";
 
 interface RenderStore {
   pageReq: Request;
   inflightFragments: Map<string, Promise<string | null>>;
+  clientEntries: Set<string>;
   currentState: Partial<Record<string, unknown>>;
 }
 
@@ -15,6 +16,7 @@ export function runWithRenderStore<T>(req: Request, fn: () => T): T {
   return als.run({
     pageReq: req,
     inflightFragments: new Map(),
+    clientEntries: new Set(),
     currentState: {},
   }, fn);
 }
@@ -27,6 +29,7 @@ export function runWithNestedRenderStore<T>(
   return als.run({
     pageReq: parent.pageReq,
     inflightFragments: parent.inflightFragments,
+    clientEntries: parent.clientEntries,
     currentState,
   }, fn);
 }
@@ -37,6 +40,47 @@ export function getRenderStore(): RenderStore {
     throw new Error("getRenderStore() was called outside a handle() render");
   }
   return store;
+}
+
+/** Document include: the compile import map, then one module script per entry. */
+export function injectModuleScripts(
+  html: string,
+  entries: Iterable<string>,
+  importMap: Record<string, string>,
+): string {
+  const tags: string[] = [];
+  if (Object.keys(importMap).length > 0) {
+    tags.push(String(jsx("script", {
+      type: "importmap",
+      dangerouslySetInnerHTML: {
+        __html: JSON.stringify({ imports: importMap }),
+      },
+    })));
+  }
+  for (const src of entries) {
+    tags.push(String(jsx("script", { type: "module", src })));
+  }
+  const scripts = tags.join("");
+  if (scripts === "") {
+    return html;
+  }
+  const close = html.lastIndexOf("</html>");
+  if (close === -1) {
+    return `${html}${scripts}`;
+  }
+  return `${html.slice(0, close)}${scripts}${html.slice(close)}`;
+}
+
+/** Fragment include: `Link` names each recorded entry’s hashed URL. */
+export function appendModulePreloads(
+  headers: Headers,
+  entries: Iterable<string>,
+  importMap: Record<string, string>,
+): void {
+  for (const src of entries) {
+    const href = importMap[src] ?? src;
+    headers.append("Link", `<${href}>; rel="modulepreload"`);
+  }
 }
 
 interface Boundary<
@@ -191,24 +235,26 @@ export function getFragmentSlot(src: string) {
 
 export async function replaceFragmentSlots(html: string): Promise<string> {
   const store = getRenderStore();
-  let seen = 0;
-
-  while (store.inflightFragments.size > seen) {
-    seen = store.inflightFragments.size;
+  for (;;) {
+    if (store.inflightFragments.size === 0) {
+      return html;
+    }
     const fragments = await Promise.all(
       store.inflightFragments.entries().map(async ([src, promise]) => ({
         src,
         content: await promise,
       })),
     );
-
+    let next = html;
     for (const fragment of fragments) {
-      html = html.replaceAll(
+      next = next.replaceAll(
         getFragmentSlot(fragment.src),
         fragment.content || "",
       );
     }
+    if (next === html) {
+      return html;
+    }
+    html = next;
   }
-
-  return html;
 }

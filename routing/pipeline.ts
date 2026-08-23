@@ -1,7 +1,9 @@
+import { clientImportMap, getCompiledFile } from "../client/mod.ts";
 import { type Element } from "../jsx-runtime/mod.ts";
 import { error as logError, info } from "../logging/mod.ts";
 import {
   type Ctx,
+  DASHI_PREFIX,
   type Method,
   METHODS,
   REQUEST_HEADERS,
@@ -18,7 +20,9 @@ import {
   matchMiss,
 } from "./table.ts";
 import {
+  appendModulePreloads,
   getRenderStore,
+  injectModuleScripts,
   RenderKind,
   type RenderResult,
   renderWithRecovery,
@@ -29,6 +33,12 @@ import {
 
 const DEFAULT_NOT_FOUND_BODY = "Not found";
 const DEFAULT_ERROR_FALLBACK_BODY = "Something Went Wrong";
+const RESERVED_PATH =
+  `${DASHI_PREFIX}/* is used by the framework for internal purposes, please use a different path.`;
+
+function reservedNotFound(): Response {
+  return new Response(DEFAULT_NOT_FOUND_BODY, { status: 404 });
+}
 
 let compiled: CompiledTable<Record<string, unknown>> = {
   staticByPath: new Map(),
@@ -114,16 +124,23 @@ async function htmlResponse(
   }
   const unspliced = String(out);
   let html = unspliced;
+  const store = getRenderStore();
   // Nested eager SSR uses a synthetic request; splicing here would await
   // this fragment's own inflight promise.
-  if (getRenderStore().pageReq === options.req) {
+  if (store.pageReq === options.req) {
     html = await replaceFragmentSlots(unspliced);
+    if (!options.isFragment) {
+      html = injectModuleScripts(html, store.clientEntries, clientImportMap());
+    }
   }
   const body = options.isFragment ? html : `<!DOCTYPE html>${html}`;
   const bytes = new TextEncoder().encode(body);
   const res = new Response(bytes, { status: options.status });
   res.headers.set("Content-Type", "text/html");
   res.headers.set("Content-Length", String(bytes.byteLength));
+  if (options.isFragment && store.pageReq === options.req) {
+    appendModulePreloads(res.headers, store.clientEntries, clientImportMap());
+  }
   return { response: res, html: unspliced };
 }
 
@@ -316,6 +333,58 @@ export async function runRoute(
   );
 }
 
+function isFrameworkHandler(handler: unknown): boolean {
+  return handler === getCompiledFile || handler === reservedNotFound;
+}
+
+function assertReservedClient(
+  table: CompiledTable<Record<string, unknown>>,
+): void {
+  for (
+    const route of [
+      ...table.staticByPath.values(),
+      ...table.dynamic,
+    ]
+  ) {
+    if (
+      !isFrameworkHandler(route.handlers.GET) &&
+      (route.path === DASHI_PREFIX ||
+        route.path.startsWith(`${DASHI_PREFIX}/`))
+    ) {
+      throw new Error(RESERVED_PATH);
+    }
+  }
+  if (match(table, `${DASHI_PREFIX}/x`)?.handlers.GET !== reservedNotFound) {
+    throw new Error(RESERVED_PATH);
+  }
+  if (
+    match(table, `${DASHI_PREFIX}/client/x.js`)?.handlers.GET !==
+      getCompiledFile
+  ) {
+    throw new Error(RESERVED_PATH);
+  }
+}
+
+function withCompiledClient<
+  State extends Record<string, unknown>,
+>(
+  cb: GroupCallback<"", State>,
+  fields: GroupFields<State>,
+): GroupFields<State> {
+  return {
+    ...fields,
+    routes: [
+      cb.group(DASHI_PREFIX, ({ route }) => ({
+        routes: [
+          route("/client/:file*", { GET: getCompiledFile }),
+          route("/:rest*", { GET: reservedNotFound }),
+        ],
+      })),
+      ...fields.routes,
+    ],
+  };
+}
+
 export function init<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(
@@ -324,9 +393,13 @@ export function init<
 ) {
   // handle() has no State parameter. The table is only invoked with a ctx
   // whose state bag is the object the request created.
-  compiled = compile(group(build), errorFallback) as CompiledTable<
+  compiled = compile(
+    group((cb: GroupCallback<"", State>) => withCompiledClient(cb, build(cb))),
+    errorFallback,
+  ) as CompiledTable<
     Record<string, unknown>
   >;
+  assertReservedClient(compiled);
   const declared = [
     ...compiled.staticByPath.values(),
     ...compiled.dynamic,
