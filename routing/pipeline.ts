@@ -1,16 +1,9 @@
-import {
-  CLIENT_PREFIX,
-  clientImportMap,
-  DASHI_PREFIX,
-  getCompiledFile,
-  isReservedPath,
-  reservedNotFound,
-  reservedPathError,
-} from "../client/mod.ts";
+import { clientImportMap, getCompiledFile } from "../client/mod.ts";
 import { type Element } from "../jsx-runtime/mod.ts";
 import { error as logError, info } from "../logging/mod.ts";
 import {
   type Ctx,
+  DASHI_PREFIX,
   type Method,
   METHODS,
   REQUEST_HEADERS,
@@ -40,6 +33,12 @@ import {
 
 const DEFAULT_NOT_FOUND_BODY = "Not found";
 const DEFAULT_ERROR_FALLBACK_BODY = "Something Went Wrong";
+const RESERVED_PATH =
+  `${DASHI_PREFIX}/* is used by the framework for internal purposes, please use a different path.`;
+
+function reservedNotFound(): Response {
+  return new Response(DEFAULT_NOT_FOUND_BODY, { status: 404 });
+}
 
 let compiled: CompiledTable<Record<string, unknown>> = {
   staticByPath: new Map(),
@@ -349,18 +348,20 @@ function assertReservedClient(
   ) {
     if (
       !isFrameworkHandler(route.handlers.GET) &&
-      isReservedPath(route.path)
+      (route.path === DASHI_PREFIX ||
+        route.path.startsWith(`${DASHI_PREFIX}/`))
     ) {
-      throw reservedPathError();
+      throw new Error(RESERVED_PATH);
     }
   }
   if (match(table, `${DASHI_PREFIX}/x`)?.handlers.GET !== reservedNotFound) {
-    throw reservedPathError();
+    throw new Error(RESERVED_PATH);
   }
   if (
-    match(table, `${CLIENT_PREFIX}/x.js`)?.handlers.GET !== getCompiledFile
+    match(table, `${DASHI_PREFIX}/client/x.js`)?.handlers.GET !==
+      getCompiledFile
   ) {
-    throw reservedPathError();
+    throw new Error(RESERVED_PATH);
   }
 }
 

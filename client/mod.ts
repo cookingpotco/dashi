@@ -1,19 +1,14 @@
 import { type Element, jsx, jsxTemplate } from "../jsx-runtime/mod.ts";
 import { error as logError } from "../logging/mod.ts";
-import { type Ctx } from "../shared/mod.ts";
+import { type Ctx, DASHI_PREFIX } from "../shared/mod.ts";
 import { getRenderStore } from "../ssr/mod.ts";
 
-/** Reserved group for framework-served URLs. */
-export const DASHI_PREFIX = "/_dashi";
-
 /** Reserved URL prefix for compiled client modules. */
-export const CLIENT_PREFIX = `${DASHI_PREFIX}/client`;
+const CLIENT_PREFIX = `${DASHI_PREFIX}/client`;
 
 const IMMUTABLE = "public, max-age=31536000, immutable";
 const FACTORY_SCOPE =
   "call client.module / client.element at module scope, not inside a component or handler";
-const RESERVED_PATH =
-  `${DASHI_PREFIX}/* is used by the framework for internal purposes, please use a different path.`;
 
 interface CompiledFile {
   bytes: Uint8Array<ArrayBuffer>;
@@ -225,17 +220,13 @@ export async function compileClient(): Promise<void> {
   }
 }
 
-function notFound(): Response {
-  return new Response("Not found", { status: 404 });
-}
-
 /** GET handler for `/_dashi/client/:file*`. Serves the in-memory bundle. */
 export function getCompiledFile(
   ctx: Ctx<{ file: string }, Record<string, unknown>>,
 ): Response {
   const file = compiledFiles.get(`${CLIENT_PREFIX}/${ctx.params.file}`);
   if (!file) {
-    return notFound();
+    return new Response("Not found", { status: 404 });
   }
   return new Response(file.bytes, {
     status: 200,
@@ -246,17 +237,4 @@ export function getCompiledFile(
       ETag: file.etag,
     },
   });
-}
-
-/** GET handler for other `/_dashi/:rest*` paths. */
-export function reservedNotFound(): Response {
-  return notFound();
-}
-
-export function isReservedPath(path: string): boolean {
-  return path === DASHI_PREFIX || path.startsWith(`${DASHI_PREFIX}/`);
-}
-
-export function reservedPathError(): Error {
-  return new Error(RESERVED_PATH);
 }
