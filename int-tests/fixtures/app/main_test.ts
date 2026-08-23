@@ -73,6 +73,17 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
+    name: "nested eager fragment substitutes",
+    request: { path: "/nested-embed" },
+    status: 200,
+    html: {
+      bodyExcludes: ["{{fragment:"],
+      select: [
+        { selector: "#nested-frag", text: "nested-fragment-body" },
+      ],
+    },
+  },
+  {
     name: "eager fragment substitutes; lazy keeps fallback",
     request: { path: "/embed" },
     status: 200,

@@ -235,24 +235,26 @@ export function getFragmentSlot(src: string) {
 
 export async function replaceFragmentSlots(html: string): Promise<string> {
   const store = getRenderStore();
-  let seen = 0;
-
-  while (store.inflightFragments.size > seen) {
-    seen = store.inflightFragments.size;
+  for (;;) {
+    if (store.inflightFragments.size === 0) {
+      return html;
+    }
     const fragments = await Promise.all(
       store.inflightFragments.entries().map(async ([src, promise]) => ({
         src,
         content: await promise,
       })),
     );
-
+    let next = html;
     for (const fragment of fragments) {
-      html = html.replaceAll(
+      next = next.replaceAll(
         getFragmentSlot(fragment.src),
         fragment.content || "",
       );
     }
+    if (next === html) {
+      return html;
+    }
+    html = next;
   }
-
-  return html;
 }
