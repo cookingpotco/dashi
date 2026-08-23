@@ -1,3 +1,10 @@
+import {
+  type CacheConfig,
+  cacheControl,
+  type CachedElement,
+  CacheStrategy,
+  mergeVary,
+} from "../caching/mod.ts";
 import { clientImportMap, getCompiledFile } from "../client/mod.ts";
 import { type Element } from "../jsx-runtime/mod.ts";
 import { error as logError, info } from "../logging/mod.ts";
@@ -117,7 +124,12 @@ function lastResort(options: {
 
 async function htmlResponse(
   out: Element | Response,
-  options: { status: number; isFragment: boolean; req: Request },
+  options: {
+    status: number;
+    isFragment: boolean;
+    req: Request;
+    cache?: CacheConfig;
+  },
 ): Promise<Executed> {
   if (out instanceof Response) {
     return { response: out, html: null };
@@ -138,6 +150,11 @@ async function htmlResponse(
   const res = new Response(bytes, { status: options.status });
   res.headers.set("Content-Type", "text/html");
   res.headers.set("Content-Length", String(bytes.byteLength));
+  const cache = options.cache ?? { strategy: CacheStrategy.Private };
+  res.headers.set("Cache-Control", cacheControl(cache));
+  if (cache.vary) {
+    mergeVary(res.headers, cache.vary);
+  }
   if (options.isFragment && store.pageReq === options.req) {
     appendModulePreloads(res.headers, store.clientEntries, clientImportMap());
   }
@@ -155,12 +172,14 @@ async function respond(
         status: options.pageStatus,
         isFragment: ctx.isFragment,
         req: ctx.req,
+        cache: result.cache,
       });
     case RenderKind.Recovered:
       return await htmlResponse(result.page, {
         status: 500,
         isFragment: ctx.isFragment,
         req: ctx.req,
+        cache: result.cache,
       });
     case RenderKind.Response:
       return { response: result.response, html: null };
@@ -178,7 +197,7 @@ async function respond(
 async function runHandler(
   ctx: RequestCtx,
   matched: MatchedRoute<Record<string, unknown>>,
-): Promise<Element | Response> {
+): Promise<Element | CachedElement | Response> {
   const method = ctx.req.method;
   if (method === "OPTIONS") {
     return new Response(null, {

@@ -1,8 +1,13 @@
+import {
+  type CacheConfig,
+  cacheControl,
+  CacheStrategy,
+  mergeVary,
+} from "../caching/mod.ts";
 import { error as logError } from "../logging/mod.ts";
 import { type Ctx } from "../shared/mod.ts";
 
 const NOT_FOUND_BODY = "Not found";
-const IMMUTABLE = "public, max-age=31536000, immutable";
 
 const TYPES: Record<Lowercase<string>, Lowercase<string>> = {
   css: "text/css; charset=utf-8",
@@ -29,25 +34,6 @@ const TYPES: Record<Lowercase<string>, Lowercase<string>> = {
   webmanifest: "application/manifest+json",
 };
 
-export const enum StaticFileCacheStrategy {
-  Immutable = "immutable",
-  Public = "public",
-  Private = "private",
-}
-
-/**
- * Cache-Control for a static file. Omitted `staticFile` cache is
- * immutable.
- */
-export type StaticFileCacheConfig =
-  | { strategy: StaticFileCacheStrategy.Immutable }
-  | {
-    strategy: StaticFileCacheStrategy.Public;
-    maxAge: number;
-    sMaxAge?: number;
-  }
-  | { strategy: StaticFileCacheStrategy.Private };
-
 function basename(path: string): string {
   const slash = path.lastIndexOf("/");
   return slash === -1 ? path : path.slice(slash + 1);
@@ -61,20 +47,6 @@ function contentType(path: string): string {
   }
   const ext = base.slice(dot + 1).toLowerCase() as Lowercase<string>;
   return TYPES[ext] ?? "application/octet-stream";
-}
-
-function cacheControl(cache: StaticFileCacheConfig): string {
-  if (cache.strategy === StaticFileCacheStrategy.Immutable) {
-    return IMMUTABLE;
-  }
-  if (cache.strategy === StaticFileCacheStrategy.Private) {
-    return "private";
-  }
-  let header = `public, max-age=${cache.maxAge}`;
-  if (cache.sMaxAge !== undefined) {
-    header += `, s-maxage=${cache.sMaxAge}`;
-  }
-  return header;
 }
 
 function etag(size: number, mtimeMs: number): string {
@@ -145,8 +117,8 @@ export async function staticFile(
   ctx: Ctx<Record<string, string>, Record<string, unknown>>,
   dir: string,
   relative: string,
-  cache: StaticFileCacheConfig = {
-    strategy: StaticFileCacheStrategy.Immutable,
+  cache: CacheConfig = {
+    strategy: CacheStrategy.Immutable,
   },
 ): Promise<Response> {
   const decoded = decodeRelative(relative);
@@ -179,24 +151,20 @@ export async function staticFile(
   }
 
   const tag = etag(info.size, info.mtime?.getTime() ?? 0);
-  const cacheHeader = cacheControl(cache);
-
-  if (etagMatches(ctx.req.headers.get("if-none-match"), tag)) {
-    return new Response(null, {
-      status: 304,
-      headers: {
-        ETag: tag,
-        "Cache-Control": cacheHeader,
-      },
-    });
+  const headers = new Headers({
+    ETag: tag,
+    "Cache-Control": cacheControl(cache),
+  });
+  if (cache.vary) {
+    mergeVary(headers, cache.vary);
   }
 
-  const headers = {
-    "Content-Type": contentType(decoded),
-    "Content-Length": String(info.size),
-    ETag: tag,
-    "Cache-Control": cacheHeader,
-  };
+  if (etagMatches(ctx.req.headers.get("if-none-match"), tag)) {
+    return new Response(null, { status: 304, headers });
+  }
+
+  headers.set("Content-Type", contentType(decoded));
+  headers.set("Content-Length", String(info.size));
 
   try {
     const file = await Deno.open(resolved, { read: true });

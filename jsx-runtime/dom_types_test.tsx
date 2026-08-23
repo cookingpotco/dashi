@@ -1,3 +1,5 @@
+import { cached, CacheStrategy } from "../caching/mod.ts";
+
 function typechecks() {
   const fn = () => {};
 
@@ -19,6 +21,9 @@ function typechecks() {
 
   // @ts-expect-error route-fragment is not a JSX intrinsic; use RouteFragment
   <route-fragment src="/x" />;
+
+  // @ts-expect-error cached() is not a JSX child
+  <div>{cached(<span>x</span>, { strategy: CacheStrategy.Private })}</div>;
 }
 
 Deno.test("DOM attribute types typecheck", () => {

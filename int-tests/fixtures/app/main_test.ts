@@ -373,11 +373,13 @@ const appCases: IntegrationTestCase[] = [
     bodyExact: "x\n",
   },
   {
-    name: "public cache strategy sets max-age and s-maxage",
+    name:
+      "public cache strategy sets max-age, s-maxage, and stale-while-revalidate",
     request: { path: "/static-public/app.css" },
     status: 200,
     headers: {
-      "cache-control": "public, max-age=3600, s-maxage=86400",
+      "cache-control":
+        "public, max-age=3600, s-maxage=86400, stale-while-revalidate=120",
       "x-mw": "ok",
     },
   },
@@ -503,6 +505,114 @@ const appCases: IntegrationTestCase[] = [
       select: [{ selector: "#gated", text: "welcome" }],
     },
   },
+  {
+    name: "plain Element page is private",
+    request: { path: "/" },
+    status: 200,
+    headers: { "cache-control": "private" },
+  },
+  {
+    name: "plain Element HEAD is private",
+    request: { method: "HEAD", path: "/" },
+    status: 200,
+    headers: { "cache-control": "private" },
+    bodyExact: "",
+  },
+  {
+    name: "cached public page sets Cache-Control and Vary",
+    request: { path: "/cache-public" },
+    status: 200,
+    headers: {
+      "cache-control":
+        "public, max-age=60, stale-while-revalidate=3600, stale-if-error=120",
+      vary: "Accept-Language",
+    },
+    html: {
+      bodyIncludes: ["<!DOCTYPE html>"],
+      select: [{ selector: "#cache-public", text: "cached-public" }],
+    },
+  },
+  {
+    name: "cached public page HEAD copies GET cache headers",
+    request: { method: "HEAD", path: "/cache-public" },
+    status: 200,
+    headers: {
+      "cache-control":
+        "public, max-age=60, stale-while-revalidate=3600, stale-if-error=120",
+      vary: "Accept-Language",
+    },
+    bodyExact: "",
+  },
+  {
+    name: "cached public page headers repeat on a second GET",
+    request: { path: "/cache-public" },
+    status: 200,
+    headers: {
+      "cache-control":
+        "public, max-age=60, stale-while-revalidate=3600, stale-if-error=120",
+      vary: "Accept-Language",
+    },
+  },
+  {
+    name: "cached public x-fragment keeps policy without doctype",
+    request: {
+      path: "/cache-public",
+      headers: { "x-fragment": "1" },
+    },
+    status: 200,
+    headers: {
+      "cache-control":
+        "public, max-age=60, stale-while-revalidate=3600, stale-if-error=120",
+      vary: "Accept-Language",
+    },
+    html: {
+      bodyExcludes: ["<!DOCTYPE html>"],
+      select: [{ selector: "#cache-public", text: "cached-public" }],
+    },
+  },
+  {
+    name: "eager embed does not inherit fragment cache policy",
+    request: { path: "/cache-embed" },
+    status: 200,
+    headers: { "cache-control": "private" },
+    html: {
+      select: [{ selector: "#cache-public", text: "cached-public" }],
+    },
+  },
+  {
+    name: "layout cached() applies when handler is a plain Element",
+    request: { path: "/cache-from-layout" },
+    status: 200,
+    headers: { "cache-control": "public, max-age=30" },
+    html: {
+      select: [{ selector: "#cache-from-layout", text: "from-handler" }],
+    },
+  },
+  {
+    name: "handler cached() wins over layout cached()",
+    request: { path: "/cache-override" },
+    status: 200,
+    headers: { "cache-control": "public, max-age=60" },
+    html: {
+      select: [{ selector: "#cache-override", text: "route-wins" }],
+    },
+  },
+  {
+    name: "cors merges Origin into route Vary",
+    request: {
+      path: "/cache-cors",
+      headers: { origin: "https://app.example" },
+    },
+    status: 200,
+    headers: {
+      "cache-control": "public, max-age=60",
+      vary: "Accept-Language, Origin",
+      "access-control-allow-origin": "https://app.example",
+    },
+    html: {
+      select: [{ selector: "#cache-cors", text: "cors-cached" }],
+    },
+  },
 ];
 
 const stillServes: IntegrationTestCase = {
@@ -583,6 +693,26 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
         { selector: "html > body > h1", text: "Website Title" },
         { selector: "html > body > #pre", text: "from-mw" },
         { selector: "html > body > #root-error", text: "root-error" },
+      ],
+    },
+    stillServes: true,
+  },
+  {
+    name: "error handler Element is private",
+    request: { path: "/throw" },
+    status: 500,
+    headers: { "cache-control": "private" },
+    stillServes: true,
+  },
+  {
+    name: "error Element is private; thrown public handler does not leak",
+    request: { path: "/cache-public-then-throw" },
+    status: 500,
+    headers: { "cache-control": "private" },
+    html: {
+      select: [
+        { selector: "html > body > #root-error", text: "root-error" },
+        { selector: "#cache-public", exists: false },
       ],
     },
     stillServes: true,
@@ -1183,6 +1313,81 @@ Deno.test("main fixture app over HTTP", async (t) => {
         res,
         body,
       );
+      if (error instanceof Error) {
+        error.message = `${error.message}\n\n${dump}`;
+      }
+      throw error;
+    }
+  });
+
+  await t.step(
+    "Response returns do not get Element cache default",
+    async () => {
+      const json = await app.fetch({ path: "/ok" });
+      const jsonBody = await json.text();
+      const method = await app.fetch({ method: "POST", path: "/" });
+      const methodBody = await method.text();
+      const redirect = await app.fetch({ path: "/gated" });
+      const redirectBody = await redirect.text();
+      try {
+        assertEquals(json.status, 200);
+        assertEquals(json.headers.get("cache-control"), null);
+        assertEquals(method.status, 405);
+        assertEquals(method.headers.get("cache-control"), null);
+        assertEquals(redirect.status, 303);
+        assertEquals(redirect.headers.get("cache-control"), null);
+      } catch (error) {
+        const dump = [
+          formatIntegrationFailure(app, { path: "/ok" }, json, jsonBody),
+          formatIntegrationFailure(
+            app,
+            { method: "POST", path: "/" },
+            method,
+            methodBody,
+          ),
+          formatIntegrationFailure(
+            app,
+            { path: "/gated" },
+            redirect,
+            redirectBody,
+          ),
+        ].join("\n\n");
+        if (error instanceof Error) {
+          error.message = `${error.message}\n\n${dump}`;
+        }
+        throw error;
+      }
+    },
+  );
+
+  await t.step("cache policy follows request token state", async () => {
+    const anon = await app.fetch({ path: "/cache-session" });
+    const anonBody = await anon.text();
+    const signed = await app.fetch({
+      path: "/cache-session",
+      headers: { cookie: "token=1" },
+    });
+    const signedBody = await signed.text();
+    try {
+      assertEquals(anon.status, 200);
+      assertEquals(anon.headers.get("cache-control"), "public, max-age=60");
+      assertEquals(signed.status, 200);
+      assertEquals(signed.headers.get("cache-control"), "private");
+    } catch (error) {
+      const dump = [
+        formatIntegrationFailure(
+          app,
+          { path: "/cache-session" },
+          anon,
+          anonBody,
+        ),
+        formatIntegrationFailure(
+          app,
+          { path: "/cache-session", headers: { cookie: "token=1" } },
+          signed,
+          signedBody,
+        ),
+      ].join("\n\n");
       if (error instanceof Error) {
         error.message = `${error.message}\n\n${dump}`;
       }

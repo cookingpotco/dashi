@@ -1,3 +1,4 @@
+import { mergeVary } from "../caching/mod.ts";
 import { METHODS, type Middleware } from "../shared/mod.ts";
 
 export type CorsOrigin =
@@ -53,7 +54,7 @@ function assignCorsHeaders(
     headers.set("Access-Control-Expose-Headers", exposeHeaders);
   }
   if (varyOrigin) {
-    headers.set("Vary", "Origin");
+    mergeVary(headers, ["Origin"]);
   }
 }
 

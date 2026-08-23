@@ -1,12 +1,12 @@
 import { type Element, jsx, jsxTemplate } from "../jsx-runtime/mod.ts";
 import { error as logError } from "../logging/mod.ts";
+import { cacheControl, CacheStrategy } from "../caching/mod.ts";
 import { type Ctx, DASHI_PREFIX } from "../shared/mod.ts";
 import { getRenderStore } from "../ssr/mod.ts";
 
 /** Reserved URL prefix for compiled client modules. */
 const CLIENT_PREFIX = `${DASHI_PREFIX}/client`;
 
-const IMMUTABLE = "public, max-age=31536000, immutable";
 const FACTORY_SCOPE =
   "call client.module / client.element at module scope, not inside a component or handler";
 
@@ -230,7 +230,7 @@ export function getCompiledFile(
     headers: {
       "Content-Type": "text/javascript",
       "Content-Length": String(file.bytes.byteLength),
-      "Cache-Control": IMMUTABLE,
+      "Cache-Control": cacheControl({ strategy: CacheStrategy.Immutable }),
       ETag: file.etag,
     },
   });
