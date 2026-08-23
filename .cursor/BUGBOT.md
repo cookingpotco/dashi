@@ -85,9 +85,9 @@ cannot see project rules.
   `/_dashi/client/<name>-<hash>.js`). Relative imports are rewritten to the
   bundler path; the import map is bundler path → that public URL. Documents get
   one import map; a module script is added only when a host rendered. A lazy
-  fragment `import()`s its `Link` modulepreloads before swap.
-  `staticFile` is app-mounted disk files. Flag a second include, bundle, or
-  inject path. `/_dashi/*` is reserved.
+  fragment `import()`s its `Link` modulepreloads before swap. `staticFile` is
+  app-mounted disk files. Flag a second include, bundle, or inject path.
+  `/_dashi/*` is reserved.
 - A closed set of cases is a `const enum` (plain `enum` only when it must exist
   at runtime). Flag a string-literal union used as a discriminant.
 - An object shape is an `interface`. `type` is for unions, aliases, mapped

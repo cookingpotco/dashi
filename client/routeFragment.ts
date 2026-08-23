@@ -16,7 +16,7 @@ async function fetchContent(src: string) {
   }
   await Promise.all(pending);
 
-  // TODO: Error handling
+  // TODO(COO-19): Error handling
   return html;
 }
 
@@ -47,7 +47,7 @@ class RouteFragment extends HTMLElement {
   disconnectedCallback() {
   }
 
-  // TODO: Add moved callback, so others don't fire each time the element is moved
+  // TODO(COO-19): Add moved callback, so others don't fire each time the element is moved
 }
 
 customElements.define("route-fragment", RouteFragment);
