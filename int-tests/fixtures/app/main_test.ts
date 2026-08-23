@@ -17,7 +17,7 @@ guestbookMultipart.set("body", "from-formdata");
 
 function importMapFrom(html: string): Record<string, string> {
   const match = html.match(/<script type="importmap">([^<]*)<\/script>/);
-  if (match === undefined) {
+  if (match === null) {
     throw new Error("missing importmap");
   }
   const parsed = JSON.parse(match[1]!) as { imports?: Record<string, string> };
