@@ -6,7 +6,7 @@ import { getFragmentSlot, getRenderStore } from "../ssr/mod.ts";
 
 const RouteFragmentElement = client.element(
   "route-fragment",
-  new URL("../client/routeFragment.ts", import.meta.url),
+  new URL("./route_fragment_client.ts", import.meta.url),
 );
 
 // So document.querySelector("route-fragment") is HTMLElement.
