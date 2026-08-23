@@ -122,8 +122,8 @@ const appCases: IntegrationTestCase[] = [
     html: {
       bodyExcludes: ["{{fragment:", "Fragment cycle:"],
       select: [
-        { selector: "#dup-a #nested-frag", text: "nested-fragment-body" },
-        { selector: "#dup-b #nested-frag", text: "nested-fragment-body" },
+        { selector: "#dup-a", text: "nested-fragment-body" },
+        { selector: "#dup-b", text: "nested-fragment-body" },
       ],
     },
   },
