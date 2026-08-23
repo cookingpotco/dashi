@@ -81,11 +81,12 @@ cannot see project rules.
   of a sibling file (`routing/pipeline.ts`, `shared/shared_types.ts`).
 - Client JS attaches only via `client.module` / `client.element` at module
   scope. App files are `*_client.ts` beside the registrar. Compiled files are
-  `/_dashi/client/` via a reserved table route (flat `/_dashi/client/<name>-<hash>.js`).
-  Import-map keys are bundler paths and relatives resolved against the flat URL;
-  values are those public URLs. Documents get one import map; a module script is
-  added only when a host rendered. `staticFile` is app-mounted disk files. Flag a second
-  include, bundle, or inject path. `/_dashi/*` is reserved.
+  `/_dashi/client/` via a reserved table route (flat
+  `/_dashi/client/<name>-<hash>.js`). Import-map keys are bundler paths and
+  relatives resolved against the flat URL; values are those public URLs.
+  Documents get one import map; a module script is added only when a host
+  rendered. `staticFile` is app-mounted disk files. Flag a second include,
+  bundle, or inject path. `/_dashi/*` is reserved.
 - A closed set of cases is a `const enum` (plain `enum` only when it must exist
   at runtime). Flag a string-literal union used as a discriminant.
 - An object shape is an `interface`. `type` is for unions, aliases, mapped

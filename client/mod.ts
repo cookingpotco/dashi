@@ -107,7 +107,9 @@ function relativeSpecifier(fromPath: string, toPath: string): string {
   const fromSegs = fromDir.split("/").filter((s) => s !== "");
   const toSegs = toPath.split("/").filter((s) => s !== "");
   let i = 0;
-  while (i < fromSegs.length && i < toSegs.length && fromSegs[i] === toSegs[i]) {
+  while (
+    i < fromSegs.length && i < toSegs.length && fromSegs[i] === toSegs[i]
+  ) {
     i += 1;
   }
   const downs = toSegs.slice(i);
