@@ -88,6 +88,11 @@ cannot see project rules.
   fragment `import()`s its `Link` modulepreloads before swap. `staticFile` is
   app-mounted disk files. Flag a second include, bundle, or inject path.
   `/_dashi/*` is reserved.
+- Element cache policy is `cached()` + `CacheConfig`. Omitted `cached()`
+  on an Element response is `private`. That type is also `staticFile`’s
+  cache argument (omitted `staticFile` cache stays immutable). Raw
+  `Cache-Control` / `Vary` stay on `Response` and middleware. The most
+  specific `cached()` wins (handler over inner layout over root layout).
 - A closed set of cases is a `const enum` (plain `enum` only when it must exist
   at runtime). Flag a string-literal union used as a discriminant.
 - An object shape is an `interface`. `type` is for unions, aliases, mapped

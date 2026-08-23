@@ -1,9 +1,9 @@
 import {
+  CacheStrategy,
   type Ctx,
   type Middleware,
   serve,
   staticFile,
-  StaticFileCacheStrategy,
 } from "dashi";
 import { cors } from "dashi/cors";
 import type { AppState } from "./state.ts";
@@ -29,6 +29,14 @@ import {
 } from "./guestbook_route.tsx";
 import { ok } from "./ok_route.ts";
 import { Gated } from "./gated_route.tsx";
+import { CachePublic } from "./cache_public_route.tsx";
+import { CacheEmbed } from "./cache_embed_route.tsx";
+import { CachePublicLayout } from "./cache_public_layout.tsx";
+import { CacheFromLayout } from "./cache_from_layout_route.tsx";
+import { CachePrivateLayout } from "./cache_private_layout.tsx";
+import { CacheOverride } from "./cache_override_route.tsx";
+import { CacheSession } from "./cache_session_route.tsx";
+import { CacheCors } from "./cache_cors_route.tsx";
 import {
   ApiNotFound,
   ApiV2NotFound,
@@ -72,6 +80,13 @@ const requireSession: Middleware<AppState> = (ctx, next) => {
   return next();
 };
 
+const takeToken: Middleware<AppState> = (ctx, next) => {
+  if (ctx.req.headers.get("cookie")?.includes("token=")) {
+    ctx.state.token = "1";
+  }
+  return next();
+};
+
 const apiMw: Middleware<AppState> = async (_ctx, next) => {
   const res = await next();
   res.headers.set("x-api", "1");
@@ -83,13 +98,14 @@ const files = (ctx: Ctx<{ path: string }, AppState>) =>
   staticFile(ctx, staticDir, ctx.params.path);
 const hour = (ctx: Ctx<{ path: string }, AppState>) =>
   staticFile(ctx, staticDir, ctx.params.path, {
-    strategy: StaticFileCacheStrategy.Public,
+    strategy: CacheStrategy.Public,
     maxAge: 3600,
     sMaxAge: 86400,
+    staleWhileRevalidate: 120,
   });
 const priv = (ctx: Ctx<{ path: string }, AppState>) =>
   staticFile(ctx, staticDir, ctx.params.path, {
-    strategy: StaticFileCacheStrategy.Private,
+    strategy: CacheStrategy.Private,
   });
 const missingDir = (ctx: Ctx<{ path: string }, AppState>) =>
   staticFile(
@@ -107,6 +123,24 @@ if (import.meta.main) {
     routes: [
       route("/", { GET: Home }),
       route("/probe", { GET: ProbePage }),
+      route("/cache-public", { GET: CachePublic }),
+      route("/cache-embed", { GET: CacheEmbed }),
+      group(({ route }) => ({
+        layouts: [CachePublicLayout],
+        routes: [route("/cache-from-layout", { GET: CacheFromLayout })],
+      })),
+      group(({ route }) => ({
+        layouts: [CachePrivateLayout],
+        routes: [route("/cache-override", { GET: CacheOverride })],
+      })),
+      group(({ route }) => ({
+        middleware: [takeToken],
+        routes: [route("/cache-session", { GET: CacheSession })],
+      })),
+      group(({ route }) => ({
+        layouts: [throwingLayout],
+        routes: [route("/cache-public-then-throw", { GET: CachePublic })],
+      })),
       group(({ route }) => ({
         layouts: [NestedLayout],
         routes: [route("/nested", { GET: Nested })],
@@ -148,7 +182,10 @@ if (import.meta.main) {
         middleware: [cors({
           origin: ["https://app.example", "https://other.example"],
         })],
-        routes: [route("/cors-list", { GET: ok })],
+        routes: [
+          route("/cors-list", { GET: ok }),
+          route("/cache-cors", { GET: CacheCors }),
+        ],
       })),
       group(({ route }) => ({
         middleware: [cors({

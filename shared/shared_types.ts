@@ -1,4 +1,5 @@
 import { type Element } from "../jsx-runtime/mod.ts";
+import { type CachedElement } from "./cache.ts";
 
 /**
  * Per-invocation request context. `state` is a `Partial` bag: mutate
@@ -28,26 +29,35 @@ export type WrapperCtx<
 
 /**
  * Route function. A returned `Response` is sent as-is: no layouts,
- * DOCTYPE, or fragment splice.
+ * DOCTYPE, or fragment splice. `cached()` attaches a cache policy to an
+ * Element return.
  */
 export type Handler<
   Params extends Record<string, string> = Record<string, never>,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
   ctx: Ctx<Params, State>,
-) => Element | Response | Promise<Element | Response>;
+) =>
+  | Element
+  | CachedElement
+  | Response
+  | Promise<Element | CachedElement | Response>;
 
 /**
  * Group error UI. `thrown` is the raw value. A returned `Response` is
  * sent as-is; `Element` is wrapped in remaining parent layouts (skipped
- * on fragment hits).
+ * on fragment hits). `cached()` attaches a cache policy.
  */
 export type ErrorHandler<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
   ctx: WrapperCtx<State>,
   thrown: unknown,
-) => Element | Response | Promise<Element | Response>;
+) =>
+  | Element
+  | CachedElement
+  | Response
+  | Promise<Element | CachedElement | Response>;
 
 /**
  * Methods the router advertises. GET also answers HEAD; every matched
@@ -81,7 +91,7 @@ export type Layout<
 > = (
   ctx: WrapperCtx<State>,
   children: Element,
-) => Element | Promise<Element>;
+) => Element | CachedElement | Promise<Element | CachedElement>;
 
 /**
  * Request pipeline, outermost first. Runs for document hits and fragment

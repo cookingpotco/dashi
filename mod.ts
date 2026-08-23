@@ -13,8 +13,4 @@ export {
   type MethodHandlers,
   type ParamsOf,
 } from "./routing/mod.ts";
-export {
-  staticFile,
-  type StaticFileCacheConfig,
-  StaticFileCacheStrategy,
-} from "./static/mod.ts";
+export { staticFile } from "./static/mod.ts";

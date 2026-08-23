@@ -51,3 +51,11 @@ a module script is added only when a host rendered. A lazy fragment
 `import()`s its `Link` modulepreloads before swap.
 `DASHI_MINIFY_CLIENT=1` minifies the bundle; `deno task dev` sets it to `0`.
 `staticFile` is app-mounted disk files. `/_dashi/*` is reserved.
+
+## Cache
+
+Element cache policy is `cached()` + `CacheConfig`. Omitted `cached()` on
+an Element response is `private`. That type is also `staticFile`’s cache
+argument (omitted `staticFile` cache stays immutable). Raw
+`Cache-Control` / `Vary` stay on `Response` and middleware. The most
+specific `cached()` wins (handler over inner layout over root layout).

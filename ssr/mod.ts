@@ -1,7 +1,14 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { type Element, jsx } from "../jsx-runtime/mod.ts";
 import { error as logError } from "../logging/mod.ts";
-import { type Ctx, type ErrorHandler, type Layout } from "../shared/mod.ts";
+import {
+  type CacheConfig,
+  type CachedElement,
+  type Ctx,
+  type ErrorHandler,
+  isCachedElement,
+  type Layout,
+} from "../shared/mod.ts";
 
 interface RenderStore {
   pageReq: Request;
@@ -99,10 +106,20 @@ export const enum RenderKind {
 }
 
 export type RenderResult =
-  | { kind: RenderKind.Page; page: Element }
-  | { kind: RenderKind.Recovered; page: Element }
+  | { kind: RenderKind.Page; page: Element; cache?: CacheConfig }
+  | { kind: RenderKind.Recovered; page: Element; cache?: CacheConfig }
   | { kind: RenderKind.Response; response: Response }
   | { kind: RenderKind.Exhausted };
+
+function takeCached(
+  out: Element | CachedElement,
+  collected: CacheConfig | undefined,
+): { page: Element; cache: CacheConfig | undefined } {
+  if (isCachedElement(out)) {
+    return { page: out.page, cache: collected ?? out.cache };
+  }
+  return { page: out, cache: collected };
+}
 
 /**
  * Wraps `page` in each group's layouts (innermost first) and recovers
@@ -118,19 +135,23 @@ export type RenderResult =
 export async function renderWithRecovery<
   State extends Record<string, unknown> = Record<string, unknown>,
 >(
-  page: Element | { thrown: unknown },
+  page: Element | CachedElement | { thrown: unknown },
   options: {
     ctx: Ctx<Record<string, string>, State>;
     boundary?: Boundary<State>;
   },
 ): Promise<RenderResult> {
   // Element is a String object at runtime, so `typeof` is `"object"`.
-  if (typeof page === "object" && "thrown" in page) {
+  if (typeof page === "object" && "thrown" in page && !isCachedElement(page)) {
     return await recover(page.thrown, options.boundary, options.ctx);
   }
   const wrapped = await wrapBoundaries(page, options.ctx, options.boundary);
   if (wrapped.ok) {
-    return { kind: RenderKind.Page, page: wrapped.page };
+    return {
+      kind: RenderKind.Page,
+      page: wrapped.page,
+      cache: wrapped.cache,
+    };
   }
   return await recover(wrapped.thrown, wrapped.parent, options.ctx);
 }
@@ -138,28 +159,34 @@ export async function renderWithRecovery<
 async function wrapBoundaries<
   State extends Record<string, unknown>,
 >(
-  page: Element,
+  page: Element | CachedElement,
   ctx: Ctx<Record<string, string>, State>,
   boundary: Boundary<State> | undefined,
 ): Promise<
-  | { ok: true; page: Element }
+  | { ok: true; page: Element; cache?: CacheConfig }
   | { ok: false; thrown: unknown; parent?: Boundary<State> }
 > {
+  const first = takeCached(page, undefined);
+  let rendered = first.page;
+  let cache = first.cache;
   if (ctx.isFragment) {
-    return { ok: true, page };
+    return { ok: true, page: rendered, cache };
   }
   for (let current = boundary; current; current = current.parent) {
     try {
-      let wrapped = page;
+      let wrapped = rendered;
       for (let i = current.layouts.length - 1; i >= 0; i--) {
-        wrapped = await current.layouts[i]!(ctx, wrapped);
+        const out = await current.layouts[i]!(ctx, wrapped);
+        const taken = takeCached(out, cache);
+        wrapped = taken.page;
+        cache = taken.cache;
       }
-      page = wrapped;
+      rendered = wrapped;
     } catch (thrown) {
       return { ok: false, thrown, parent: current.parent };
     }
   }
-  return { ok: true, page };
+  return { ok: true, page: rendered, cache };
 }
 
 async function recover<
@@ -184,7 +211,12 @@ async function recover<
       if (errorResult instanceof Response) {
         return { kind: RenderKind.Response, response: errorResult };
       }
-      return { kind: RenderKind.Recovered, page: errorResult };
+      const taken = takeCached(errorResult, undefined);
+      return {
+        kind: RenderKind.Recovered,
+        page: taken.page,
+        cache: taken.cache,
+      };
     } catch (nextThrown) {
       logError(
         `[ssr] render recovering from: ${
@@ -203,7 +235,7 @@ async function recover<
     if (!current.error) {
       continue;
     }
-    let errorResult: Element | Response;
+    let errorResult: Element | CachedElement | Response;
     try {
       errorResult = await current.error(ctx, thrown);
     } catch (nextThrown) {
@@ -221,7 +253,11 @@ async function recover<
 
     const wrapped = await wrapBoundaries(errorResult, ctx, current);
     if (wrapped.ok) {
-      return { kind: RenderKind.Recovered, page: wrapped.page };
+      return {
+        kind: RenderKind.Recovered,
+        page: wrapped.page,
+        cache: wrapped.cache,
+      };
     }
     return await recover(wrapped.thrown, wrapped.parent, ctx);
   }
