@@ -44,10 +44,9 @@ and sit beside the module that registers them. The factory returns a
 PascalCase component; `client.element` takes the custom element tag
 (kebab-case). Compiled files are served at `/_dashi/client/` by a reserved
 table route. Public URLs are flat `/_dashi/client/<name>-<hash>.js`.
-Import-map keys are each file’s bundler path and the absolute path the
-browser gets when it resolves that file’s relative specifiers against
-the flat URL. Values are the flat hashed URLs. File text is stored as
-emitted. Documents get one `<script type="importmap">` for that graph;
+Relative imports in compiled files are rewritten to the matching
+bundler path. The import map is bundler path → flat hashed URL.
+Documents get one `<script type="importmap">` for that graph;
 a module script is added only when a host rendered.
 `DASHI_MINIFY_CLIENT=1` minifies the bundle; `deno task dev` sets it to `0`.
 `staticFile` is app-mounted disk files. `/_dashi/*` is reserved.

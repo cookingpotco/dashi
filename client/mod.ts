@@ -15,9 +15,10 @@ interface CompiledFile {
   etag: string;
 }
 
-interface BundleOutput {
-  bundlerPath: string;
+interface NamedOutput {
+  path: string;
   publicPath: string;
+  text: string;
 }
 
 const registered = new Map<string, URL>();
@@ -97,38 +98,39 @@ function publicPathFor(bundlerPath: string, hash: string): string {
   return `${CLIENT_PREFIX}/${stem}-${safe}.js`;
 }
 
-function relativeSpecifier(fromPath: string, toPath: string): string {
-  const fromDir = fromPath.slice(0, fromPath.lastIndexOf("/") + 1);
-  const fromSegs = fromDir.split("/").filter((s) => s !== "");
-  const toSegs = toPath.split("/").filter((s) => s !== "");
-  let i = 0;
-  while (
-    i < fromSegs.length && i < toSegs.length && fromSegs[i] === toSegs[i]
-  ) {
-    i += 1;
+function resolveSpecifier(fromPath: string, spec: string): string {
+  if (spec.startsWith("/")) {
+    return spec;
   }
-  const downs = toSegs.slice(i);
-  return [...Array.from({ length: fromSegs.length - i }, () => ".."), ...downs]
-    .join("/");
-}
-
-function resolveSpecifier(fromPath: string, specifier: string): string {
-  if (specifier.startsWith("/")) {
-    return specifier;
-  }
-  const fromDir = fromPath.slice(0, fromPath.lastIndexOf("/") + 1);
-  const out: string[] = [];
-  for (const part of [...fromDir.split("/"), ...specifier.split("/")]) {
-    if (part === "" || part === ".") {
+  const parts = fromPath.split("/").slice(0, -1);
+  for (const part of spec.split("/")) {
+    if (part === "." || part === "") {
       continue;
     }
     if (part === "..") {
-      out.pop();
+      parts.pop();
       continue;
     }
-    out.push(part);
+    parts.push(part);
   }
-  return `/${out.join("/")}`;
+  return parts.join("/");
+}
+
+function rewriteRelativeImports(
+  text: string,
+  fromPath: string,
+  outputPaths: Set<string>,
+): string {
+  return text.replace(
+    /((?:from|import)\s*\(?\s*)(["'])(\.\.?\/[^"']+)\2/g,
+    (full, prefix: string, quote: string, spec: string) => {
+      const resolved = resolveSpecifier(fromPath, spec);
+      if (!outputPaths.has(resolved)) {
+        return full;
+      }
+      return `${prefix}${quote}${resolved}${quote}`;
+    },
+  );
 }
 
 function formatBundleMessage(message: Deno.bundle.Message): string {
@@ -162,35 +164,30 @@ async function bundleRegistered(): Promise<void> {
     throw new Error("client bundle failed");
   }
   const outputFiles = result.outputFiles ?? [];
-  const files: BundleOutput[] = [];
-  const encoder = new TextEncoder();
+  const named: NamedOutput[] = [];
   for (const file of outputFiles) {
     if (!file.hash) {
       throw new Error(`client bundle missing hash for ${file.path}`);
     }
-    const publicPath = publicPathFor(file.path, file.hash);
-    files.push({ bundlerPath: file.path, publicPath });
-    importMap[file.path] = publicPath;
-    compiledFiles.set(publicPath, {
-      bytes: encoder.encode(file.text()),
-      etag: `"${publicPath.split("/").pop()}"`,
+    named.push({
+      path: file.path,
+      publicPath: publicPathFor(file.path, file.hash),
+      text: file.text(),
     });
   }
-  for (const from of files) {
-    for (const to of files) {
-      if (from === to) {
-        continue;
-      }
-      const resolved = resolveSpecifier(
-        from.publicPath,
-        relativeSpecifier(from.bundlerPath, to.bundlerPath),
-      );
-      importMap[resolved] = to.publicPath;
-    }
+  const outputPaths = new Set(named.map((file) => file.path));
+  const encoder = new TextEncoder();
+  for (const file of named) {
+    importMap[file.path] = file.publicPath;
+    compiledFiles.set(file.publicPath, {
+      bytes: encoder.encode(
+        rewriteRelativeImports(file.text, file.path, outputPaths),
+      ),
+      etag: `"${file.publicPath.split("/").pop()}"`,
+    });
   }
-  const outputPaths = files.map((file) => file.bundlerPath);
   for (const url of urls) {
-    const original = outputPathForEntry(url, outputPaths);
+    const original = outputPathForEntry(url, [...outputPaths]);
     const publicPath = importMap[original];
     if (publicPath === undefined) {
       throw new Error(`client bundle missing entry for ${url.href}`);
@@ -199,7 +196,7 @@ async function bundleRegistered(): Promise<void> {
   }
 }
 
-/** Specifier → flat hashed public path. Empty until compile. */
+/** Bundler path → flat hashed public path. Empty until compile. */
 export function clientImportMap(): Record<string, string> {
   return importMap;
 }
