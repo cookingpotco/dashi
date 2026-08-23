@@ -1,4 +1,9 @@
-import { assertEquals, assertFalse, assertStringIncludes } from "@std/assert";
+import {
+  assertEquals,
+  assertFalse,
+  assertMatch,
+  assertStringIncludes,
+} from "@std/assert";
 import {
   type App,
   boot,
@@ -795,7 +800,7 @@ Deno.test("main fixture app over HTTP", async (t) => {
     try {
       assertEquals(scripts.length, 1);
       const src = scripts[0]![1]!;
-      assertEquals(src.startsWith("/_dashi/client/"), true);
+      assertMatch(src, /^\/_dashi\/client\/routeFragment-[A-Za-z0-9_-]+\.js$/);
       const js = await app.fetch({ path: src });
       const body = await js.text();
       assertEquals(js.status, 200);
@@ -852,7 +857,7 @@ Deno.test("main fixture app over HTTP", async (t) => {
     try {
       assertEquals(scripts.length, 1);
       const src = scripts[0]![1]!;
-      assertEquals(src.startsWith("/_dashi/client/"), true);
+      assertMatch(src, /^\/_dashi\/client\/probe_client-[A-Za-z0-9_-]+\.js$/);
       assertEquals(fragHtml.includes("<script"), false);
       const link = frag.headers.get("link");
       if (link === null) {

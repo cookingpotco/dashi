@@ -30,10 +30,11 @@ a note saying why. Prefer restructuring so the assertion is unnecessary.
 
 ## Helpers
 
-Extract a function when the code is not obvious, or when the same non-trivial
-shape is repeated. A short, unmistakable check used twice stays inline. A
-longer or non-obvious body (`withoutContent`) is a function even at one call
-site.
+Do not extract a function that is a short, obvious check or a few
+straightforward lines used once. Inline it until extraction earns its keep.
+Extract when the same non-trivial shape is repeated, or when the body is long
+or not obvious (`withoutContent`). A one-line env read used once stays at the
+call site.
 
 ## Client JS
 
@@ -42,6 +43,6 @@ module scope. The factory throws after compile. App files are `*_client.ts`
 and sit beside the module that registers them. The factory returns a
 PascalCase component; `client.element` takes the custom element tag
 (kebab-case). Compiled files are served at `/_dashi/client/` by a reserved
-table route; public names are content hashes. `DASHI_MINIFY_CLIENT=1`
-minifies the bundle. `staticFile` is app-mounted disk files. `/_dashi/*`
-is reserved.
+table route; public names are `originalFileName-hash.js`.
+`DASHI_MINIFY_CLIENT=1` minifies the bundle; `deno task dev` sets it to `0`.
+`staticFile` is app-mounted disk files. `/_dashi/*` is reserved.

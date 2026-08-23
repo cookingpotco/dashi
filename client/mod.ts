@@ -64,53 +64,37 @@ function element(
 
 export const client = { module, element };
 
-function jsPathname(url: URL): string {
-  return url.pathname.replace(/\.tsx?$/, ".js");
-}
-
-function trailingMatchScore(left: string, right: string): number {
-  const a = left.split("/").filter((part) => part.length > 0);
-  const b = right.split("/").filter((part) => part.length > 0);
-  let score = 0;
-  while (
-    score < a.length &&
-    score < b.length &&
-    a[a.length - 1 - score] === b[b.length - 1 - score]
-  ) {
-    score++;
-  }
-  return score;
-}
-
-// Deno.bundle names entries by source basename and keeps a directory only
-// on collision. The result has no entry map, so match each factory URL to
-// its output path by trailing segments.
+// Deno.bundle names entries from the source path (basename, or more
+// directories on collision) and has no entry map. The factory URL is the
+// absolute source path; the output path is a suffix of that path with .js.
 function outputPathForEntry(url: URL, outputPaths: string[]): string {
-  const want = jsPathname(url);
+  const sourceJs = url.pathname.replace(/\.tsx?$/, ".js");
   let best: string | undefined;
-  let bestScore = 0;
+  let bestLen = 0;
   for (const path of outputPaths) {
-    const score = trailingMatchScore(want, path);
-    if (score > bestScore) {
-      bestScore = score;
+    const rel = path.startsWith(`${CLIENT_PREFIX}/`)
+      ? path.slice(CLIENT_PREFIX.length)
+      : path;
+    if (sourceJs.endsWith(rel) && rel.length > bestLen) {
       best = path;
+      bestLen = rel.length;
     }
   }
-  if (best === undefined || bestScore < 1) {
+  if (best === undefined) {
     throw new Error(`client bundle missing entry for ${url.href}`);
   }
   return best;
 }
 
-function minifyClient(): boolean {
-  const env = Deno.env.get("DASHI_MINIFY_CLIENT");
-  return env === "1" || env === "true";
-}
-
-function publicFileName(hash: string): string {
-  return `${
-    hash.replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "")
-  }.js`;
+function publicFileName(path: string, hash: string): string {
+  const base = path.split("/").filter((part) => part.length > 0).pop() ??
+    "chunk.js";
+  const stem = base.replace(/\.js$/, "");
+  const safe = hash.replaceAll("+", "-").replaceAll("/", "_").replaceAll(
+    "=",
+    "",
+  );
+  return `${stem}-${safe}.js`;
 }
 
 function relativeSpecifier(fromPath: string, toPath: string): string {
@@ -145,8 +129,10 @@ function rewriteToHashed(
     }
     const rel = relativeSpecifier(fromPath, file.path);
     const hashed = `./${file.publicName}`;
-    next = next.replaceAll(`"${rel}"`, `"${hashed}"`);
-    next = next.replaceAll(`'${rel}'`, `'${hashed}'`);
+    next = next.replaceAll(`"${rel}"`, `"${hashed}"`).replaceAll(
+      `'${rel}'`,
+      `'${hashed}'`,
+    );
   }
   return next;
 }
@@ -163,7 +149,8 @@ async function bundleRegistered(): Promise<void> {
   if (urls.length === 0) {
     return;
   }
-  const minify = minifyClient();
+  const minifyEnv = Deno.env.get("DASHI_MINIFY_CLIENT");
+  const minify = minifyEnv === "1" || minifyEnv === "true";
   const result = await Deno.bundle({
     entrypoints: urls.map((url) => url.href),
     outputDir: CLIENT_PREFIX,
@@ -187,7 +174,7 @@ async function bundleRegistered(): Promise<void> {
     }
     return {
       path: file.path,
-      publicName: publicFileName(file.hash),
+      publicName: publicFileName(file.path, file.hash),
       text: file.text(),
     };
   });

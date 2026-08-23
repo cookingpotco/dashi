@@ -35,7 +35,7 @@
     }
   },
   "tasks": {
-    "dev": "deno run --watch main.ts",
+    "dev": "DASHI_MINIFY_CLIENT=0 deno run --watch main.ts",
     "test": "deno test -A --ignore=int-tests/,e2e/",
     "test:int": "deno test -A int-tests/",
     "test:e2e": "deno test -A --junit-path=e2e/results/junit.xml e2e/",
