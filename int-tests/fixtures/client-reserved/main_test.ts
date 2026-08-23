@@ -55,19 +55,7 @@ Deno.test("reserved client path over HTTP", async (t) => {
       assertEquals(scripts.length, 1);
       const src = scripts[0]![1]!;
       assertEquals(src.startsWith("/_dashi/client/"), true);
-      const mapMatch = html.match(
-        /<script type="importmap">([^<]*)<\/script>/,
-      );
-      if (mapMatch === null) {
-        throw new Error("missing importmap");
-      }
-      const hashed =
-        (JSON.parse(mapMatch[1]!) as { imports: Record<string, string> })
-          .imports[src];
-      if (hashed === undefined) {
-        throw new Error(`importmap missing ${src}`);
-      }
-      const js = await app.fetch({ path: hashed });
+      const js = await app.fetch({ path: src });
       const body = await js.text();
       assertEquals(js.status, 200);
       assertEquals(js.headers.get("content-type"), "text/javascript");

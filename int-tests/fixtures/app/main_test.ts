@@ -814,13 +814,10 @@ Deno.test("main fixture app over HTTP", async (t) => {
     try {
       assertEquals(scripts.length, 1);
       const src = scripts[0]![1]!;
-      assertEquals(src.startsWith("/_dashi/client/"), true);
-      const hashed = importMapFrom(html)[src];
-      if (hashed === undefined) {
-        throw new Error(`importmap missing ${src}`);
-      }
-      assertMatch(hashed, /-[A-Za-z0-9_-]+\.js$/);
-      const js = await app.fetch({ path: hashed });
+      assertMatch(src, /^\/_dashi\/client\/.+\-[A-Za-z0-9_-]+\.js$/);
+      const imports = importMapFrom(html);
+      assertEquals(Object.values(imports).includes(src), true);
+      const js = await app.fetch({ path: src });
       const body = await js.text();
       assertEquals(js.status, 200);
       assertEquals(js.headers.get("content-type"), "text/javascript");
@@ -876,18 +873,14 @@ Deno.test("main fixture app over HTTP", async (t) => {
     try {
       assertEquals(scripts.length, 1);
       const src = scripts[0]![1]!;
-      assertEquals(src.startsWith("/_dashi/client/"), true);
-      const hashed = importMapFrom(pageHtml)[src];
-      if (hashed === undefined) {
-        throw new Error(`importmap missing ${src}`);
-      }
+      assertMatch(src, /^\/_dashi\/client\/.+\-[A-Za-z0-9_-]+\.js$/);
       assertEquals(fragHtml.includes("<script"), false);
       const link = frag.headers.get("link");
       if (link === null) {
         throw new Error("missing Link");
       }
       assertStringIncludes(link, `rel="modulepreload"`);
-      assertStringIncludes(link, hashed);
+      assertStringIncludes(link, src);
     } catch (error) {
       const dump = [
         formatIntegrationFailure(app, { path: "/probe" }, page, pageHtml),

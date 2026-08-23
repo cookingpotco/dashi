@@ -144,7 +144,12 @@ async function bundleRegistered(): Promise<void> {
     });
   }
   for (const url of urls) {
-    publicByHref.set(url.href, outputPathForEntry(url, outputPaths));
+    const original = outputPathForEntry(url, outputPaths);
+    const publicPath = importMap[original];
+    if (publicPath === undefined) {
+      throw new Error(`client bundle missing entry for ${url.href}`);
+    }
+    publicByHref.set(url.href, publicPath);
   }
 }
 
