@@ -1,5 +1,6 @@
 import {
   CLIENT_PREFIX,
+  clientImportMap,
   DASHI_PREFIX,
   getCompiledFile,
   isReservedPath,
@@ -130,7 +131,7 @@ async function htmlResponse(
   if (store.pageReq === options.req) {
     html = await replaceFragmentSlots(unspliced);
     if (!options.isFragment) {
-      html = injectModuleScripts(html, store.clientEntries);
+      html = injectModuleScripts(html, store.clientEntries, clientImportMap());
     }
   }
   const body = options.isFragment ? html : `<!DOCTYPE html>${html}`;
@@ -139,7 +140,7 @@ async function htmlResponse(
   res.headers.set("Content-Type", "text/html");
   res.headers.set("Content-Length", String(bytes.byteLength));
   if (options.isFragment && store.pageReq === options.req) {
-    appendModulePreloads(res.headers, store.clientEntries);
+    appendModulePreloads(res.headers, store.clientEntries, clientImportMap());
   }
   return { response: res, html: unspliced };
 }

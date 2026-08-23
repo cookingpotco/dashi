@@ -23,6 +23,7 @@ interface CompiledFile {
 const registered = new Map<string, URL>();
 const publicByHref = new Map<string, string>();
 const compiledFiles = new Map<string, CompiledFile>();
+const importMap: Record<string, string> = {};
 let hasCompiled = false;
 
 function assertCanRegister(): void {
@@ -86,47 +87,14 @@ function outputPathForEntry(url: URL, outputPaths: string[]): string {
   return best;
 }
 
-function publicFileName(path: string, hash: string): string {
-  const base = path.split("/").filter((part) => part.length > 0).pop() ??
-    "chunk.js";
-  const stem = base.replace(/\.js$/, "");
+function hashedPath(path: string, hash: string): string {
   const safe = hash.replaceAll("+", "-").replaceAll("/", "_").replaceAll(
     "=",
     "",
   );
-  return `${stem}-${safe}.js`;
-}
-
-function resolveSpecifier(fromPath: string, spec: string): string {
-  const parts = fromPath.split("/").slice(0, -1);
-  for (const part of spec.split("/")) {
-    if (part === "." || part === "") {
-      continue;
-    }
-    if (part === "..") {
-      parts.pop();
-      continue;
-    }
-    parts.push(part);
-  }
-  return parts.join("/");
-}
-
-function rewriteLocalImports(
-  text: string,
-  fromPath: string,
-  publicByPath: Map<string, string>,
-): string {
-  return text.replace(
-    /((?:from|import)\s*\(?\s*)(["'])(\.\.?\/[^"']+)\2/g,
-    (full, prefix, quote, spec) => {
-      const publicName = publicByPath.get(resolveSpecifier(fromPath, spec));
-      if (publicName === undefined) {
-        return full;
-      }
-      return `${prefix}${quote}./${publicName}${quote}`;
-    },
-  );
+  return path.endsWith(".js")
+    ? `${path.slice(0, -3)}-${safe}.js`
+    : `${path}-${safe}`;
 }
 
 function formatBundleMessage(message: Deno.bundle.Message): string {
@@ -160,40 +128,29 @@ async function bundleRegistered(): Promise<void> {
     throw new Error("client bundle failed");
   }
   const outputFiles = result.outputFiles ?? [];
-  const named = outputFiles.map((file) => {
+  const outputPaths: string[] = [];
+  const encoder = new TextEncoder();
+  for (const file of outputFiles) {
     if (!file.hash) {
       throw new Error(`client bundle missing hash for ${file.path}`);
     }
-    return {
-      path: file.path,
-      publicName: publicFileName(file.path, file.hash),
-      text: file.text(),
-    };
-  });
-  const outputPaths = named.map((file) => file.path);
-  const publicByPath = new Map(
-    named.map((file) => [file.path, file.publicName]),
-  );
-  const originalToPublic = new Map<string, string>();
-  for (const file of named) {
-    const publicPath = `${CLIENT_PREFIX}/${file.publicName}`;
-    originalToPublic.set(file.path, publicPath);
-    const bytes = new TextEncoder().encode(
-      rewriteLocalImports(file.text, file.path, publicByPath),
-    );
+    const publicPath = hashedPath(file.path, file.hash);
+    outputPaths.push(file.path);
+    importMap[file.path] = publicPath;
+    const bytes = encoder.encode(file.text());
     compiledFiles.set(publicPath, {
       bytes,
-      etag: `"${file.publicName}"`,
+      etag: `"${publicPath.split("/").pop()}"`,
     });
   }
   for (const url of urls) {
-    const original = outputPathForEntry(url, outputPaths);
-    const publicPath = originalToPublic.get(original);
-    if (publicPath === undefined) {
-      throw new Error(`client bundle missing entry for ${url.href}`);
-    }
-    publicByHref.set(url.href, publicPath);
+    publicByHref.set(url.href, outputPathForEntry(url, outputPaths));
   }
+}
+
+/** Bundler path → hashed public path. Empty until compile. */
+export function clientImportMap(): Record<string, string> {
+  return importMap;
 }
 
 /** Compile every registered client URL, then mark the graph closed. */

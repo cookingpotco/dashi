@@ -42,14 +42,25 @@ export function getRenderStore(): RenderStore {
   return store;
 }
 
-/** Document include: one module script per recorded entry. */
+/** Document include: the compile import map, then one module script per entry. */
 export function injectModuleScripts(
   html: string,
   entries: Iterable<string>,
+  importMap: Record<string, string>,
 ): string {
-  const scripts = [...entries].map((src) =>
-    String(jsx("script", { type: "module", src }))
-  ).join("");
+  const tags: string[] = [];
+  if (Object.keys(importMap).length > 0) {
+    tags.push(String(jsx("script", {
+      type: "importmap",
+      dangerouslySetInnerHTML: {
+        __html: JSON.stringify({ imports: importMap }),
+      },
+    })));
+  }
+  for (const src of entries) {
+    tags.push(String(jsx("script", { type: "module", src })));
+  }
+  const scripts = tags.join("");
   if (scripts === "") {
     return html;
   }
@@ -60,13 +71,15 @@ export function injectModuleScripts(
   return `${html.slice(0, close)}${scripts}${html.slice(close)}`;
 }
 
-/** Fragment include: `Link` names each recorded entry. */
+/** Fragment include: `Link` names each recorded entry’s hashed URL. */
 export function appendModulePreloads(
   headers: Headers,
   entries: Iterable<string>,
+  importMap: Record<string, string>,
 ): void {
   for (const src of entries) {
-    headers.append("Link", `<${src}>; rel="modulepreload"`);
+    const href = importMap[src] ?? src;
+    headers.append("Link", `<${href}>; rel="modulepreload"`);
   }
 }
 

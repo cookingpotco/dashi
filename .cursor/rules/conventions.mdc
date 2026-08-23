@@ -43,6 +43,8 @@ module scope. The factory throws after compile. App files are `*_client.ts`
 and sit beside the module that registers them. The factory returns a
 PascalCase component; `client.element` takes the custom element tag
 (kebab-case). Compiled files are served at `/_dashi/client/` by a reserved
-table route; public names are `originalFileName-hash.js`.
+table route. Public URLs keep the bundler path and add `-<hash>` on the
+last segment. Documents get one `<script type="importmap">` for that
+graph; a module script is added only when a host rendered.
 `DASHI_MINIFY_CLIENT=1` minifies the bundle; `deno task dev` sets it to `0`.
 `staticFile` is app-mounted disk files. `/_dashi/*` is reserved.

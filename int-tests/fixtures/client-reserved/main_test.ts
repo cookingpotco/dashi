@@ -1,4 +1,4 @@
-import { assertEquals, assertMatch, assertStringIncludes } from "@std/assert";
+import { assertEquals, assertStringIncludes } from "@std/assert";
 import { boot, formatIntegrationFailure, runCases } from "../../mod.ts";
 
 async function bootFails(
@@ -54,8 +54,20 @@ Deno.test("reserved client path over HTTP", async (t) => {
     try {
       assertEquals(scripts.length, 1);
       const src = scripts[0]![1]!;
-      assertMatch(src, /^\/_dashi\/client\/probe_client-[A-Za-z0-9_-]+\.js$/);
-      const js = await app.fetch({ path: src });
+      assertEquals(src.startsWith("/_dashi/client/"), true);
+      const mapMatch = html.match(
+        /<script type="importmap">([^<]*)<\/script>/,
+      );
+      if (mapMatch === null) {
+        throw new Error("missing importmap");
+      }
+      const hashed =
+        (JSON.parse(mapMatch[1]!) as { imports: Record<string, string> })
+          .imports[src];
+      if (hashed === undefined) {
+        throw new Error(`importmap missing ${src}`);
+      }
+      const js = await app.fetch({ path: hashed });
       const body = await js.text();
       assertEquals(js.status, 200);
       assertEquals(js.headers.get("content-type"), "text/javascript");
