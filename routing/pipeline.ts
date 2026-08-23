@@ -150,7 +150,7 @@ async function htmlResponse(
   res.headers.set("Content-Length", String(bytes.byteLength));
   const cache = options.cache ?? { strategy: CacheStrategy.Private };
   res.headers.set("Cache-Control", cacheControl(cache));
-  if (cache.vary !== undefined) {
+  if (cache.vary) {
     mergeVary(res.headers, cache.vary);
   }
   if (options.isFragment && store.pageReq === options.req) {

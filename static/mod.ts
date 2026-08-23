@@ -155,7 +155,7 @@ export async function staticFile(
     ETag: tag,
     "Cache-Control": cacheControl(cache),
   });
-  if (cache.vary !== undefined) {
+  if (cache.vary) {
     mergeVary(headers, cache.vary);
   }
 
