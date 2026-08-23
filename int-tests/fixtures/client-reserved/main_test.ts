@@ -1,4 +1,4 @@
-import { assertEquals, assertStringIncludes } from "@std/assert";
+import { assertEquals, assertMatch, assertStringIncludes } from "@std/assert";
 import { boot, formatIntegrationFailure, runCases } from "../../mod.ts";
 
 async function bootFails(
@@ -54,7 +54,7 @@ Deno.test("reserved client path over HTTP", async (t) => {
     try {
       assertEquals(scripts.length, 1);
       const src = scripts[0]![1]!;
-      assertEquals(src.startsWith("/_dashi/client/"), true);
+      assertMatch(src, /^\/_dashi\/client\/[^/]+\-[A-Za-z0-9_-]+\.js$/);
       const js = await app.fetch({ path: src });
       const body = await js.text();
       assertEquals(js.status, 200);

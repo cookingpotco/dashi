@@ -814,9 +814,12 @@ Deno.test("main fixture app over HTTP", async (t) => {
     try {
       assertEquals(scripts.length, 1);
       const src = scripts[0]![1]!;
-      assertMatch(src, /^\/_dashi\/client\/.+\-[A-Za-z0-9_-]+\.js$/);
+      assertMatch(src, /^\/_dashi\/client\/[^/]+\-[A-Za-z0-9_-]+\.js$/);
       const imports = importMapFrom(html);
       assertEquals(Object.values(imports).includes(src), true);
+      for (const value of Object.values(imports)) {
+        assertMatch(value, /^\/_dashi\/client\/[^/]+\-[A-Za-z0-9_-]+\.js$/);
+      }
       const js = await app.fetch({ path: src });
       const body = await js.text();
       assertEquals(js.status, 200);
