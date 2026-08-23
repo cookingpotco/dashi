@@ -1,12 +1,14 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { type Element, jsx } from "../jsx-runtime/mod.ts";
-import { error as logError } from "../logging/mod.ts";
 import {
   type CacheConfig,
   type CachedElement,
+  isCachedElement,
+} from "../caching/mod.ts";
+import { type Element, jsx } from "../jsx-runtime/mod.ts";
+import { error as logError } from "../logging/mod.ts";
+import {
   type Ctx,
   type ErrorHandler,
-  isCachedElement,
   type Layout,
 } from "../shared/mod.ts";
 

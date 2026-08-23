@@ -1,14 +1,16 @@
-import { clientImportMap, getCompiledFile } from "../client/mod.ts";
-import { type Element } from "../jsx-runtime/mod.ts";
-import { error as logError, info } from "../logging/mod.ts";
 import {
   type CacheConfig,
   cacheControl,
   type CachedElement,
   CacheStrategy,
+  mergeVary,
+} from "../caching/mod.ts";
+import { clientImportMap, getCompiledFile } from "../client/mod.ts";
+import { type Element } from "../jsx-runtime/mod.ts";
+import { error as logError, info } from "../logging/mod.ts";
+import {
   type Ctx,
   DASHI_PREFIX,
-  mergeVary,
   type Method,
   METHODS,
   REQUEST_HEADERS,

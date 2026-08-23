@@ -1,11 +1,7 @@
 import { type Element, jsx, jsxTemplate } from "../jsx-runtime/mod.ts";
 import { error as logError } from "../logging/mod.ts";
-import {
-  cacheControl,
-  CacheStrategy,
-  type Ctx,
-  DASHI_PREFIX,
-} from "../shared/mod.ts";
+import { cacheControl, CacheStrategy } from "../caching/mod.ts";
+import { type Ctx, DASHI_PREFIX } from "../shared/mod.ts";
 import { getRenderStore } from "../ssr/mod.ts";
 
 /** Reserved URL prefix for compiled client modules. */

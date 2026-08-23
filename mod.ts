@@ -5,6 +5,7 @@ export { client } from "./client/mod.ts";
 export * from "./jsx-runtime/mod.ts";
 export * from "./fragments/mod.ts";
 export * from "./shared/mod.ts";
+export * from "./caching/mod.ts";
 export * from "./serve/mod.ts";
 export {
   type Group,

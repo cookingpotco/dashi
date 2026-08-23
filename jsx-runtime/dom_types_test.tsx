@@ -1,4 +1,4 @@
-import { cached, CacheStrategy } from "../shared/mod.ts";
+import { cached, CacheStrategy } from "../caching/mod.ts";
 
 function typechecks() {
   const fn = () => {};

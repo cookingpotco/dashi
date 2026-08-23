@@ -1,4 +1,5 @@
-import { mergeVary, METHODS, type Middleware } from "../shared/mod.ts";
+import { mergeVary } from "../caching/mod.ts";
+import { METHODS, type Middleware } from "../shared/mod.ts";
 
 export type CorsOrigin =
   | string

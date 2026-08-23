@@ -1,11 +1,11 @@
-import { error as logError } from "../logging/mod.ts";
 import {
   type CacheConfig,
   cacheControl,
   CacheStrategy,
-  type Ctx,
   mergeVary,
-} from "../shared/mod.ts";
+} from "../caching/mod.ts";
+import { error as logError } from "../logging/mod.ts";
+import { type Ctx } from "../shared/mod.ts";
 
 const NOT_FOUND_BODY = "Not found";
 

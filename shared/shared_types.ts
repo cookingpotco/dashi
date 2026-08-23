@@ -1,5 +1,5 @@
+import { type CachedElement } from "../caching/mod.ts";
 import { type Element } from "../jsx-runtime/mod.ts";
-import { type CachedElement } from "./cache.ts";
 
 /**
  * Per-invocation request context. `state` is a `Partial` bag: mutate
