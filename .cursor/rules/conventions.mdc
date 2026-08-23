@@ -47,6 +47,7 @@ table route. Public URLs are flat `/_dashi/client/<name>-<hash>.js`.
 Relative imports in compiled files are rewritten to the matching
 bundler path. The import map is bundler path → flat hashed URL.
 Documents get one `<script type="importmap">` for that graph;
-a module script is added only when a host rendered.
+a module script is added only when a host rendered. A lazy fragment
+`import()`s its `Link` modulepreloads before swap.
 `DASHI_MINIFY_CLIENT=1` minifies the bundle; `deno task dev` sets it to `0`.
 `staticFile` is app-mounted disk files. `/_dashi/*` is reserved.
