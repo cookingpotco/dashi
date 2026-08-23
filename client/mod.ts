@@ -97,44 +97,36 @@ function publicFileName(path: string, hash: string): string {
   return `${stem}-${safe}.js`;
 }
 
-function relativeSpecifier(fromPath: string, toPath: string): string {
-  const fromDir = fromPath.split("/").slice(0, -1);
-  const toParts = toPath.split("/");
-  const toFile = toParts.pop() ?? "";
-  let common = 0;
-  while (
-    common < fromDir.length &&
-    common < toParts.length &&
-    fromDir[common] === toParts[common]
-  ) {
-    common++;
-  }
-  const spec = [
-    ...Array(fromDir.length - common).fill(".."),
-    ...toParts.slice(common),
-    toFile,
-  ].join("/");
-  return spec.startsWith(".") ? spec : `./${spec}`;
-}
-
-function rewriteToHashed(
-  text: string,
-  fromPath: string,
-  files: { path: string; publicName: string }[],
-): string {
-  let next = text;
-  for (const file of files) {
-    if (file.path === fromPath) {
+function resolveSpecifier(fromPath: string, spec: string): string {
+  const parts = fromPath.split("/").slice(0, -1);
+  for (const part of spec.split("/")) {
+    if (part === "." || part === "") {
       continue;
     }
-    const rel = relativeSpecifier(fromPath, file.path);
-    const hashed = `./${file.publicName}`;
-    next = next.replaceAll(`"${rel}"`, `"${hashed}"`).replaceAll(
-      `'${rel}'`,
-      `'${hashed}'`,
-    );
+    if (part === "..") {
+      parts.pop();
+      continue;
+    }
+    parts.push(part);
   }
-  return next;
+  return parts.join("/");
+}
+
+function rewriteLocalImports(
+  text: string,
+  fromPath: string,
+  publicByPath: Map<string, string>,
+): string {
+  return text.replace(
+    /((?:from|import)\s*\(?\s*)(["'])(\.\.?\/[^"']+)\2/g,
+    (full, prefix, quote, spec) => {
+      const publicName = publicByPath.get(resolveSpecifier(fromPath, spec));
+      if (publicName === undefined) {
+        return full;
+      }
+      return `${prefix}${quote}./${publicName}${quote}`;
+    },
+  );
 }
 
 function formatBundleMessage(message: Deno.bundle.Message): string {
@@ -179,12 +171,15 @@ async function bundleRegistered(): Promise<void> {
     };
   });
   const outputPaths = named.map((file) => file.path);
+  const publicByPath = new Map(
+    named.map((file) => [file.path, file.publicName]),
+  );
   const originalToPublic = new Map<string, string>();
   for (const file of named) {
     const publicPath = `${CLIENT_PREFIX}/${file.publicName}`;
     originalToPublic.set(file.path, publicPath);
     const bytes = new TextEncoder().encode(
-      rewriteToHashed(file.text, file.path, named),
+      rewriteLocalImports(file.text, file.path, publicByPath),
     );
     compiledFiles.set(publicPath, {
       bytes,
