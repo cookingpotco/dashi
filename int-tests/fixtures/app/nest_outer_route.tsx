@@ -1,5 +1,9 @@
 import { RouteFragment } from "dashi";
 
 export function NestOuter() {
-  return <RouteFragment src="/nest-inner" />;
+  return (
+    <div id="nest-outer">
+      <RouteFragment src="/nest-mid" />
+    </div>
+  );
 }

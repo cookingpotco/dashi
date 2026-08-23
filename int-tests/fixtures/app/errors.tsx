@@ -147,3 +147,81 @@ export function embedFragMiss(): Element {
     </div>
   );
 }
+
+export function messageError(
+  _ctx: WrapperCtx<AppState>,
+  thrown: unknown,
+): Element {
+  return (
+    <p id="fragment-fault">
+      {thrown instanceof Error ? thrown.message : String(thrown)}
+    </p>
+  );
+}
+
+export function SelfInclude(): Element {
+  return <RouteFragment src="/self-include" />;
+}
+
+export function CycleA(): Element {
+  return <RouteFragment src="/cycle-b" />;
+}
+
+export function CycleB(): Element {
+  return <RouteFragment src="/cycle-a" />;
+}
+
+export function EmbedCycle(): Element {
+  return <RouteFragment src="/cycle-a" />;
+}
+
+export function DepthEmbed(): Element {
+  return <RouteFragment src="/d1" />;
+}
+
+export function Depth1(): Element {
+  return <RouteFragment src="/d2" />;
+}
+
+export function Depth2(): Element {
+  return <RouteFragment src="/d3" />;
+}
+
+export function Depth3(): Element {
+  return <RouteFragment src="/d4" />;
+}
+
+export function Depth4(): Element {
+  return <RouteFragment src="/d5" />;
+}
+
+export function Depth5(): Element {
+  return <RouteFragment src="/d6" />;
+}
+
+export function Depth6(): Element {
+  return <p id="depth-leaf">depth-leaf</p>;
+}
+
+export async function Slow(): Promise<Element> {
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  return <p id="slow">slow-body</p>;
+}
+
+export function EmbedSlow(): Element {
+  return (
+    <div id="embed-slow">
+      <RouteFragment src="/slow" timeout={50} />
+      <RouteFragment src="/peer" />
+    </div>
+  );
+}
+
+export function EmbedSlowEmpty(): Element {
+  return (
+    <div id="embed-slow-empty">
+      <RouteFragment src="/slow-no-error" timeout={50} />
+      <RouteFragment src="/peer" />
+    </div>
+  );
+}

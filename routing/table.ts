@@ -186,6 +186,7 @@ export interface CompiledTable<
   rootMiddleware: Middleware<State>[];
   prefixCaptures: PrefixCapture<State>[];
   errorFallback?: Element | Response;
+  fragmentDepthLimit: number;
 }
 
 interface PrefixCapture<
@@ -364,6 +365,7 @@ export function compile<
 >(
   table: Group<State>,
   errorFallback?: Element | Response,
+  fragmentDepthLimit = 5,
 ): CompiledTable<State> {
   const rootBoundary: GroupBoundary<State> = {
     layouts: table.layouts,
@@ -433,6 +435,7 @@ export function compile<
     rootMiddleware: table.middleware,
     prefixCaptures,
     errorFallback,
+    fragmentDepthLimit,
   };
 }
 

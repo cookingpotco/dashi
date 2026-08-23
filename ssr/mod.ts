@@ -8,27 +8,42 @@ import { type Element, jsx } from "../jsx-runtime/mod.ts";
 import { error as logError } from "../logging/mod.ts";
 import { type Ctx, type ErrorHandler, type Layout } from "../shared/mod.ts";
 
+interface FragmentFault {
+  error?: Error;
+}
+
 interface RenderStore {
   pageReq: Request;
   inflightFragments: Map<string, Promise<string | null>>;
   clientEntries: Set<string>;
   currentState: Partial<Record<string, unknown>>;
+  includeChain: string[];
+  fragmentFault: FragmentFault;
+  fragmentDepthLimit: number;
 }
 
 const als = new AsyncLocalStorage<RenderStore>();
 
-export function runWithRenderStore<T>(req: Request, fn: () => T): T {
+export function runWithRenderStore<T>(
+  req: Request,
+  fragmentDepthLimit: number,
+  fn: () => T,
+): T {
   return als.run({
     pageReq: req,
     inflightFragments: new Map(),
     clientEntries: new Set(),
     currentState: {},
+    includeChain: [],
+    fragmentFault: {},
+    fragmentDepthLimit,
   }, fn);
 }
 
 export function runWithNestedRenderStore<T>(
   currentState: Partial<Record<string, unknown>>,
   fn: () => T,
+  includeChain?: string[],
 ): T {
   const parent = getRenderStore();
   return als.run({
@@ -36,6 +51,9 @@ export function runWithNestedRenderStore<T>(
     inflightFragments: parent.inflightFragments,
     clientEntries: parent.clientEntries,
     currentState,
+    includeChain: includeChain ?? parent.includeChain,
+    fragmentFault: parent.fragmentFault,
+    fragmentDepthLimit: parent.fragmentDepthLimit,
   }, fn);
 }
 
@@ -267,9 +285,18 @@ export function getFragmentSlot(src: string) {
   return `{{fragment:${src}}}`;
 }
 
+function throwFragmentFault(store: RenderStore): void {
+  if (store.fragmentFault.error) {
+    const error = store.fragmentFault.error;
+    store.fragmentFault.error = undefined;
+    throw error;
+  }
+}
+
 export async function replaceFragmentSlots(html: string): Promise<string> {
   const store = getRenderStore();
   for (;;) {
+    throwFragmentFault(store);
     if (store.inflightFragments.size === 0) {
       return html;
     }
@@ -279,6 +306,7 @@ export async function replaceFragmentSlots(html: string): Promise<string> {
         content: await promise,
       })),
     );
+    throwFragmentFault(store);
     let next = html;
     for (const fragment of fragments) {
       next = next.replaceAll(

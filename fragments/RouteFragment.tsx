@@ -2,12 +2,18 @@ import { type DashiNode, type HTMLAttributes } from "dashi/jsx-runtime";
 import { client } from "../client/mod.ts";
 import { error as logError } from "../logging/mod.ts";
 import { runRoute } from "../routing/mod.ts";
-import { getFragmentSlot, getRenderStore } from "../ssr/mod.ts";
+import {
+  getFragmentSlot,
+  getRenderStore,
+  runWithNestedRenderStore,
+} from "../ssr/mod.ts";
 
 const RouteFragmentElement = client.element(
   "route-fragment",
   new URL("./route_fragment_client.ts", import.meta.url),
 );
+
+const DEFAULT_FRAGMENT_TIMEOUT_MS = 5000;
 
 // So document.querySelector("route-fragment") is HTMLElement.
 declare global {
@@ -41,18 +47,39 @@ interface LazyFragmentProps extends BaseRouteFragmentProps {
    * nonempty error body replaces it.
    */
   fallback?: DashiNode;
+  timeout?: never;
 }
 
 interface EagerFragmentProps extends BaseRouteFragmentProps {
   lazy?: never;
   fallback?: never;
+  /**
+   * Milliseconds to wait for this include during SSR. Omitted is 5000.
+   * On timeout the include behaves as a handler throw.
+   */
+  timeout?: number;
 }
 
 type FragmentSlotProps = LazyFragmentProps | EagerFragmentProps;
 
-function requestEagerFragment(src: string) {
+function requestEagerFragment(src: string, timeoutMs: number) {
   const store = getRenderStore();
 
+  if (store.includeChain.includes(src)) {
+    store.fragmentFault.error = new Error(
+      `Fragment cycle: ${[...store.includeChain, src].join(" → ")}`,
+    );
+    return;
+  }
+  const chain = [...store.includeChain, src];
+  if (chain.length > store.fragmentDepthLimit) {
+    store.fragmentFault.error = new Error(
+      `Fragment depth exceeded (${store.fragmentDepthLimit}): ${
+        chain.join(" → ")
+      }`,
+    );
+    return;
+  }
   if (store.inflightFragments.has(src)) {
     return;
   }
@@ -71,11 +98,17 @@ function requestEagerFragment(src: string) {
   const req = new Request(url, { method: "GET", headers });
   const promise = (async (): Promise<string | null> => {
     try {
-      const out = await runRoute(req, {
-        isFragment: true,
-        state: { ...store.currentState },
-        recoverMiss: false,
-      });
+      const out = await runWithNestedRenderStore(
+        { ...store.currentState },
+        () =>
+          runRoute(req, {
+            isFragment: true,
+            state: { ...store.currentState },
+            recoverMiss: false,
+            timeoutMs,
+          }),
+        chain,
+      );
       return out?.html ?? null;
     } catch (thrown) {
       logError(
@@ -91,7 +124,7 @@ function requestEagerFragment(src: string) {
 }
 
 export function RouteFragment(
-  { src, lazy, fallback, ...rest }: FragmentSlotProps,
+  { src, lazy, fallback, timeout, ...rest }: FragmentSlotProps,
 ) {
   if (lazy) {
     return (
@@ -101,7 +134,7 @@ export function RouteFragment(
     );
   }
 
-  requestEagerFragment(src);
+  requestEagerFragment(src, timeout ?? DEFAULT_FRAGMENT_TIMEOUT_MS);
   return (
     <RouteFragmentElement
       src={src}
