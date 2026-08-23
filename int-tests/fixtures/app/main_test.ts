@@ -373,7 +373,8 @@ const appCases: IntegrationTestCase[] = [
     bodyExact: "x\n",
   },
   {
-    name: "public cache strategy sets max-age, s-maxage, and stale-while-revalidate",
+    name:
+      "public cache strategy sets max-age, s-maxage, and stale-while-revalidate",
     request: { path: "/static-public/app.css" },
     status: 200,
     headers: {
@@ -1319,37 +1320,45 @@ Deno.test("main fixture app over HTTP", async (t) => {
     }
   });
 
-  await t.step("Response returns do not get Element cache default", async () => {
-    const json = await app.fetch({ path: "/ok" });
-    const jsonBody = await json.text();
-    const method = await app.fetch({ method: "POST", path: "/" });
-    const methodBody = await method.text();
-    const redirect = await app.fetch({ path: "/gated" });
-    const redirectBody = await redirect.text();
-    try {
-      assertEquals(json.status, 200);
-      assertEquals(json.headers.get("cache-control"), null);
-      assertEquals(method.status, 405);
-      assertEquals(method.headers.get("cache-control"), null);
-      assertEquals(redirect.status, 303);
-      assertEquals(redirect.headers.get("cache-control"), null);
-    } catch (error) {
-      const dump = [
-        formatIntegrationFailure(app, { path: "/ok" }, json, jsonBody),
-        formatIntegrationFailure(
-          app,
-          { method: "POST", path: "/" },
-          method,
-          methodBody,
-        ),
-        formatIntegrationFailure(app, { path: "/gated" }, redirect, redirectBody),
-      ].join("\n\n");
-      if (error instanceof Error) {
-        error.message = `${error.message}\n\n${dump}`;
+  await t.step(
+    "Response returns do not get Element cache default",
+    async () => {
+      const json = await app.fetch({ path: "/ok" });
+      const jsonBody = await json.text();
+      const method = await app.fetch({ method: "POST", path: "/" });
+      const methodBody = await method.text();
+      const redirect = await app.fetch({ path: "/gated" });
+      const redirectBody = await redirect.text();
+      try {
+        assertEquals(json.status, 200);
+        assertEquals(json.headers.get("cache-control"), null);
+        assertEquals(method.status, 405);
+        assertEquals(method.headers.get("cache-control"), null);
+        assertEquals(redirect.status, 303);
+        assertEquals(redirect.headers.get("cache-control"), null);
+      } catch (error) {
+        const dump = [
+          formatIntegrationFailure(app, { path: "/ok" }, json, jsonBody),
+          formatIntegrationFailure(
+            app,
+            { method: "POST", path: "/" },
+            method,
+            methodBody,
+          ),
+          formatIntegrationFailure(
+            app,
+            { path: "/gated" },
+            redirect,
+            redirectBody,
+          ),
+        ].join("\n\n");
+        if (error instanceof Error) {
+          error.message = `${error.message}\n\n${dump}`;
+        }
+        throw error;
       }
-      throw error;
-    }
-  });
+    },
+  );
 
   await t.step("cache policy follows request token state", async () => {
     const anon = await app.fetch({ path: "/cache-session" });

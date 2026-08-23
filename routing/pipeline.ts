@@ -8,9 +8,9 @@ import {
   CacheStrategy,
   type Ctx,
   DASHI_PREFIX,
+  mergeVary,
   type Method,
   METHODS,
-  mergeVary,
   REQUEST_HEADERS,
 } from "../shared/mod.ts";
 import {
