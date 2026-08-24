@@ -5,6 +5,17 @@ Deno.test("app fixture", async (t) => {
   await withBrowser(
     new URL("./main.ts", import.meta.url),
     async ({ app, page }) => {
+      async function typeField(selector: string, text: string) {
+        await page.evaluate((sel) => {
+          const el = document.querySelector(sel);
+          if (!(el instanceof HTMLElement)) {
+            throw new Error("missing field");
+          }
+          el.focus();
+        }, { args: [selector] });
+        await page.keyboard.type(text);
+      }
+
       await t.step("home heading is ok", async () => {
         await page.goto(`${app.origin}/`);
         const heading = await page.$("h1");
@@ -244,12 +255,11 @@ Deno.test("app fixture", async (t) => {
             marker.textContent = "mutated";
           }
         });
-        const title = await page.$("#todos-form input[name=title]");
         const add = await page.$("#todos-form button");
-        if (title === null || add === null) {
+        if (add === null) {
           throw new Error("todos form is missing");
         }
-        await title.type("milk");
+        await typeField("#todos-form input[name=title]", "milk");
         await add.click();
         await page.evaluate(async () => {
           const start = Date.now();
@@ -289,12 +299,11 @@ Deno.test("app fixture", async (t) => {
           await page.evaluate(() =>
             customElements.whenDefined("route-fragment")
           );
-          const title = await page.$("#todos-form input[name=title]");
           const add = await page.$("#todos-form button");
-          if (title === null || add === null) {
+          if (add === null) {
             throw new Error("todos form is missing");
           }
-          await title.type("x");
+          await typeField("#todos-form input[name=title]", "x");
           await page.keyboard.press("Backspace");
           await add.click();
           await page.evaluate(async () => {
@@ -339,12 +348,11 @@ Deno.test("app fixture", async (t) => {
           const before = await page.evaluate(() =>
             document.querySelectorAll("#todos li").length
           );
-          const title = await page.$("#todos-form input[name=title]");
           const add = await page.$("#todos-form button");
-          if (title === null || add === null) {
+          if (add === null) {
             throw new Error("todos form is missing");
           }
-          await title.type("once");
+          await typeField("#todos-form input[name=title]", "once");
           await add.click();
           await add.click();
           const start = Date.now();
@@ -378,12 +386,11 @@ Deno.test("app fixture", async (t) => {
       await t.step("fragment form redirect navigates the page", async () => {
         await page.goto(`${app.origin}/todos-page`);
         await page.evaluate(() => customElements.whenDefined("route-fragment"));
-        const note = await page.$("#leave-form input[name=note]");
         const leaveBtn = await page.$("#leave-form button");
-        if (note === null || leaveBtn === null) {
+        if (leaveBtn === null) {
           throw new Error("leave form is missing");
         }
-        await note.type("bye");
+        await typeField("#leave-form input[name=note]", "bye");
         await Promise.all([
           page.waitForNavigation(),
           leaveBtn.click(),
