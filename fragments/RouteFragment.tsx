@@ -25,7 +25,8 @@ interface BaseRouteFragmentProps extends HTMLAttributes {
    * Fragment is fetched from this location, either eagerly during SSR or after
    * load when `lazy` is set.
    *
-   * Actions like form submissions will also be scoped to this path by default
+   * A form submitted inside this fragment re-renders only this fragment. Point
+   * the form's `action` at this route to have it re-render itself.
    */
   src: InternalSrc;
 }

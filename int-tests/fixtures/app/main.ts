@@ -15,7 +15,7 @@ import { NestedLayout } from "./nested_layout.tsx";
 import { ApiLayout } from "./api_layout.tsx";
 import { Echo } from "./echo_route.tsx";
 import { Embed } from "./embed_route.tsx";
-import { Fragment } from "./fragment_route.tsx";
+import { Fragment, post as postFragment } from "./fragment_route.tsx";
 import { NestEmbed } from "./nest_embed_route.tsx";
 import { NestInner } from "./nest_inner_route.tsx";
 import { NestMid } from "./nest_mid_route.tsx";
@@ -178,7 +178,7 @@ if (import.meta.main) {
       route("/dup-src", { GET: DupSrc }),
       group(({ route }) => ({
         middleware: [fragOnly],
-        routes: [route("/fragment", { GET: Fragment })],
+        routes: [route("/fragment", { GET: Fragment, POST: postFragment })],
       })),
       route("/peer", { GET: Peer }),
       route("/posts/new", { GET: PostsNew }),
