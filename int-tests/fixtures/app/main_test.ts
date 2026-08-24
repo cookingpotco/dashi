@@ -222,6 +222,44 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
+    name: "POST x-fragment actions are sibling route-action elements",
+    request: {
+      method: "POST",
+      path: "/actions",
+      headers: { "x-fragment": "1" },
+    },
+    status: 200,
+    headers: { "content-type": "text/html", "cache-control": "private" },
+    html: {
+      bodyExcludes: ["<!DOCTYPE html>", "{{fragment:"],
+      select: [
+        {
+          selector: 'route-action[action="append"]',
+          text: "milk",
+          attr: { src: "/todos" },
+        },
+        {
+          selector: 'route-action[action="replace"]',
+          text: "3",
+          attr: { src: "/todo-count" },
+        },
+      ],
+    },
+  },
+  {
+    name: "POST actions without fragment header is 500",
+    request: {
+      method: "POST",
+      path: "/actions",
+    },
+    status: 500,
+    html: {
+      select: [
+        { selector: "html > body > #root-error", text: "root-error" },
+      ],
+    },
+  },
+  {
     name: "unmatched path is 404",
     request: { path: "/no-such-page" },
     status: 404,

@@ -16,6 +16,10 @@ import { Counted } from "./counted_route.tsx";
 import { countedHits } from "./counted_hits_route.ts";
 import { create as createTodo, list as listTodos } from "./todos_route.tsx";
 import { TodosPage } from "./todos_page_route.tsx";
+import { ActionsPage } from "./actions_page_route.tsx";
+import { apply as applyActions, form as actionsForm } from "./actions_route.tsx";
+import { list as listTodoCount } from "./todo_count_route.tsx";
+import { dismiss as dismissNotice, list as listNotice } from "./notice_route.tsx";
 import { Leave, leave } from "./leave_route.tsx";
 import { RootLayout } from "./root_layout.tsx";
 import { errorFallback, ErrorPage } from "./errors.tsx";
@@ -42,6 +46,10 @@ if (import.meta.main) {
       route("/counted-hits", { GET: countedHits }),
       route("/todos-page", { GET: TodosPage }),
       route("/todos", { GET: listTodos, POST: createTodo }),
+      route("/actions-page", { GET: ActionsPage }),
+      route("/actions", { GET: actionsForm, POST: applyActions }),
+      route("/todo-count", { GET: listTodoCount }),
+      route("/notice", { GET: listNotice, POST: dismissNotice }),
       route("/leave", { GET: Leave, POST: leave }),
     ],
   }), { errorFallback, port: 0 });

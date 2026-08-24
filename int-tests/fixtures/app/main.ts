@@ -14,6 +14,7 @@ import { Nested } from "./nested_route.tsx";
 import { NestedLayout } from "./nested_layout.tsx";
 import { ApiLayout } from "./api_layout.tsx";
 import { Echo } from "./echo_route.tsx";
+import { post as postActions } from "./actions_route.tsx";
 import { Embed } from "./embed_route.tsx";
 import { Fragment, post as postFragment } from "./fragment_route.tsx";
 import { NestEmbed } from "./nest_embed_route.tsx";
@@ -181,6 +182,7 @@ if (import.meta.main) {
         routes: [route("/fragment", { GET: Fragment, POST: postFragment })],
       })),
       route("/peer", { GET: Peer }),
+      route("/actions", { POST: postActions }),
       route("/posts/new", { GET: PostsNew }),
       route("/posts/:id", { GET: Post }),
       route("/guestbook", { GET: listGuestbook, POST: addGuestbook }),

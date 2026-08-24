@@ -96,6 +96,10 @@ cannot see project rules.
   `/_dashi/*` is reserved.
 - A closed set of cases is a `const enum` (plain `enum` only when it must exist
   at runtime). Flag a string-literal union used as a discriminant.
+- Fragment updates are `fragment.replace`, `fragment.append`, and
+  `fragment.remove` on one primitive, targeting every `route-fragment` with
+  that `src`. `route-action` is the wire format, not a user-writable
+  element. Flag a second update path or targeting by DOM id.
 - An object shape is an `interface`. `type` is for unions, aliases, mapped
   types. Flag an object shape written as a `type`.
 - Flag a helper that is a short, obvious check or a few straightforward lines

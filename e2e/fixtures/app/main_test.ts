@@ -383,6 +383,95 @@ Deno.test("app fixture", async (t) => {
         },
       );
 
+      await t.step(
+        "action list appends and replaces without a page load",
+        async () => {
+          await page.goto(`${app.origin}/actions-page`);
+          await page.evaluate(() =>
+            customElements.whenDefined("route-fragment")
+          );
+          await page.evaluate(() => {
+            const marker = document.getElementById("page-marker");
+            if (marker) {
+              marker.textContent = "mutated";
+            }
+          });
+          const add = await page.$("#actions-form button");
+          if (add === null) {
+            throw new Error("actions form is missing");
+          }
+          await typeField("#actions-form input[name=title]", "action-milk");
+          await add.click();
+          await page.evaluate(async () => {
+            const start = Date.now();
+            while (document.getElementById("appended-todo") === null) {
+              if (Date.now() - start > 10000) {
+                throw new Error("appended row did not appear");
+              }
+              await new Promise((resolve) => setTimeout(resolve, 25));
+            }
+          });
+          const result = await page.evaluate(() => {
+            const todosHost = document.querySelector(
+              "route-fragment[src='/todos']",
+            );
+            const countHost = document.querySelector(
+              "route-fragment[src='/todo-count']",
+            );
+            return {
+              url: location.href,
+              marker: document.getElementById("page-marker")?.textContent,
+              item: document.getElementById("appended-todo")?.textContent,
+              itemInHost: todosHost?.querySelector("#appended-todo")
+                ?.textContent ?? null,
+              count: document.getElementById("todo-count")?.textContent,
+              countInHost: countHost?.querySelector("#todo-count")
+                ?.textContent ?? null,
+            };
+          });
+          assertEquals(result, {
+            url: `${app.origin}/actions-page`,
+            marker: "mutated",
+            item: "action-milk",
+            itemInHost: "action-milk",
+            count: "1",
+            countInHost: "1",
+          });
+        },
+      );
+
+      await t.step("action list removes a host", async () => {
+        await page.goto(`${app.origin}/actions-page`);
+        await page.evaluate(() => customElements.whenDefined("route-fragment"));
+        const dismiss = await page.$("#dismiss-form button");
+        if (dismiss === null) {
+          throw new Error("dismiss form is missing");
+        }
+        await dismiss.click();
+        await page.evaluate(async () => {
+          const start = Date.now();
+          while (
+            document.querySelector("route-fragment[src='/notice']") !== null
+          ) {
+            if (Date.now() - start > 10000) {
+              throw new Error("notice host was not removed");
+            }
+            await new Promise((resolve) => setTimeout(resolve, 25));
+          }
+        });
+        const result = await page.evaluate(() => ({
+          url: location.href,
+          host: document.querySelector("route-fragment[src='/notice']") !==
+            null,
+          notice: document.getElementById("notice") !== null,
+        }));
+        assertEquals(result, {
+          url: `${app.origin}/actions-page`,
+          host: false,
+          notice: false,
+        });
+      });
+
       await t.step("fragment form redirect navigates the page", async () => {
         await page.goto(`${app.origin}/todos-page`);
         await page.evaluate(() => customElements.whenDefined("route-fragment"));

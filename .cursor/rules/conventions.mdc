@@ -71,3 +71,11 @@ browser behaviour being mirrored. Use `getAttribute` or `hasAttribute`
 when presence itself is the question. JSX prop spellings (`className`,
 `htmlFor`) stop at the runtime's `MAPPED_HTML_ATTR_NAMES` and never appear
 in client code.
+
+## Fragment updates
+
+A write handler may return a non-empty list of `fragment.replace`,
+`fragment.append`, and `fragment.remove` instead of markup. Those three
+actions share one client primitive and target every `route-fragment`
+whose `src` matches. A body with no actions still replaces the host that
+asked. `route-action` is the wire format, not a user-writable element.

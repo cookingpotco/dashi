@@ -21,6 +21,8 @@ function typechecks() {
 
   // @ts-expect-error route-fragment is not a JSX intrinsic; use RouteFragment
   <route-fragment src="/x" />;
+  // @ts-expect-error route-action is not a JSX intrinsic
+  <route-action action="remove" src="/x" />;
 
   // @ts-expect-error cached() is not a JSX child
   <div>{cached(<span>x</span>, { strategy: CacheStrategy.Private })}</div>;

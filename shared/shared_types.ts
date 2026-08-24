@@ -1,4 +1,5 @@
 import { type CachedElement } from "../caching/mod.ts";
+import { type FragmentAction } from "../fragments/mod.ts";
 import { type Element } from "../jsx-runtime/mod.ts";
 
 /**
@@ -80,11 +81,31 @@ export const METHODS = [
 ] as const;
 export type Method = typeof METHODS[number];
 
+type WriteHandler<
+  Params extends Record<string, string> = Record<string, never>,
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> = (
+  ctx: Ctx<Params, State>,
+) =>
+  | Element
+  | CachedElement
+  | Response
+  | [FragmentAction, ...FragmentAction[]]
+  | Promise<
+    Element | CachedElement | Response | [FragmentAction, ...FragmentAction[]]
+  >;
+
+/**
+ * Per-method handlers on a route. GET cannot return fragment actions;
+ * writes may, as a non-empty list.
+ */
 export type MethodHandlers<
   Params extends Record<string, string> = Record<string, never>,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = {
-  [M in Exclude<Method, "HEAD" | "OPTIONS">]?: Handler<Params, State>;
+  [M in Exclude<Method, "HEAD" | "OPTIONS">]?: M extends "GET"
+    ? Handler<Params, State>
+    : WriteHandler<Params, State>;
 };
 
 /**

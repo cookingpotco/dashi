@@ -1,6 +1,5 @@
-import type { Ctx } from "dashi";
-
-const todos: string[] = [];
+import { type Ctx, fragment } from "dashi";
+import { todos } from "./todos.ts";
 
 function TodoList({ error }: { error?: string }) {
   return (
@@ -27,5 +26,11 @@ export async function create(ctx: Ctx) {
     return <TodoList error="title is required" />;
   }
   todos.push(title);
-  return <TodoList />;
+  if (!ctx.isFragment) {
+    return <TodoList />;
+  }
+  return [
+    fragment.append("/todos", <li>{title}</li>),
+    fragment.replace("/todo-count", <span>{todos.length}</span>),
+  ];
 }

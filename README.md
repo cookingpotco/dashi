@@ -17,6 +17,10 @@ published yet.
 - Forms inside a fragment submit to their `action` and swap only that fragment.
   The swap needs JavaScript; without it the same form posts normally and the
   response is a full page
+- A write handler can return `fragment.replace`, `fragment.append`, and
+  `fragment.remove` to update every host rendering those routes in one
+  response. Replace is also the default for a body with no actions. Append
+  and remove exist only as client actions and have no no-JS equivalent
 - Example apps under `examples/`
 - Static files from a directory via `staticFile` in a route handler
 - Client TypeScript included via `client.module` / `client.element`; documents
