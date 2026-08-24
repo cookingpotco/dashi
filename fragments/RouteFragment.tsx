@@ -2,11 +2,7 @@ import { type DashiNode, type HTMLAttributes } from "dashi/jsx-runtime";
 import { client } from "../client/mod.ts";
 import { error as logError } from "../logging/mod.ts";
 import { runRoute } from "../routing/mod.ts";
-import {
-  getFragmentSlot,
-  getRenderStore,
-  runWithNestedRenderStore,
-} from "../ssr/mod.ts";
+import { getFragmentSlot, getRenderStore } from "../ssr/mod.ts";
 
 const RouteFragmentElement = client.element(
   "route-fragment",
@@ -98,17 +94,13 @@ function requestEagerFragment(src: string, timeoutMs: number) {
   const req = new Request(url, { method: "GET", headers });
   const promise = (async (): Promise<string | null> => {
     try {
-      const out = await runWithNestedRenderStore(
-        { ...store.currentState },
-        () =>
-          runRoute(req, {
-            isFragment: true,
-            state: { ...store.currentState },
-            recoverMiss: false,
-            timeoutMs,
-          }),
-        chain,
-      );
+      const out = await runRoute(req, {
+        isFragment: true,
+        state: { ...store.currentState },
+        recoverMiss: false,
+        timeoutMs,
+        includeChain: chain,
+      });
       return out?.html ?? null;
     } catch (thrown) {
       logError(

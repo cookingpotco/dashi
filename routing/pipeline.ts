@@ -18,6 +18,7 @@ import {
 import {
   compile,
   type CompiledTable,
+  DEFAULT_FRAGMENT_DEPTH_LIMIT,
   group,
   type GroupBoundary,
   type GroupCallback,
@@ -53,7 +54,7 @@ let compiled: CompiledTable<Record<string, unknown>> = {
   rootBoundary: { layouts: [] },
   rootMiddleware: [],
   prefixCaptures: [],
-  fragmentDepthLimit: 5,
+  fragmentDepthLimit: DEFAULT_FRAGMENT_DEPTH_LIMIT,
 };
 
 interface Executed {
@@ -255,7 +256,7 @@ async function executeMatched(
       : await raceTimeout(
         handlerPromise,
         timeoutMs,
-        `Fragment timed out: ${ctx.url.pathname}`,
+        `Route timed out: ${ctx.url.pathname}`,
       );
     if (out instanceof Response) {
       return { response: out, html: null };
@@ -317,6 +318,7 @@ async function runPipeline(
   ctx: RequestCtx,
   middleware: MatchedRoute<Record<string, unknown>>["middleware"],
   runTerminal: () => Promise<Executed>,
+  includeChain?: string[],
 ): Promise<Executed> {
   return await runWithNestedRenderStore(ctx.state, async () => {
     let html: string | null = null;
@@ -337,7 +339,7 @@ async function runPipeline(
     };
     const response = await dispatch(0);
     return { response, html };
-  });
+  }, includeChain);
 }
 
 export async function runRoute(
@@ -347,6 +349,7 @@ export async function runRoute(
     state: Partial<Record<string, unknown>>;
     recoverMiss: boolean;
     timeoutMs?: number;
+    includeChain?: string[];
   },
 ): Promise<Executed | null> {
   const url = new URL(req.url);
@@ -367,6 +370,7 @@ export async function runRoute(
       ctx,
       miss.middleware,
       () => executeNotFound(ctx, miss.boundary),
+      options.includeChain,
     );
   }
 
@@ -381,6 +385,7 @@ export async function runRoute(
     ctx,
     matched.middleware,
     () => executeMatched(ctx, matched, options.timeoutMs),
+    options.includeChain,
   );
 }
 

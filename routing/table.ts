@@ -360,12 +360,14 @@ function staticPathname(segments: ConcreteSegment[]): string | null {
   return pathname === "" ? "/" : pathname;
 }
 
+export const DEFAULT_FRAGMENT_DEPTH_LIMIT = 5;
+
 export function compile<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(
   table: Group<State>,
   errorFallback?: Element | Response,
-  fragmentDepthLimit = 5,
+  fragmentDepthLimit = DEFAULT_FRAGMENT_DEPTH_LIMIT,
 ): CompiledTable<State> {
   const rootBoundary: GroupBoundary<State> = {
     layouts: table.layouts,
