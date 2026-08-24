@@ -249,14 +249,21 @@ Deno.test("app fixture", async (t) => {
         if (title === null || add === null) {
           throw new Error("todos form is missing");
         }
-        await title.type("buy milk");
+        await title.click();
+        await title.type("milk");
         await add.click();
-        await page.waitForFunction(() =>
-          document.querySelector("#todos")?.textContent?.includes(
-            "buy milk",
-          ) ===
-            true
-        );
+        await page.evaluate(async () => {
+          const start = Date.now();
+          while (
+            document.querySelector("#todos")?.textContent?.includes("milk") !==
+              true
+          ) {
+            if (Date.now() - start > 10000) {
+              throw new Error("todo item did not appear in the fragment");
+            }
+            await new Promise((resolve) => setTimeout(resolve, 25));
+          }
+        });
         const result = await page.evaluate(() => {
           const host = document.querySelector("route-fragment[src='/todos']");
           return {
@@ -270,8 +277,8 @@ Deno.test("app fixture", async (t) => {
         assertEquals(result, {
           url: `${app.origin}/todos-page`,
           marker: "mutated",
-          item: "buy milk",
-          itemInHost: "buy milk",
+          item: "milk",
+          itemInHost: "milk",
           hostHasHtml: false,
         });
       });
@@ -288,13 +295,22 @@ Deno.test("app fixture", async (t) => {
           if (title === null || add === null) {
             throw new Error("todos form is missing");
           }
+          await title.click();
           await title.type("x");
           await page.keyboard.press("Backspace");
           await add.click();
-          await page.waitForFunction(() =>
-            document.querySelector("todo-error-el")?.textContent ===
-              "error-upgraded"
-          );
+          await page.evaluate(async () => {
+            const start = Date.now();
+            while (
+              document.querySelector("todo-error-el")?.textContent !==
+                "error-upgraded"
+            ) {
+              if (Date.now() - start > 10000) {
+                throw new Error("validation error did not upgrade");
+              }
+              await new Promise((resolve) => setTimeout(resolve, 25));
+            }
+          });
           const result = await page.evaluate(() => {
             const input = document.querySelector(
               "#todos-form input[name=title]",
@@ -330,14 +346,21 @@ Deno.test("app fixture", async (t) => {
           if (title === null || add === null) {
             throw new Error("todos form is missing");
           }
-          await title.type("only-once");
+          await title.click();
+          await title.type("once");
           await add.click();
           await add.click();
-          await page.waitForFunction(
-            (expected) =>
-              document.querySelectorAll("#todos li").length === expected,
-            { args: [before + 1] },
-          );
+          await page.evaluate(async (expected) => {
+            const start = Date.now();
+            while (
+              document.querySelectorAll("#todos li").length !== expected
+            ) {
+              if (Date.now() - start > 10000) {
+                throw new Error("in-flight submit was not applied once");
+              }
+              await new Promise((resolve) => setTimeout(resolve, 25));
+            }
+          }, before + 1);
           const result = await page.evaluate(() => {
             const items = [
               ...document.querySelectorAll("#todos li"),
@@ -345,7 +368,7 @@ Deno.test("app fixture", async (t) => {
             return {
               url: location.href,
               items,
-              once: items.filter((item) => item === "only-once").length,
+              once: items.filter((item) => item === "once").length,
             };
           });
           assertEquals(result.url, `${app.origin}/todos-page`);
@@ -361,6 +384,7 @@ Deno.test("app fixture", async (t) => {
         if (note === null || leaveBtn === null) {
           throw new Error("leave form is missing");
         }
+        await note.click();
         await note.type("bye");
         await Promise.all([
           page.waitForNavigation(),
