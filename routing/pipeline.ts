@@ -318,9 +318,12 @@ async function runPipeline(
   ctx: RequestCtx,
   middleware: MatchedRoute<Record<string, unknown>>["middleware"],
   runTerminal: () => Promise<Executed>,
-  includeChain?: string[],
 ): Promise<Executed> {
   return await runWithNestedRenderStore(ctx.state, async () => {
+    if (ctx.isFragment) {
+      const store = getRenderStore();
+      store.includeChain = [...store.includeChain, ctx.url.pathname];
+    }
     let html: string | null = null;
     let index = -1;
     const dispatch = async (i: number): Promise<Response> => {
@@ -339,7 +342,7 @@ async function runPipeline(
     };
     const response = await dispatch(0);
     return { response, html };
-  }, includeChain);
+  });
 }
 
 export async function runRoute(
@@ -349,7 +352,6 @@ export async function runRoute(
     state: Partial<Record<string, unknown>>;
     recoverMiss: boolean;
     timeoutMs?: number;
-    includeChain?: string[];
   },
 ): Promise<Executed | null> {
   const url = new URL(req.url);
@@ -370,7 +372,6 @@ export async function runRoute(
       ctx,
       miss.middleware,
       () => executeNotFound(ctx, miss.boundary),
-      options.includeChain,
     );
   }
 
@@ -385,7 +386,6 @@ export async function runRoute(
     ctx,
     matched.middleware,
     () => executeMatched(ctx, matched, options.timeoutMs),
-    options.includeChain,
   );
 }
 

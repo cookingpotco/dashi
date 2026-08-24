@@ -99,7 +99,6 @@ function requestEagerFragment(src: string, timeoutMs: number) {
         state: { ...store.currentState },
         recoverMiss: false,
         timeoutMs,
-        includeChain: chain,
       });
       return out?.html ?? null;
     } catch (thrown) {

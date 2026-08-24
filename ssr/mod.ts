@@ -43,7 +43,6 @@ export function runWithRenderStore<T>(
 export function runWithNestedRenderStore<T>(
   currentState: Partial<Record<string, unknown>>,
   fn: () => T,
-  includeChain?: string[],
 ): T {
   const parent = getRenderStore();
   return als.run({
@@ -51,7 +50,7 @@ export function runWithNestedRenderStore<T>(
     inflightFragments: parent.inflightFragments,
     clientEntries: parent.clientEntries,
     currentState,
-    includeChain: includeChain ?? parent.includeChain,
+    includeChain: parent.includeChain,
     fragmentFault: parent.fragmentFault,
     fragmentDepthLimit: parent.fragmentDepthLimit,
   }, fn);
