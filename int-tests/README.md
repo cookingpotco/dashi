@@ -34,8 +34,8 @@ that observes it.
 `*_middleware` modules plus `main.ts`, matching the examples. Put a new folder
 next to it only when the behaviour cannot live on that app. Do not add a fixture
 as its own workspace member. Extra fixtures (`cors`, `error-defaults`,
-`error-fallback-response`) are a small `main.ts` or `main.tsx` because they
-cannot share the main app's `serve()` table.
+`error-fallback-response`, `fragment-depth`) are a small `main.ts` or `main.tsx`
+because they cannot share the main app's `serve()` table.
 
 Each fixture calls
 `serve(({ route, group }) => ({ … }), { port: 0,

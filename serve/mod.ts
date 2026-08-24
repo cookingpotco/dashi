@@ -21,8 +21,8 @@ import {
  *
  * @param build Root table. Pathless; nested prefixes live on the
  * callback's `group`.
- * @param options Forwarded to `Deno.serve`, plus `errorFallback`.
- * `handler` is always the router.
+ * @param options Forwarded to `Deno.serve`, plus `errorFallback` and
+ * `fragmentDepthLimit`. `handler` is always the router.
  */
 export function serve<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
@@ -36,10 +36,15 @@ export function serve<
      * status: 500 })`.
      */
     errorFallback?: Element | Response;
+    /**
+     * Max eager include chain length. Omitted is 5. A longer chain
+     * fails the request.
+     */
+    fragmentDepthLimit?: number;
   },
 ) {
-  const { errorFallback, ...serveOptions } = options ?? {};
-  init(build, errorFallback);
+  const { errorFallback, fragmentDepthLimit, ...serveOptions } = options ?? {};
+  init(build, errorFallback, fragmentDepthLimit);
   void compileThenListen(serveOptions);
 }
 

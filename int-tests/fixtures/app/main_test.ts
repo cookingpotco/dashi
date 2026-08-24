@@ -79,7 +79,51 @@ const appCases: IntegrationTestCase[] = [
     html: {
       bodyExcludes: ["{{fragment:"],
       select: [
+        {
+          selector: "#nest-outer #nest-mid #nested-frag",
+          text: "nested-fragment-body",
+        },
+      ],
+    },
+  },
+  {
+    name: "eager inside lazy keeps fallback on the document",
+    request: { path: "/lazy-nest-embed" },
+    status: 200,
+    html: {
+      bodyExcludes: ["nested-fragment-body", "{{fragment:"],
+      select: [
+        {
+          selector: "route-fragment[lazy] #lazy-nest-fallback",
+          text: "Loading nest...",
+        },
+        { selector: "#nested-frag", exists: false },
+      ],
+    },
+  },
+  {
+    name: "eager inside lazy is filled on x-fragment GET",
+    request: {
+      path: "/lazy-nest",
+      headers: { "x-fragment": "1" },
+    },
+    status: 200,
+    html: {
+      bodyExcludes: ["<!DOCTYPE html>", "{{fragment:"],
+      select: [
         { selector: "#nested-frag", text: "nested-fragment-body" },
+      ],
+    },
+  },
+  {
+    name: "same src twice reuses and is not a cycle",
+    request: { path: "/dup-src" },
+    status: 200,
+    html: {
+      bodyExcludes: ["{{fragment:", "Fragment cycle:"],
+      select: [
+        { selector: "#dup-a", text: "nested-fragment-body" },
+        { selector: "#dup-b", text: "nested-fragment-body" },
       ],
     },
   },
@@ -911,6 +955,83 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     },
     status: 500,
     bodyExact: "",
+    stillServes: true,
+  },
+  {
+    name: "self-including fragment is 500 naming the cycle",
+    request: { path: "/self-include" },
+    status: 500,
+    html: {
+      bodyIncludes: ["Fragment cycle: /self-include → /self-include"],
+      select: [
+        {
+          selector: "#fragment-fault",
+          text: "Fragment cycle: /self-include → /self-include",
+        },
+      ],
+    },
+    stillServes: true,
+  },
+  {
+    name: "transitive fragment cycle is 500 naming the cycle",
+    request: { path: "/embed-cycle" },
+    status: 500,
+    html: {
+      bodyIncludes: ["Fragment cycle: /cycle-a → /cycle-b → /cycle-a"],
+      select: [
+        {
+          selector: "#fragment-fault",
+          text: "Fragment cycle: /cycle-a → /cycle-b → /cycle-a",
+        },
+      ],
+    },
+    stillServes: true,
+  },
+  {
+    name: "six-deep eager chain exceeds default depth",
+    request: { path: "/depth-embed" },
+    status: 500,
+    html: {
+      bodyIncludes: [
+        "Fragment depth exceeded (5): /d1 → /d2 → /d3 → /d4 → /d5 → /d6",
+      ],
+      select: [
+        {
+          selector: "#fragment-fault",
+          text:
+            "Fragment depth exceeded (5): /d1 → /d2 → /d3 → /d4 → /d5 → /d6",
+        },
+      ],
+    },
+    stillServes: true,
+  },
+  {
+    name: "eager fragment timeout splices group error",
+    request: { path: "/embed-slow" },
+    status: 200,
+    html: {
+      bodyExcludes: ["{{fragment:", "slow-body"],
+      select: [
+        { selector: "route-fragment #frag-error", text: "frag-error-ui" },
+        { selector: "#peer", text: "peer-body" },
+        { selector: "#slow", exists: false },
+      ],
+    },
+    stillServes: true,
+  },
+  {
+    name: "eager fragment timeout without error leaves slot empty",
+    request: { path: "/embed-slow-empty" },
+    status: 200,
+    html: {
+      bodyExcludes: ["{{fragment:", "slow-body", "frag-error-ui"],
+      select: [
+        { selector: "#embed-slow-empty", exists: true },
+        { selector: "#peer", text: "peer-body" },
+        { selector: "#slow", exists: false },
+        { selector: "#frag-error", exists: false },
+      ],
+    },
     stillServes: true,
   },
 ];

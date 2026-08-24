@@ -18,7 +18,11 @@ import { Embed } from "./embed_route.tsx";
 import { Fragment } from "./fragment_route.tsx";
 import { NestEmbed } from "./nest_embed_route.tsx";
 import { NestInner } from "./nest_inner_route.tsx";
+import { NestMid } from "./nest_mid_route.tsx";
 import { NestOuter } from "./nest_outer_route.tsx";
+import { LazyNest } from "./lazy_nest_route.tsx";
+import { LazyNestEmbed } from "./lazy_nest_embed_route.tsx";
+import { DupSrc } from "./dup_src_route.tsx";
 import { ProbePage } from "./probe_route.tsx";
 import { Peer } from "./peer_route.tsx";
 import { PostsNew } from "./posts_new_route.tsx";
@@ -41,13 +45,26 @@ import {
   ApiNotFound,
   ApiV2NotFound,
   compactError,
+  CycleA,
+  CycleB,
+  Depth1,
+  Depth2,
+  Depth3,
+  Depth4,
+  Depth5,
+  Depth6,
+  DepthEmbed,
+  EmbedCycle,
   embedFragError,
   embedFragErrorResponse,
   embedFragErrorThrows,
   embedFragMiss,
   embedFragThrow,
+  EmbedSlow,
+  EmbedSlowEmpty,
   errorFallback,
   jsonError,
+  messageError,
   nestedError,
   nestedErrorLayout,
   nestedMw,
@@ -56,6 +73,8 @@ import {
   okPage,
   responseError,
   RootError,
+  SelfInclude,
+  Slow,
   throwErrorHandlerBoom,
   throwHandler,
   throwingError,
@@ -152,7 +171,11 @@ if (import.meta.main) {
       })),
       route("/nested-embed", { GET: NestEmbed }),
       route("/nest-outer", { GET: NestOuter }),
+      route("/nest-mid", { GET: NestMid }),
       route("/nest-inner", { GET: NestInner }),
+      route("/lazy-nest", { GET: LazyNest }),
+      route("/lazy-nest-embed", { GET: LazyNestEmbed }),
+      route("/dup-src", { GET: DupSrc }),
       group(({ route }) => ({
         middleware: [fragOnly],
         routes: [route("/fragment", { GET: Fragment })],
@@ -256,6 +279,31 @@ if (import.meta.main) {
       route("/embed-frag-error-response", { GET: embedFragErrorResponse }),
       route("/embed-frag-error-throws", { GET: embedFragErrorThrows }),
       route("/embed-frag-miss", { GET: embedFragMiss }),
+      group(({ route }) => ({
+        error: messageError,
+        routes: [
+          route("/self-include", { GET: SelfInclude }),
+          route("/cycle-a", { GET: CycleA }),
+          route("/cycle-b", { GET: CycleB }),
+          route("/embed-cycle", { GET: EmbedCycle }),
+          route("/depth-embed", { GET: DepthEmbed }),
+          route("/d1", { GET: Depth1 }),
+          route("/d2", { GET: Depth2 }),
+          route("/d3", { GET: Depth3 }),
+          route("/d4", { GET: Depth4 }),
+          route("/d5", { GET: Depth5 }),
+          route("/d6", { GET: Depth6 }),
+        ],
+      })),
+      group(({ route }) => ({
+        error: compactError,
+        routes: [
+          route("/slow", { GET: Slow }),
+        ],
+      })),
+      route("/slow-no-error", { GET: Slow }),
+      route("/embed-slow", { GET: EmbedSlow }),
+      route("/embed-slow-empty", { GET: EmbedSlowEmpty }),
     ],
   }), { errorFallback, port: 0 });
 }

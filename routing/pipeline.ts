@@ -18,6 +18,7 @@ import {
 import {
   compile,
   type CompiledTable,
+  DEFAULT_FRAGMENT_DEPTH_LIMIT,
   group,
   type GroupBoundary,
   type GroupCallback,
@@ -53,6 +54,7 @@ let compiled: CompiledTable<Record<string, unknown>> = {
   rootBoundary: { layouts: [] },
   rootMiddleware: [],
   prefixCaptures: [],
+  fragmentDepthLimit: DEFAULT_FRAGMENT_DEPTH_LIMIT,
 };
 
 interface Executed {
@@ -220,12 +222,42 @@ async function runHandler(
   return await handler(ctx);
 }
 
+function raceTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  message: string,
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(message));
+    }, timeoutMs);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
+}
+
 async function executeMatched(
   ctx: RequestCtx,
   matched: MatchedRoute<Record<string, unknown>>,
+  timeoutMs?: number,
 ): Promise<Executed> {
   try {
-    const out = await runHandler(ctx, matched);
+    const handlerPromise = runHandler(ctx, matched);
+    const out = timeoutMs === undefined
+      ? await handlerPromise
+      : await raceTimeout(
+        handlerPromise,
+        timeoutMs,
+        `Route timed out: ${ctx.url.pathname}`,
+      );
     if (out instanceof Response) {
       return { response: out, html: null };
     }
@@ -288,6 +320,10 @@ async function runPipeline(
   runTerminal: () => Promise<Executed>,
 ): Promise<Executed> {
   return await runWithNestedRenderStore(ctx.state, async () => {
+    if (ctx.isFragment) {
+      const store = getRenderStore();
+      store.includeChain = [...store.includeChain, ctx.url.pathname];
+    }
     let html: string | null = null;
     let index = -1;
     const dispatch = async (i: number): Promise<Response> => {
@@ -315,6 +351,7 @@ export async function runRoute(
     isFragment: boolean;
     state: Partial<Record<string, unknown>>;
     recoverMiss: boolean;
+    timeoutMs?: number;
   },
 ): Promise<Executed | null> {
   const url = new URL(req.url);
@@ -348,7 +385,7 @@ export async function runRoute(
   return await runPipeline(
     ctx,
     matched.middleware,
-    () => executeMatched(ctx, matched),
+    () => executeMatched(ctx, matched, options.timeoutMs),
   );
 }
 
@@ -409,12 +446,14 @@ export function init<
 >(
   build: (cb: GroupCallback<"", State>) => GroupFields<State>,
   errorFallback?: Element | Response,
+  fragmentDepthLimit?: number,
 ) {
   // handle() has no State parameter. The table is only invoked with a ctx
   // whose state bag is the object the request created.
   compiled = compile(
     group((cb: GroupCallback<"", State>) => withCompiledClient(cb, build(cb))),
     errorFallback,
+    fragmentDepthLimit,
   ) as CompiledTable<
     Record<string, unknown>
   >;
@@ -437,30 +476,34 @@ export function init<
 export async function handle(
   req: Request,
 ) {
-  const res = await runWithRenderStore(req, async () => {
-    const isFragment = req.headers.has(REQUEST_HEADERS.FRAGMENT);
-    try {
-      const out = await runRoute(req, {
-        isFragment,
-        state: {},
-        recoverMiss: true,
-      });
-      return out!.response;
-    } catch (thrown) {
-      logError(
-        `[routing] handle recovering from: ${
-          thrown instanceof Error ? thrown.message : thrown
-        }`,
-      );
-      return (await htmlResponse(
-        lastResort({
+  const res = await runWithRenderStore(
+    req,
+    compiled.fragmentDepthLimit,
+    async () => {
+      const isFragment = req.headers.has(REQUEST_HEADERS.FRAGMENT);
+      try {
+        const out = await runRoute(req, {
           isFragment,
-          errorFallback: compiled.errorFallback,
-        }),
-        { status: 500, isFragment, req },
-      )).response;
-    }
-  });
+          state: {},
+          recoverMiss: true,
+        });
+        return out!.response;
+      } catch (thrown) {
+        logError(
+          `[routing] handle recovering from: ${
+            thrown instanceof Error ? thrown.message : thrown
+          }`,
+        );
+        return (await htmlResponse(
+          lastResort({
+            isFragment,
+            errorFallback: compiled.errorFallback,
+          }),
+          { status: 500, isFragment, req },
+        )).response;
+      }
+    },
+  );
   if (req.method === "HEAD") {
     return await withoutContent(res);
   }
