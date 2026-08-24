@@ -249,7 +249,6 @@ Deno.test("app fixture", async (t) => {
         if (title === null || add === null) {
           throw new Error("todos form is missing");
         }
-        await title.click();
         await title.type("milk");
         await add.click();
         await page.evaluate(async () => {
@@ -295,7 +294,6 @@ Deno.test("app fixture", async (t) => {
           if (title === null || add === null) {
             throw new Error("todos form is missing");
           }
-          await title.click();
           await title.type("x");
           await page.keyboard.press("Backspace");
           await add.click();
@@ -346,7 +344,6 @@ Deno.test("app fixture", async (t) => {
           if (title === null || add === null) {
             throw new Error("todos form is missing");
           }
-          await title.click();
           await title.type("once");
           await add.click();
           await add.click();
@@ -386,7 +383,6 @@ Deno.test("app fixture", async (t) => {
         if (note === null || leaveBtn === null) {
           throw new Error("leave form is missing");
         }
-        await note.click();
         await note.type("bye");
         await Promise.all([
           page.waitForNavigation(),
