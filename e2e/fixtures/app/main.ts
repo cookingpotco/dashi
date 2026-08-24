@@ -17,9 +17,15 @@ import { countedHits } from "./counted_hits_route.ts";
 import { create as createTodo, list as listTodos } from "./todos_route.tsx";
 import { TodosPage } from "./todos_page_route.tsx";
 import { ActionsPage } from "./actions_page_route.tsx";
-import { apply as applyActions, form as actionsForm } from "./actions_route.tsx";
+import {
+  apply as applyActions,
+  form as actionsForm,
+} from "./actions_route.tsx";
 import { list as listTodoCount } from "./todo_count_route.tsx";
-import { dismiss as dismissNotice, list as listNotice } from "./notice_route.tsx";
+import {
+  dismiss as dismissNotice,
+  list as listNotice,
+} from "./notice_route.tsx";
 import { Leave, leave } from "./leave_route.tsx";
 import { RootLayout } from "./root_layout.tsx";
 import { errorFallback, ErrorPage } from "./errors.tsx";

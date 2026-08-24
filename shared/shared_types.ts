@@ -90,14 +90,12 @@ type WriteHandler<
   | Element
   | CachedElement
   | Response
-  | [FragmentAction, ...FragmentAction[]]
-  | Promise<
-    Element | CachedElement | Response | [FragmentAction, ...FragmentAction[]]
-  >;
+  | FragmentAction[]
+  | Promise<Element | CachedElement | Response | FragmentAction[]>;
 
 /**
  * Per-method handlers on a route. GET cannot return fragment actions;
- * writes may, as a non-empty list.
+ * writes may, as a list.
  */
 export type MethodHandlers<
   Params extends Record<string, string> = Record<string, never>,

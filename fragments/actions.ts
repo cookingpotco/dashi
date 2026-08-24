@@ -29,15 +29,15 @@ interface RemoveAction {
 /** One targeted update for every `<RouteFragment>` rendering `src`. */
 export type FragmentAction = ReplaceAction | AppendAction | RemoveAction;
 
-function replace(src: InternalSrc, body: Element): ReplaceAction {
+function replace(src: InternalSrc, body: Element): FragmentAction {
   return { kind: ActionKind.Replace, src, body };
 }
 
-function append(src: InternalSrc, body: Element): AppendAction {
+function append(src: InternalSrc, body: Element): FragmentAction {
   return { kind: ActionKind.Append, src, body };
 }
 
-function remove(src: InternalSrc): RemoveAction {
+function remove(src: InternalSrc): FragmentAction {
   return { kind: ActionKind.Remove, src };
 }
 

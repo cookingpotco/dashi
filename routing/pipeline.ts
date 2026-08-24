@@ -207,7 +207,7 @@ async function runHandler(
   | Element
   | CachedElement
   | Response
-  | [FragmentAction, ...FragmentAction[]]
+  | FragmentAction[]
 > {
   const method = ctx.req.method;
   if (method === "OPTIONS") {
