@@ -350,17 +350,19 @@ Deno.test("app fixture", async (t) => {
           await title.type("once");
           await add.click();
           await add.click();
-          await page.evaluate(async (expected) => {
-            const start = Date.now();
-            while (
-              document.querySelectorAll("#todos li").length !== expected
-            ) {
-              if (Date.now() - start > 10000) {
-                throw new Error("in-flight submit was not applied once");
-              }
-              await new Promise((resolve) => setTimeout(resolve, 25));
+          const start = Date.now();
+          while (true) {
+            const length = await page.evaluate(() =>
+              document.querySelectorAll("#todos li").length
+            );
+            if (length === before + 1) {
+              break;
             }
-          }, before + 1);
+            if (Date.now() - start > 10000) {
+              throw new Error("in-flight submit was not applied once");
+            }
+            await new Promise((resolve) => setTimeout(resolve, 25));
+          }
           const result = await page.evaluate(() => {
             const items = [
               ...document.querySelectorAll("#todos li"),
