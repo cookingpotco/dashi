@@ -19,6 +19,7 @@ export async function Home() {
         Random number: {hello.toFixed(2)}
       </h1>
       <TestComponent text="my footy" />
+      <RouteFragment src="/todos" />
       <RouteFragment src="/fragment" />
       <RouteFragment
         src="/fragment"

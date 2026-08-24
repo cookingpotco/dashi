@@ -234,6 +234,152 @@ Deno.test("app fixture", async (t) => {
           });
         },
       );
+
+      await t.step("fragment form submits and swaps in place", async () => {
+        await page.goto(`${app.origin}/todos-page`);
+        await page.evaluate(() => customElements.whenDefined("route-fragment"));
+        await page.evaluate(() => {
+          const marker = document.getElementById("page-marker");
+          if (marker) {
+            marker.textContent = "mutated";
+          }
+        });
+        const title = await page.$("#todos-form input[name=title]");
+        const add = await page.$("#todos-form button");
+        if (title === null || add === null) {
+          throw new Error("todos form is missing");
+        }
+        await title.type("buy milk");
+        await add.click();
+        await page.waitForFunction(() =>
+          document.querySelector("#todos")?.textContent?.includes(
+            "buy milk",
+          ) ===
+            true
+        );
+        const result = await page.evaluate(() => {
+          const host = document.querySelector("route-fragment[src='/todos']");
+          return {
+            url: location.href,
+            marker: document.getElementById("page-marker")?.textContent,
+            item: document.querySelector("#todos li")?.textContent,
+            itemInHost: host?.querySelector("#todos li")?.textContent ?? null,
+            hostHasHtml: host?.querySelector("html") !== null,
+          };
+        });
+        assertEquals(result, {
+          url: `${app.origin}/todos-page`,
+          marker: "mutated",
+          item: "buy milk",
+          itemInHost: "buy milk",
+          hostHasHtml: false,
+        });
+      });
+
+      await t.step(
+        "fragment form validation error swaps in place and upgrades",
+        async () => {
+          await page.goto(`${app.origin}/todos-page`);
+          await page.evaluate(() =>
+            customElements.whenDefined("route-fragment")
+          );
+          const title = await page.$("#todos-form input[name=title]");
+          const add = await page.$("#todos-form button");
+          if (title === null || add === null) {
+            throw new Error("todos form is missing");
+          }
+          await title.type("x");
+          await page.keyboard.press("Backspace");
+          await add.click();
+          await page.waitForFunction(() =>
+            document.querySelector("todo-error-el")?.textContent ===
+              "error-upgraded"
+          );
+          const result = await page.evaluate(() => {
+            const input = document.querySelector(
+              "#todos-form input[name=title]",
+            );
+            return {
+              url: location.href,
+              error: document.getElementById("todo-error")?.textContent,
+              inputPresent: input instanceof HTMLInputElement,
+              inputValue: input instanceof HTMLInputElement
+                ? input.value
+                : null,
+            };
+          });
+          assertEquals(result.url, `${app.origin}/todos-page`);
+          assertEquals(result.error, "title is required");
+          assertEquals(result.inputPresent, true);
+          assertEquals(result.inputValue, "");
+        },
+      );
+
+      await t.step(
+        "a second submit while in flight is dropped",
+        async () => {
+          await page.goto(`${app.origin}/todos-page`);
+          await page.evaluate(() =>
+            customElements.whenDefined("route-fragment")
+          );
+          const before = await page.evaluate(() =>
+            document.querySelectorAll("#todos li").length
+          );
+          const title = await page.$("#todos-form input[name=title]");
+          const add = await page.$("#todos-form button");
+          if (title === null || add === null) {
+            throw new Error("todos form is missing");
+          }
+          await title.type("only-once");
+          await add.click();
+          await add.click();
+          await page.waitForFunction(
+            (expected) =>
+              document.querySelectorAll("#todos li").length === expected,
+            { args: [before + 1] },
+          );
+          const result = await page.evaluate(() => {
+            const items = [
+              ...document.querySelectorAll("#todos li"),
+            ].map((el) => el.textContent);
+            return {
+              url: location.href,
+              items,
+              once: items.filter((item) => item === "only-once").length,
+            };
+          });
+          assertEquals(result.url, `${app.origin}/todos-page`);
+          assertEquals(result.once, 1);
+        },
+      );
+
+      await t.step("fragment form redirect navigates the page", async () => {
+        await page.goto(`${app.origin}/todos-page`);
+        await page.evaluate(() => customElements.whenDefined("route-fragment"));
+        const note = await page.$("#leave-form input[name=note]");
+        const leaveBtn = await page.$("#leave-form button");
+        if (note === null || leaveBtn === null) {
+          throw new Error("leave form is missing");
+        }
+        await note.type("bye");
+        await Promise.all([
+          page.waitForNavigation(),
+          leaveBtn.click(),
+        ]);
+        const result = await page.evaluate(() => ({
+          url: location.href,
+          heading: document.querySelector("h1")?.textContent,
+          host: document.querySelector("route-fragment[src='/leave']") !==
+            null,
+          hasDoctype: document.doctype !== null,
+        }));
+        assertEquals(result, {
+          url: `${app.origin}/`,
+          heading: "ok",
+          host: false,
+          hasDoctype: true,
+        });
+      });
     },
   );
 });

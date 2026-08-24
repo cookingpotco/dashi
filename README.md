@@ -14,6 +14,9 @@ published yet.
   path answers OPTIONS.
 - `<RouteFragment>` for composing another route into the current page (eager
   during SSR, or client-fetched when `lazy`)
+- Forms inside a fragment submit to their `action` and swap only that fragment.
+  The swap needs JavaScript; without it the same form posts normally and the
+  response is a full page
 - Example apps under `examples/`
 - Static files from a directory via `staticFile` in a route handler
 - Client TypeScript included via `client.module` / `client.element`; documents

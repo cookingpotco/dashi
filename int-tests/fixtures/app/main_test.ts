@@ -205,6 +205,23 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
+    name: "POST x-fragment omits layouts and doctype",
+    request: {
+      method: "POST",
+      path: "/fragment",
+      headers: { "x-fragment": "1" },
+    },
+    status: 200,
+    headers: { "content-type": "text/html" },
+    html: {
+      bodyExcludes: ["<!DOCTYPE html>", "<script"],
+      select: [
+        { selector: "#frag", text: "posted-fragment-body" },
+        { selector: "h1", exists: false },
+      ],
+    },
+  },
+  {
     name: "unmatched path is 404",
     request: { path: "/no-such-page" },
     status: 404,
