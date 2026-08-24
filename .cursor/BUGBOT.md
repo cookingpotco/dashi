@@ -79,6 +79,12 @@ cannot see project rules.
   example apps.
 - Cross-directory imports go through that directory's `mod.ts`. Flag an import
   of a sibling file (`routing/pipeline.ts`, `shared/shared_types.ts`).
+- A `*_route.ts(x)` module exports route handlers only, and only the route table
+  imports from it. Flag application code that calls a handler, including as a
+  JSX child: it skips the target's middleware and error boundary, applies its
+  cache policy to the caller's response, and leaves it reading the caller's
+  `ctx`. Shared markup is a component in a non-route module; another route's
+  rendered output is `<RouteFragment src>`.
 - Client JS attaches only via `client.module` / `client.element` at module
   scope. App files are `*_client.ts` beside the registrar. Compiled files are
   `/_dashi/client/` via a reserved table route (flat

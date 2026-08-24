@@ -31,6 +31,11 @@ export type WrapperCtx<
  * Route function. A returned `Response` is sent as-is: no layouts,
  * DOCTYPE, or fragment splice. `cached()` attaches a cache policy to an
  * Element return.
+ *
+ * Only the router calls a handler. A direct call skips the target's
+ * middleware and error boundary and leaves it reading the caller's
+ * `ctx`. Share markup as a component; include another route's rendered
+ * output with `<RouteFragment src>`.
  */
 export type Handler<
   Params extends Record<string, string> = Record<string, never>,

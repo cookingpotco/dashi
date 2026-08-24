@@ -11,6 +11,19 @@ A directory's public surface is its `mod.ts`. Import that file from outside
 the directory. Do not reach into a sibling module (`routing/pipeline.ts`,
 `shared/shared_types.ts`). Same-directory imports are fine.
 
+## Route modules
+
+A `*_route.ts(x)` module exports route handlers and nothing else, and only
+the route table imports from it. Shared values live in a module that is not
+a route.
+
+Application code never calls a handler. The router is what invokes one: a
+direct call skips the target's middleware and error boundary, applies its
+cache policy to the caller's response, and leaves it reading the caller's
+`ctx`. Share markup as a component, including between two methods of one
+route, and use `<RouteFragment src>` to include another route's rendered
+output.
+
 ## Discriminants
 
 A closed set of cases is a `const enum`. Comparisons use the enum member, not
