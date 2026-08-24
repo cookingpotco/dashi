@@ -51,3 +51,10 @@ a module script is added only when a host rendered. A lazy fragment
 `import()`s its `Link` modulepreloads before swap.
 `DASHI_MINIFY_CLIENT=1` minifies the bundle; `deno task dev` sets it to `0`.
 `staticFile` is app-mounted disk files. `/_dashi/*` is reserved.
+Client code names the DOM the way the HTML spec does. Prefer IDL properties
+(`form.method`, `submitter.formAction`): their reflection rules, meaning
+value normalisation, URL resolution, and missing-value defaults, are the
+browser behaviour being mirrored. Use `getAttribute` or `hasAttribute`
+when presence itself is the question. JSX prop spellings (`className`,
+`htmlFor`) stop at the runtime's `MAPPED_HTML_ATTR_NAMES` and never appear
+in client code.

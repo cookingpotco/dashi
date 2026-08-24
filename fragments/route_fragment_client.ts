@@ -20,6 +20,7 @@ class RouteFragment extends HTMLElement {
     }
 
     this.src = srcAttr;
+    this.addEventListener("submit", (event) => this.onSubmit(event));
   }
 
   connectedCallback() {
@@ -40,7 +41,98 @@ class RouteFragment extends HTMLElement {
     });
   }
 
+  private onSubmit(event: Event) {
+    if (!(event.target instanceof HTMLFormElement)) {
+      return;
+    }
+    const form = event.target;
+    if (form.closest("route-fragment") !== this) {
+      return;
+    }
+    const submitter = event instanceof SubmitEvent ? event.submitter : null;
+    const formControl = submitter instanceof HTMLButtonElement ||
+        submitter instanceof HTMLInputElement
+      ? submitter
+      : null;
+    const method = formControl?.formMethod || form.method;
+    if (method === "dialog") {
+      return;
+    }
+    const action = formControl?.hasAttribute("formaction")
+      ? formControl.formAction
+      : form.action;
+    const target = formControl?.hasAttribute("formtarget")
+      ? formControl.formTarget
+      : form.target;
+    if (target !== "" || new URL(action).origin !== location.origin) {
+      return;
+    }
+    if (this.abort !== null) {
+      event.preventDefault();
+      return;
+    }
+    event.preventDefault();
+    const abort = new AbortController();
+    this.abort = abort;
+    void this.submitAndSwap(form, formControl, method, action, abort);
+  }
+
+  private async submitAndSwap(
+    form: HTMLFormElement,
+    submitter: HTMLButtonElement | HTMLInputElement | null,
+    method: string,
+    action: string,
+    abort: AbortController,
+  ) {
+    this.setAttribute("aria-busy", "true");
+    try {
+      const formData = submitter
+        ? new FormData(form, submitter)
+        : new FormData(form);
+      const encoded = new URLSearchParams(
+        [...formData].filter((entry): entry is [string, string] =>
+          typeof entry[1] === "string"
+        ),
+      );
+      const init: RequestInit = {
+        method,
+        headers: fragmentHeaders,
+        signal: abort.signal,
+      };
+      let url = action;
+      if (method === "get") {
+        const query = new URL(action);
+        query.search = encoded.toString();
+        url = query.href;
+      } else if (form.enctype === "multipart/form-data") {
+        init.body = formData;
+      } else {
+        init.body = encoded;
+      }
+      const res = await fetch(url, init);
+      if (abort.signal.aborted) {
+        return;
+      }
+      if (res.redirected) {
+        // TODO(COO-24): in-place navigation instead of a full load
+        location.assign(res.url);
+        return;
+      }
+      await this.applyResponse(res, abort);
+    } catch {
+      return;
+    } finally {
+      if (this.abort === abort) {
+        this.abort = null;
+      }
+      if (this.abort === null) {
+        this.removeAttribute("aria-busy");
+      }
+    }
+  }
+
   private async fetchAndSwap(abort: AbortController) {
+    this.setAttribute("aria-busy", "true");
     try {
       const res = await fetch(this.src, {
         method: "GET",
@@ -50,28 +142,10 @@ class RouteFragment extends HTMLElement {
       if (abort.signal.aborted) {
         return;
       }
-      const html = await res.text();
-      if (abort.signal.aborted) {
-        return;
-      }
-      if (!res.ok && html === "") {
+      await this.applyResponse(res, abort);
+      if (!abort.signal.aborted) {
         this.loaded = true;
-        return;
       }
-      const link = res.headers.get("link") ?? "";
-      const pending: Promise<unknown>[] = [];
-      for (const match of link.matchAll(/<([^>]+)>;\s*rel="modulepreload"/g)) {
-        const href = match[1];
-        if (href !== undefined) {
-          pending.push(import(new URL(href, location.href).href));
-        }
-      }
-      await Promise.all(pending);
-      if (abort.signal.aborted || !this.isConnected) {
-        return;
-      }
-      this.innerHTML = html;
-      this.loaded = true;
     } catch {
       if (!abort.signal.aborted) {
         this.loaded = true;
@@ -80,7 +154,33 @@ class RouteFragment extends HTMLElement {
       if (this.abort === abort) {
         this.abort = null;
       }
+      if (this.abort === null) {
+        this.removeAttribute("aria-busy");
+      }
     }
+  }
+
+  private async applyResponse(res: Response, abort: AbortController) {
+    const html = await res.text();
+    if (abort.signal.aborted) {
+      return;
+    }
+    if (!res.ok && html === "") {
+      return;
+    }
+    const link = res.headers.get("link") ?? "";
+    const pending: Promise<unknown>[] = [];
+    for (const match of link.matchAll(/<([^>]+)>;\s*rel="modulepreload"/g)) {
+      const href = match[1];
+      if (href !== undefined) {
+        pending.push(import(new URL(href, location.href).href));
+      }
+    }
+    await Promise.all(pending);
+    if (abort.signal.aborted || !this.isConnected) {
+      return;
+    }
+    this.innerHTML = html;
   }
 }
 

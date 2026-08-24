@@ -16,3 +16,7 @@ export function Fragment(
     </aside>
   );
 }
+
+export function post() {
+  return <aside id="frag">posted-fragment-body</aside>;
+}

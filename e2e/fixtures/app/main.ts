@@ -14,6 +14,9 @@ import { Slow } from "./slow_route.tsx";
 import { Count } from "./count_route.tsx";
 import { Counted } from "./counted_route.tsx";
 import { countedHits } from "./counted_hits_route.ts";
+import { create as createTodo, list as listTodos } from "./todos_route.tsx";
+import { TodosPage } from "./todos_page_route.tsx";
+import { Leave, leave } from "./leave_route.tsx";
 import { RootLayout } from "./root_layout.tsx";
 import { errorFallback, ErrorPage } from "./errors.tsx";
 
@@ -37,6 +40,9 @@ if (import.meta.main) {
       route("/count", { GET: Count }),
       route("/counted", { GET: Counted }),
       route("/counted-hits", { GET: countedHits }),
+      route("/todos-page", { GET: TodosPage }),
+      route("/todos", { GET: listTodos, POST: createTodo }),
+      route("/leave", { GET: Leave, POST: leave }),
     ],
   }), { errorFallback, port: 0 });
 }
