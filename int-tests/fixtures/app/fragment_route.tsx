@@ -19,6 +19,9 @@ export function Fragment(
 
 export function post() {
   return [
-    fragment.replace("/fragment", <aside id="frag">posted-fragment-body</aside>),
+    fragment.replace(
+      "/fragment",
+      <aside id="frag">posted-fragment-body</aside>,
+    ),
   ];
 }

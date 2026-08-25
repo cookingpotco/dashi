@@ -99,8 +99,8 @@ cannot see project rules.
 - Fragment updates are `fragment.replace`, `fragment.append`, and
   `fragment.remove` on one primitive, targeting every `route-fragment` with that
   `src`. Write handlers return that list or a Response, not markup.
-  `route-action` is the wire format, not a user-writable element. Flag a
-  second update path, targeting by DOM id, or a write that returns JSX.
+  `route-action` is the wire format, not a user-writable element. Flag a second
+  update path, targeting by DOM id, or a write that returns JSX.
 - An object shape is an `interface`. `type` is for unions, aliases, mapped
   types. Flag an object shape written as a `type`.
 - Flag a helper that is a short, obvious check or a few straightforward lines
