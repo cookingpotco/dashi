@@ -76,6 +76,9 @@ jobs:
           - name: Publish dry-run
             run: deno publish --dry-run
             timeout: 10
+          - name: Published graph
+            run: deno run -A scripts/check_published_graph.ts
+            timeout: 10
           - name: Fresh project
             run: deno run -A scripts/verify_fresh_project.ts --linked
             timeout: 10

@@ -1,4 +1,9 @@
-import type { DashiNode, Element, HTMLAttributes } from "../jsx-runtime/mod.ts";
+import {
+  type DashiNode,
+  type Element,
+  type HTMLAttributes,
+  jsx,
+} from "../jsx-runtime/mod.ts";
 import { client } from "../client/mod.ts";
 import type { InternalSrc } from "./actions.ts";
 import { error as logError } from "../logging/mod.ts";
@@ -112,19 +117,18 @@ export function RouteFragment(
   { src, lazy, fallback, timeout, ...rest }: FragmentSlotProps,
 ): Element {
   if (lazy) {
-    return (
-      <RouteFragmentElement src={src} lazy {...rest}>
-        {fallback}
-      </RouteFragmentElement>
-    );
+    return jsx(RouteFragmentElement, {
+      src,
+      lazy,
+      ...rest,
+      children: fallback,
+    });
   }
 
   requestEagerFragment(src, timeout ?? DEFAULT_FRAGMENT_TIMEOUT_MS);
-  return (
-    <RouteFragmentElement
-      src={src}
-      {...rest}
-      dangerouslySetInnerHTML={{ __html: getFragmentSlot(src) }}
-    />
-  );
+  return jsx(RouteFragmentElement, {
+    src,
+    ...rest,
+    dangerouslySetInnerHTML: { __html: getFragmentSlot(src) },
+  });
 }
