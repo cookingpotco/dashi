@@ -35,7 +35,8 @@ serve(({ route }) => ({
 
 - No runtime dependencies.
 - One way to do a thing.
-- No client framework: JS ships only when a client host renders.
+- Explicit client inclusion — JS ships only when you call `client.module` or
+  `client.element` at module scope.
 - Explicit over magic — no file-system routing, no `_` prefixes.
 
 ## Quick start
