@@ -1,5 +1,8 @@
 # dashi
 
+> **Not production ready.** dashi has not hit v1 yet and is under active
+> development. Expect breaking changes in minor versions.
+
 Server-first web framework for Deno. JSX compiles to HTML strings on the server
 — no VDOM, no hydration, no client framework. Pages update by swapping
 server-rendered fragments, in the spirit of [Hotwire](https://hotwired.dev/) and
@@ -194,11 +197,6 @@ group("/api", ({ route }) => ({
 - WebSocket / SSE push into fragments, and SSR streaming.
 - Deno-only. JSR's npm compatibility means an install under Node succeeds, and
   then `Deno.serve` is not there.
-
-## Stability
-
-0.1.x. Breaking changes are expected while navigation and API consolidation
-land. On `0.x` a break is a minor bump.
 
 ## Examples
 
