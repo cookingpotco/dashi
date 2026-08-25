@@ -1,7 +1,5 @@
 {
   "compilerOptions": {
-    "jsx": "precompile",
-    "jsxImportSource": "@cookingpot/dashi",
     "lib": [
       "dom",
       "deno.ns",
@@ -12,7 +10,8 @@
     "./examples/hello-world",
     "./examples/fragments",
     "./int-tests",
-    "./e2e"
+    "./e2e",
+    "./jsx-tests"
   ],
   "unstable": ["bundle"],
   "lock": {

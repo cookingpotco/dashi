@@ -19,7 +19,8 @@ review follow-up. If that skill is not already available, read
 Every behaviour change is covered at the layer that actually runs:
 
 - Pure functions: `Deno.test` next to the module
-- Markup: compiled JSX
+- Markup: compiled JSX, in `jsx-tests/` because the published package carries no
+  JSX config
 - HTTP (status, headers, HTML bytes / parsed response): `int-tests/`
 - Live DOM after JS (custom element upgrade, fetch, swap, History): `e2e/`
 
