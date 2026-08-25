@@ -51,18 +51,6 @@ interpolated HTML, and its request path runs concurrently under `Deno.serve`.
   reachable.
 - **Several asserts on one input.** That is covering a flow. Do not ask to split
   them.
-- **The known defects listed below.** They are tracked, and restating them is
-  noise.
-
-## Known and tracked
-
-These are real problems with owning issues. Do not report them as new findings.
-**Do** flag a change that touches one of them without fixing it, or that
-introduces a new instance of the same class elsewhere.
-
-| Location                | Defect                                                                   | Issue     |
-| ----------------------- | ------------------------------------------------------------------------ | --------- |
-| `deno.json` (all three) | The `dev` task has no permission flags and relies on interactive prompts | untracked |
 
 ## Conventions
 

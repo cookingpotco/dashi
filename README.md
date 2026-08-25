@@ -28,14 +28,15 @@ serve(({ route }) => ({
 - **Explicit route table.** Typed params from the path literal, and per-method
   handlers, in one `serve()` callback.
 - **Web standards.** Handlers read `ctx.req` as a `Request` and return JSX or a
-  `Response`.
+  `Response`. Client code uses native custom elements and plain DOM access.
 - **Per-route cache control.** Wrap any handler or layout return in `cached()`.
 
 ## By design
 
-No runtime dependencies. One way to do a thing. No client framework: JS ships
-only when a client host renders. Explicit over magic — no file-system routing,
-no `_` prefixes.
+- No runtime dependencies.
+- One way to do a thing.
+- No client framework: JS ships only when a client host renders.
+- Explicit over magic — no file-system routing, no `_` prefixes.
 
 ## Quick start
 
@@ -60,11 +61,7 @@ Every config key a consumer needs, in one `deno.json`:
 
 <!-- TODO(COO-29): confirm the published version -->
 
-`unstable: ["bundle"]` is required to listen. Importing `dashi` registers
-`RouteFragment`'s client element at module scope, and `serve()` calls
-`Deno.bundle`. Without the flag `deno check` still passes; the server logs
-`[client] bundle failed: Deno.bundle is not a function` and exits 1 before it
-listens.
+`unstable: ["bundle"]` is required until runtime `Deno.bundle` becomes stable.
 
 Leave `compilerOptions.lib` unset. Deno's default is enough. A partial `lib`
 array drops types the compiler and `Deno.bundle` need.
@@ -142,8 +139,6 @@ serve(({ route }) => ({
 
 A GET or lazy fetch replaces the host that asked with markup. `fragment.replace`
 / `append` / `remove` update every `<RouteFragment>` rendering that `src`.
-Action lists have no no-JS equivalent; return a `Response` if the form should
-work without JavaScript.
 
 ## Other features
 
@@ -172,6 +167,12 @@ is the last-resort 500 on `serve()` options: no layouts, no `ctx`, no `thrown`.
 scope — not inside a component or handler. Documents get an import map; a module
 script is added only when a client host rendered.
 
+```tsx
+const Clock = client.module(
+  new URL("./clock_client.ts", import.meta.url),
+);
+```
+
 **Static files** from a directory: `staticFile(ctx, dir, relative)` in a route
 handler. Pass `${import.meta.dirname}/static` so the folder travels with the
 module.
@@ -187,9 +188,9 @@ group("/api", ({ route }) => ({
 
 ## Not yet
 
-- Link interception and Turbo-style navigation (M5).
-- WebSocket / SSE push into fragments, and SSR streaming
-  ([COO-59](https://linear.app/cookingpot/issue/COO-59)).
+- Link interception and Turbo-style navigation, planned for the next minor
+  version.
+- WebSocket / SSE push into fragments, and SSR streaming.
 - Deno-only. JSR's npm compatibility means an install under Node succeeds, and
   then `Deno.serve` is not there.
 
@@ -200,7 +201,7 @@ land. On `0.x` a break is a minor bump.
 
 ## Examples
 
-Worked apps in the repo:
+Minimal working samples, not a recommended layout:
 
 - [`examples/hello-world`](examples/hello-world) — routes, layouts, middleware,
   a form
