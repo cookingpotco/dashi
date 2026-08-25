@@ -284,6 +284,11 @@ async function executeMatched(
         { pageStatus: 200, ctx },
       );
     }
+    if (ctx.req.method !== "GET" && ctx.req.method !== "HEAD") {
+      throw new Error(
+        `Write handlers return fragment actions or a Response: ${ctx.url.pathname}`,
+      );
+    }
     return await respond(
       await renderWithRecovery(out, { ctx, boundary: matched.boundary }),
       { pageStatus: 200, ctx },

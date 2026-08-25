@@ -14,13 +14,11 @@ published yet.
   path answers OPTIONS.
 - `<RouteFragment>` for composing another route into the current page (eager
   during SSR, or client-fetched when `lazy`)
-- Forms inside a fragment submit to their `action` and swap only that fragment.
-  The swap needs JavaScript; without it the same form posts normally and the
-  response is a full page
-- A write handler can return `fragment.replace`, `fragment.append`, and
-  `fragment.remove` to update every host rendering those routes in one response.
-  Replace is also the default for a body with no actions. Append and remove
-  exist only as client actions and have no no-JS equivalent
+- Forms inside a fragment submit to their `action` without a full page load.
+  A write handler returns `fragment.replace`, `fragment.append`, and
+  `fragment.remove`, or a `Response`. GET and lazy fetch still replace the
+  host that asked with plain markup. Action lists have no no-JS equivalent;
+  return a `Response` if the form should work without JavaScript
 - Example apps under `examples/`
 - Static files from a directory via `staticFile` in a route handler
 - Client TypeScript included via `client.module` / `client.element`; documents

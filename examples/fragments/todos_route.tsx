@@ -23,12 +23,9 @@ export function list() {
 export async function create(ctx: Ctx) {
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
-    return <TodoList error="title is required" />;
+    return [fragment.replace("/todos", <TodoList error="title is required" />)];
   }
   todos.push(title);
-  if (!ctx.isFragment) {
-    return <TodoList />;
-  }
   return [
     fragment.append("/todos", <li>{title}</li>),
     fragment.replace("/todo-count", <span>{todos.length}</span>),

@@ -87,15 +87,13 @@ type WriteHandler<
 > = (
   ctx: Ctx<Params, State>,
 ) =>
-  | Element
-  | CachedElement
   | Response
   | FragmentAction[]
-  | Promise<Element | CachedElement | Response | FragmentAction[]>;
+  | Promise<Response | FragmentAction[]>;
 
 /**
- * Per-method handlers on a route. GET cannot return fragment actions;
- * writes may, as a list.
+ * Per-method handlers on a route. GET returns a page or fragment body.
+ * Writes return a list of fragment actions, or a Response.
  */
 export type MethodHandlers<
   Params extends Record<string, string> = Record<string, never>,

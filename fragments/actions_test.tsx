@@ -32,6 +32,10 @@ function typechecks(cb: GroupCallback) {
   cb.route("/x", {
     POST: () => [fragment.remove("/x")],
   });
+  cb.route("/x", {
+    // @ts-expect-error writes cannot return markup
+    POST: () => <div />,
+  });
 }
 
 Deno.test("GET cannot return fragment actions", () => {

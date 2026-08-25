@@ -72,7 +72,7 @@ function typechecks() {
           ctx.params.field;
           // @ts-expect-error only declared params exist
           ctx.params.slug;
-          return "" as Element;
+          return new Response();
         },
       }),
     ],
@@ -349,7 +349,7 @@ Deno.test("compile keeps per-group error on the boundary chain", () => {
 
 Deno.test("GET+POST share one path; empty map throws", () => {
   const list = () => "" as Element;
-  const add = () => "" as Element;
+  const add = () => new Response();
   const compiled = compile(group(({ route }) => ({
     routes: [
       route("/guestbook", { GET: list, POST: add }),
@@ -368,7 +368,7 @@ Deno.test("GET+POST share one path; empty map throws", () => {
 
 Deno.test("compile matches joined paths from a prefixed group", () => {
   const index = () => "" as Element;
-  const field = () => "" as Element;
+  const field = () => new Response();
   const compiled = compile(group(({ group }) => ({
     routes: [
       group("/users/:id", ({ route }) => ({
