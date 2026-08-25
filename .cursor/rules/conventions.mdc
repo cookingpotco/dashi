@@ -11,6 +11,17 @@ A directory's public surface is its `mod.ts`. Import that file from outside
 the directory. Do not reach into a sibling module (`routing/pipeline.ts`,
 `shared/shared_types.ts`). Same-directory imports are fine.
 
+## Static JSON
+
+A known static `.json` file is imported as a module (`import x from
+"./foo.json" with { type: "json" }`). `JSON.parse` is for payloads that
+arrive at runtime.
+
+## Root import map
+
+Root `deno.json` `imports` may map a bare specifier to a dependency, never
+to a path inside the package. Workspace members map `dashi` to the checkout.
+
 ## Route modules
 
 A `*_route.ts(x)` module exports route handlers and nothing else, and only
