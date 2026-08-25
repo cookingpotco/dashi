@@ -223,11 +223,18 @@ deno task test
 deno task test:int
 deno task test:e2e
 deno task test:e2e:headed
+deno run -A scripts/verify_fresh_project.ts --linked
 ```
 
 CI runs the same commands on every pull request and every push to `main`, except
 `test:e2e:headed`, which is local-only. Unit tests stay on the Test check; HTTP
-cases are the Integration check; browser cases are the E2E check.
+cases are the Integration check; browser cases are the E2E check. Fresh project
+is the README consumer against this checkout. A version bump on `main` is the
+release; see [RELEASING.md](RELEASING.md).
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
