@@ -10,65 +10,7 @@
  *   deno run -A scripts/check_published_graph.ts
  */
 
-interface PackedManifest {
-  name: string;
-  version: string;
-  compilerOptions: Record<string, unknown>;
-  exports: Record<string, string>;
-  include: string[];
-}
-
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function stringArray(value: unknown, label: string): string[] {
-  if (
-    !Array.isArray(value) || value.some((entry) => typeof entry !== "string")
-  ) {
-    throw new Error(`${label} must be an array of strings`);
-  }
-  return value;
-}
-
-function stringRecord(value: unknown, label: string): Record<string, string> {
-  if (!isObject(value)) {
-    throw new Error(`${label} must be an object`);
-  }
-  const record: Record<string, string> = {};
-  for (const [key, entry] of Object.entries(value)) {
-    if (typeof entry !== "string") {
-      throw new Error(`${label}.${key} must be a string`);
-    }
-    record[key] = entry;
-  }
-  return record;
-}
-
-function readPackedManifest(root: string): PackedManifest {
-  const parsed: unknown = JSON.parse(
-    Deno.readTextFileSync(`${root}/deno.json`),
-  );
-  if (!isObject(parsed)) {
-    throw new Error(`${root}/deno.json is not an object`);
-  }
-  if (typeof parsed.name !== "string" || typeof parsed.version !== "string") {
-    throw new Error(`${root}/deno.json is missing name or version`);
-  }
-  if (!isObject(parsed.compilerOptions)) {
-    throw new Error(`${root}/deno.json is missing compilerOptions`);
-  }
-  if (!isObject(parsed.publish)) {
-    throw new Error(`${root}/deno.json is missing publish`);
-  }
-  return {
-    name: parsed.name,
-    version: parsed.version,
-    compilerOptions: parsed.compilerOptions,
-    exports: stringRecord(parsed.exports, "exports"),
-    include: stringArray(parsed.publish.include, "publish.include"),
-  };
-}
+import denoJson from "../deno.json" with { type: "json" };
 
 async function copyDir(src: string, dest: string): Promise<void> {
   await Deno.mkdir(dest, { recursive: true });
@@ -86,7 +28,7 @@ async function copyDir(src: string, dest: string): Promise<void> {
 async function copyPublishedFiles(
   root: string,
   dest: string,
-  include: string[],
+  include: readonly string[],
 ): Promise<void> {
   for (const entry of include) {
     const src = `${root}/${entry}`;
@@ -115,11 +57,10 @@ async function copyPublishedFiles(
 
 async function checkPacked(
   cwd: string,
-  exports: Record<string, string>,
+  entrypoints: string[],
 ): Promise<void> {
-  const entrypoints = [...new Set(Object.values(exports))];
   const output = await new Deno.Command(Deno.execPath(), {
-    args: ["check", ...entrypoints],
+    args: ["check", ...new Set(entrypoints)],
     cwd,
     stdout: "inherit",
     stderr: "inherit",
@@ -131,7 +72,6 @@ async function checkPacked(
 
 async function main(): Promise<void> {
   const root = Deno.realPathSync(`${import.meta.dirname}/..`);
-  const manifest = readPackedManifest(root);
   const dir = await Deno.makeTempDir({ prefix: "dashi-published-" });
   if (dir === root || dir.startsWith(`${root}/`)) {
     throw new Error(`temp dir ${dir} is inside the checkout`);
@@ -139,21 +79,21 @@ async function main(): Promise<void> {
 
   let passed = false;
   try {
-    await copyPublishedFiles(root, dir, manifest.include);
+    await copyPublishedFiles(root, dir, denoJson.publish.include);
     const packed = {
-      name: manifest.name,
-      version: manifest.version,
-      exports: manifest.exports,
-      compilerOptions: manifest.compilerOptions,
+      name: denoJson.name,
+      version: denoJson.version,
+      exports: denoJson.exports,
+      compilerOptions: denoJson.compilerOptions,
     };
     await Deno.writeTextFile(
       `${dir}/deno.json`,
       `${JSON.stringify(packed, null, 2)}\n`,
     );
     console.log(
-      `published graph at ${dir} using ${manifest.name}@${manifest.version}`,
+      `published graph at ${dir} using ${denoJson.name}@${denoJson.version}`,
     );
-    await checkPacked(dir, manifest.exports);
+    await checkPacked(dir, Object.values(denoJson.exports));
     passed = true;
   } finally {
     if (passed) {

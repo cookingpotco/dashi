@@ -9,6 +9,8 @@
  *   deno run -A scripts/verify_fresh_project.ts --registry
  */
 
+import denoJson from "../deno.json" with { type: "json" };
+
 const MAIN_TSX = `import { serve } from "dashi";
 
 serve(({ route }) => ({
@@ -42,23 +44,6 @@ function parseMode(args: string[]): Mode {
     throw new Error("pass exactly one of --linked or --registry");
   }
   return linked ? Mode.Linked : Mode.Registry;
-}
-
-function readNameAndVersion(root: string): { name: string; version: string } {
-  const parsed: unknown = JSON.parse(
-    Deno.readTextFileSync(`${root}/deno.json`),
-  );
-  if (
-    typeof parsed !== "object" ||
-    parsed === null ||
-    !("name" in parsed) ||
-    !("version" in parsed) ||
-    typeof parsed.name !== "string" ||
-    typeof parsed.version !== "string"
-  ) {
-    throw new Error(`${root}/deno.json is missing name or version`);
-  }
-  return { name: parsed.name, version: parsed.version };
 }
 
 function consumerConfig(
@@ -97,7 +82,7 @@ async function checkConsumer(cwd: string): Promise<void> {
 async function main(): Promise<void> {
   const mode = parseMode(Deno.args);
   const root = Deno.realPathSync(`${import.meta.dirname}/..`);
-  const { name, version } = readNameAndVersion(root);
+  const { name, version } = denoJson;
   const dir = await Deno.makeTempDir({ prefix: "dashi-fresh-" });
   if (dir === root || dir.startsWith(`${root}/`)) {
     throw new Error(`temp dir ${dir} is inside the checkout`);
