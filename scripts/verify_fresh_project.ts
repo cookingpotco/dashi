@@ -1,6 +1,6 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write --allow-run --allow-net
 /**
- * Type-checks the README consumer in a temp directory.
+ * Boots the README consumer in a temp directory until it listens.
  *
  * `--linked` resolves `jsr:@cookingpot/dashi@<version>` to this checkout
  * through `links`. `--registry` installs that version from JSR.
@@ -11,13 +11,62 @@
 
 import denoJson from "../deno.json" with { type: "json" };
 
-const MAIN_TSX = `import { serve } from "dashi";
+const LISTEN_RE = /Listening on https?:\/\/(?:\[[^\]]+\]|[\w.]+):(\d+)\//;
+const UNUSED_LINK_RE = /Linked package '[^']+' was not used[^\n]*/;
+const BOOT_TIMEOUT_MS = 30_000;
+
+const MAIN_TSX =
+  `import { type Ctx, fragment, RouteFragment, serve } from "dashi";
+
+const todos: string[] = [];
+
+function Home() {
+  return (
+    <html>
+      <h1>Todos</h1>
+      <RouteFragment
+        src="/todos"
+        lazy
+        fallback={<p>Loading…</p>}
+      />
+    </html>
+  );
+}
+
+function TodoList({ error }: { error?: string }) {
+  return (
+    <div>
+      <ul>
+        {todos.map((todo) => <li>{todo}</li>)}
+      </ul>
+      {error ? <p>{error}</p> : null}
+      <form method="POST" action="/todos">
+        <input name="title" />
+        <button type="submit">Add</button>
+      </form>
+    </div>
+  );
+}
+
+function list() {
+  return <TodoList />;
+}
+
+async function create(ctx: Ctx) {
+  const title = (await ctx.req.formData()).get("title");
+  if (typeof title !== "string" || title.trim() === "") {
+    return [
+      fragment.replace("/todos", <TodoList error="title is required" />),
+    ];
+  }
+  todos.push(title);
+  return [fragment.replace("/todos", <TodoList />)];
+}
 
 serve(({ route }) => ({
   routes: [
-    route("/", {
-      GET: () => <h1>Hello</h1>,
-    }),
+    route("/", { GET: Home }),
+    route("/todos", { GET: list, POST: create }),
   ],
 }));
 `;
@@ -67,15 +116,95 @@ function consumerConfig(
   return config;
 }
 
-async function checkConsumer(cwd: string): Promise<void> {
-  const output = await new Deno.Command(Deno.execPath(), {
-    args: ["check", "main.tsx"],
+function unusedLinkWarning(output: string): string | undefined {
+  return output.match(UNUSED_LINK_RE)?.[0];
+}
+
+async function readStream(
+  stream: ReadableStream<Uint8Array>,
+  onText: (text: string) => void,
+): Promise<void> {
+  const decoder = new TextDecoder();
+  for await (const chunk of stream) {
+    onText(decoder.decode(chunk, { stream: true }));
+  }
+  onText(decoder.decode());
+}
+
+async function bootUntilListening(cwd: string): Promise<void> {
+  const child = new Deno.Command(Deno.execPath(), {
+    args: ["run", "-A", "main.tsx"],
     cwd,
-    stdout: "inherit",
-    stderr: "inherit",
-  }).output();
-  if (output.code !== 0) {
-    throw new Error(`deno check failed with code ${output.code}`);
+    stdin: "null",
+    stdout: "piped",
+    stderr: "piped",
+  }).spawn();
+
+  const stdout = { text: "" };
+  const stderr = { text: "" };
+  let settled = false;
+  let resolveListen: () => void = () => {};
+  let rejectListen: (error: Error) => void = () => {};
+  const listenPromise = new Promise<void>((resolve, reject) => {
+    resolveListen = resolve;
+    rejectListen = reject;
+  });
+  listenPromise.catch(() => {});
+
+  const onText = (bag: { text: string }, chunk: string) => {
+    bag.text += chunk;
+    if (!settled && LISTEN_RE.test(bag.text)) {
+      settled = true;
+      resolveListen();
+    }
+  };
+
+  const stdoutDone = readStream(child.stdout, (chunk) => onText(stdout, chunk));
+  const stderrDone = readStream(child.stderr, (chunk) => onText(stderr, chunk));
+
+  child.status.then((status) => {
+    if (!settled) {
+      settled = true;
+      const output = `stderr:\n${stderr.text}\nstdout:\n${stdout.text}`;
+      const unused = unusedLinkWarning(`${stderr.text}\n${stdout.text}`);
+      rejectListen(
+        new Error(
+          unused ??
+            `consumer exited with code ${status.code} before listening\n${output}`,
+        ),
+      );
+    }
+  });
+
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      listenPromise,
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          settled = true;
+          reject(
+            new Error(
+              `timed out waiting for listen line\nstderr:\n${stderr.text}\nstdout:\n${stdout.text}`,
+            ),
+          );
+        }, BOOT_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timeoutId);
+    try {
+      child.kill("SIGTERM");
+    } catch {
+      // Process already exited.
+    }
+    await child.status;
+    await Promise.all([stdoutDone, stderrDone]);
+  }
+
+  const unused = unusedLinkWarning(`${stderr.text}\n${stdout.text}`);
+  if (unused !== undefined) {
+    throw new Error(unused);
   }
 }
 
@@ -101,7 +230,7 @@ async function main(): Promise<void> {
     );
     await Deno.writeTextFile(`${dir}/main.tsx`, MAIN_TSX);
     console.log(`${mode} consumer at ${dir} using ${name}@${version}`);
-    await checkConsumer(dir);
+    await bootUntilListening(dir);
     passed = true;
   } finally {
     if (passed) {
