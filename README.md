@@ -178,8 +178,9 @@ const Clock = client.module(
 **In-place navigation.** Wrap the swapping region in `<RouteNavigation>` in the
 root layout. Same-origin clicks fetch the next document and replace the host's
 children. History, back/forward, and scroll restoration are included. Opt out
-with `data-dashi-navigate="false"` on a link or a container. `<head>` is not
-merged yet.
+with `data-dashi-navigate="false"` on a link or a container. From client
+TypeScript, `import { navigate } from "dashi/client"` and call `navigate(url)`
+for the same swap. `<head>` is not merged yet.
 
 **Static files** from a directory: `staticFile(ctx, dir, relative)` in a route
 handler. Pass `${import.meta.dirname}/static` so the folder travels with the

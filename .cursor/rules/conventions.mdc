@@ -69,7 +69,8 @@ call site.
 ## Client JS
 
 Client TypeScript attaches only via `client.module` / `client.element` at
-module scope. The factory throws after compile. App files are `*_client.ts`
+module scope. Browser-safe APIs import from `dashi/client`; client modules
+do not import `dashi`. The factory throws after compile. App files are `*_client.ts`
 and sit beside the module that registers them. The factory returns a
 PascalCase component; `client.element` takes the custom element tag
 (kebab-case). Compiled files are served at `/_dashi/client/` by a reserved

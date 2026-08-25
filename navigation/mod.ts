@@ -12,7 +12,8 @@ const RouteNavigationElement = client.element(
  *
  * Same-origin left-clicks fetch the next document and replace this
  * element's children. `data-dashi-navigate="false"` on a link or a
- * container opts that subtree out. `<head>` is not merged yet.
+ * container opts that subtree out. From client TypeScript,
+ * `import { navigate } from "dashi/client"`. `<head>` is not merged yet.
  *
  * Without this element, nothing changes and no navigation JS reaches
  * the browser. Without JS, links are links.

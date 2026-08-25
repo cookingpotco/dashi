@@ -47,12 +47,14 @@
   "license": "MIT",
   "exports": {
     ".": "./mod.ts",
+    "./client": "./client.ts",
     "./jsx-runtime": "./jsx-runtime/mod.ts",
     "./cors": "./cors/mod.ts"
   },
   "publish": {
     "include": [
       "mod.ts",
+      "client.ts",
       "README.md",
       "LICENSE",
       "caching",

@@ -1,3 +1,10 @@
+import { client } from "dashi";
+
+const GoAbout = client.element(
+  "go-about",
+  new URL("./go_client.ts", import.meta.url),
+);
+
 export function Home() {
   return (
     <div>
@@ -12,6 +19,7 @@ export function Home() {
         <a id="to-bare" href="/bare">Bare</a>
         <a id="to-missing" href="/missing">Missing</a>
         <a id="to-cross" href="https://example.invalid/">Cross</a>
+        <GoAbout id="go-about">Go about</GoAbout>
       </p>
     </div>
   );

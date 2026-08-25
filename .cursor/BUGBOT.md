@@ -81,8 +81,9 @@ cannot see project rules.
   `ctx`. Shared markup is a component in a non-route module; another route's
   rendered output is `<RouteFragment src>`.
 - Client JS attaches only via `client.module` / `client.element` at module
-  scope. App files are `*_client.ts` beside the registrar. Compiled files are
-  `/_dashi/client/` via a reserved table route (flat
+  scope. App files are `*_client.ts` beside the registrar. Browser-safe APIs
+  import from `dashi/client`; client modules do not import `dashi`. Compiled
+  files are `/_dashi/client/` via a reserved table route (flat
   `/_dashi/client/<name>-<hash>.js`). Relative imports are rewritten to the
   bundler path; the import map is bundler path → that public URL. Documents get
   one import map; a module script is added only when a host rendered. A lazy

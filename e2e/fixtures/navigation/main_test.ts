@@ -283,6 +283,21 @@ Deno.test("navigation fixture", async (t) => {
           assertEquals(result.url, `${app.origin}/about`);
         },
       );
+
+      await t.step(
+        "navigate() from a client module swaps in place",
+        async () => {
+          await prepare(page, app.origin, "/");
+          await page.evaluate(() => customElements.whenDefined("go-about"));
+          await clickId(page, "go-about");
+          await waitForHeading(page, "about");
+          const result = await page.evaluate(snapshot);
+          assertEquals(result.survived, true);
+          assertEquals(result.chrome, "mutated");
+          assertEquals(result.heading, "about");
+          assertEquals(result.url, `${app.origin}/about`);
+        },
+      );
     },
   );
 });
