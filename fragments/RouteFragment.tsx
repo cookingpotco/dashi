@@ -1,4 +1,4 @@
-import type { DashiNode, Element, HTMLAttributes } from "dashi/jsx-runtime";
+import type { DashiNode, Element, HTMLAttributes } from "../jsx-runtime/mod.ts";
 import { client } from "../client/mod.ts";
 import type { InternalSrc } from "./actions.ts";
 import { error as logError } from "../logging/mod.ts";
