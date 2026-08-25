@@ -63,8 +63,6 @@ Every config key a consumer needs, in one `deno.json`:
 }
 ```
 
-<!-- TODO(COO-29): confirm the published version -->
-
 `unstable: ["bundle"]` is required until runtime `Deno.bundle` becomes stable.
 
 Leave `compilerOptions.lib` unset. Deno's default is enough. A partial `lib`
