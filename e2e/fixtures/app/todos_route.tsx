@@ -1,4 +1,4 @@
-import { client, type Ctx } from "dashi";
+import { client, type Ctx, fragment } from "dashi";
 
 const TodoErrorMark = client.element(
   "todo-error-el",
@@ -31,8 +31,8 @@ export async function create(ctx: Ctx) {
   await new Promise((resolve) => setTimeout(resolve, 2000));
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
-    return <TodoList error="title is required" />;
+    return [fragment.replace("/todos", <TodoList error="title is required" />)];
   }
   todos.push(title);
-  return <TodoList />;
+  return [fragment.replace("/todos", <TodoList />)];
 }

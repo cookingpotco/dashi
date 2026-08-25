@@ -6,6 +6,10 @@ import {
   mergeVary,
 } from "../caching/mod.ts";
 import { clientImportMap, getCompiledFile } from "../client/mod.ts";
+import {
+  type FragmentAction,
+  renderFragmentActions,
+} from "../fragments/mod.ts";
 import { type Element } from "../jsx-runtime/mod.ts";
 import { error as logError, info } from "../logging/mod.ts";
 import {
@@ -199,7 +203,12 @@ async function respond(
 async function runHandler(
   ctx: RequestCtx,
   matched: MatchedRoute<Record<string, unknown>>,
-): Promise<Element | CachedElement | Response> {
+): Promise<
+  | Element
+  | CachedElement
+  | Response
+  | FragmentAction[]
+> {
   const method = ctx.req.method;
   if (method === "OPTIONS") {
     return new Response(null, {
@@ -260,6 +269,25 @@ async function executeMatched(
       );
     if (out instanceof Response) {
       return { response: out, html: null };
+    }
+    if (Array.isArray(out)) {
+      if (!ctx.isFragment) {
+        throw new Error(
+          `Fragment actions require a fragment request: ${ctx.url.pathname}`,
+        );
+      }
+      return await respond(
+        await renderWithRecovery(renderFragmentActions(out), {
+          ctx,
+          boundary: matched.boundary,
+        }),
+        { pageStatus: 200, ctx },
+      );
+    }
+    if (ctx.req.method !== "GET" && ctx.req.method !== "HEAD") {
+      throw new Error(
+        `Write handlers return fragment actions or a Response: ${ctx.url.pathname}`,
+      );
     }
     return await respond(
       await renderWithRecovery(out, { ctx, boundary: matched.boundary }),

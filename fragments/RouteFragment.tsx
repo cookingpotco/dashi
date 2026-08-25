@@ -1,5 +1,6 @@
 import { type DashiNode, type HTMLAttributes } from "dashi/jsx-runtime";
 import { client } from "../client/mod.ts";
+import { type InternalSrc } from "./actions.ts";
 import { error as logError } from "../logging/mod.ts";
 import { runRoute } from "../routing/mod.ts";
 import { getFragmentSlot, getRenderStore } from "../ssr/mod.ts";
@@ -18,15 +19,14 @@ declare global {
   }
 }
 
-type InternalSrc = `/${string}`;
-
 interface BaseRouteFragmentProps extends HTMLAttributes {
   /**
    * Fragment is fetched from this location, either eagerly during SSR or after
    * load when `lazy` is set.
    *
-   * A form submitted inside this fragment re-renders only this fragment. Point
-   * the form's `action` at this route to have it re-render itself.
+   * A form submitted inside this fragment is fetched as a fragment request.
+   * A write handler returns `fragment.replace`, `fragment.append`, or
+   * `fragment.remove` to update every host rendering those routes.
    */
   src: InternalSrc;
 }

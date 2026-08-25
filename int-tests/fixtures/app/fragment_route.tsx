@@ -1,4 +1,4 @@
-import type { Ctx } from "dashi";
+import { type Ctx, fragment } from "dashi";
 import type { AppState } from "./state.ts";
 
 export function Fragment(
@@ -18,5 +18,10 @@ export function Fragment(
 }
 
 export function post() {
-  return <aside id="frag">posted-fragment-body</aside>;
+  return [
+    fragment.replace(
+      "/fragment",
+      <aside id="frag">posted-fragment-body</aside>,
+    ),
+  ];
 }

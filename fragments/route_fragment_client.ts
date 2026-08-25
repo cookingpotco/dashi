@@ -177,10 +177,68 @@ class RouteFragment extends HTMLElement {
       }
     }
     await Promise.all(pending);
-    if (abort.signal.aborted || !this.isConnected) {
+    if (abort.signal.aborted) {
+      return;
+    }
+    const template = document.createElement("template");
+    template.innerHTML = html;
+    const actions: Element[] = [];
+    let mixed = false;
+    for (const node of template.content.childNodes) {
+      if (!(node instanceof Element)) {
+        continue;
+      }
+      if (node.localName !== "route-action") {
+        mixed = true;
+        break;
+      }
+      actions.push(node);
+    }
+    if (!mixed && actions.length > 0) {
+      for (const action of actions) {
+        applyAction(action);
+      }
+      return;
+    }
+    if (!this.isConnected) {
       return;
     }
     this.innerHTML = html;
+  }
+}
+
+const enum SwapKind {
+  Replace = "replace",
+  Append = "append",
+  Remove = "remove",
+}
+
+function applyAction(action: Element) {
+  const kind = action.getAttribute("action");
+  const src = action.getAttribute("src");
+  if (src === null) {
+    return;
+  }
+  const hosts = document.querySelectorAll(`route-fragment[src="${src}"]`);
+  if (kind === SwapKind.Remove) {
+    for (const host of hosts) {
+      host.remove();
+    }
+    return;
+  }
+  if (kind === SwapKind.Replace) {
+    for (const host of hosts) {
+      host.innerHTML = action.innerHTML;
+    }
+    return;
+  }
+  if (kind === SwapKind.Append) {
+    for (const host of hosts) {
+      const clone = action.cloneNode(true);
+      if (clone instanceof Element) {
+        host.append(...clone.childNodes);
+      }
+    }
   }
 }
 
