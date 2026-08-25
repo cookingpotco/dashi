@@ -1,36 +1,210 @@
 # dashi
 
-TODO: replace this with the real README as part of the docs work.
+Server-first web framework for Deno. JSX compiles to HTML strings on the server
+— no VDOM, no hydration, no client framework. Pages update by swapping
+server-rendered fragments, in the spirit of [Hotwire](https://hotwired.dev/) and
+[htmx](https://htmx.org/).
 
-Server-first web framework for Deno. JSX compiles to HTML strings. No VDOM, no
-hydration, no client framework. Friends-and-family beta; the package is not
-published yet.
+```tsx
+import { serve } from "dashi";
 
-## Implemented
+serve(({ route }) => ({
+  routes: [
+    route("/", {
+      GET: () => <h1>Hello</h1>,
+    }),
+  ],
+}));
+```
 
-- JSX → HTML strings with escaped XSS values
-- Explicit route table with typed params, per-method handlers, layouts, and
-  middleware. GET also answers HEAD (empty body, same headers). Every matched
-  path answers OPTIONS.
-- `<RouteFragment>` for composing another route into the current page (eager
-  during SSR, or client-fetched when `lazy`)
-- Forms inside a fragment submit to their `action` without a full page load. A
-  write handler returns `fragment.replace`, `fragment.append`, and
-  `fragment.remove`, or a `Response`. GET and lazy fetch still replace the host
-  that asked with plain markup. Action lists have no no-JS equivalent; return a
-  `Response` if the form should work without JavaScript
-- Example apps under `examples/`
-- Static files from a directory via `staticFile` in a route handler
-- Client TypeScript included via `client.module` / `client.element`; documents
-  get an import map, and a module script only when a client host rendered
+## Features
+
+- **Route fragments.** Compose one route into another with
+  `<RouteFragment src>`. Eager during SSR, or `lazy` after load, with `fallback`
+  and `timeout`.
+- **Fragment actions.** A form inside a fragment submits without a full page
+  load. The write handler returns `fragment.replace`, `fragment.append`, or
+  `fragment.remove`, targeting every host rendering that route.
+- **Explicit route table.** Typed params from the path literal, and per-method
+  handlers, in one `serve()` callback.
+- **Web standards.** Handlers read `ctx.req` as a `Request` and return JSX or a
+  `Response`.
+- **Per-route cache control.** Wrap any handler or layout return in `cached()`.
+
+## By design
+
+No runtime dependencies. One way to do a thing. No client framework: JS ships
+only when a client host renders. Explicit over magic — no file-system routing,
+no `_` prefixes.
+
+## Quick start
+
+```sh
+deno add jsr:@cookingpot/dashi
+```
+
+Every config key a consumer needs, in one `deno.json`:
+
+```json
+{
+  "compilerOptions": {
+    "jsx": "precompile",
+    "jsxImportSource": "dashi"
+  },
+  "unstable": ["bundle"],
+  "imports": {
+    "dashi": "jsr:@cookingpot/dashi@^0.1.0"
+  }
+}
+```
+
+<!-- TODO(COO-29): confirm the published version -->
+
+`unstable: ["bundle"]` is required as soon as anything renders a fragment.
+`RouteFragment` registers a client element at module scope, and that
+registration calls `Deno.bundle`. Without the flag the server logs
+`[client] bundle failed: Deno.bundle is not a function` and exits 1 before it
+listens. A fragment-free page runs without it, which is why this fails late.
+
+Leave `compilerOptions.lib` unset. Deno's default is enough. A partial `lib`
+array drops types the compiler and `Deno.bundle` need.
+
+Save the snippet at the top as `main.tsx`, then:
+
+```sh
+deno run -A --watch main.tsx
+```
+
+Open http://localhost:8000. Running without permission flags dies on
+`Deno.env.get("DASHI_LOG")` at import, before serving.
+
+## Fragments
+
+A lazy fragment shows `fallback` during SSR and fetches its route after load.
+Omit `lazy` to include during SSR; `timeout` is milliseconds to wait (5000 if
+omitted), and a timeout fails the include.
+
+```tsx
+import { type Ctx, fragment, RouteFragment, serve } from "dashi";
+
+const todos: string[] = [];
+
+function Home() {
+  return (
+    <html>
+      <h1>Todos</h1>
+      <RouteFragment
+        src="/todos"
+        lazy
+        fallback={<p>Loading…</p>}
+      />
+    </html>
+  );
+}
+
+function TodoList({ error }: { error?: string }) {
+  return (
+    <div>
+      <ul>
+        {todos.map((todo) => <li>{todo}</li>)}
+      </ul>
+      {error ? <p>{error}</p> : null}
+      <form method="POST" action="/todos">
+        <input name="title" />
+        <button type="submit">Add</button>
+      </form>
+    </div>
+  );
+}
+
+function list() {
+  return <TodoList />;
+}
+
+async function create(ctx: Ctx) {
+  const title = (await ctx.req.formData()).get("title");
+  if (typeof title !== "string" || title.trim() === "") {
+    return [
+      fragment.replace("/todos", <TodoList error="title is required" />),
+    ];
+  }
+  todos.push(title);
+  return [fragment.replace("/todos", <TodoList />)];
+}
+
+serve(({ route }) => ({
+  routes: [
+    route("/", { GET: Home }),
+    route("/todos", { GET: list, POST: create }),
+  ],
+}));
+```
+
+A GET or lazy fetch replaces the host that asked with markup. `fragment.replace`
+/ `append` / `remove` update every `<RouteFragment>` rendering that `src`.
+Action lists have no no-JS equivalent; return a `Response` if the form should
+work without JavaScript.
+
+## Other features
+
+**Layouts** wrap the route on document render, outermost first, and do not run
+on fragment renders. A layout is `(ctx, children) => …`. Attach
+`layouts: [RootLayout]` on the table or a `group()`.
+
+**Middleware** is a `(ctx, next) => Response` factory attached on `group()`. It
+runs for document hits and fragment hits.
+
+**Prefixed `group()`** joins a path onto child routes. Nested `route` and
+`group` see the accumulated prefix, and handlers get the joined params:
+
+```tsx
+group("/posts", ({ route }) => ({
+  routes: [
+    route("/:id", { GET: (ctx) => <p>{ctx.params.id}</p> }),
+  ],
+}));
+```
+
+**Error boundaries.** `notFound` and `error` live on the table. `errorFallback`
+is the last-resort 500 on `serve()` options: no layouts, no `ctx`, no `thrown`.
+
+**Client TypeScript** attaches with `client.module` / `client.element` at module
+scope — not inside a component or handler. Documents get an import map; a module
+script is added only when a client host rendered.
+
+**Static files** from a directory: `staticFile(ctx, dir, relative)` in a route
+handler. Pass `${import.meta.dirname}/static` so the folder travels with the
+module.
+
+**CORS** is `import { cors } from "dashi/cors"`, attached on `group()`:
+
+```tsx
+group("/api", ({ route }) => ({
+  middleware: [cors()],
+  routes: [route("/ok", { GET: () => Response.json({ ok: true }) })],
+}));
+```
 
 ## Not yet
 
-- JSR publish
-- Production-ready SSR
-- WebSocket / SSE push into fragments, and SSR streaming: omitted from
-  friends-and-family ([COO-59](https://linear.app/cookingpot/issue/COO-59),
-  Dashi v0.5). Fragment updates in F&F are request/response only
+- Link interception and Turbo-style navigation (M5).
+- WebSocket / SSE push into fragments, and SSR streaming
+  ([COO-59](https://linear.app/cookingpot/issue/COO-59)).
+- Deno-only. JSR's npm compatibility means an install under Node succeeds, and
+  then `Deno.serve` is not there.
+
+## Stability
+
+0.1.x. Breaking changes are expected while navigation and API consolidation
+land. On `0.x` a break is a minor bump.
+
+## Examples
+
+Worked apps in the repo:
+
+- [`examples/hello-world`](examples/hello-world) — routes, layouts, middleware,
+  a form
+- [`examples/fragments`](examples/fragments) — eager and lazy fragments, actions
 
 ## Development
 
