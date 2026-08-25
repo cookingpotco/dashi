@@ -12,6 +12,22 @@ async function clickId(page: Page, id: string) {
   }, { args: [id] });
 }
 
+async function waitForHeading(page: Page, text: string) {
+  await page.evaluate(async (expected) => {
+    const start = Date.now();
+    while (document.getElementById("heading")?.textContent !== expected) {
+      if (Date.now() - start > 5000) {
+        throw new Error(
+          `heading is ${
+            document.getElementById("heading")?.textContent
+          }, not ${expected}`,
+        );
+      }
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+  }, { args: [text] });
+}
+
 async function waitForPath(page: Page, path: string) {
   await page.evaluate(async (expected) => {
     const start = Date.now();
@@ -98,9 +114,9 @@ Deno.test("navigation fixture", async (t) => {
           throw new Error("tall page did not scroll");
         }
         await clickId(page, "to-about");
-        await waitForPath(page, "/about");
+        await waitForHeading(page, "about");
         await page.evaluate(() => history.back());
-        await waitForPath(page, "/tall");
+        await waitForHeading(page, "tall");
         const back = await page.evaluate(() => ({
           survived: Reflect.get(globalThis, "__dashiDoc") === true,
           heading: document.getElementById("heading")?.textContent ?? null,
@@ -112,7 +128,7 @@ Deno.test("navigation fixture", async (t) => {
         assertEquals(back.url, "/tall");
         assertEquals(back.scroll, scrolled);
         await page.evaluate(() => history.forward());
-        await waitForPath(page, "/about");
+        await waitForHeading(page, "about");
         const forward = await page.evaluate(() => ({
           survived: Reflect.get(globalThis, "__dashiDoc") === true,
           heading: document.getElementById("heading")?.textContent ?? null,
