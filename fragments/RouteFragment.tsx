@@ -1,6 +1,6 @@
-import { type DashiNode, type HTMLAttributes } from "dashi/jsx-runtime";
+import type { DashiNode, Element, HTMLAttributes } from "dashi/jsx-runtime";
 import { client } from "../client/mod.ts";
-import { type InternalSrc } from "./actions.ts";
+import type { InternalSrc } from "./actions.ts";
 import { error as logError } from "../logging/mod.ts";
 import { runRoute } from "../routing/mod.ts";
 import { getFragmentSlot, getRenderStore } from "../ssr/mod.ts";
@@ -11,13 +11,6 @@ const RouteFragmentElement = client.element(
 );
 
 const DEFAULT_FRAGMENT_TIMEOUT_MS = 5000;
-
-// So document.querySelector("route-fragment") is HTMLElement.
-declare global {
-  interface HTMLElementTagNameMap {
-    "route-fragment": HTMLElement;
-  }
-}
 
 interface BaseRouteFragmentProps extends HTMLAttributes {
   /**
@@ -117,7 +110,7 @@ function requestEagerFragment(src: string, timeoutMs: number) {
 
 export function RouteFragment(
   { src, lazy, fallback, timeout, ...rest }: FragmentSlotProps,
-) {
+): Element {
   if (lazy) {
     return (
       <RouteFragmentElement src={src} lazy {...rest}>

@@ -45,8 +45,31 @@
     "@std/assert": "jsr:@std/assert@1",
     "dashi/jsx-runtime": "./jsx-runtime/mod.ts"
   },
+  "name": "@cookingpot/dashi",
+  "version": "0.0.0",
+  "license": "MIT",
   "exports": {
     ".": "./mod.ts",
+    "./jsx-runtime": "./jsx-runtime/mod.ts",
     "./cors": "./cors/mod.ts"
+  },
+  "publish": {
+    "include": [
+      "mod.ts",
+      "README.md",
+      "LICENSE",
+      "caching",
+      "client",
+      "cors",
+      "fragments",
+      "jsx-runtime",
+      "logging",
+      "routing",
+      "serve",
+      "shared",
+      "ssr",
+      "static"
+    ],
+    "exclude": ["**/*_test.ts", "**/*_test.tsx"]
   }
 }

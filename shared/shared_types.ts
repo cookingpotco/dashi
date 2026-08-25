@@ -1,6 +1,6 @@
-import { type CachedElement } from "../caching/mod.ts";
-import { type FragmentAction } from "../fragments/mod.ts";
-import { type Element } from "../jsx-runtime/mod.ts";
+import type { CachedElement } from "../caching/mod.ts";
+import type { FragmentAction } from "../fragments/mod.ts";
+import type { Element } from "../jsx-runtime/mod.ts";
 
 /**
  * Per-invocation request context. `state` is a `Partial` bag: mutate
@@ -81,7 +81,7 @@ export const METHODS = [
 ] as const;
 export type Method = typeof METHODS[number];
 
-type WriteHandler<
+export type WriteHandler<
   Params extends Record<string, string> = Record<string, never>,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (

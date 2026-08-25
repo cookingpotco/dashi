@@ -1,4 +1,4 @@
-import { type Element } from "../jsx-runtime/mod.ts";
+import type { Element } from "../jsx-runtime/mod.ts";
 
 export const enum CacheStrategy {
   Immutable = "immutable",

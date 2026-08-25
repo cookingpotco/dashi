@@ -6,7 +6,7 @@ import {
 } from "../caching/mod.ts";
 import { type Element, jsx } from "../jsx-runtime/mod.ts";
 import { error as logError } from "../logging/mod.ts";
-import { type Ctx, type ErrorHandler, type Layout } from "../shared/mod.ts";
+import type { Ctx, ErrorHandler, Layout } from "../shared/mod.ts";
 
 interface FragmentFault {
   error?: Error;

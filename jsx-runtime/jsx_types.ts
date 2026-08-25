@@ -1,4 +1,4 @@
-import * as dom from "./dom_types.ts";
+import type * as dom from "./dom_types.ts";
 
 export const trustedHtmlBrand: unique symbol = Symbol("dashi.trustedHtml");
 
