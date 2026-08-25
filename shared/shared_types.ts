@@ -81,7 +81,7 @@ export const METHODS = [
 ] as const;
 export type Method = typeof METHODS[number];
 
-type WriteHandler<
+export type WriteHandler<
   Params extends Record<string, string> = Record<string, never>,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (

@@ -1,17 +1,38 @@
-export * as routing from "./routing/mod.ts";
-export * as ssr from "./ssr/mod.ts";
-export { client } from "./client/mod.ts";
-
-export * from "./jsx-runtime/mod.ts";
-export * from "./fragments/mod.ts";
-export * from "./shared/mod.ts";
-export * from "./caching/mod.ts";
-export * from "./serve/mod.ts";
 export {
-  type Group,
-  type GroupCallback,
-  type Method,
-  type MethodHandlers,
-  type ParamsOf,
+  type CacheConfig,
+  cached,
+  type CachedElement,
+  CacheStrategy,
+} from "./caching/mod.ts";
+export { client } from "./client/mod.ts";
+export {
+  fragment,
+  type FragmentAction,
+  RouteFragment,
+} from "./fragments/mod.ts";
+export type {
+  DashiNode,
+  Element,
+  HTMLAttributes,
+  JSX,
+  SVGAttributes,
+} from "./jsx-runtime/mod.ts";
+export type {
+  Group,
+  GroupCallback,
+  GroupFields,
+  Method,
+  MethodHandlers,
+  ParamsOf,
 } from "./routing/mod.ts";
+export { serve } from "./serve/mod.ts";
+export type {
+  Ctx,
+  ErrorHandler,
+  Handler,
+  Layout,
+  Middleware,
+  WrapperCtx,
+  WriteHandler,
+} from "./shared/mod.ts";
 export { staticFile } from "./static/mod.ts";

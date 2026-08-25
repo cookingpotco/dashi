@@ -72,6 +72,9 @@ jobs:
           - name: E2E
             run: deno task test:e2e
             timeout: 20
+          - name: Publish dry-run
+            run: deno publish --dry-run --allow-dirty
+            timeout: 10
     steps:
       - uses: actions/checkout@v5
 
