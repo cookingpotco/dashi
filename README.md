@@ -175,6 +175,12 @@ const Clock = client.module(
 );
 ```
 
+**In-place navigation.** Wrap the swapping region in `<RouteNavigation>` in the
+root layout. Same-origin clicks fetch the next document and replace the host's
+children. History, back/forward, and scroll restoration are included. Opt out
+with `data-dashi-navigate="false"` on a link or a container. `<head>` is not
+merged yet.
+
 **Static files** from a directory: `staticFile(ctx, dir, relative)` in a route
 handler. Pass `${import.meta.dirname}/static` so the folder travels with the
 module.
@@ -190,8 +196,6 @@ group("/api", ({ route }) => ({
 
 ## Not yet
 
-- Link interception and Turbo-style navigation, planned for the next minor
-  version.
 - WebSocket / SSE push into fragments, and SSR streaming.
 - Deno-only. JSR's npm compatibility means an install under Node succeeds, and
   then `Deno.serve` is not there.

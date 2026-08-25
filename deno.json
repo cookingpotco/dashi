@@ -61,6 +61,7 @@
       "fragments",
       "jsx-runtime",
       "logging",
+      "navigation",
       "routing",
       "serve",
       "shared",

@@ -114,7 +114,7 @@ class RouteFragment extends HTMLElement {
         return;
       }
       if (res.redirected) {
-        // TODO(COO-24): in-place navigation instead of a full load
+        // TODO(COO-26): in-place navigation instead of a full load
         location.assign(res.url);
         return;
       }
