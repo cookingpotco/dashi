@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
-import type { GroupCallback } from "../routing/mod.ts";
-import { fragment, renderFragmentActions } from "./actions.ts";
+import { fragment, type GroupCallback } from "dashi";
+import { renderFragmentActions } from "../fragments/mod.ts";
 
 Deno.test("action list serializes to sibling route-action elements", () => {
   assertEquals(

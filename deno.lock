@@ -149,6 +149,11 @@
           "jsr:@b-fuze/deno-dom@0.1",
           "jsr:@std/assert@1"
         ]
+      },
+      "jsx-tests": {
+        "dependencies": [
+          "jsr:@std/assert@1"
+        ]
       }
     }
   }

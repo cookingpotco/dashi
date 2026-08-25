@@ -22,6 +22,12 @@ arrive at runtime.
 Root `deno.json` `imports` may map a bare specifier to a dependency, never
 to a path inside the package. Workspace members map `dashi` to the checkout.
 
+## Root JSX config
+
+The root `deno.json` carries no JSX configuration. A JSR consumer does not
+inherit a package's `compilerOptions`, and the setting makes the package
+resolve itself by name against the registry.
+
 ## Route modules
 
 A `*_route.ts(x)` module exports route handlers and nothing else, and only
