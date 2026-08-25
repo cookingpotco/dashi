@@ -6,7 +6,7 @@
 Server-first web framework for Deno. JSX compiles to HTML strings on the server
 — no VDOM, no hydration, no client framework. Pages update by swapping
 server-rendered fragments, in the spirit of [Hotwire](https://hotwired.dev/) and
-[htmx](https://htmx.org/).
+[htmx](https://htmx.org/). Published on [JSR](https://jsr.io/@cookingpot/dashi).
 
 ```tsx
 import { serve } from "dashi";
