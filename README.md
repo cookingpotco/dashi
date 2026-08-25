@@ -201,7 +201,7 @@ land. On `0.x` a break is a minor bump.
 
 ## Examples
 
-Minimal working samples, not a recommended layout:
+Minimal working examples, not best practice:
 
 - [`examples/hello-world`](examples/hello-world) — routes, layouts, middleware,
   a form
