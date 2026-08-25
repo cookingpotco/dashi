@@ -1,5 +1,5 @@
 import { compileClient } from "../client/mod.ts";
-import { type Element } from "../jsx-runtime/mod.ts";
+import type { Element } from "../jsx-runtime/mod.ts";
 import {
   type GroupCallback,
   type GroupFields,

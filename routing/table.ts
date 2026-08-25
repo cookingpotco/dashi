@@ -1,17 +1,17 @@
-import { type Element } from "../jsx-runtime/mod.ts";
+import type { Element } from "../jsx-runtime/mod.ts";
 import {
   type ErrorHandler,
   type Handler,
-  Layout,
+  type Layout,
   type MethodHandlers,
   METHODS,
-  Middleware,
+  type Middleware,
 } from "../shared/mod.ts";
-import {
-  type GroupPrefixError,
-  type Join,
-  type ParamsOf,
-  type PathError,
+import type {
+  GroupPrefixError,
+  Join,
+  ParamsOf,
+  PathError,
 } from "./path_types.ts";
 
 export type { ErrorHandler, Method, MethodHandlers } from "../shared/mod.ts";

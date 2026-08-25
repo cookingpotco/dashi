@@ -1,6 +1,6 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { type Element } from "../jsx-runtime/mod.ts";
-import { type Ctx, type Middleware } from "../shared/mod.ts";
+import type { Element } from "../jsx-runtime/mod.ts";
+import type { Ctx, Middleware } from "../shared/mod.ts";
 import { compile, group, match, type ParamsOf } from "./table.ts";
 
 type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends

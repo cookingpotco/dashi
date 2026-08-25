@@ -1,10 +1,6 @@
-import {
-  type DashiNode,
-  type Element,
-  type HTMLAttributes,
-} from "dashi/jsx-runtime";
+import type { DashiNode, Element, HTMLAttributes } from "dashi/jsx-runtime";
 import { client } from "../client/mod.ts";
-import { type InternalSrc } from "./actions.ts";
+import type { InternalSrc } from "./actions.ts";
 import { error as logError } from "../logging/mod.ts";
 import { runRoute } from "../routing/mod.ts";
 import { getFragmentSlot, getRenderStore } from "../ssr/mod.ts";

@@ -10,7 +10,7 @@ import {
   type FragmentAction,
   renderFragmentActions,
 } from "../fragments/mod.ts";
-import { type Element } from "../jsx-runtime/mod.ts";
+import type { Element } from "../jsx-runtime/mod.ts";
 import { error as logError, info } from "../logging/mod.ts";
 import {
   type Ctx,
