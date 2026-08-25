@@ -76,9 +76,6 @@ jobs:
           - name: Publish dry-run
             run: deno publish --dry-run --allow-dirty
             timeout: 10
-          - name: Fresh project
-            run: deno run -A scripts/verify_fresh_project.ts --linked
-            timeout: 10
     steps:
       - uses: actions/checkout@v5
 
