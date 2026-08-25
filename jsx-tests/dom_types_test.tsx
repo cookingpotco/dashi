@@ -1,4 +1,4 @@
-import { cached, CacheStrategy } from "../caching/mod.ts";
+import { cached, CacheStrategy } from "dashi";
 
 function typechecks() {
   const fn = () => {};

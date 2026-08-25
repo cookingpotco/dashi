@@ -1,7 +1,5 @@
 {
   "compilerOptions": {
-    "jsx": "precompile",
-    "jsxImportSource": "@cookingpot/dashi",
     "lib": [
       "dom",
       "deno.ns",
@@ -12,7 +10,8 @@
     "./examples/hello-world",
     "./examples/fragments",
     "./int-tests",
-    "./e2e"
+    "./e2e",
+    "./jsx-tests"
   ],
   "unstable": ["bundle"],
   "lock": {
@@ -44,7 +43,7 @@
     "@std/assert": "jsr:@std/assert@1"
   },
   "name": "@cookingpot/dashi",
-  "version": "0.1.0-rc.1",
+  "version": "0.1.0-rc.2",
   "license": "MIT",
   "exports": {
     ".": "./mod.ts",

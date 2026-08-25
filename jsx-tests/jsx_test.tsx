@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { MAPPED_HTML_ATTR_NAMES } from "./mod.ts";
+import { MAPPED_HTML_ATTR_NAMES } from "dashi/jsx-runtime";
 
 Deno.test("renders an interpolated script tag inert in body position", () => {
   const payload = "<script>alert(1)</script>";
