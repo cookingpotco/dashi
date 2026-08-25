@@ -68,11 +68,11 @@ cannot see project rules.
 - Cross-directory imports go through that directory's `mod.ts`. Flag an import
   of a sibling file (`routing/pipeline.ts`, `shared/shared_types.ts`).
 - A known static `.json` file is imported with `{ type: "json" }`. Flag
-  `readTextFile` + `JSON.parse` of a file that is part of the checkout.
-  Runtime payloads (request bodies, webhook events) stay `JSON.parse`.
-- Root `deno.json` `imports` may map a bare specifier to a dependency, never
-  to a path inside the package. Flag `"./…"`, `"../…"`, or `"/…"` values
-  there. Workspace members mapping `dashi` to the checkout are fine.
+  `readTextFile` + `JSON.parse` of a file that is part of the checkout. Runtime
+  payloads (request bodies, webhook events) stay `JSON.parse`.
+- Root `deno.json` `imports` may map a bare specifier to a dependency, never to
+  a path inside the package. Flag `"./…"`, `"../…"`, or `"/…"` values there.
+  Workspace members mapping `dashi` to the checkout are fine.
 - A `*_route.ts(x)` module exports route handlers only, and only the route table
   imports from it. Flag application code that calls a handler, including as a
   JSX child: it skips the target's middleware and error boundary, applies its
