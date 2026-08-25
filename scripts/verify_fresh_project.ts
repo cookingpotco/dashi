@@ -133,7 +133,9 @@ async function readStream(
 
 async function bootUntilListening(cwd: string): Promise<void> {
   const child = new Deno.Command(Deno.execPath(), {
-    args: ["run", "-A", "main.tsx"],
+    // --min-dep-age=0 because `--registry` runs against a version published
+    // moments earlier, which the default 24h policy would refuse to resolve.
+    args: ["run", "-A", "--min-dep-age=0", "main.tsx"],
     cwd,
     stdin: "null",
     stdout: "piped",
