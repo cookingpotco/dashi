@@ -60,11 +60,11 @@ Every config key a consumer needs, in one `deno.json`:
 
 <!-- TODO(COO-29): confirm the published version -->
 
-`unstable: ["bundle"]` is required as soon as anything renders a fragment.
-`RouteFragment` registers a client element at module scope, and that
-registration calls `Deno.bundle`. Without the flag the server logs
+`unstable: ["bundle"]` is required to listen. Importing `dashi` registers
+`RouteFragment`'s client element at module scope, and `serve()` calls
+`Deno.bundle`. Without the flag `deno check` still passes; the server logs
 `[client] bundle failed: Deno.bundle is not a function` and exits 1 before it
-listens. A fragment-free page runs without it, which is why this fails late.
+listens.
 
 Leave `compilerOptions.lib` unset. Deno's default is enough. A partial `lib`
 array drops types the compiler and `Deno.bundle` need.
