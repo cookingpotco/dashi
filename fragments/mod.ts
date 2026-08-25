@@ -3,4 +3,4 @@ export {
   type FragmentAction,
   renderFragmentActions,
 } from "./actions.ts";
-export { RouteFragment } from "./RouteFragment.tsx";
+export { RouteFragment } from "./RouteFragment.ts";
