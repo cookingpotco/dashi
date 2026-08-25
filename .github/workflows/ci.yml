@@ -130,29 +130,8 @@ jobs:
           restore-keys: |
             deno-${{ runner.os }}-
 
+      - name: Verify consumer
+        run: deno run -A scripts/verify_fresh_project.ts --linked
+
       - name: Publish
         run: deno publish
-
-  verify-release:
-    needs: [publish]
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version-file: .tool-versions
-
-      - uses: actions/cache@v5
-        with:
-          path: ${{ env.DENO_DIR }}
-          key: deno-${{ runner.os }}-${{ hashFiles('deno.lock') }}
-          restore-keys: |
-            deno-${{ runner.os }}-
-
-      - name: Verify published package
-        run: deno run -A scripts/verify_fresh_project.ts --registry
