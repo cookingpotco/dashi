@@ -22,7 +22,7 @@ interface BaseRouteFragmentProps extends HTMLAttributes {
    * Fragment is fetched from this location, either eagerly during SSR or after
    * load when `lazy` is set.
    *
-   * A form submitted inside this fragment is fetched as a fragment request.
+   * A write submitted inside this fragment is fetched as a fragment request.
    * A write handler returns `fragment.replace`, `fragment.append`, or
    * `fragment.remove` to update every host rendering those routes.
    */

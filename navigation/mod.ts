@@ -11,10 +11,11 @@ const NavigationRootElement = client.element(
  * root layout around the page content; persistent elements left
  * outside survive.
  *
- * Same-origin left-clicks fetch the next document and replace this
- * element's children. `hardNavigation` on an `<a>` opts that link
- * out. From client TypeScript, `import { navigate } from "dashi/client"`.
- * `<head>` is not merged yet.
+ * Same-origin left-clicks, GET forms, and form redirects fetch the
+ * next document and replace this element's children. History,
+ * back/forward, and scroll restoration are included. `hardNavigation`
+ * on an `<a>` or a form opts that control out. From client TypeScript,
+ * `import { navigate } from "dashi/client"`. `<head>` is not merged yet.
  *
  * Without this element, nothing changes and no navigation JS reaches
  * the browser. Without JS, links are links.

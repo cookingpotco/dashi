@@ -28,7 +28,6 @@ export function list() {
 }
 
 export async function create(ctx: Ctx) {
-  await new Promise((resolve) => setTimeout(resolve, 2000));
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
     return [fragment.replace("/todos", <TodoList error="title is required" />)];

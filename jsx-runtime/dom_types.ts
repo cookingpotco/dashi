@@ -292,6 +292,13 @@ export type HTMLAttributeAnchorTarget =
   | "_top"
   | (string & Record<never, never>);
 
+type FormMethod = "GET" | "POST" | "dialog";
+
+type FormEncType =
+  | "application/x-www-form-urlencoded"
+  | "multipart/form-data"
+  | "text/plain";
+
 export interface AnchorHTMLAttributes extends HTMLAttributes {
   download?: string;
   /** Skip soft navigation and load this link as a document. */
@@ -345,10 +352,12 @@ export interface ButtonHTMLAttributes extends HTMLAttributes {
   disabled?: boolean;
   form?: string;
   formAction?: string;
-  formEncType?: string;
-  formMethod?: string;
+  formEncType?: FormEncType;
+  formMethod?: FormMethod;
   formNoValidate?: boolean;
   formTarget?: string;
+  /** Skip soft navigation and load this link as a document. */
+  hardNavigation?: boolean;
   name?: string;
   type?: "submit" | "reset" | "button";
   value?: string | number;
@@ -404,8 +413,10 @@ export interface FormHTMLAttributes extends HTMLAttributes {
   acceptCharset?: string;
   action?: string;
   autoComplete?: string;
-  encType?: string;
-  method?: string;
+  encType?: FormEncType;
+  /** Skip soft navigation and load this link as a document. */
+  hardNavigation?: boolean;
+  method?: FormMethod;
   name?: string;
   noValidate?: boolean;
   target?: string;
@@ -490,10 +501,12 @@ export interface InputHTMLAttributes extends HTMLAttributes {
   disabled?: boolean;
   form?: string;
   formAction?: string;
-  formEncType?: string;
-  formMethod?: string;
+  formEncType?: FormEncType;
+  formMethod?: FormMethod;
   formNoValidate?: boolean;
   formTarget?: string;
+  /** Skip soft navigation and load this link as a document. */
+  hardNavigation?: boolean;
   height?: number | string;
   list?: string;
   max?: number | string;

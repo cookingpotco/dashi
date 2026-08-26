@@ -1,3 +1,9 @@
+import {
+  leaveFor,
+  registerWriteHost,
+  type SubmitIntent,
+} from "../forms/submit_client.ts";
+
 const fragmentHeaders = new Headers();
 fragmentHeaders.append("Accept", "text/html");
 fragmentHeaders.append("X-Fragment", "1");
@@ -20,7 +26,6 @@ class RouteFragment extends HTMLElement {
     }
 
     this.src = srcAttr;
-    this.addEventListener("submit", (event) => this.onSubmit(event));
   }
 
   connectedCallback() {
@@ -41,81 +46,32 @@ class RouteFragment extends HTMLElement {
     });
   }
 
-  private onSubmit(event: Event) {
-    if (!(event.target instanceof HTMLFormElement)) {
-      return;
-    }
-    const form = event.target;
-    if (form.closest("route-fragment") !== this) {
-      return;
-    }
-    const submitter = event instanceof SubmitEvent ? event.submitter : null;
-    const formControl = submitter instanceof HTMLButtonElement ||
-        submitter instanceof HTMLInputElement
-      ? submitter
-      : null;
-    const method = formControl?.formMethod || form.method;
-    if (method === "dialog") {
-      return;
-    }
-    const action = formControl?.hasAttribute("formaction")
-      ? formControl.formAction
-      : form.action;
-    const target = formControl?.hasAttribute("formtarget")
-      ? formControl.formTarget
-      : form.target;
-    if (target !== "" || new URL(action).origin !== location.origin) {
-      return;
-    }
+  submit(intent: SubmitIntent): void {
     if (this.abort !== null) {
-      event.preventDefault();
       return;
     }
-    event.preventDefault();
     const abort = new AbortController();
     this.abort = abort;
-    void this.submitAndSwap(form, formControl, method, action, abort);
+    void this.submitAndSwap(intent, abort);
   }
 
   private async submitAndSwap(
-    form: HTMLFormElement,
-    submitter: HTMLButtonElement | HTMLInputElement | null,
-    method: string,
-    action: string,
+    intent: SubmitIntent,
     abort: AbortController,
   ) {
     this.setAttribute("aria-busy", "true");
     try {
-      const formData = submitter
-        ? new FormData(form, submitter)
-        : new FormData(form);
-      const encoded = new URLSearchParams(
-        [...formData].filter((entry): entry is [string, string] =>
-          typeof entry[1] === "string"
-        ),
-      );
-      const init: RequestInit = {
-        method,
+      const res = await fetch(intent.url, {
+        method: intent.method,
         headers: fragmentHeaders,
+        body: intent.body,
         signal: abort.signal,
-      };
-      let url = action;
-      if (method === "get") {
-        const query = new URL(action);
-        query.search = encoded.toString();
-        url = query.href;
-      } else if (form.enctype === "multipart/form-data") {
-        init.body = formData;
-      } else {
-        init.body = encoded;
-      }
-      const res = await fetch(url, init);
+      });
       if (abort.signal.aborted) {
         return;
       }
       if (res.redirected) {
-        // TODO(COO-26): in-place navigation instead of a full load
-        location.assign(res.url);
+        leaveFor(res.url);
         return;
       }
       await this.applyResponse(res, abort);
@@ -241,5 +197,11 @@ function applyAction(action: Element) {
     }
   }
 }
+
+registerWriteHost("route-fragment", (host, intent) => {
+  if (host instanceof RouteFragment) {
+    host.submit(intent);
+  }
+});
 
 customElements.define("route-fragment", RouteFragment);
