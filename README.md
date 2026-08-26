@@ -5,8 +5,8 @@
 
 <img align="right" width="220" height="220" alt="dashi" src="logo.svg" hspace="24" style="margin-left: 24px;">
 
-Server-first web framework for Deno. JSX compiles to HTML strings on the server
-— no VDOM, no hydration, no client framework. Pages update by swapping
+Server-first web framework for Deno that compiles JSX to HTML strings on the server.
+No VDOM, no hydration, no client framework. Pages update by swapping
 server-rendered fragments, in the spirit of [Hotwire](https://hotwired.dev/) and
 [htmx](https://htmx.org/). Published on [JSR](https://jsr.io/@cookingpot/dashi).
 
@@ -40,9 +40,9 @@ serve(({ route }) => ({
 
 - No runtime dependencies.
 - One way to do a thing.
-- Explicit client inclusion — JS ships only when you call `client.module` or
+- Explicit client inclusion: JS ships only when you call `client.module` or
   `client.element` at module scope.
-- Explicit over magic — no file-system routing, no `_` prefixes.
+- Explicit over magic: no file-system routing, no `_` prefixes.
 
 ## Quick start
 
@@ -82,7 +82,7 @@ Open http://localhost:8000. Running without permission flags dies on
 ## Fragments
 
 A lazy fragment shows `fallback` during SSR and fetches its route after load.
-Omit `lazy` to include during SSR; `timeout` is milliseconds to wait (5000 if
+Omit `lazy` to include during SSR. `timeout` is milliseconds to wait (5000 if
 omitted), and a timeout fails the include.
 
 ```tsx
@@ -94,7 +94,7 @@ function Home() {
   return (
     <html>
       <h1>Todos</h1>
-      <RouteFragment src="/todos" lazy fallback={<p>Loading…</p>} />
+      <RouteFragment src="/todos" lazy fallback={<p>Loading...</p>} />
     </html>
   );
 }
@@ -143,7 +143,7 @@ A GET or lazy fetch replaces the host that asked with markup. `fragment.replace`
 ## Other features
 
 **Layouts** wrap the route on document render, outermost first, and do not run
-on fragment renders. A layout is `(ctx, children) => …`. Attach
+on fragment renders. A layout is `(ctx, children) => ...`. Attach
 `layouts: [RootLayout]` on the table or a `group()`.
 
 **Middleware** is a `(ctx, next) => Response` factory attached on `group()`. It
@@ -162,7 +162,7 @@ group("/posts", ({ route }) => ({
 is the last-resort 500 on `serve()` options: no layouts, no `ctx`, no `thrown`.
 
 **Client TypeScript** attaches with `client.module` / `client.element` at module
-scope — not inside a component or handler. Documents get an import map; a module
+scope, not inside a component or handler. Documents get an import map. A module
 script is added only when a client host rendered.
 
 ```tsx
@@ -200,9 +200,9 @@ group("/api", ({ route }) => ({
 
 Minimal working examples, not best practice:
 
-- [`examples/hello-world`](examples/hello-world) — routes, layouts, middleware,
-  a form
-- [`examples/fragments`](examples/fragments) — eager and lazy fragments, actions
+- [`examples/hello-world`](examples/hello-world): routes, layouts, middleware, a
+  form
+- [`examples/fragments`](examples/fragments): eager and lazy fragments, actions
 
 ## Development
 
