@@ -1,3 +1,9 @@
+import {
+  registerSoftNavigate,
+  registerWriteHost,
+  type SubmitIntent,
+} from "../forms/submit_client.ts";
+
 history.scrollRestoration = "manual";
 
 const parser = new DOMParser();
@@ -22,6 +28,39 @@ function fallback(url: string, push: boolean): void {
   } else {
     location.reload();
   }
+}
+
+async function incomingHostFrom(
+  res: Response,
+  abort: AbortController,
+): Promise<Element | null> {
+  const type = res.headers.get("content-type");
+  if (type === null || !type.toLowerCase().startsWith("text/html")) {
+    return null;
+  }
+  const html = await res.text();
+  if (abort.signal.aborted) {
+    return null;
+  }
+  const parsed = parser.parseFromString(html, "text/html");
+  const incomingHost = parsed.querySelector("navigation-root");
+  if (incomingHost === null) {
+    return null;
+  }
+  const pending: Promise<unknown>[] = [];
+  for (
+    const script of parsed.querySelectorAll("script[type=module][src]")
+  ) {
+    const src = script.getAttribute("src");
+    if (src !== null) {
+      pending.push(import(new URL(src, location.href).href));
+    }
+  }
+  await Promise.all(pending);
+  if (abort.signal.aborted) {
+    return null;
+  }
+  return incomingHost;
 }
 
 async function performNavigate(
@@ -51,32 +90,12 @@ async function performNavigate(
       fallback(url, options.push);
       return;
     }
-    const type = res.headers.get("content-type");
-    if (type === null || !type.toLowerCase().startsWith("text/html")) {
-      fallback(url, options.push);
-      return;
-    }
-    const html = await res.text();
+    const incomingHost = await incomingHostFrom(res, abort);
     if (abort.signal.aborted) {
       return;
     }
-    const parsed = parser.parseFromString(html, "text/html");
-    const incomingHost = parsed.querySelector("navigation-root");
     if (incomingHost === null) {
       fallback(url, options.push);
-      return;
-    }
-    const pending: Promise<unknown>[] = [];
-    for (
-      const script of parsed.querySelectorAll("script[type=module][src]")
-    ) {
-      const src = script.getAttribute("src");
-      if (src !== null) {
-        pending.push(import(new URL(src, location.href).href));
-      }
-    }
-    await Promise.all(pending);
-    if (abort.signal.aborted) {
       return;
     }
     history.replaceState(
@@ -137,6 +156,74 @@ export function navigate(url: string | URL): Promise<void> {
     return Promise.resolve();
   }
   return performNavigate(dest.href, { push: true });
+}
+
+async function performSubmit(
+  host: NavigationRoot,
+  intent: SubmitIntent,
+): Promise<void> {
+  const abort = new AbortController();
+  inflight = abort;
+  host.setAttribute("aria-busy", "true");
+  try {
+    const res = await fetch(intent.url, {
+      method: intent.method,
+      headers: { Accept: "text/html" },
+      body: intent.body,
+      signal: abort.signal,
+    });
+    if (abort.signal.aborted) {
+      return;
+    }
+    if (new URL(res.url, location.href).origin !== location.origin) {
+      location.assign(res.url);
+      return;
+    }
+    const incomingHost = await incomingHostFrom(res, abort);
+    if (abort.signal.aborted) {
+      return;
+    }
+    if (incomingHost === null) {
+      location.assign(res.url);
+      return;
+    }
+    if (res.redirected) {
+      history.replaceState(
+        { ...history.state, dashiScroll: scrollY },
+        "",
+      );
+      history.pushState({ dashiScroll: 0 }, "", res.url);
+    }
+    host.replaceChildren(
+      ...document.importNode(incomingHost, true).childNodes,
+    );
+    if (!res.redirected) {
+      return;
+    }
+    renderedUrl = new URL(res.url, location.href);
+    const hash = renderedUrl.hash;
+    if (hash.length <= 1) {
+      scrollTo(0, 0);
+      return;
+    }
+    const target = document.getElementById(
+      decodeURIComponent(hash.slice(1)),
+    );
+    if (target === null) {
+      scrollTo(0, 0);
+      return;
+    }
+    target.scrollIntoView();
+  } catch {
+    if (abort.signal.aborted) {
+      return;
+    }
+  } finally {
+    if (inflight === abort) {
+      inflight = null;
+      host.removeAttribute("aria-busy");
+    }
+  }
 }
 
 class NavigationRoot extends HTMLElement {
@@ -220,5 +307,18 @@ class NavigationRoot extends HTMLElement {
     void performNavigate(dest.href, { push: false, scroll });
   };
 }
+
+registerWriteHost("navigation-root", (host, intent) => {
+  if (!(host instanceof NavigationRoot)) {
+    return;
+  }
+  // A second submit is dropped. A click still aborts this apply, so a
+  // navigation can win; another POST cannot.
+  if (inflight !== null) {
+    return;
+  }
+  void performSubmit(host, intent);
+});
+registerSoftNavigate(navigate);
 
 customElements.define("navigation-root", NavigationRoot);

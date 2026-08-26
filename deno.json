@@ -60,6 +60,7 @@
       "caching",
       "client",
       "cors",
+      "forms",
       "fragments",
       "jsx-runtime",
       "logging",

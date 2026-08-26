@@ -5,7 +5,6 @@ export function TodosPage() {
     <div>
       <p id="page-marker">outside</p>
       <RouteFragment src="/todos" />
-      <RouteFragment src="/leave" />
     </div>
   );
 }

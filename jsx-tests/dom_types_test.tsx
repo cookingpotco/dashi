@@ -24,8 +24,16 @@ function typechecks() {
   // @ts-expect-error navigation-root is not a JSX intrinsic; use NavigationRoot
   <navigation-root />;
   <a href="/x" hardNavigation />;
-  // @ts-expect-error hardNavigation is only on anchors
+  <form hardNavigation />;
+  <button type="submit" hardNavigation />;
+  <input type="submit" hardNavigation />;
+  <form method="POST" encType="multipart/form-data" />;
+  // @ts-expect-error hardNavigation is not on arbitrary elements
   <div hardNavigation />;
+  // @ts-expect-error method does not include DELETE; the browser would treat it as GET
+  <form method="DELETE" />;
+  // @ts-expect-error encType is the three spec keywords
+  <form encType="application/json" />;
   // @ts-expect-error route-action is not a JSX intrinsic
   <route-action action="remove" src="/x" />;
 

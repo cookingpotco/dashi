@@ -107,6 +107,13 @@ Deno.test("emits hardNavigation as a boolean attribute on anchors", () => {
   );
 });
 
+Deno.test("emits hardNavigation as a boolean attribute on forms", () => {
+  assertEquals(
+    String(<form hardNavigation></form>),
+    `<form hardnavigation></form>`,
+  );
+});
+
 Deno.test("omits the closing tag on a void element", () => {
   assertEquals(String(<br />), "<br>");
 });

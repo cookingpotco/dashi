@@ -93,3 +93,8 @@ browser behaviour being mirrored. Use `getAttribute` or `hasAttribute`
 when presence itself is the question. JSX prop spellings (`className`,
 `htmlFor`) stop at the runtime's `MAPPED_HTML_ATTR_NAMES` and never appear
 in client code.
+`mod.ts` is the server surface of a directory; client runtime modules are
+imported by file. One document-level submit listener in `forms/` owns
+interception. Hosts register their tag; there is no per-element submit
+listener. GET navigates the page; a write applies to the nearest
+registered host.

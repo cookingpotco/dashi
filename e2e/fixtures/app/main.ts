@@ -26,7 +26,6 @@ import {
   dismiss as dismissNotice,
   list as listNotice,
 } from "./notice_route.tsx";
-import { Leave, leave } from "./leave_route.tsx";
 import { RootLayout } from "./root_layout.tsx";
 import { errorFallback, ErrorPage } from "./errors.tsx";
 
@@ -56,7 +55,6 @@ if (import.meta.main) {
       route("/actions", { GET: actionsForm, POST: applyActions }),
       route("/todo-count", { GET: listTodoCount }),
       route("/notice", { GET: listNotice, POST: dismissNotice }),
-      route("/leave", { GET: Leave, POST: leave }),
     ],
   }), { errorFallback, port: 0 });
 }

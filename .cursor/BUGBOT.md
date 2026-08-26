@@ -66,7 +66,9 @@ cannot see project rules.
 - `deno check` is the type-check command. It covers the framework, scripts,
   example apps, and `jsx-tests/`.
 - Cross-directory imports go through that directory's `mod.ts`. Flag an import
-  of a sibling file (`routing/pipeline.ts`, `shared/shared_types.ts`).
+  of a sibling file (`routing/pipeline.ts`, `shared/shared_types.ts`). `mod.ts`
+  is the server surface; client runtime modules are imported by file
+  (`forms/submit_client.ts`).
 - A known static `.json` file is imported with `{ type: "json" }`. Flag
   `readTextFile` + `JSON.parse` of a file that is part of the checkout. Runtime
   payloads (request bodies, webhook events) stay `JSON.parse`.
@@ -89,7 +91,10 @@ cannot see project rules.
   one import map; a module script is added only when a host rendered. A lazy
   fragment `import()`s its `Link` modulepreloads before swap. `staticFile` is
   app-mounted disk files. Flag a second include, bundle, or inject path.
-  `/_dashi/*` is reserved.
+  `/_dashi/*` is reserved. One document-level submit listener in `forms/` owns
+  interception. Hosts register their tag; there is no per-element submit
+  listener. GET navigates the page; a write applies to the nearest registered
+  host. Flag a per-element submit listener or a GET form that swaps a fragment.
 - A closed set of cases is a `const enum` (plain `enum` only when it must exist
   at runtime). Flag a string-literal union used as a discriminant.
 - Fragment updates are `fragment.replace`, `fragment.append`, and

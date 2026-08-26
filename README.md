@@ -177,8 +177,11 @@ const Clock = client.module(
 
 **Soft navigation.** Wrap the swapping region in `<NavigationRoot>` in the root
 layout. Same-origin clicks fetch the next document and replace the host's
-children. History, back/forward, and scroll restoration are included. Opt a link
-out with `hardNavigation` on the `<a>`. From client TypeScript,
+children. A GET form navigates the same way, wherever it sits. A write applies
+to the nearest host — the fragment that contains it, or this page host. A
+redirect swaps in place at the new URL, with history so back does not re-post.
+History, back/forward, and scroll restoration are included. Opt a link or form
+out with `hardNavigation`. From client TypeScript,
 `import { navigate } from "dashi/client"` and call `navigate(url)` for the same
 swap. Persistent elements left outside the host survive. `<head>` is not merged
 yet.
