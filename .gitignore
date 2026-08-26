@@ -7,6 +7,7 @@
 *.swp
 
 e2e/results/
+coverage/
 
 # CI points DENO_DIR here, inside the workspace.
 .deno/

@@ -3,6 +3,8 @@
 > **Not production ready.** dashi has not hit v1 yet and is under active
 > development. Expect breaking changes in minor versions.
 
+<img align="right" width="220" height="220" alt="dashi" src="logo.svg" hspace="24" style="margin-left: 24px;">
+
 Server-first web framework for Deno. JSX compiles to HTML strings on the server
 — no VDOM, no hydration, no client framework. Pages update by swapping
 server-rendered fragments, in the spirit of [Hotwire](https://hotwired.dev/) and
@@ -92,11 +94,7 @@ function Home() {
   return (
     <html>
       <h1>Todos</h1>
-      <RouteFragment
-        src="/todos"
-        lazy
-        fallback={<p>Loading…</p>}
-      />
+      <RouteFragment src="/todos" lazy fallback={<p>Loading…</p>} />
     </html>
   );
 }
@@ -105,7 +103,9 @@ function TodoList({ error }: { error?: string }) {
   return (
     <div>
       <ul>
-        {todos.map((todo) => <li>{todo}</li>)}
+        {todos.map((todo) => (
+          <li>{todo}</li>
+        ))}
       </ul>
       {error ? <p>{error}</p> : null}
       <form method="POST" action="/todos">
@@ -123,9 +123,7 @@ function list() {
 async function create(ctx: Ctx) {
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
-    return [
-      fragment.replace("/todos", <TodoList error="title is required" />),
-    ];
+    return [fragment.replace("/todos", <TodoList error="title is required" />)];
   }
   todos.push(title);
   return [fragment.replace("/todos", <TodoList />)];
@@ -156,9 +154,7 @@ runs for document hits and fragment hits.
 
 ```tsx
 group("/posts", ({ route }) => ({
-  routes: [
-    route("/:id", { GET: (ctx) => <p>{ctx.params.id}</p> }),
-  ],
+  routes: [route("/:id", { GET: (ctx) => <p>{ctx.params.id}</p> })],
 }));
 ```
 
@@ -170,9 +166,7 @@ scope — not inside a component or handler. Documents get an import map; a modu
 script is added only when a client host rendered.
 
 ```tsx
-const Clock = client.module(
-  new URL("./clock_client.ts", import.meta.url),
-);
+const Clock = client.module(new URL("./clock_client.ts", import.meta.url));
 ```
 
 **Soft navigation.** Wrap the swapping region in `<NavigationRoot>` in the root

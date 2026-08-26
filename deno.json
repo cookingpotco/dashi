@@ -57,6 +57,7 @@
       "client.ts",
       "README.md",
       "LICENSE",
+      "logo.svg",
       "caching",
       "client",
       "cors",
