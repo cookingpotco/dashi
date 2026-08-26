@@ -11,6 +11,7 @@ const parser = new DOMParser();
 let renderedUrl = new URL(location.href);
 let connectedHost: NavigationRoot | null = null;
 let inflight: AbortController | null = null;
+let announcer: HTMLElement | null = null;
 
 function samePath(a: URL, b: URL): boolean {
   return a.origin === b.origin && a.pathname === b.pathname &&
@@ -20,6 +21,11 @@ function samePath(a: URL, b: URL): boolean {
 interface NavigateOptions {
   push: boolean;
   scroll?: number;
+}
+
+interface ParsedPage {
+  host: Element;
+  doc: Document;
 }
 
 function fallback(url: string, push: boolean): void {
@@ -33,7 +39,7 @@ function fallback(url: string, push: boolean): void {
 async function parseResponse(
   res: Response,
   abort: AbortController,
-): Promise<Element | null> {
+): Promise<ParsedPage | null> {
   const type = res.headers.get("content-type");
   if (type === null || !type.toLowerCase().startsWith("text/html")) {
     return null;
@@ -42,14 +48,14 @@ async function parseResponse(
   if (abort.signal.aborted) {
     return null;
   }
-  const parsed = parser.parseFromString(html, "text/html");
-  const incomingHost = parsed.querySelector("navigation-root");
+  const doc = parser.parseFromString(html, "text/html");
+  const incomingHost = doc.querySelector("navigation-root");
   if (incomingHost === null) {
     return null;
   }
   const pending: Promise<unknown>[] = [];
   for (
-    const script of parsed.querySelectorAll("script[type=module][src]")
+    const script of doc.querySelectorAll("script[type=module][src]")
   ) {
     const src = script.getAttribute("src");
     if (src !== null) {
@@ -60,26 +66,170 @@ async function parseResponse(
   if (abort.signal.aborted) {
     return null;
   }
-  return incomingHost;
+  return { host: incomingHost, doc };
 }
 
-function persistSoftNavigation(
-  host: NavigationRoot,
-  incomingHost: Element,
-  url: string,
+// DOMParser documents resolve URLs against about:blank.
+function assetUrl(el: HTMLLinkElement | HTMLScriptElement): string {
+  const attr = el instanceof HTMLScriptElement
+    ? el.getAttribute("src")
+    : el.getAttribute("href");
+  if (attr === null || attr === "") {
+    if (el instanceof HTMLScriptElement) {
+      return el.src;
+    }
+    return el.href;
+  }
+  return new URL(attr, location.href).href;
+}
+
+function matchingLive(
+  incoming: Node,
+  live: Node[],
+  kept: Set<Node>,
+): Node | null {
+  if (
+    incoming instanceof HTMLLinkElement &&
+    incoming.relList.contains("stylesheet")
+  ) {
+    const href = assetUrl(incoming);
+    for (const node of live) {
+      if (
+        !kept.has(node) &&
+        node instanceof HTMLLinkElement &&
+        node.relList.contains("stylesheet") &&
+        assetUrl(node) === href
+      ) {
+        return node;
+      }
+    }
+    return null;
+  }
+  if (!(incoming instanceof HTMLScriptElement)) {
+    return null;
+  }
+  const src = incoming.getAttribute("src");
+  if (src === null || src === "") {
+    return null;
+  }
+  const url = assetUrl(incoming);
+  for (const node of live) {
+    if (
+      !kept.has(node) &&
+      node instanceof HTMLScriptElement &&
+      assetUrl(node) === url
+    ) {
+      return node;
+    }
+  }
+  return null;
+}
+
+function waitForSheet(
+  link: HTMLLinkElement,
+  signal: AbortSignal,
+): Promise<void> {
+  return new Promise((resolve) => {
+    const done = () => {
+      link.removeEventListener("load", done);
+      link.removeEventListener("error", done);
+      signal.removeEventListener("abort", done);
+      resolve();
+    };
+    link.addEventListener("load", done);
+    link.addEventListener("error", done);
+    signal.addEventListener("abort", done);
+    if (signal.aborted || link.sheet !== null) {
+      done();
+    }
+  });
+}
+
+async function mergeHead(
+  doc: Document,
+  abort: AbortController,
+): Promise<boolean> {
+  const live = [...document.head.childNodes];
+  const kept = new Set<Node>();
+  const added: ChildNode[] = [];
+  const sheets: HTMLLinkElement[] = [];
+
+  for (const incoming of [...doc.head.childNodes]) {
+    const match = matchingLive(incoming, live, kept);
+    if (match !== null) {
+      kept.add(match);
+      continue;
+    }
+    if (incoming instanceof HTMLScriptElement) {
+      continue;
+    }
+    const node = document.importNode(incoming, true);
+    document.head.append(node);
+    added.push(node);
+    if (
+      node instanceof HTMLLinkElement &&
+      node.relList.contains("stylesheet")
+    ) {
+      sheets.push(node);
+    }
+  }
+
+  await Promise.all(
+    sheets.map((link) => waitForSheet(link, abort.signal)),
+  );
+  if (abort.signal.aborted) {
+    for (const node of added) {
+      node.remove();
+    }
+    return false;
+  }
+
+  for (const node of live) {
+    if (!kept.has(node)) {
+      node.remove();
+    }
+  }
+  return true;
+}
+
+function copyLang(doc: Document): void {
+  const lang = doc.documentElement.getAttribute("lang");
+  if (lang === null) {
+    document.documentElement.removeAttribute("lang");
+  } else {
+    document.documentElement.lang = lang;
+  }
+}
+
+function announceTitle(): void {
+  if (announcer === null) {
+    const el = document.createElement("div");
+    el.setAttribute("aria-live", "assertive");
+    el.setAttribute("aria-atomic", "true");
+    el.style.cssText =
+      "position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0";
+    document.body.append(el);
+    announcer = el;
+  }
+  announcer.textContent = "";
+  announcer.textContent = document.title;
+}
+
+function focusAfterSwap(host: NavigationRoot): void {
+  const autofocus = host.querySelector("[autofocus]");
+  if (autofocus instanceof HTMLElement) {
+    autofocus.focus({ preventScroll: true });
+    return;
+  }
+  if (!host.hasAttribute("tabindex")) {
+    host.tabIndex = -1;
+  }
+  host.focus({ preventScroll: true });
+}
+
+function restoreScroll(
   options: NavigateOptions,
 ): void {
-  history.replaceState(
-    { ...history.state, dashiScroll: scrollY },
-    "",
-  );
-  if (options.push) {
-    history.pushState({ dashiScroll: 0 }, "", url);
-  }
-  host.replaceChildren(
-    ...document.importNode(incomingHost, true).childNodes,
-  );
-  renderedUrl = new URL(url, location.href);
   if (!options.push) {
     scrollTo(0, options.scroll ?? 0);
     return;
@@ -97,6 +247,37 @@ function persistSoftNavigation(
     return;
   }
   target.scrollIntoView();
+}
+
+async function commitDocument(
+  host: NavigationRoot,
+  parsed: ParsedPage,
+  abort: AbortController,
+  navigation: { url: string; options: NavigateOptions } | null,
+): Promise<boolean> {
+  if (!await mergeHead(parsed.doc, abort)) {
+    return false;
+  }
+  copyLang(parsed.doc);
+  if (navigation !== null) {
+    history.replaceState(
+      { ...history.state, dashiScroll: scrollY },
+      "",
+    );
+    if (navigation.options.push) {
+      history.pushState({ dashiScroll: 0 }, "", navigation.url);
+    }
+  }
+  host.replaceChildren(
+    ...document.importNode(parsed.host, true).childNodes,
+  );
+  if (navigation !== null) {
+    renderedUrl = new URL(navigation.url, location.href);
+    restoreScroll(navigation.options);
+  }
+  focusAfterSwap(host);
+  announceTitle();
+  return true;
 }
 
 async function performNavigate(
@@ -126,15 +307,18 @@ async function performNavigate(
       fallback(url, options.push);
       return;
     }
-    const incomingHost = await parseResponse(res, abort);
+    const parsed = await parseResponse(res, abort);
     if (abort.signal.aborted) {
       return;
     }
-    if (incomingHost === null) {
+    if (parsed === null) {
       fallback(url, options.push);
       return;
     }
-    persistSoftNavigation(host, incomingHost, finalUrl, options);
+    await commitDocument(host, parsed, abort, {
+      url: finalUrl,
+      options,
+    });
   } catch {
     if (abort.signal.aborted) {
       return;
@@ -188,21 +372,22 @@ async function performSubmit(
       location.assign(res.url);
       return;
     }
-    const incomingHost = await parseResponse(res, abort);
+    const parsed = await parseResponse(res, abort);
     if (abort.signal.aborted) {
       return;
     }
-    if (incomingHost === null) {
+    if (parsed === null) {
       location.assign(res.url);
       return;
     }
     if (res.redirected) {
-      persistSoftNavigation(host, incomingHost, res.url, { push: true });
+      await commitDocument(host, parsed, abort, {
+        url: res.url,
+        options: { push: true },
+      });
       return;
     }
-    host.replaceChildren(
-      ...document.importNode(incomingHost, true).childNodes,
-    );
+    await commitDocument(host, parsed, abort, null);
   } catch {
     if (abort.signal.aborted) {
       return;

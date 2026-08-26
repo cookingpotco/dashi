@@ -6,6 +6,9 @@ export function RootLayout(
 ): Element {
   return (
     <html>
+      <head>
+        <title>Hello World</title>
+      </head>
       <h1>Website Title</h1>
       <nav>
         <a href="/">Home</a>

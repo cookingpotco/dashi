@@ -3,6 +3,9 @@ import { type Element, NavigationRoot } from "dashi";
 export function NotFound(): Element {
   return (
     <html>
+      <head>
+        <title>not found</title>
+      </head>
       <header id="persistent">persistent</header>
       <NavigationRoot>
         <p id="heading">not found</p>
