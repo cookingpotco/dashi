@@ -44,12 +44,12 @@ async function waitForPath(page: Page, path: string) {
 
 async function prepare(page: Page, origin: string, path: string) {
   await page.goto(`${origin}${path}`);
-  await page.evaluate(() => customElements.whenDefined("route-navigation"));
+  await page.evaluate(() => customElements.whenDefined("navigation-root"));
   await page.evaluate(() => {
     Reflect.set(globalThis, "__dashiDoc", true);
-    const chrome = document.getElementById("chrome");
-    if (chrome) {
-      chrome.textContent = "mutated";
+    const persistent = document.getElementById("persistent");
+    if (persistent) {
+      persistent.textContent = "mutated";
     }
   });
 }
@@ -57,11 +57,11 @@ async function prepare(page: Page, origin: string, path: string) {
 function snapshot() {
   return {
     survived: Reflect.get(globalThis, "__dashiDoc") === true,
-    chrome: document.getElementById("chrome")?.textContent ?? null,
+    persistent: document.getElementById("persistent")?.textContent ?? null,
     heading: document.getElementById("heading")?.textContent ?? null,
     url: location.href,
     scroll: scrollY,
-    host: document.querySelector("route-navigation") !== null,
+    host: document.querySelector("navigation-root") !== null,
   };
 }
 
@@ -86,7 +86,8 @@ Deno.test("navigation fixture", async (t) => {
             await customElements.whenDefined("widget-el");
             return {
               survived: Reflect.get(globalThis, "__dashiDoc") === true,
-              chrome: document.getElementById("chrome")?.textContent ?? null,
+              persistent: document.getElementById("persistent")?.textContent ??
+                null,
               heading: document.getElementById("heading")?.textContent ?? null,
               widget: document.querySelector("widget-el")?.textContent ?? null,
               url: location.pathname,
@@ -95,7 +96,7 @@ Deno.test("navigation fixture", async (t) => {
           });
           assertEquals(result, {
             survived: true,
-            chrome: "mutated",
+            persistent: "mutated",
             heading: "widget",
             widget: "widget-upgraded",
             url: "/widget",
@@ -149,7 +150,7 @@ Deno.test("navigation fixture", async (t) => {
           await waitForPath(page, "/missing");
           const result = await page.evaluate(snapshot);
           assertEquals(result.survived, true);
-          assertEquals(result.chrome, "mutated");
+          assertEquals(result.persistent, "mutated");
           assertEquals(result.heading, "not found");
           assertEquals(result.url, `${app.origin}/missing`);
           assertEquals(result.host, true);
@@ -176,7 +177,7 @@ Deno.test("navigation fixture", async (t) => {
       );
 
       await t.step(
-        "a data-dashi-navigate=false link does a real document load",
+        "a hardNavigation link does a real document load",
         async () => {
           await prepare(page, app.origin, "/");
           await Promise.all([
@@ -278,7 +279,7 @@ Deno.test("navigation fixture", async (t) => {
           );
           const result = await page.evaluate(snapshot);
           assertEquals(result.survived, true);
-          assertEquals(result.chrome, "mutated");
+          assertEquals(result.persistent, "mutated");
           assertEquals(result.heading, "about");
           assertEquals(result.url, `${app.origin}/about`);
         },
@@ -293,7 +294,7 @@ Deno.test("navigation fixture", async (t) => {
           await waitForHeading(page, "about");
           const result = await page.evaluate(snapshot);
           assertEquals(result.survived, true);
-          assertEquals(result.chrome, "mutated");
+          assertEquals(result.persistent, "mutated");
           assertEquals(result.heading, "about");
           assertEquals(result.url, `${app.origin}/about`);
         },

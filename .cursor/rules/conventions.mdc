@@ -66,6 +66,10 @@ Extract when the same non-trivial shape is repeated, or when the body is long
 or not obvious (`withoutContent`). A one-line env read used once stays at the
 call site.
 
+## Conditionals
+
+Do not chain ternary operators. Use `if`.
+
 ## Client JS
 
 Client TypeScript attaches only via `client.module` / `client.element` at

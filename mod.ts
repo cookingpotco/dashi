@@ -10,7 +10,7 @@ export {
   type FragmentAction,
   RouteFragment,
 } from "./fragments/mod.ts";
-export { RouteNavigation } from "./navigation/mod.ts";
+export { NavigationRoot } from "./navigation/mod.ts";
 export type {
   DashiNode,
   Element,

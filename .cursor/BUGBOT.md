@@ -102,6 +102,7 @@ cannot see project rules.
 - Flag a helper that is a short, obvious check or a few straightforward lines
   used once. Inline those. A longer or non-obvious body may be a function at one
   call site.
+- Do not chain ternary operators. Flag a nested `? :`.
 - Do not use `as` to silence the checker. An assertion is allowed when the types
   cannot express the fact, and only at the use that needs it, with a note saying
   why. Flag a cast that can go away by restructuring, or that sits on a

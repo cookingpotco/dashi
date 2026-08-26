@@ -1,4 +1,4 @@
-import { type Element, RouteNavigation, type WrapperCtx } from "dashi";
+import { type Element, NavigationRoot, type WrapperCtx } from "dashi";
 
 export function RootLayout(
   _ctx: WrapperCtx,
@@ -12,9 +12,9 @@ export function RootLayout(
         <a href="/nested">Nested</a>
         <a href="/guestbook">Guestbook</a>
       </nav>
-      <RouteNavigation>
+      <NavigationRoot>
         {children}
-      </RouteNavigation>
+      </NavigationRoot>
     </html>
   );
 }

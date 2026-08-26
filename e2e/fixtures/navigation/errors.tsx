@@ -1,12 +1,12 @@
-import { type Element, RouteNavigation } from "dashi";
+import { type Element, NavigationRoot } from "dashi";
 
 export function NotFound(): Element {
   return (
     <html>
-      <header id="chrome">chrome</header>
-      <RouteNavigation>
+      <header id="persistent">persistent</header>
+      <NavigationRoot>
         <p id="heading">not found</p>
-      </RouteNavigation>
+      </NavigationRoot>
     </html>
   );
 }

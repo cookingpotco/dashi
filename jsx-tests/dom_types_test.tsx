@@ -21,6 +21,11 @@ function typechecks() {
 
   // @ts-expect-error route-fragment is not a JSX intrinsic; use RouteFragment
   <route-fragment src="/x" />;
+  // @ts-expect-error navigation-root is not a JSX intrinsic; use NavigationRoot
+  <navigation-root />;
+  <a href="/x" hardNavigation />;
+  // @ts-expect-error hardNavigation is only on anchors
+  <div hardNavigation />;
   // @ts-expect-error route-action is not a JSX intrinsic
   <route-action action="remove" src="/x" />;
 

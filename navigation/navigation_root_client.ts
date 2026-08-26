@@ -1,7 +1,9 @@
 history.scrollRestoration = "manual";
 
+const parser = new DOMParser();
+
 let renderedUrl = new URL(location.href);
-let connectedHost: RouteNavigation | null = null;
+let connectedHost: NavigationRoot | null = null;
 let inflight: AbortController | null = null;
 
 function samePath(a: URL, b: URL): boolean {
@@ -58,8 +60,8 @@ async function performNavigate(
     if (abort.signal.aborted) {
       return;
     }
-    const parsed = new DOMParser().parseFromString(html, "text/html");
-    const incomingHost = parsed.querySelector("route-navigation");
+    const parsed = parser.parseFromString(html, "text/html");
+    const incomingHost = parsed.querySelector("navigation-root");
     if (incomingHost === null) {
       fallback(url, options.push);
       return;
@@ -88,39 +90,38 @@ async function performNavigate(
       ...document.importNode(incomingHost, true).childNodes,
     );
     renderedUrl = new URL(finalUrl, location.href);
-    if (options.push) {
-      const hash = renderedUrl.hash;
-      if (hash.length > 1) {
-        const target = document.getElementById(
-          decodeURIComponent(hash.slice(1)),
-        );
-        if (target !== null) {
-          target.scrollIntoView();
-        } else {
-          scrollTo(0, 0);
-        }
-      } else {
-        scrollTo(0, 0);
-      }
-    } else {
+    if (!options.push) {
       scrollTo(0, options.scroll ?? 0);
+      return;
     }
+    const hash = renderedUrl.hash;
+    if (hash.length <= 1) {
+      scrollTo(0, 0);
+      return;
+    }
+    const target = document.getElementById(
+      decodeURIComponent(hash.slice(1)),
+    );
+    if (target === null) {
+      scrollTo(0, 0);
+      return;
+    }
+    target.scrollIntoView();
   } catch {
-    if (!abort.signal.aborted) {
-      fallback(url, options.push);
+    if (abort.signal.aborted) {
+      return;
     }
+    fallback(url, options.push);
   } finally {
     if (inflight === abort) {
       inflight = null;
-    }
-    if (inflight === null) {
       host.removeAttribute("aria-busy");
     }
   }
 }
 
 /**
- * Fetch `url` and swap the connected `<route-navigation>` in place.
+ * Fetch `url` and swap the connected `<navigation-root>` in place.
  * Pushes history and scrolls to the top, or to the hash target.
  * Without a host, or when the response cannot be swapped, does a
  * real navigation.
@@ -138,11 +139,11 @@ export function navigate(url: string | URL): Promise<void> {
   return performNavigate(dest.href, { push: true });
 }
 
-class RouteNavigation extends HTMLElement {
+class NavigationRoot extends HTMLElement {
   connectedCallback() {
     if (connectedHost !== null && connectedHost !== this) {
       throw new Error(
-        "Only one <route-navigation> may be connected per document",
+        "Only one <navigation-root> may be connected per document",
       );
     }
     connectedHost = this;
@@ -167,11 +168,12 @@ class RouteNavigation extends HTMLElement {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
       return;
     }
-    const el = event.target instanceof Element
-      ? event.target
-      : event.target instanceof Node
-      ? event.target.parentElement
-      : null;
+    let el: Element | null = null;
+    if (event.target instanceof Element) {
+      el = event.target;
+    } else if (event.target instanceof Node) {
+      el = event.target.parentElement;
+    }
     if (el === null) {
       return;
     }
@@ -185,7 +187,7 @@ class RouteNavigation extends HTMLElement {
     if (anchor.target !== "" && anchor.target !== "_self") {
       return;
     }
-    if (anchor.closest('[data-dashi-navigate="false"]') !== null) {
+    if (anchor.hasAttribute("hardNavigation")) {
       return;
     }
     const dest = new URL(anchor.href);
@@ -208,12 +210,15 @@ class RouteNavigation extends HTMLElement {
       return;
     }
     const state = event.state;
-    const scroll = state !== null && typeof state === "object" &&
-        "dashiScroll" in state && typeof state.dashiScroll === "number"
-      ? state.dashiScroll
-      : 0;
+    let scroll = 0;
+    if (
+      state !== null && typeof state === "object" &&
+      "dashiScroll" in state && typeof state.dashiScroll === "number"
+    ) {
+      scroll = state.dashiScroll;
+    }
     void performNavigate(dest.href, { push: false, scroll });
   };
 }
 
-customElements.define("route-navigation", RouteNavigation);
+customElements.define("navigation-root", NavigationRoot);

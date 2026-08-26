@@ -1,4 +1,4 @@
-import { type Element, RouteNavigation, type WrapperCtx } from "dashi";
+import { type Element, NavigationRoot, type WrapperCtx } from "dashi";
 
 export function RootLayout(
   _ctx: WrapperCtx,
@@ -6,10 +6,10 @@ export function RootLayout(
 ): Element {
   return (
     <html>
-      <header id="chrome">chrome</header>
-      <RouteNavigation>
+      <header id="persistent">persistent</header>
+      <NavigationRoot>
         {children}
-      </RouteNavigation>
+      </NavigationRoot>
     </html>
   );
 }
