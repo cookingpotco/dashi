@@ -67,6 +67,8 @@ function onSubmit(event: Event): void {
   if (writeHosts.size === 0) {
     return;
   }
+  // TODO(COO-80): whether writes closest() to a host, or a fragment
+  // controller registers once like soft navigation.
   const host = form.closest([...writeHosts.keys()].join(", "));
   if (host === null) {
     return;
@@ -106,6 +108,8 @@ export function registerSoftNavigate(navigate: (url: string) => void): void {
   ensureListener();
 }
 
+// TODO(COO-80): whether leaveFor and registerSoftNavigate move to a
+// document-level request registry.
 /** Leave the current page for `url`: soft when navigation loaded, else a real load. */
 export function leaveFor(url: string): void {
   if (softNavigate !== null) {
