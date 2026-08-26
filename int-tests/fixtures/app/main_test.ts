@@ -1200,6 +1200,9 @@ Deno.test("main fixture app over HTTP", async (t) => {
       assertEquals(scripts.length, 1);
       const src = scripts[0]![1]!;
       assertMatch(src, /^\/_dashi\/client\/[^/]+\-[A-Za-z0-9_-]+\.js$/);
+      assertStringIncludes(pageHtml, 'id="probe"');
+      assertStringIncludes(pageHtml, 'id="probe-b"');
+      assertEquals(pageHtml.split(`src="${src}"`).length - 1, 1);
       assertEquals(fragHtml.includes("<script"), false);
       const link = frag.headers.get("link");
       if (link === null) {

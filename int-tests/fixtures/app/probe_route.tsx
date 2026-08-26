@@ -6,5 +6,10 @@ const Probe = client.element(
 );
 
 export function ProbePage() {
-  return <Probe id="probe">probe-body</Probe>;
+  return (
+    <div>
+      <Probe id="probe">probe-body</Probe>
+      <Probe id="probe-b">probe-b</Probe>
+    </div>
+  );
 }

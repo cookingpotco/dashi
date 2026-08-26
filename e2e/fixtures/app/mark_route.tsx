@@ -6,5 +6,10 @@ const Mark = client.element(
 );
 
 export function MarkPage() {
-  return <Mark />;
+  return (
+    <div>
+      <Mark id="mark-a" />
+      <Mark id="mark-b" />
+    </div>
+  );
 }

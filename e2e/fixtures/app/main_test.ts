@@ -24,11 +24,21 @@ Deno.test("app fixture", async (t) => {
 
       await t.step("client.element script stamps the page", async () => {
         await page.goto(`${app.origin}/mark`);
-        const text = await page.evaluate(async () => {
+        const result = await page.evaluate(async () => {
           await customElements.whenDefined("mark-el");
-          return document.querySelector("mark-el")?.textContent;
+          return {
+            a: document.getElementById("mark-a")?.textContent,
+            b: document.getElementById("mark-b")?.textContent,
+            evals: Number(Reflect.get(globalThis, "__dashiMarkEvals") ?? 0),
+            scripts: [
+              ...document.querySelectorAll("script[type=module][src]"),
+            ].map((el) => el.getAttribute("src")),
+          };
         });
-        assertEquals(text, "from-lib");
+        assertEquals(result.a, "from-lib");
+        assertEquals(result.b, "from-lib");
+        assertEquals(result.evals, 1);
+        assertEquals(result.scripts.length, 1);
       });
 
       await t.step("client.module script stamps the page", async () => {
@@ -300,7 +310,11 @@ Deno.test("app fixture", async (t) => {
           await add.click();
           await page.evaluate(async () => {
             const start = Date.now();
-            while (document.getElementById("appended-todo") === null) {
+            while (
+              document.getElementById("appended-todo") === null ||
+              document.getElementById("appended-mark")?.textContent !==
+                "append-upgraded"
+            ) {
               if (Date.now() - start > 10000) {
                 throw new Error("appended row did not appear");
               }
@@ -320,6 +334,8 @@ Deno.test("app fixture", async (t) => {
               item: document.getElementById("appended-todo")?.textContent,
               itemInHost: todosHost?.querySelector("#appended-todo")
                 ?.textContent ?? null,
+              appendedMark: document.getElementById("appended-mark")
+                ?.textContent ?? null,
               count: document.getElementById("todo-count")?.textContent,
               countInHost: countHost?.querySelector("#todo-count")
                 ?.textContent ?? null,
@@ -330,6 +346,7 @@ Deno.test("app fixture", async (t) => {
             marker: "mutated",
             item: "action-milk",
             itemInHost: "action-milk",
+            appendedMark: "append-upgraded",
             count: "1",
             countInHost: "1",
           });

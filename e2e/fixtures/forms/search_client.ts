@@ -1,13 +1,11 @@
-import { stamp } from "./stamp.ts";
-
-const key = "__dashiMarkEvals";
+const key = "__dashiSearchEvals";
 Reflect.set(globalThis, key, Number(Reflect.get(globalThis, key) ?? 0) + 1);
 
 customElements.define(
-  "mark-el",
+  "search-el",
   class extends HTMLElement {
     connectedCallback() {
-      stamp(this, "from-lib");
+      this.textContent = "search-upgraded";
     }
   },
 );

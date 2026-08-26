@@ -39,6 +39,17 @@ async function waitForHeading(page: Page, text: string) {
   }, { args: [text] });
 }
 
+async function searchEvals(page: Page): Promise<number> {
+  return await page.evaluate(() =>
+    Number(Reflect.get(globalThis, "__dashiSearchEvals") ?? 0)
+  );
+}
+
+async function waitForSearchMarks(page: Page) {
+  await waitForText(page, "search-mark-a", "search-upgraded");
+  await waitForText(page, "search-mark-b", "search-upgraded");
+}
+
 async function waitForText(page: Page, id: string, text: string) {
   await page.evaluate(async (expected) => {
     const start = Date.now();
@@ -122,6 +133,7 @@ Deno.test("forms fixture", async (t) => {
           await prepareHosted(page, app.origin, "/entries");
           await clickId(page, "redirect-submit");
           await waitForHeading(page, "search");
+          await waitForSearchMarks(page);
           const result = await page.evaluate(snapshot);
           assertEquals(result, {
             survived: true,
@@ -130,6 +142,7 @@ Deno.test("forms fixture", async (t) => {
             url: `${app.origin}/search`,
             host: true,
           });
+          assertEquals(await searchEvals(page), 1);
         },
       );
 
@@ -186,6 +199,7 @@ Deno.test("forms fixture", async (t) => {
         await typeField(page, "#page-search-q", "hello");
         await clickId(page, "page-search-submit");
         await waitForHeading(page, "search");
+        await waitForSearchMarks(page);
         const result = await page.evaluate(() => ({
           survived: Reflect.get(globalThis, "__dashiDoc") === true,
           persistent: document.getElementById("persistent")?.textContent ??
@@ -199,6 +213,7 @@ Deno.test("forms fixture", async (t) => {
         assertEquals(result.heading, "search");
         assertEquals(result.query, "hello");
         assertEquals(result.url, `${app.origin}/search?q=hello`);
+        assertEquals(await searchEvals(page), 1);
       });
 
       await t.step(
@@ -208,6 +223,7 @@ Deno.test("forms fixture", async (t) => {
           await typeField(page, "#header-search-q", "from-header");
           await clickId(page, "header-search-submit");
           await waitForHeading(page, "search");
+          await waitForSearchMarks(page);
           const result = await page.evaluate(() => ({
             survived: Reflect.get(globalThis, "__dashiDoc") === true,
             heading: document.getElementById("heading")?.textContent ?? null,
@@ -218,6 +234,24 @@ Deno.test("forms fixture", async (t) => {
           assertEquals(result.heading, "search");
           assertEquals(result.query, "from-header");
           assertEquals(result.url, `${app.origin}/search?q=from-header`);
+          assertEquals(await searchEvals(page), 1);
+        },
+      );
+
+      await t.step(
+        "search client module does not re-evaluate on a second in-place visit",
+        async () => {
+          await prepareHosted(page, app.origin, "/entries");
+          await typeField(page, "#page-search-q", "once");
+          await clickId(page, "page-search-submit");
+          await waitForSearchMarks(page);
+          assertEquals(await searchEvals(page), 1);
+          await page.evaluate(() => history.back());
+          await waitForHeading(page, "entries");
+          await typeField(page, "#page-search-q", "twice");
+          await clickId(page, "page-search-submit");
+          await waitForSearchMarks(page);
+          assertEquals(await searchEvals(page), 1);
         },
       );
 
@@ -257,6 +291,7 @@ Deno.test("forms fixture", async (t) => {
           await typeField(page, "#frag-get-q", "inside");
           await clickId(page, "frag-get-submit");
           await waitForHeading(page, "search");
+          await waitForSearchMarks(page);
           const result = await page.evaluate(() => ({
             survived: Reflect.get(globalThis, "__dashiDoc") === true,
             persistent: document.getElementById("persistent")?.textContent ??
@@ -273,6 +308,7 @@ Deno.test("forms fixture", async (t) => {
           assertEquals(result.query, "inside");
           assertEquals(result.frag, false);
           assertEquals(result.url, `${app.origin}/search?q=inside`);
+          assertEquals(await searchEvals(page), 1);
         },
       );
 
@@ -282,6 +318,7 @@ Deno.test("forms fixture", async (t) => {
           await prepareFrag(page, app.origin, "/frag-page");
           await clickId(page, "frag-leave-submit");
           await waitForHeading(page, "search");
+          await waitForSearchMarks(page);
           const result = await page.evaluate(snapshot);
           assertEquals(result, {
             survived: true,
@@ -290,6 +327,7 @@ Deno.test("forms fixture", async (t) => {
             url: `${app.origin}/search`,
             host: true,
           });
+          assertEquals(await searchEvals(page), 1);
         },
       );
 
@@ -301,10 +339,12 @@ Deno.test("forms fixture", async (t) => {
             page.waitForNavigation(),
             clickId(page, "hard-submit"),
           ]);
+          await waitForSearchMarks(page);
           const result = await page.evaluate(snapshot);
           assertEquals(result.survived, false);
           assertEquals(result.heading, "search");
           assertEquals(result.url, `${app.origin}/search`);
+          assertEquals(await searchEvals(page), 1);
         },
       );
 
