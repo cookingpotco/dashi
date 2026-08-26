@@ -30,7 +30,7 @@ function fallback(url: string, push: boolean): void {
   }
 }
 
-async function incomingHostFrom(
+async function parseResponse(
   res: Response,
   abort: AbortController,
 ): Promise<Element | null> {
@@ -63,6 +63,42 @@ async function incomingHostFrom(
   return incomingHost;
 }
 
+function persistSoftNavigation(
+  host: NavigationRoot,
+  incomingHost: Element,
+  url: string,
+  options: NavigateOptions,
+): void {
+  history.replaceState(
+    { ...history.state, dashiScroll: scrollY },
+    "",
+  );
+  if (options.push) {
+    history.pushState({ dashiScroll: 0 }, "", url);
+  }
+  host.replaceChildren(
+    ...document.importNode(incomingHost, true).childNodes,
+  );
+  renderedUrl = new URL(url, location.href);
+  if (!options.push) {
+    scrollTo(0, options.scroll ?? 0);
+    return;
+  }
+  const hash = renderedUrl.hash;
+  if (hash.length <= 1) {
+    scrollTo(0, 0);
+    return;
+  }
+  const target = document.getElementById(
+    decodeURIComponent(hash.slice(1)),
+  );
+  if (target === null) {
+    scrollTo(0, 0);
+    return;
+  }
+  target.scrollIntoView();
+}
+
 async function performNavigate(
   url: string,
   options: NavigateOptions,
@@ -90,7 +126,7 @@ async function performNavigate(
       fallback(url, options.push);
       return;
     }
-    const incomingHost = await incomingHostFrom(res, abort);
+    const incomingHost = await parseResponse(res, abort);
     if (abort.signal.aborted) {
       return;
     }
@@ -98,34 +134,7 @@ async function performNavigate(
       fallback(url, options.push);
       return;
     }
-    history.replaceState(
-      { ...history.state, dashiScroll: scrollY },
-      "",
-    );
-    if (options.push) {
-      history.pushState({ dashiScroll: 0 }, "", finalUrl);
-    }
-    host.replaceChildren(
-      ...document.importNode(incomingHost, true).childNodes,
-    );
-    renderedUrl = new URL(finalUrl, location.href);
-    if (!options.push) {
-      scrollTo(0, options.scroll ?? 0);
-      return;
-    }
-    const hash = renderedUrl.hash;
-    if (hash.length <= 1) {
-      scrollTo(0, 0);
-      return;
-    }
-    const target = document.getElementById(
-      decodeURIComponent(hash.slice(1)),
-    );
-    if (target === null) {
-      scrollTo(0, 0);
-      return;
-    }
-    target.scrollIntoView();
+    persistSoftNavigation(host, incomingHost, finalUrl, options);
   } catch {
     if (abort.signal.aborted) {
       return;
@@ -179,7 +188,7 @@ async function performSubmit(
       location.assign(res.url);
       return;
     }
-    const incomingHost = await incomingHostFrom(res, abort);
+    const incomingHost = await parseResponse(res, abort);
     if (abort.signal.aborted) {
       return;
     }
@@ -188,32 +197,12 @@ async function performSubmit(
       return;
     }
     if (res.redirected) {
-      history.replaceState(
-        { ...history.state, dashiScroll: scrollY },
-        "",
-      );
-      history.pushState({ dashiScroll: 0 }, "", res.url);
+      persistSoftNavigation(host, incomingHost, res.url, { push: true });
+      return;
     }
     host.replaceChildren(
       ...document.importNode(incomingHost, true).childNodes,
     );
-    if (!res.redirected) {
-      return;
-    }
-    renderedUrl = new URL(res.url, location.href);
-    const hash = renderedUrl.hash;
-    if (hash.length <= 1) {
-      scrollTo(0, 0);
-      return;
-    }
-    const target = document.getElementById(
-      decodeURIComponent(hash.slice(1)),
-    );
-    if (target === null) {
-      scrollTo(0, 0);
-      return;
-    }
-    target.scrollIntoView();
   } catch {
     if (abort.signal.aborted) {
       return;

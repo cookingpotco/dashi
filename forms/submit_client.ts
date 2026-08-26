@@ -12,11 +12,11 @@ let softNavigate: ((url: string) => void) | null = null;
 let listening = false;
 
 function urlEncoded(formData: FormData): URLSearchParams {
-  return new URLSearchParams(
-    [...formData].filter((entry): entry is [string, string] =>
-      typeof entry[1] === "string"
-    ),
-  );
+  const params = new URLSearchParams();
+  for (const [name, value] of formData) {
+    params.append(name, typeof value === "string" ? value : value.name);
+  }
+  return params;
 }
 
 function onSubmit(event: Event): void {

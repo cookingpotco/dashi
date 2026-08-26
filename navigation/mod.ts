@@ -11,11 +11,10 @@ const NavigationRootElement = client.element(
  * root layout around the page content; persistent elements left
  * outside survive.
  *
- * Same-origin left-clicks fetch the next document and replace this
- * element's children. A GET form navigates the same way. A write
- * applies to the nearest host. A redirect swaps in place at the new
- * URL, with history so back does not re-post. `hardNavigation` on an
- * `<a>` or a form opts that control out. From client TypeScript,
+ * Same-origin left-clicks, GET forms, and form redirects fetch the
+ * next document and replace this element's children. History,
+ * back/forward, and scroll restoration are included. `hardNavigation`
+ * on an `<a>` or a form opts that control out. From client TypeScript,
  * `import { navigate } from "dashi/client"`. `<head>` is not merged yet.
  *
  * Without this element, nothing changes and no navigation JS reaches

@@ -100,17 +100,22 @@ Deno.test("emits a string style attribute", () => {
   );
 });
 
-Deno.test("emits hardNavigation as a boolean attribute on anchors", () => {
+Deno.test("emits hardNavigation as a boolean attribute", () => {
   assertEquals(
     String(<a href="/x" hardNavigation></a>),
     `<a href="/x" hardnavigation></a>`,
   );
-});
-
-Deno.test("emits hardNavigation as a boolean attribute on forms", () => {
   assertEquals(
     String(<form hardNavigation></form>),
     `<form hardnavigation></form>`,
+  );
+  assertEquals(
+    String(<button type="submit" hardNavigation></button>),
+    `<button type="submit" hardnavigation></button>`,
+  );
+  assertEquals(
+    String(<input type="submit" hardNavigation />),
+    `<input type="submit" hardnavigation>`,
   );
 });
 
