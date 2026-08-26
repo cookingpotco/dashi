@@ -187,7 +187,7 @@ class NavigationRoot extends HTMLElement {
     if (anchor.target !== "" && anchor.target !== "_self") {
       return;
     }
-    if (anchor.hasAttribute("hardNavigation")) {
+    if (anchor.hasAttribute("hardnavigation")) {
       return;
     }
     const dest = new URL(anchor.href);
