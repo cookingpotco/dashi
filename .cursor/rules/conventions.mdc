@@ -66,10 +66,15 @@ Extract when the same non-trivial shape is repeated, or when the body is long
 or not obvious (`withoutContent`). A one-line env read used once stays at the
 call site.
 
+## Conditionals
+
+Do not chain ternary operators. Use `if`.
+
 ## Client JS
 
 Client TypeScript attaches only via `client.module` / `client.element` at
-module scope. The factory throws after compile. App files are `*_client.ts`
+module scope. Browser-safe APIs import from `dashi/client`; client modules
+do not import `dashi`. The factory throws after compile. App files are `*_client.ts`
 and sit beside the module that registers them. The factory returns a
 PascalCase component; `client.element` takes the custom element tag
 (kebab-case). Compiled files are served at `/_dashi/client/` by a reserved

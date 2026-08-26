@@ -100,6 +100,13 @@ Deno.test("emits a string style attribute", () => {
   );
 });
 
+Deno.test("emits hardNavigation as a boolean attribute on anchors", () => {
+  assertEquals(
+    String(<a href="/x" hardNavigation></a>),
+    `<a href="/x" hardnavigation></a>`,
+  );
+});
+
 Deno.test("omits the closing tag on a void element", () => {
   assertEquals(String(<br />), "<br>");
 });

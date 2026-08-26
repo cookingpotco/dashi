@@ -6,12 +6,7 @@ export function RootLayout(
 ): Element {
   return (
     <html>
-      <h1>Website Title</h1>
-      <nav>
-        <a href="/">Home</a>
-        <a href="/nested">Nested</a>
-        <a href="/guestbook">Guestbook</a>
-      </nav>
+      <header id="persistent">persistent</header>
       <NavigationRoot>
         {children}
       </NavigationRoot>

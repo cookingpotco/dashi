@@ -3,6 +3,7 @@ import { type App, boot } from "../test-harness/mod.ts";
 
 export type { Browser, Page };
 export type { App };
+export { boot };
 
 const RESULTS_DIR = new URL("./results/", import.meta.url);
 

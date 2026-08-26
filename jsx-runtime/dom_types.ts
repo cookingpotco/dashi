@@ -294,6 +294,8 @@ export type HTMLAttributeAnchorTarget =
 
 export interface AnchorHTMLAttributes extends HTMLAttributes {
   download?: string;
+  /** Skip soft navigation and load this link as a document. */
+  hardNavigation?: boolean;
   href?: string;
   hrefLang?: string;
   media?: string;
