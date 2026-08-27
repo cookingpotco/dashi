@@ -160,6 +160,8 @@ async function mergeHead(
       kept.add(match);
       continue;
     }
+    // parseResponse already import()s module scripts. Inserting the
+    // tag would run them again.
     if (incoming instanceof HTMLScriptElement) {
       continue;
     }
