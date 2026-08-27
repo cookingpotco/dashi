@@ -23,13 +23,14 @@ export type {
   JSX,
   SVGAttributes,
 } from "./jsx-runtime/mod.ts";
-export type {
-  Group,
-  GroupCallback,
-  GroupFields,
-  Method,
-  MethodHandlers,
-  ParamsOf,
+export {
+  type Group,
+  group,
+  type GroupCallback,
+  type GroupFields,
+  type Method,
+  type MethodHandlers,
+  type ParamsOf,
 } from "./routing/mod.ts";
 export { serve } from "./serve/mod.ts";
 export type {

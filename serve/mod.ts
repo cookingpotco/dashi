@@ -10,17 +10,17 @@ import {
 /**
  * Starts the HTTP server.
  *
- * The first argument is the root table callback. Nested and prefixed
- * groups use the callback's `group`. The root itself is pathless; `notFound`
- * here is the default 404. Layouts wrap the route on document render,
- * outermost first, and do not run on fragment renders. Middleware is
- * the request pipeline, outermost first, and runs for document hits and
- * fragment hits. `error` catches handler throws and inner group
- * failures. `errorFallback` is the last-resort 500 value when the error
- * walk is exhausted.
+ * The first argument is the root table callback. The root itself is
+ * pathless; `notFound` here is the default 404. Prefixed and pathless
+ * groups are `group()` values in `routes`. Layouts wrap the route on
+ * document render, outermost first, and do not run on fragment
+ * renders. Middleware is the request pipeline, outermost first, and
+ * runs for document hits and fragment hits. `error` catches handler
+ * throws and inner group failures. `errorFallback` is the last-resort
+ * 500 value when the error walk is exhausted.
  *
- * @param build Root table. Pathless; nested prefixes live on the
- * callback's `group`.
+ * @param build Root table. Pathless; nested prefixes live on imported
+ * `group()` values in `routes`.
  * @param options Forwarded to `Deno.serve`, plus `errorFallback` and
  * `fragmentDepthLimit`. `handler` is always the router.
  */
