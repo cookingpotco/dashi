@@ -5,12 +5,11 @@ alwaysApply: true
 
 # App layout
 
-Every app in this repo is one tree. Root `mod.ts` is the `serve()` callback.
-`main.ts` only boots: `serve(app, options)`. Feature folders export a `Group`
-from `mod.ts` (`mod.tsx` when the file contains JSX). `/` and one-offs such as
-`staticFile` live on the root group; every other page is a prefixed feature
-group. README snippets may inline `serve(callback)` to show the whole flow;
-those are not apps.
+Every app in this repo is one tree. `main.ts` is the `serve()` callback and
+boots it. Feature folders export a `Group` from `mod.ts` (`mod.tsx` when the
+file contains JSX). `/` and one-offs such as `staticFile` live on the root
+group; every other page is a prefixed feature group. README snippets may
+inline `serve(callback)` to show the whole flow; those are not apps.
 
 ## File names
 
@@ -40,15 +39,16 @@ A component that returns `Element` is PascalCase (`Home`, `RootLayout`,
 `mod.ts` is the controller for that group: `group()` plus handlers (inline or
 named functions in the same file). No `*_route.tsx` and no `controller.ts`
 inside a feature folder. Root `/` and one-off probes are `*_route.ts(x)`:
-they export handlers only, and only the root table imports from them.
+they export handlers only, and only the root table in `main.ts` imports from
+them.
 
 ## Table
 
-Root `mod.ts` exports the `serve()` callback. It binds `route("/")`, imported
-Groups, and any root one-offs. Feature folders import `group` from `dashi` at
-module scope and export the `Group`. The parent drops that value into
-`routes`. Do not `import { group }` inside a bag callback. Do not export
-`route()`.
+`main.ts` is the `serve()` callback. It binds `route("/")`, imported Groups,
+and any root one-offs, then calls `serve`. Feature folders import `group`
+from `dashi` at module scope and export the `Group`. The parent drops that
+value into `routes`. Do not `import { group }` inside a bag callback. Do not
+export `route()`.
 
 Every feature is a group, including one-page features:
 
@@ -70,9 +70,18 @@ declare. Shared data goes on `ctx.state`.
 `main.ts` is:
 
 ```ts
-import { serve } from "dashi";
-import { app } from "./mod.ts";
+import { type GroupCallback, type GroupFields, serve } from "dashi";
+import { Home } from "./home_route.tsx";
+import { RootLayout } from "./root_layout.tsx";
 import { errorFallback } from "./errors.tsx";
+import { menu } from "./menu/mod.ts";
+
+function app({ route }: GroupCallback): GroupFields {
+  return {
+    layouts: [RootLayout],
+    routes: [route("/", { GET: Home }), menu],
+  };
+}
 
 if (import.meta.main) {
   serve(app, { errorFallback });

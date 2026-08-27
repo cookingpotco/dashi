@@ -171,16 +171,15 @@ export const posts = group("/posts", ({ route }) => ({
 ```
 
 ```tsx
+import { serve } from "dashi";
 import { posts } from "./posts/mod.ts";
 
-export function app({ route }) {
-  return {
-    routes: [
-      route("/", { GET: Home }),
-      posts,
-    ],
-  };
-}
+serve(({ route }) => ({
+  routes: [
+    route("/", { GET: Home }),
+    posts,
+  ],
+}));
 ```
 
 **Error boundaries.** `notFound` and `error` live on the table. `errorFallback`
