@@ -5,6 +5,7 @@ import { logger } from "./logger_middleware.ts";
 import { Fragment } from "./fragment_route.tsx";
 import { create, list } from "./todos_route.tsx";
 import { list as listTodoCount } from "./todo_count_route.tsx";
+import { list as listTime } from "./time_route.tsx";
 import {
   dismiss as dismissNotice,
   list as listNotice,
@@ -21,6 +22,7 @@ if (import.meta.main) {
       route("/fragment", { GET: Fragment }),
       route("/todos", { GET: list, POST: create }),
       route("/todo-count", { GET: listTodoCount }),
+      route("/time", { GET: listTime }),
       route("/notice", { GET: listNotice, POST: dismissNotice }),
     ],
   }), { errorFallback });

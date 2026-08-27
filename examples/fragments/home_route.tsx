@@ -22,6 +22,9 @@ export async function Home() {
       <p>
         Todos: <RouteFragment src="/todo-count" />
       </p>
+      <p>
+        <RouteFragment src="/time" />
+      </p>
       <RouteFragment src="/notice" />
       <RouteFragment src="/todos" />
       <RouteFragment src="/fragment" />
