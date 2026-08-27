@@ -53,14 +53,18 @@ marker and do not leave it pointing at work that has already landed.
 
 ## Push
 
-Commit and push to the same branch. Do not force-push or rebase. Wait until CI
-is green on that push. A red check means you are not done.
+Commit and push to the same branch. Do not force-push or rebase.
+
+Wait until CI is green on that push before the comment or `gh pr ready`.
+`gh pr checks --watch`. A red check means you are not done. Stay in this run
+through Ready; nothing resumes you when checks finish.
 
 ## Comment
 
 Leave the Linear plan and the PR description as they are.
 
-Leave **one conversation comment** with the pull-request tool.
+Leave **one conversation comment** on the GitHub PR with the pull-request tool.
+That is the handoff. A Linear agent summary is a different post.
 
 Follow the plan where you can. If a working change cannot match it, ship that
 change and list it under a **Plan deviations** heading in the comment, so it
@@ -74,8 +78,10 @@ cannot be missed.
 
 ## Ready
 
-`gh pr ready`. Check that it took: the draft state sometimes survives the call,
-and a draft cannot be merged. Marking the PR ready is what starts Bugbot. Do not
-comment `@cursor review`. Do not wait for Bugbot before handing over; findings
-come back as a submitted review and `review-followup.yml` resumes you. Address
-them. Do not ask Bugbot again.
+`gh pr ready`. Then `gh pr view --json isDraft` and confirm it is false. The
+draft state sometimes survives the first call; a draft cannot be merged, and
+Bugbot does not run until the PR leaves draft.
+
+Do not comment `@cursor review`. Do not wait for Bugbot before handing over;
+findings come back as a submitted review and `review-followup.yml` resumes you.
+Address them. Do not ask Bugbot again.
