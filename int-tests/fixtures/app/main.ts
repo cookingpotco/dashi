@@ -38,9 +38,11 @@ import {
 import { ok } from "./ok_route.ts";
 import { Gated } from "./gated_route.tsx";
 import { CachePublic } from "./cache_public_route.tsx";
+import { CachePrivate } from "./cache_private_route.tsx";
 import { CacheEmbed } from "./cache_embed_route.tsx";
 import { CachePublicLayout } from "./cache_public_layout.tsx";
 import { CacheFromLayout } from "./cache_from_layout_route.tsx";
+import { CacheNoStore } from "./cache_nostore_route.tsx";
 import { CachePrivateLayout } from "./cache_private_layout.tsx";
 import { CacheOverride } from "./cache_override_route.tsx";
 import { CacheSession } from "./cache_session_route.tsx";
@@ -129,6 +131,7 @@ const hour = (ctx: Ctx<{ path: string }, AppState>) =>
 const priv = (ctx: Ctx<{ path: string }, AppState>) =>
   staticFile(ctx, staticDir, ctx.params.path, {
     strategy: CacheStrategy.Private,
+    maxAge: 60,
   });
 const missingDir = (ctx: Ctx<{ path: string }, AppState>) =>
   staticFile(
@@ -147,10 +150,14 @@ if (import.meta.main) {
       route("/", { GET: Home }),
       route("/probe", { GET: ProbePage }),
       route("/cache-public", { GET: CachePublic }),
+      route("/cache-private", { GET: CachePrivate }),
       route("/cache-embed", { GET: CacheEmbed }),
       group(({ route }) => ({
         layouts: [CachePublicLayout],
-        routes: [route("/cache-from-layout", { GET: CacheFromLayout })],
+        routes: [
+          route("/cache-from-layout", { GET: CacheFromLayout }),
+          route("/cache-nostore", { GET: CacheNoStore }),
+        ],
       })),
       group(({ route }) => ({
         layouts: [CachePrivateLayout],

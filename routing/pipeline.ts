@@ -156,7 +156,7 @@ async function htmlResponse(
   const res = new Response(bytes, { status: options.status });
   res.headers.set("Content-Type", "text/html");
   res.headers.set("Content-Length", String(bytes.byteLength));
-  const cache = options.cache ?? { strategy: CacheStrategy.Private };
+  const cache = options.cache ?? { strategy: CacheStrategy.NoStore };
   res.headers.set("Cache-Control", cacheControl(cache));
   if (cache.vary) {
     mergeVary(res.headers, cache.vary);

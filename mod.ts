@@ -3,6 +3,10 @@ export {
   cached,
   type CachedElement,
   CacheStrategy,
+  type ImmutableCacheConfig,
+  type NoStoreCacheConfig,
+  type PrivateCacheConfig,
+  type PublicCacheConfig,
 } from "./caching/mod.ts";
 export { client } from "./client/mod.ts";
 export {

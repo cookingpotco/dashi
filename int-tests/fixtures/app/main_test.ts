@@ -229,7 +229,10 @@ const appCases: IntegrationTestCase[] = [
       headers: { "x-fragment": "1" },
     },
     status: 200,
-    headers: { "content-type": "text/html", "cache-control": "private" },
+    headers: {
+      "content-type": "text/html",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+    },
     html: {
       bodyExcludes: ["<!DOCTYPE html>", "{{fragment:"],
       select: [
@@ -254,7 +257,10 @@ const appCases: IntegrationTestCase[] = [
       path: "/actions",
     },
     status: 200,
-    headers: { "content-type": "text/html", "cache-control": "private" },
+    headers: {
+      "content-type": "text/html",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+    },
     html: {
       bodyExcludes: ["<!DOCTYPE html>", "{{fragment:"],
       select: [
@@ -521,11 +527,11 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
-    name: "private cache strategy is private",
+    name: "private cache strategy sets max-age",
     request: { path: "/static-private/app.css" },
     status: 200,
     headers: {
-      "cache-control": "private",
+      "cache-control": "private, max-age=60",
       "x-mw": "ok",
     },
   },
@@ -643,16 +649,20 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
-    name: "plain Element page is private",
+    name: "plain Element page is no-store",
     request: { path: "/" },
     status: 200,
-    headers: { "cache-control": "private" },
+    headers: {
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+    },
   },
   {
-    name: "plain Element HEAD is private",
+    name: "plain Element HEAD is no-store",
     request: { method: "HEAD", path: "/" },
     status: 200,
-    headers: { "cache-control": "private" },
+    headers: {
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+    },
     bodyExact: "",
   },
   {
@@ -711,7 +721,9 @@ const appCases: IntegrationTestCase[] = [
     name: "eager embed does not inherit fragment cache policy",
     request: { path: "/cache-embed" },
     status: 200,
-    headers: { "cache-control": "private" },
+    headers: {
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+    },
     html: {
       select: [{ selector: "#cache-public", text: "cached-public" }],
     },
@@ -732,6 +744,28 @@ const appCases: IntegrationTestCase[] = [
     headers: { "cache-control": "public, max-age=60" },
     html: {
       select: [{ selector: "#cache-override", text: "route-wins" }],
+    },
+  },
+  {
+    name: "cached private page sets max-age and stale-while-revalidate",
+    request: { path: "/cache-private" },
+    status: 200,
+    headers: {
+      "cache-control": "private, max-age=60, stale-while-revalidate=120",
+    },
+    html: {
+      select: [{ selector: "#cache-private", text: "cached-private" }],
+    },
+  },
+  {
+    name: "handler no-store wins over public layout",
+    request: { path: "/cache-nostore" },
+    status: 200,
+    headers: {
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+    },
+    html: {
+      select: [{ selector: "#cache-nostore", text: "cached-nostore" }],
     },
   },
   {
@@ -835,17 +869,21 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     stillServes: true,
   },
   {
-    name: "error handler Element is private",
+    name: "error handler Element is no-store",
     request: { path: "/throw" },
     status: 500,
-    headers: { "cache-control": "private" },
+    headers: {
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+    },
     stillServes: true,
   },
   {
-    name: "error Element is private; thrown public handler does not leak",
+    name: "error Element is no-store; thrown public handler does not leak",
     request: { path: "/cache-public-then-throw" },
     status: 500,
-    headers: { "cache-control": "private" },
+    headers: {
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+    },
     html: {
       select: [
         { selector: "html > body > #root-error", text: "root-error" },
@@ -1586,7 +1624,10 @@ Deno.test("main fixture app over HTTP", async (t) => {
       assertEquals(anon.status, 200);
       assertEquals(anon.headers.get("cache-control"), "public, max-age=60");
       assertEquals(signed.status, 200);
-      assertEquals(signed.headers.get("cache-control"), "private");
+      assertEquals(
+        signed.headers.get("cache-control"),
+        "no-cache, no-store, max-age=0, must-revalidate",
+      );
     } catch (error) {
       const dump = [
         formatIntegrationFailure(

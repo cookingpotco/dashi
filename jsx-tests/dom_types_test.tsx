@@ -38,7 +38,9 @@ function typechecks() {
   <route-action action="remove" src="/x" />;
 
   // @ts-expect-error cached() is not a JSX child
-  <div>{cached(<span>x</span>, { strategy: CacheStrategy.Private })}</div>;
+  <div>{cached(<span>x</span>, { strategy: CacheStrategy.NoStore })}</div>;
+  // @ts-expect-error Private requires maxAge
+  cached(<span>x</span>, { strategy: CacheStrategy.Private });
 }
 
 Deno.test("DOM attribute types typecheck", () => {

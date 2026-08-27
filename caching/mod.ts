@@ -4,21 +4,40 @@ export const enum CacheStrategy {
   Immutable = "immutable",
   Public = "public",
   Private = "private",
+  NoStore = "no-store",
+}
+
+export interface ImmutableCacheConfig {
+  strategy: CacheStrategy.Immutable;
+  vary?: string[];
+}
+
+export interface PublicCacheConfig {
+  strategy: CacheStrategy.Public;
+  maxAge: number;
+  sMaxAge?: number;
+  staleWhileRevalidate?: number;
+  staleIfError?: number;
+  vary?: string[];
+}
+
+export interface PrivateCacheConfig {
+  strategy: CacheStrategy.Private;
+  maxAge: number;
+  staleWhileRevalidate?: number;
+  vary?: string[];
+}
+
+export interface NoStoreCacheConfig {
+  strategy: CacheStrategy.NoStore;
+  vary?: string[];
 }
 
 export type CacheConfig =
-  & (
-    | { strategy: CacheStrategy.Immutable }
-    | {
-      strategy: CacheStrategy.Public;
-      maxAge: number;
-      sMaxAge?: number;
-      staleWhileRevalidate?: number;
-      staleIfError?: number;
-    }
-    | { strategy: CacheStrategy.Private }
-  )
-  & { vary?: string[] };
+  | ImmutableCacheConfig
+  | PublicCacheConfig
+  | PrivateCacheConfig
+  | NoStoreCacheConfig;
 
 const cachedBrand: unique symbol = Symbol("dashi.cached");
 
@@ -30,7 +49,7 @@ export interface CachedElement {
 
 /**
  * Attach a cache policy to an Element return. The most specific
- * `cached()` on the handler-to-layout walk wins. Omitted: `private`.
+ * `cached()` on the handler-to-layout walk wins. Omitted: `no-store`.
  */
 export function cached(page: Element, cache: CacheConfig): CachedElement {
   return { [cachedBrand]: true, page, cache };
@@ -45,8 +64,15 @@ export function cacheControl(cache: CacheConfig): string {
   if (cache.strategy === CacheStrategy.Immutable) {
     return "public, max-age=31536000, immutable";
   }
+  if (cache.strategy === CacheStrategy.NoStore) {
+    return "no-cache, no-store, max-age=0, must-revalidate";
+  }
   if (cache.strategy === CacheStrategy.Private) {
-    return "private";
+    let header = `private, max-age=${cache.maxAge}`;
+    if (cache.staleWhileRevalidate !== undefined) {
+      header += `, stale-while-revalidate=${cache.staleWhileRevalidate}`;
+    }
+    return header;
   }
   let header = `public, max-age=${cache.maxAge}`;
   if (cache.sMaxAge !== undefined) {
