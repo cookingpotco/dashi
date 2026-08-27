@@ -7,6 +7,6 @@ export function CachePrivateLayout(
 ) {
   return cached(
     <div id="cache-private-layout">{children}</div>,
-    { strategy: CacheStrategy.Private },
+    { strategy: CacheStrategy.Private, maxAge: 30 },
   );
 }
