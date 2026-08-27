@@ -1,0 +1,70 @@
+name: Publish
+
+# After CI succeeds on main, publish that commit to JSR and boot a consumer
+# from the registry.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+env:
+  # Shared with setup-deno so the cache path matches what Deno actually uses.
+  DENO_DIR: ${{ github.workspace }}/.deno
+
+jobs:
+  publish:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # workflow_run checks out the branch tip; this is the SHA CI ran.
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version-file: .tool-versions
+
+      - uses: actions/cache@v5
+        with:
+          path: ${{ env.DENO_DIR }}
+          key: deno-${{ runner.os }}-${{ hashFiles('deno.lock') }}
+          restore-keys: |
+            deno-${{ runner.os }}-
+
+      - name: Publish
+        run: deno publish
+
+  verify-release:
+    needs: [publish]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version-file: .tool-versions
+
+      - uses: actions/cache@v5
+        with:
+          path: ${{ env.DENO_DIR }}
+          key: deno-${{ runner.os }}-${{ hashFiles('deno.lock') }}
+          restore-keys: |
+            deno-${{ runner.os }}-
+
+      - name: Verify release
+        run: deno run -A scripts/verify_fresh_project.ts --registry

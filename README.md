@@ -1,5 +1,9 @@
 # dashi
 
+[![JSR](https://jsr.io/badges/@cookingpot/dashi)](https://jsr.io/@cookingpot/dashi)
+[![CI](https://github.com/cookingpotco/dashi/actions/workflows/ci.yml/badge.svg)](https://github.com/cookingpotco/dashi/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 > **Not production ready.** dashi has not hit v1 yet and is under active
 > development. Expect breaking changes in minor versions.
 
@@ -17,7 +21,7 @@
 Server-first web framework for Deno that compiles JSX to HTML strings on the
 server. No VDOM, no hydration, no client framework. Pages update by swapping
 server-rendered fragments, in the spirit of [Hotwire](https://hotwired.dev/) and
-[htmx](https://htmx.org/). Published on [JSR](https://jsr.io/@cookingpot/dashi).
+[htmx](https://htmx.org/).
 
 ```tsx
 import { serve } from "dashi";

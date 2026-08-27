@@ -6,8 +6,8 @@ on:
     branches: [main]
   pull_request:
 
-# PRs replace an in-flight run. A second push to main does not cancel, so it
-# cannot abort a publish.
+# PRs replace an in-flight run. A second push to main does not cancel, so CI
+# can finish and the publish workflow can start.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
@@ -110,52 +110,3 @@ jobs:
           path: e2e/results/
           if-no-files-found: ignore
           retention-days: 7
-
-  publish:
-    needs: [check]
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version-file: .tool-versions
-
-      - uses: actions/cache@v5
-        with:
-          path: ${{ env.DENO_DIR }}
-          key: deno-${{ runner.os }}-${{ hashFiles('deno.lock') }}
-          restore-keys: |
-            deno-${{ runner.os }}-
-
-      - name: Publish
-        run: deno publish
-
-  verify-release:
-    needs: [publish]
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version-file: .tool-versions
-
-      - uses: actions/cache@v5
-        with:
-          path: ${{ env.DENO_DIR }}
-          key: deno-${{ runner.os }}-${{ hashFiles('deno.lock') }}
-          restore-keys: |
-            deno-${{ runner.os }}-
-
-      - name: Verify release
-        run: deno run -A scripts/verify_fresh_project.ts --registry
