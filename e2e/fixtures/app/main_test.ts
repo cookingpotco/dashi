@@ -293,7 +293,9 @@ Deno.test("app fixture", async (t) => {
         await add.click();
         await page.evaluate(async () => {
           const start = Date.now();
-          while (document.getElementById("refresh-stamp")?.textContent !== "2") {
+          while (
+            document.getElementById("refresh-stamp")?.textContent !== "2"
+          ) {
             if (Date.now() - start > 10000) {
               throw new Error("refresh stamp did not become 2");
             }
@@ -303,7 +305,9 @@ Deno.test("app fixture", async (t) => {
         await add.click();
         const result = await page.evaluate(async () => {
           const start = Date.now();
-          while (document.getElementById("refresh-stamp")?.textContent !== "3") {
+          while (
+            document.getElementById("refresh-stamp")?.textContent !== "3"
+          ) {
             if (Date.now() - start > 10000) {
               throw new Error("refresh stamp did not become 3");
             }

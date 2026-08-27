@@ -148,8 +148,8 @@ serve(({ route }) => ({
 A GET or lazy fetch replaces the host that asked with markup. `fragment.replace`
 / `append` / `remove` / `refresh` update every `<RouteFragment>` rendering that
 `src`. Use `replace` when the write has the markup; use `refresh` when the host
-should GET that route. A write handler returns that list or a `Response` — not
-a document. The form can sit anywhere on the page.
+should GET that route. A write handler returns that list or a `Response` — not a
+document. The form can sit anywhere on the page.
 
 ## Other features
 
