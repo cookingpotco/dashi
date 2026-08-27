@@ -2,7 +2,10 @@ import { type Ctx, fragment, group } from "dashi";
 import { todos as items } from "../todos.ts";
 
 export const todos = group("/todos", ({ route }) => ({
-  routes: [route("/", { GET: list, POST: create })],
+  routes: [
+    route("/", { GET: list, POST: create }),
+    route("/count", { GET: count }),
+  ],
 }));
 
 function TodoList({ error }: { error?: string }) {
@@ -24,6 +27,10 @@ function list() {
   return <TodoList />;
 }
 
+function count() {
+  return <span id="todo-count">{items.length}</span>;
+}
+
 async function create(ctx: Ctx) {
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
@@ -32,7 +39,10 @@ async function create(ctx: Ctx) {
   items.push(title);
   return [
     fragment.append("/todos", <li>{title}</li>),
-    fragment.replace("/todo-count", <span>{items.length}</span>),
+    fragment.replace(
+      "/todos/count",
+      <span id="todo-count">{items.length}</span>,
+    ),
     fragment.refresh("/time"),
   ];
 }
