@@ -3,7 +3,16 @@
 > **Not production ready.** dashi has not hit v1 yet and is under active
 > development. Expect breaking changes in minor versions.
 
-<img align="right" width="220" height="220" alt="dashi" src="logo.svg" hspace="24" style="margin-left: 24px;">
+<picture>
+  <source media="(max-width: 768px)" srcset="logo-empty.svg">
+  <img align="right" alt="dashi" src="logo.svg" hspace="24" style="margin-left: 24px;">
+</picture>
+<div align="center">
+  <picture>
+    <source media="(min-width: 769px)" srcset="logo-empty.svg">
+    <img alt="" src="logo.svg">
+  </picture>
+</div>
 
 Server-first web framework for Deno that compiles JSX to HTML strings on the
 server. No VDOM, no hydration, no client framework. Pages update by swapping
