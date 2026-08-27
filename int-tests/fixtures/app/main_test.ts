@@ -472,6 +472,18 @@ const appCases: IntegrationTestCase[] = [
     bodyExact: "body {\n  color: #111;\n}\n",
   },
   {
+    name: "uppercase extension still maps content-type",
+    request: { path: "/static/uppercase.CSS" },
+    status: 200,
+    headers: {
+      "content-type": "text/css; charset=utf-8",
+      "content-length": "24",
+      "cache-control": "public, max-age=31536000, immutable",
+      "x-mw": "ok",
+    },
+    bodyExact: "body {\n  color: #000;\n}\n",
+  },
+  {
     name: "HEAD stylesheet is 200 with empty body",
     request: { method: "HEAD", path: "/static/app.css" },
     status: 200,
@@ -1496,36 +1508,6 @@ Deno.test("main fixture app over HTTP", async (t) => {
         error.message = `${error.message}\n\n${dump}`;
       }
       throw error;
-    }
-  });
-
-  await t.step("uppercase extension still maps content-type", async () => {
-    const file = new URL("./static/app.CSS", import.meta.url);
-    await Deno.writeTextFile(file, "body{color:#000}\n");
-    try {
-      const res = await app.fetch({ path: "/static/app.CSS" });
-      const body = await res.text();
-      try {
-        assertEquals(res.status, 200);
-        assertEquals(
-          res.headers.get("content-type"),
-          "text/css; charset=utf-8",
-        );
-        assertEquals(body, "body{color:#000}\n");
-      } catch (error) {
-        const dump = formatIntegrationFailure(
-          app,
-          { path: "/static/app.CSS" },
-          res,
-          body,
-        );
-        if (error instanceof Error) {
-          error.message = `${error.message}\n\n${dump}`;
-        }
-        throw error;
-      }
-    } finally {
-      await Deno.remove(file);
     }
   });
 
