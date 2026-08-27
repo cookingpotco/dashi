@@ -163,6 +163,7 @@ runs for document hits and fragment hits.
 `dashi` in a feature `mod.ts` and drop the `Group` into the root callback:
 
 ```tsx
+// posts/mod.tsx
 import { group } from "dashi";
 
 export const posts = group("/posts", ({ route }) => ({
@@ -171,6 +172,7 @@ export const posts = group("/posts", ({ route }) => ({
 ```
 
 ```tsx
+// main.ts
 import { serve } from "dashi";
 import { posts } from "./posts/mod.ts";
 
@@ -210,6 +212,7 @@ module.
 feature `mod.ts`:
 
 ```tsx
+// api/mod.ts
 import { group } from "dashi";
 import { cors } from "dashi/cors";
 
