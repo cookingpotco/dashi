@@ -5,53 +5,86 @@ alwaysApply: true
 
 # App layout
 
-Examples and the main int-test fixture are a flat folder. `main.ts` is the
-route table. Handlers, layouts, and middleware sit beside it as one module
-each.
-
-TODO(COO-47): whether this stays a flat folder or becomes module-scoped
-folders.
+Every app in this repo is one tree. Root `mod.ts` is the `serve()` callback.
+`main.ts` only boots: `serve(app, options)`. Feature folders export a `Group`
+from `mod.ts` (`mod.tsx` when the file contains JSX). `/` and one-offs such as
+`staticFile` live on the root group; every other page is a prefixed feature
+group. README snippets may inline `serve(callback)` to show the whole flow;
+those are not apps.
 
 ## File names
 
-Deno snake_case. Role in the suffix: `home_route.tsx`, `root_layout.tsx`,
-`logger_middleware.ts`. Client modules are `*_client.ts` (`clock_client.ts`)
-and sit beside the route or component that registers them. No `routes/`
+Deno snake_case. Feature folders match the path (`slow_write/` for
+`/slow-write`). Layout and middleware files are `{folder}_{role}`:
+`menu_layout.tsx`, `menu_middleware.ts`. Nested `reviews/` uses
+`reviews_layout.tsx`. At the app root: `root_layout.tsx`,
+`logger_middleware.ts`, `errors.tsx`. Client modules are `*_client.ts`
+(`clock_client.ts`) and sit beside the file that registers them. No `routes/`
 directory, no app `client/` folder, and no `_` magic prefixes.
 
 `errors.tsx` holds the named `notFound`, `error`, and `errorFallback`
-exports. Those are not routes. `main.ts` puts `notFound` and `error` on
-the `serve()` callback and `errorFallback` on `serve()` options.
+exports. Those are not routes. Root `notFound` / `error` live on the root
+callback; a feature group's `notFound` / `error` live on that group's `mod.ts`.
+`errorFallback` stays on `serve()` options.
 
-Ordinary extra modules (`state.ts`, later `db.ts`) sit beside the handlers.
-No `layouts/`, `middleware/`, or feature folders.
+Ordinary extra modules (`todos.ts`, later `db.ts`) sit beside the handlers.
+No blessed view / service / DAL layer: extract `menu_service.ts` or a
+component when needed. No `layouts/` or `middleware/` folders.
 
 ## Exports
 
-Named exports: `import { Home } from "./home_route.tsx"`. A component that
-returns `Element` is PascalCase (`Home`, `RootLayout`, `ErrorPage`).
-Middleware and per-method handlers are camelCase (`logger`, `list`, `add`).
-One route per file. `/guestbook` is one file with `list` and `add` (two
-methods, one route). Do not colocate several routes in `main.ts`.
+A component that returns `Element` is PascalCase (`Home`, `RootLayout`,
+`ErrorPage`). Middleware and per-method handlers are camelCase (`logger`,
+`list`, `add`).
 
-A route file exports the handler(s) plus local helpers and types it needs.
-Path, layouts, and middleware stay in the table in `main.ts`. A file named
-`home_route.tsx` does not register `/`. `group()` is assembled in `main.ts`,
-not exported from a route or feature file.
+`mod.ts` is the controller for that group: `group()` plus handlers (inline or
+named functions in the same file). No `*_route.tsx` and no `controller.ts`
+inside a feature folder. Root `/` and one-off probes are `*_route.ts(x)`:
+they export handlers only, and only the root table imports from them.
 
 ## Table
 
-`main.ts` imports the modules and calls
-`serve(({ route, group }) => …, { errorFallback })`. The callback's
-`route` and `group` bind paths. That is the only place that binds a
-handler to a path.
+Root `mod.ts` exports the `serve()` callback. It binds `route("/")`, imported
+Groups, and any root one-offs. Feature folders import `group` from `dashi` at
+module scope and export the `Group`. The parent drops that value into
+`routes`. Do not `import { group }` inside a bag callback. Do not export
+`route()`.
+
+Every feature is a group, including one-page features:
+
+```ts
+import { group } from "dashi";
+
+export const menu = group("/menu", ({ route }) => ({
+  layouts: [MenuLayout],
+  routes: [route("/", { GET: Menu })],
+}));
+```
+
+`group("/", …)` is illegal. Pathless `group(({ route }) => …)` is only a
+layout/middleware shell with no extra prefix, still exported from a file.
+Nested folders are nested groups. A pre-built `Group` types `ctx.params` from
+its own prefix; nested groups do not read ancestor params they did not
+declare. Shared data goes on `ctx.state`.
+
+`main.ts` is:
+
+```ts
+import { serve } from "dashi";
+import { app } from "./mod.ts";
+import { errorFallback } from "./errors.tsx";
+
+if (import.meta.main) {
+  serve(app, { errorFallback });
+}
+```
 
 ## Fixtures
 
 The main fixture (`int-tests/fixtures/app/`) matches this layout. Extra
 fixtures that cannot share that `serve()` table are a small `main.ts` or
-`main.tsx` in their own folder. They are not workspace members. The e2e
-fixture (`e2e/fixtures/app/`) uses the same flat layout; extra e2e fixtures
+`main.tsx` in their own folder, inline `serve(callback)` harnesses. They are
+not workspace members. The e2e fixtures use the same tree; extra e2e fixtures
 follow the same rule.
 
 ## Imports

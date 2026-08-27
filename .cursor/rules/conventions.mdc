@@ -30,9 +30,11 @@ resolve itself by name against the registry.
 
 ## Route modules
 
-A `*_route.ts(x)` module exports route handlers and nothing else, and only
-the route table imports from it. Shared values live in a module that is not
-a route.
+Feature folders export a `Group` from `mod.ts` (`mod.tsx` when the file
+contains JSX). Handlers for that group live in that file. Root `/` and
+one-off probes are `*_route.ts(x)`: they export handlers and nothing else,
+and only the root table imports from them. Shared values live in a module
+that is not a route.
 
 Application code never calls a handler. The router is what invokes one: a
 direct call skips the target's middleware and error boundary, applies its
