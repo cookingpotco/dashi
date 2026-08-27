@@ -8,7 +8,7 @@ export function CachePublic() {
       maxAge: 60,
       staleWhileRevalidate: 3600,
       staleIfError: 120,
-      vary: ["Accept-Language"],
+      varyHeaders: ["Accept-Language"],
     },
   );
 }

@@ -47,6 +47,11 @@ import { CachePrivateLayout } from "./cache_private_layout.tsx";
 import { CacheOverride } from "./cache_override_route.tsx";
 import { CacheSession } from "./cache_session_route.tsx";
 import { CacheCors } from "./cache_cors_route.tsx";
+import { CachePublicCookie } from "./cache_public_cookie_route.tsx";
+import { CachePublicStar } from "./cache_public_star_route.tsx";
+import { CachePrivateCookie } from "./cache_private_cookie_route.tsx";
+import { CachePublicCookieLayout } from "./cache_public_cookie_layout.tsx";
+import { CacheNoStoreOverCookie } from "./cache_nostore_over_cookie_route.tsx";
 import {
   ApiNotFound,
   ApiV2NotFound,
@@ -133,6 +138,11 @@ const priv = (ctx: Ctx<{ path: string }, AppState>) =>
     strategy: CacheStrategy.Private,
     maxAge: 60,
   });
+const immutableCookie = (ctx: Ctx<{ path: string }, AppState>) =>
+  staticFile(ctx, staticDir, ctx.params.path, {
+    strategy: CacheStrategy.Immutable,
+    varyHeaders: ["Cookie"],
+  });
 const missingDir = (ctx: Ctx<{ path: string }, AppState>) =>
   staticFile(
     ctx,
@@ -150,13 +160,22 @@ if (import.meta.main) {
       route("/", { GET: Home }),
       route("/probe", { GET: ProbePage }),
       route("/cache-public", { GET: CachePublic }),
+      route("/cache-public-cookie", { GET: CachePublicCookie }),
+      route("/cache-public-star", { GET: CachePublicStar }),
       route("/cache-private", { GET: CachePrivate }),
+      route("/cache-private-cookie", { GET: CachePrivateCookie }),
       route("/cache-embed", { GET: CacheEmbed }),
       group(({ route }) => ({
         layouts: [CachePublicLayout],
         routes: [
           route("/cache-from-layout", { GET: CacheFromLayout }),
           route("/cache-nostore", { GET: CacheNoStore }),
+        ],
+      })),
+      group(({ route }) => ({
+        layouts: [CachePublicCookieLayout],
+        routes: [
+          route("/cache-nostore-over-cookie", { GET: CacheNoStoreOverCookie }),
         ],
       })),
       group(({ route }) => ({
@@ -241,6 +260,7 @@ if (import.meta.main) {
       route("/static/:path*", { GET: files }),
       route("/static-public/:path*", { GET: hour }),
       route("/static-private/:path*", { GET: priv }),
+      route("/static-immutable-cookie/:path*", { GET: immutableCookie }),
       route("/static-missing-dir/:path*", { GET: missingDir }),
       group(({ route }) => ({
         middleware: [requireSession],

@@ -1,4 +1,5 @@
 export {
+  type BaseCacheConfig,
   type CacheConfig,
   cached,
   type CachedElement,
