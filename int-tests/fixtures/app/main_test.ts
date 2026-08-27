@@ -477,11 +477,11 @@ const appCases: IntegrationTestCase[] = [
     status: 200,
     headers: {
       "content-type": "text/css; charset=utf-8",
-      "content-length": "17",
+      "content-length": "24",
       "cache-control": "public, max-age=31536000, immutable",
       "x-mw": "ok",
     },
-    bodyExact: "body{color:#000}\n",
+    bodyExact: "body {\n  color: #000;\n}\n",
   },
   {
     name: "HEAD stylesheet is 200 with empty body",
