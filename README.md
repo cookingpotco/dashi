@@ -159,12 +159,28 @@ on fragment renders. A layout is `(ctx, children) => ...`. Attach
 **Middleware** is a `(ctx, next) => Response` factory attached on `group()`. It
 runs for document hits and fragment hits.
 
-**Prefixed `group()`** joins a path onto child routes. Nested `route` and
-`group` see the accumulated prefix, and handlers get the joined params:
+**Prefixed `group()`** joins a path onto child routes. Import `group` from
+`dashi` in a feature `mod.ts` and drop the `Group` into the root callback:
 
 ```tsx
-group("/posts", ({ route }) => ({
+// posts/mod.tsx
+import { group } from "dashi";
+
+export const posts = group("/posts", ({ route }) => ({
   routes: [route("/:id", { GET: (ctx) => <p>{ctx.params.id}</p> })],
+}));
+```
+
+```tsx
+// main.ts
+import { serve } from "dashi";
+import { posts } from "./posts/mod.ts";
+
+serve(({ route }) => ({
+  routes: [
+    route("/", { GET: Home }),
+    posts,
+  ],
 }));
 ```
 
@@ -192,10 +208,15 @@ stylesheets update without unloading CSS already on the page.
 handler. Pass `${import.meta.dirname}/static` so the folder travels with the
 module.
 
-**CORS** is `import { cors } from "dashi/cors"`, attached on `group()`:
+**CORS** is `import { cors } from "dashi/cors"`, attached on `group()` in a
+feature `mod.ts`:
 
 ```tsx
-group("/api", ({ route }) => ({
+// api/mod.ts
+import { group } from "dashi";
+import { cors } from "dashi/cors";
+
+export const api = group("/api", ({ route }) => ({
   middleware: [cors()],
   routes: [route("/ok", { GET: () => Response.json({ ok: true }) })],
 }));

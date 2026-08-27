@@ -76,12 +76,16 @@ cannot see project rules.
   a path inside the package. Flag `"./…"`, `"../…"`, or `"/…"` values there.
   Workspace members mapping `dashi` to the checkout are fine. Flag a re-added
   `compilerOptions.jsxImportSource` on the root config.
-- A `*_route.ts(x)` module exports route handlers only, and only the route table
-  imports from it. Flag application code that calls a handler, including as a
+- Feature folders export a `Group` from `mod.ts` (`mod.tsx` when the file
+  contains JSX); handlers for that group live there. Root `/` and one-off probes
+  are `*_route.ts(x)`: they export handlers only, and only the root table
+  imports from them. Flag application code that calls a handler, including as a
   JSX child: it skips the target's middleware and error boundary, applies its
   cache policy to the caller's response, and leaves it reading the caller's
   `ctx`. Shared markup is a component in a non-route module; another route's
-  rendered output is `<RouteFragment src>`.
+  rendered output is `<RouteFragment src>`. Flag a `*_route.tsx` inside a
+  feature folder, or `group()` inlined in a `serve()` bag instead of an imported
+  `Group`.
 - Client JS attaches only via `client.module` / `client.element` at module
   scope. App files are `*_client.ts` beside the registrar. Browser-safe APIs
   import from `dashi/client`; client modules do not import `dashi`. Compiled

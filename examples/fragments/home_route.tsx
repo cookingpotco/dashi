@@ -20,7 +20,7 @@ export async function Home() {
       </h1>
       <TestComponent text="my footy" />
       <p>
-        Todos: <RouteFragment src="/todo-count" />
+        Todos: <RouteFragment src="/todos/count" />
       </p>
       <p>
         <RouteFragment src="/time" />

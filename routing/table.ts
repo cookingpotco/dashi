@@ -708,10 +708,11 @@ function createGroupCallback<
 
 /**
  * Declares a node in the route tree. Pass a prefix to join onto child
- * paths, or omit it (`"/"` is the same). The callback's `route` and
- * `group` close over the accumulated prefix so handlers see joined
- * params. `notFound` handles document misses under this prefix; omitted
- * walks to the parent.
+ * paths, or omit it for a pathless layout/middleware shell. `"/"` is
+ * not a valid prefix. The callback's `route` and `group` close over
+ * this group's prefix so handlers see joined params. `notFound`
+ * handles document misses under this prefix; omitted walks to the
+ * parent.
  *
  * Layouts wrap the route on document render, outermost first, and do
  * not run on fragment renders. Middleware is the request pipeline,

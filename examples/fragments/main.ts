@@ -2,15 +2,11 @@ import { serve } from "dashi";
 import { Home } from "./home_route.tsx";
 import { RootLayout } from "./root_layout.tsx";
 import { logger } from "./logger_middleware.ts";
-import { Fragment } from "./fragment_route.tsx";
-import { create, list } from "./todos_route.tsx";
-import { list as listTodoCount } from "./todo_count_route.tsx";
-import { list as listTime } from "./time_route.tsx";
-import {
-  dismiss as dismissNotice,
-  list as listNotice,
-} from "./notice_route.tsx";
 import { errorFallback, ErrorPage } from "./errors.tsx";
+import { fragment } from "./fragment/mod.tsx";
+import { todos } from "./todos/mod.tsx";
+import { time } from "./time/mod.tsx";
+import { notice } from "./notice/mod.tsx";
 
 if (import.meta.main) {
   serve(({ route }) => ({
@@ -19,11 +15,10 @@ if (import.meta.main) {
     error: ErrorPage,
     routes: [
       route("/", { GET: Home }),
-      route("/fragment", { GET: Fragment }),
-      route("/todos", { GET: list, POST: create }),
-      route("/todo-count", { GET: listTodoCount }),
-      route("/time", { GET: listTime }),
-      route("/notice", { GET: listNotice, POST: dismissNotice }),
+      fragment,
+      todos,
+      time,
+      notice,
     ],
   }), { errorFallback });
 }
