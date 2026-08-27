@@ -1,7 +1,9 @@
 import { serve } from "dashi";
 import { list, write } from "./entries_route.tsx";
+import { list as listEntriesForm } from "./entries_form_route.tsx";
 import { Search } from "./search_route.tsx";
 import { SlowWrite, slowWrite } from "./slow_write_route.tsx";
+import { Wrote } from "./wrote_route.tsx";
 import { writes } from "./writes_route.ts";
 import { jsonWrite } from "./json_write_route.ts";
 import { FragPage } from "./frag_page_route.tsx";
@@ -23,8 +25,10 @@ if (import.meta.main) {
         error: ErrorPage,
         routes: [
           route("/entries", { GET: list, POST: write }),
+          route("/entries-form", { GET: listEntriesForm }),
           route("/search", { GET: Search }),
           route("/slow-write", { GET: SlowWrite, POST: slowWrite }),
+          route("/wrote", { GET: Wrote }),
           route("/writes", { GET: writes }),
           route("/json-write", { GET: jsonWrite, POST: jsonWrite }),
           route("/frag-page", { GET: FragPage }),

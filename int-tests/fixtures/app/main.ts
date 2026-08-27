@@ -4,6 +4,7 @@ import {
   type Middleware,
   serve,
   staticFile,
+  type WriteHandler,
 } from "dashi";
 import { cors } from "dashi/cors";
 import type { AppState } from "./state.ts";
@@ -15,6 +16,8 @@ import { NestedLayout } from "./nested_layout.tsx";
 import { ApiLayout } from "./api_layout.tsx";
 import { Echo } from "./echo_route.tsx";
 import { post as postActions } from "./actions_route.tsx";
+import { postHtml } from "./write_html_route.ts";
+import { postJsx } from "./write_jsx_route.tsx";
 import { Embed } from "./embed_route.tsx";
 import { Fragment, post as postFragment } from "./fragment_route.tsx";
 import { NestEmbed } from "./nest_embed_route.tsx";
@@ -183,6 +186,15 @@ if (import.meta.main) {
       })),
       route("/peer", { GET: Peer }),
       route("/actions", { POST: postActions }),
+      route("/write-html", { POST: postHtml }),
+      route("/write-jsx", {
+        // The table type cannot express an invalid Element return; the
+        // pipeline still rejects it at runtime.
+        POST: postJsx as unknown as WriteHandler<
+          Record<string, never>,
+          AppState
+        >,
+      }),
       route("/posts/new", { GET: PostsNew }),
       route("/posts/:id", { GET: Post }),
       route("/guestbook", { GET: listGuestbook, POST: addGuestbook }),

@@ -43,7 +43,7 @@ function remove(src: InternalSrc): FragmentAction {
 
 /**
  * Targeted fragment updates from a write handler. Return them as a
- * non-empty list. GET cannot return these; a body with no actions still
+ * non-empty list. GET cannot return these; a GET or lazy fetch still
  * replaces the host that asked.
  */
 export const fragment = { replace, append, remove };

@@ -1,15 +1,4 @@
-export interface SubmitIntent {
-  readonly method: string;
-  readonly url: string;
-  readonly body: FormData | URLSearchParams;
-}
-
-const writeHosts = new Map<
-  string,
-  (host: Element, intent: SubmitIntent) => void
->();
-let softNavigate: ((url: string) => void) | null = null;
-let listening = false;
+import { navigate, submitWrite } from "../client/registry_client.ts";
 
 function urlEncoded(formData: FormData): URLSearchParams {
   const params = new URLSearchParams();
@@ -52,69 +41,30 @@ function onSubmit(event: Event): void {
     return;
   }
   if (method === "get") {
-    if (softNavigate === null) {
-      return;
-    }
     event.preventDefault();
     const formData = formControl !== null
       ? new FormData(form, formControl)
       : new FormData(form);
     const dest = new URL(action);
     dest.search = urlEncoded(formData).toString();
-    softNavigate(dest.href);
+    void navigate(dest.href);
     return;
   }
-  if (writeHosts.size === 0) {
-    return;
-  }
-  // TODO(COO-80): whether writes closest() to a host, or a fragment
-  // controller registers once like soft navigation.
-  const host = form.closest([...writeHosts.keys()].join(", "));
-  if (host === null) {
+  if (form.hasAttribute("aria-busy")) {
+    event.preventDefault();
     return;
   }
   event.preventDefault();
-  const submit = writeHosts.get(host.localName);
-  if (submit === undefined) {
-    return;
-  }
   const formData = formControl !== null
     ? new FormData(form, formControl)
     : new FormData(form);
   const body = form.enctype === "multipart/form-data"
     ? formData
     : urlEncoded(formData);
-  submit(host, { method, url: action, body });
+  form.setAttribute("aria-busy", "true");
+  void submitWrite({ method, url: action, body }).finally(() => {
+    form.removeAttribute("aria-busy");
+  });
 }
 
-function ensureListener(): void {
-  if (listening) {
-    return;
-  }
-  listening = true;
-  document.addEventListener("submit", onSubmit);
-}
-
-export function registerWriteHost(
-  tag: string,
-  submit: (host: Element, intent: SubmitIntent) => void,
-): void {
-  writeHosts.set(tag, submit);
-  ensureListener();
-}
-
-export function registerSoftNavigate(navigate: (url: string) => void): void {
-  softNavigate = navigate;
-  ensureListener();
-}
-
-// TODO(COO-80): whether leaveFor and registerSoftNavigate move to a
-// document-level request registry.
-/** Leave the current page for `url`: soft when navigation loaded, else a real load. */
-export function leaveFor(url: string): void {
-  if (softNavigate !== null) {
-    softNavigate(url);
-    return;
-  }
-  location.assign(url);
-}
+document.addEventListener("submit", onSubmit);

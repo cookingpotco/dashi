@@ -156,9 +156,12 @@ Deno.test("forms fixture", async (t) => {
       );
 
       await t.step(
-        "page-host validation error swaps in place without a history write",
+        "validation error updates a fragment without a history write",
         async () => {
           await prepareHosted(page, app.origin, "/entries");
+          await page.evaluate(() =>
+            customElements.whenDefined("route-fragment")
+          );
           const before = await page.evaluate(() => history.length);
           await clickId(page, "validate-submit");
           await waitForText(page, "error", "title is required");
@@ -218,6 +221,32 @@ Deno.test("forms fixture", async (t) => {
           assertEquals(result.heading, "search");
           assertEquals(result.query, "from-header");
           assertEquals(result.url, `${app.origin}/search?q=from-header`);
+        },
+      );
+
+      await t.step(
+        "form outside a fragment updates that fragment via actions",
+        async () => {
+          await prepareFrag(page, app.origin, "/frag-page");
+          await typeField(page, "#header-write-title", "from-header");
+          await clickId(page, "header-write-submit");
+          await waitForText(page, "frag-item", "from-header");
+          const result = await page.evaluate(() => ({
+            survived: Reflect.get(globalThis, "__dashiDoc") === true,
+            persistent: document.getElementById("persistent")?.textContent ??
+              null,
+            heading: document.getElementById("heading")?.textContent ?? null,
+            marker: document.getElementById("page-marker")?.textContent ??
+              null,
+            item: document.getElementById("frag-item")?.textContent ?? null,
+            url: location.href,
+          }));
+          assertEquals(result.survived, true);
+          assertEquals(result.persistent, "mutated");
+          assertEquals(result.heading, "frag-page");
+          assertEquals(result.marker, "mutated");
+          assertEquals(result.item, "from-header");
+          assertEquals(result.url, `${app.origin}/frag-page`);
         },
       );
 
@@ -314,6 +343,10 @@ Deno.test("forms fixture", async (t) => {
           await prepareHosted(page, app.origin, "/slow-write");
           const before = await writeCount(page);
           await clickId(page, "slow-submit");
+          const busy = await page.evaluate(() =>
+            document.getElementById("slow-form")?.getAttribute("aria-busy")
+          );
+          assertEquals(busy, "true");
           await clickId(page, "slow-submit");
           await waitForHeading(page, "wrote");
           const after = await writeCount(page);
@@ -321,7 +354,7 @@ Deno.test("forms fixture", async (t) => {
           const result = await page.evaluate(snapshot);
           assertEquals(result.survived, true);
           assertEquals(result.heading, "wrote");
-          assertEquals(result.url, `${app.origin}/slow-write`);
+          assertEquals(result.url, `${app.origin}/wrote`);
         },
       );
 
@@ -384,7 +417,7 @@ Deno.test("forms fixture", async (t) => {
       );
 
       await t.step(
-        "GET form inside a fragment submits natively without a page host",
+        "GET form without a page host does a real document load",
         async () => {
           await prepareBareFrag(page, app.origin, "/bare-frag-page");
           await typeField(page, "#frag-get-q", "native");

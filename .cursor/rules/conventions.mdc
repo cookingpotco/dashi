@@ -94,7 +94,8 @@ when presence itself is the question. JSX prop spellings (`className`,
 `htmlFor`) stop at the runtime's `MAPPED_HTML_ATTR_NAMES` and never appear
 in client code.
 `mod.ts` is the server surface of a directory; client runtime modules are
-imported by file. One document-level submit listener in `forms/` owns
-interception. Hosts register their tag; there is no per-element submit
-listener. GET navigates the page; a write applies to the nearest
-registered host.
+imported by file. `client/mod.ts` is the compiler; `client/registry_client.ts`
+is the browser bus. One document-level submit listener in `forms/` owns
+interception. There is no per-element submit listener and no nearest-host
+targeting. GET navigates the page; a write goes through the registry. Client
+features assume the client runtime.

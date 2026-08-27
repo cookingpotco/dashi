@@ -19,8 +19,8 @@ const NavigationRootElement = client.element(
  * `hardNavigation` on an `<a>` or a form opts that control out. From
  * client TypeScript, `import { navigate } from "dashi/client"`.
  *
- * Without this element, nothing changes and no navigation JS reaches
- * the browser. Without JS, links are links.
+ * Without this element, GET navigation is a real load. Writes still
+ * apply fragment actions when that runtime loaded.
  */
 export function NavigationRoot(props: HTMLAttributes): Element {
   return jsx(NavigationRootElement, { ...props });

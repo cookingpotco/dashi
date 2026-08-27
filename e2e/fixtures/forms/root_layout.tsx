@@ -12,6 +12,10 @@ export function RootLayout(
           <input id="header-search-q" name="q" />
           <button id="header-search-submit" type="submit">Search</button>
         </form>
+        <form id="header-write" method="POST" action="/frag">
+          <input id="header-write-title" name="title" />
+          <button id="header-write-submit" type="submit">Add</button>
+        </form>
       </header>
       <NavigationRoot>
         {children}

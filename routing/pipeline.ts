@@ -116,10 +116,10 @@ async function withoutContent(res: Response): Promise<Response> {
 }
 
 function lastResort(options: {
-  isFragment: boolean;
+  isPartial: boolean;
   errorFallback: Element | Response | undefined;
 }): Element | Response {
-  if (options.isFragment) {
+  if (options.isPartial) {
     return new Response("", { status: 500 });
   }
   if (options.errorFallback === undefined) {
@@ -132,7 +132,7 @@ async function htmlResponse(
   out: Element | Response,
   options: {
     status: number;
-    isFragment: boolean;
+    isPartial: boolean;
     req: Request;
     cache?: CacheConfig;
   },
@@ -147,11 +147,11 @@ async function htmlResponse(
   // this fragment's own inflight promise.
   if (store.pageReq === options.req) {
     html = await replaceFragmentSlots(unspliced);
-    if (!options.isFragment) {
+    if (!options.isPartial) {
       html = injectModuleScripts(html, store.clientEntries, clientImportMap());
     }
   }
-  const body = options.isFragment ? html : `<!DOCTYPE html>${html}`;
+  const body = options.isPartial ? html : `<!DOCTYPE html>${html}`;
   const bytes = new TextEncoder().encode(body);
   const res = new Response(bytes, { status: options.status });
   res.headers.set("Content-Type", "text/html");
@@ -161,7 +161,7 @@ async function htmlResponse(
   if (cache.vary) {
     mergeVary(res.headers, cache.vary);
   }
-  if (options.isFragment && store.pageReq === options.req) {
+  if (options.isPartial && store.pageReq === options.req) {
     appendModulePreloads(res.headers, store.clientEntries, clientImportMap());
   }
   return { response: res, html: unspliced };
@@ -176,14 +176,14 @@ async function respond(
     case RenderKind.Page:
       return await htmlResponse(result.page, {
         status: options.pageStatus,
-        isFragment: ctx.isFragment,
+        isPartial: ctx.isFragment,
         req: ctx.req,
         cache: result.cache,
       });
     case RenderKind.Recovered:
       return await htmlResponse(result.page, {
         status: 500,
-        isFragment: ctx.isFragment,
+        isPartial: ctx.isFragment,
         req: ctx.req,
         cache: result.cache,
       });
@@ -192,10 +192,10 @@ async function respond(
     case RenderKind.Exhausted:
       return await htmlResponse(
         lastResort({
-          isFragment: ctx.isFragment,
+          isPartial: ctx.isFragment,
           errorFallback: compiled.errorFallback,
         }),
-        { status: 500, isFragment: ctx.isFragment, req: ctx.req },
+        { status: 500, isPartial: ctx.isFragment, req: ctx.req },
       );
   }
 }
@@ -268,21 +268,25 @@ async function executeMatched(
         `Route timed out: ${ctx.url.pathname}`,
       );
     if (out instanceof Response) {
+      if (ctx.req.method !== "GET" && ctx.req.method !== "HEAD") {
+        const type = out.headers.get("content-type");
+        if (
+          out.status >= 200 && out.status < 300 &&
+          type !== null && type.toLowerCase().startsWith("text/html")
+        ) {
+          throw new Error(
+            `Write handlers must not return a 2xx text/html Response: ${ctx.url.pathname}`,
+          );
+        }
+      }
       return { response: out, html: null };
     }
     if (Array.isArray(out)) {
-      if (!ctx.isFragment) {
-        throw new Error(
-          `Fragment actions require a fragment request: ${ctx.url.pathname}`,
-        );
-      }
-      return await respond(
-        await renderWithRecovery(renderFragmentActions(out), {
-          ctx,
-          boundary: matched.boundary,
-        }),
-        { pageStatus: 200, ctx },
-      );
+      return await htmlResponse(renderFragmentActions(out), {
+        status: 200,
+        isPartial: true,
+        req: ctx.req,
+      });
     }
     if (ctx.req.method !== "GET" && ctx.req.method !== "HEAD") {
       throw new Error(
@@ -524,10 +528,10 @@ export async function handle(
         );
         return (await htmlResponse(
           lastResort({
-            isFragment,
+            isPartial: isFragment,
             errorFallback: compiled.errorFallback,
           }),
-          { status: 500, isFragment, req },
+          { status: 500, isPartial: isFragment, req },
         )).response;
       }
     },

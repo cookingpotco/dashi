@@ -81,6 +81,10 @@ export const METHODS = [
 ] as const;
 export type Method = typeof METHODS[number];
 
+/**
+ * POST/PUT/PATCH/DELETE. Return fragment actions (no layouts, no
+ * DOCTYPE) or a Response. A 2xx `text/html` Response is rejected.
+ */
 export type WriteHandler<
   Params extends Record<string, string> = Record<string, never>,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
