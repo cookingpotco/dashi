@@ -55,6 +55,15 @@ export async function submitWrite(intent: SubmitIntent): Promise<void> {
     }
     if (actions !== null) {
       const html = await res.text();
+      const link = res.headers.get("link") ?? "";
+      const pending: Promise<unknown>[] = [];
+      for (const match of link.matchAll(/<([^>]+)>;\s*rel="modulepreload"/g)) {
+        const href = match[1];
+        if (href !== undefined) {
+          pending.push(import(new URL(href, location.href).href));
+        }
+      }
+      await Promise.all(pending);
       if (actions(html)) {
         return;
       }
