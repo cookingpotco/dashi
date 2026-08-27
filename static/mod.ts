@@ -1,8 +1,8 @@
 import {
+  applyVaryHeaders,
   type CacheConfig,
   cacheControl,
   CacheStrategy,
-  mergeVary,
 } from "../caching/mod.ts";
 import { error as logError } from "../logging/mod.ts";
 import type { Ctx } from "../shared/mod.ts";
@@ -112,6 +112,8 @@ async function realPath(path: string): Promise<string | null> {
  *   travels with the module.
  * @param relative Path under `dir`, typically a catch-all route param.
  * @param cache Cache-Control. Defaults to immutable.
+ *   `varyHeaders` names request headers; Cookie is the whole jar;
+ *   Public and Immutable refuse `Cookie` and `*`.
  */
 export async function staticFile(
   ctx: Ctx<Record<string, string>, Record<string, unknown>>,
@@ -155,9 +157,7 @@ export async function staticFile(
     ETag: tag,
     "Cache-Control": cacheControl(cache),
   });
-  if (cache.vary) {
-    mergeVary(headers, cache.vary);
-  }
+  applyVaryHeaders(headers, cache);
 
   if (etagMatches(ctx.req.headers.get("if-none-match"), tag)) {
     return new Response(null, { status: 304, headers });

@@ -41,6 +41,8 @@ function typechecks() {
   <div>{cached(<span>x</span>, { strategy: CacheStrategy.NoStore })}</div>;
   // @ts-expect-error Private requires maxAge
   cached(<span>x</span>, { strategy: CacheStrategy.Private });
+  // @ts-expect-error vary is not a CacheConfig key; use varyHeaders
+  cached(<span>x</span>, { strategy: CacheStrategy.NoStore, vary: ["Accept"] });
 }
 
 Deno.test("DOM attribute types typecheck", () => {
