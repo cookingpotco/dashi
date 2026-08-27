@@ -13,10 +13,10 @@
 
 ## What is dashi?
 
-dashi is a server-first web framework for Deno that compiles JSX to HTML strings on the
-server. No VDOM, no hydration, no client framework. Pages update by swapping
-server-rendered fragments, in the spirit of [Hotwire](https://hotwired.dev/) and
-[htmx](https://htmx.org/).
+dashi is a server-first web framework for Deno that compiles JSX to HTML strings
+on the server. No VDOM, no hydration, no client framework. Pages update by
+swapping server-rendered fragments, in the spirit of
+[Hotwire](https://hotwired.dev/) and [htmx](https://htmx.org/).
 
 ```tsx
 import { serve } from "dashi";
@@ -35,9 +35,9 @@ serve(({ route }) => ({
 - **Route fragments.** Compose one route into another with
   `<RouteFragment src>`. Eager during SSR, or `lazy` after load, with `fallback`
   and `timeout`.
-- **Fragment actions.** A form inside a fragment submits without a full page
-  load. The write handler returns `fragment.replace`, `fragment.append`, or
-  `fragment.remove`, targeting every host rendering that route.
+- **Fragment actions.** A write handler returns `fragment.replace`,
+  `fragment.append`, or `fragment.remove`, targeting every host rendering that
+  route. The submitting form does not have to sit inside the fragment.
 - **Explicit route table.** Typed params from the path literal, and per-method
   handlers, in one `serve()` callback.
 - **Web standards.** Handlers read `ctx.req` as a `Request` and return JSX or a
@@ -144,7 +144,9 @@ serve(({ route }) => ({
 ```
 
 A GET or lazy fetch replaces the host that asked with markup. `fragment.replace`
-/ `append` / `remove` update every `<RouteFragment>` rendering that `src`.
+/ `append` / `remove` update every `<RouteFragment>` rendering that `src`. A
+write handler returns that list or a `Response` — not a document. The form can
+sit anywhere on the page.
 
 ## Other features
 

@@ -268,21 +268,25 @@ async function executeMatched(
         `Route timed out: ${ctx.url.pathname}`,
       );
     if (out instanceof Response) {
+      if (ctx.req.method !== "GET" && ctx.req.method !== "HEAD") {
+        const type = out.headers.get("content-type");
+        if (
+          out.status >= 200 && out.status < 300 &&
+          type !== null && type.toLowerCase().startsWith("text/html")
+        ) {
+          throw new Error(
+            `Write handlers must not return a 2xx text/html Response: ${ctx.url.pathname}`,
+          );
+        }
+      }
       return { response: out, html: null };
     }
     if (Array.isArray(out)) {
-      if (!ctx.isFragment) {
-        throw new Error(
-          `Fragment actions require a fragment request: ${ctx.url.pathname}`,
-        );
-      }
-      return await respond(
-        await renderWithRecovery(renderFragmentActions(out), {
-          ctx,
-          boundary: matched.boundary,
-        }),
-        { pageStatus: 200, ctx },
-      );
+      return await htmlResponse(renderFragmentActions(out), {
+        status: 200,
+        isFragment: true,
+        req: ctx.req,
+      });
     }
     if (ctx.req.method !== "GET" && ctx.req.method !== "HEAD") {
       throw new Error(

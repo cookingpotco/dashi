@@ -91,17 +91,20 @@ cannot see project rules.
   one import map; a module script is added only when a host rendered. A lazy
   fragment `import()`s its `Link` modulepreloads before swap. `staticFile` is
   app-mounted disk files. Flag a second include, bundle, or inject path.
-  `/_dashi/*` is reserved. One document-level submit listener in `forms/` owns
-  interception. Hosts register their tag; there is no per-element submit
-  listener. GET navigates the page; a write applies to the nearest registered
-  host. Flag a per-element submit listener or a GET form that swaps a fragment.
+  `/_dashi/*` is reserved. `client/mod.ts` is the compiler;
+  `client/registry_client.ts` is the browser bus. One document-level submit
+  listener in `forms/` owns interception. There is no per-element submit
+  listener and no nearest-host targeting. GET navigates the page; a write goes
+  through the registry. Client features assume the client runtime. Flag a
+  per-element submit listener or a GET form that swaps a fragment.
 - A closed set of cases is a `const enum` (plain `enum` only when it must exist
   at runtime). Flag a string-literal union used as a discriminant.
 - Fragment updates are `fragment.replace`, `fragment.append`, and
   `fragment.remove` on one primitive, targeting every `route-fragment` with that
-  `src`. Write handlers return that list or a Response, not markup.
-  `route-action` is the wire format, not a user-writable element. Flag a second
-  update path, targeting by DOM id, or a write that returns JSX.
+  `src`. Write handlers return that list or a Response, not markup or a 2xx
+  `text/html` document. `route-action` is the wire format, not a user-writable
+  element. Flag a second update path, targeting by DOM id, or a write that
+  returns JSX.
 - An object shape is an `interface`. `type` is for unions, aliases, mapped
   types. Flag an object shape written as a `type`.
 - Flag a helper that is a short, obvious check or a few straightforward lines

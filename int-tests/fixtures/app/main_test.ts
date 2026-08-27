@@ -247,10 +247,48 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
-    name: "POST actions without fragment header is 500",
+    name:
+      "POST actions without fragment header are sibling route-action elements",
     request: {
       method: "POST",
       path: "/actions",
+    },
+    status: 200,
+    headers: { "content-type": "text/html", "cache-control": "private" },
+    html: {
+      bodyExcludes: ["<!DOCTYPE html>", "{{fragment:"],
+      select: [
+        {
+          selector: 'route-action[action="append"]',
+          text: "milk",
+          attr: { src: "/todos" },
+        },
+        {
+          selector: 'route-action[action="replace"]',
+          text: "3",
+          attr: { src: "/todo-count" },
+        },
+      ],
+    },
+  },
+  {
+    name: "write handler 2xx text/html Response is rejected",
+    request: {
+      method: "POST",
+      path: "/write-html",
+    },
+    status: 500,
+    html: {
+      select: [
+        { selector: "html > body > #root-error", text: "root-error" },
+      ],
+    },
+  },
+  {
+    name: "write returning JSX is rejected",
+    request: {
+      method: "POST",
+      path: "/write-jsx",
     },
     status: 500,
     html: {

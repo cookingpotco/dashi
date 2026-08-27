@@ -1,8 +1,5 @@
-import {
-  registerSoftNavigate,
-  registerWriteHost,
-  type SubmitIntent,
-} from "../forms/submit_client.ts";
+import { registerPage } from "../client/registry_client.ts";
+import "../forms/submit_client.ts";
 
 history.scrollRestoration = "manual";
 
@@ -342,13 +339,7 @@ async function performNavigate(
   }
 }
 
-/**
- * Fetch `url` and swap the connected `<navigation-root>` in place.
- * Pushes history and scrolls to the top, or to the hash target.
- * Without a host, or when the response cannot be swapped, does a
- * real navigation.
- */
-export function navigate(url: string | URL): Promise<void> {
+function navigate(url: string | URL): Promise<void> {
   const dest = new URL(url, location.href);
   if (dest.origin !== location.origin) {
     location.assign(dest.href);
@@ -361,25 +352,22 @@ export function navigate(url: string | URL): Promise<void> {
   return performNavigate(dest.href, { push: true });
 }
 
-async function performSubmit(
-  host: NavigationRoot,
-  intent: SubmitIntent,
+async function commitFetchedDocument(
+  res: Response,
+  destUrl: string,
 ): Promise<void> {
+  const host = connectedHost;
+  if (host === null) {
+    location.assign(destUrl);
+    return;
+  }
+  inflight?.abort();
   const abort = new AbortController();
   inflight = abort;
   host.setAttribute("aria-busy", "true");
   try {
-    const res = await fetch(intent.url, {
-      method: intent.method,
-      headers: { Accept: "text/html" },
-      body: intent.body,
-      signal: abort.signal,
-    });
-    if (abort.signal.aborted) {
-      return;
-    }
-    if (new URL(res.url, location.href).origin !== location.origin) {
-      location.assign(res.url);
+    if (new URL(destUrl, location.href).origin !== location.origin) {
+      location.assign(destUrl);
       return;
     }
     const parsed = await parseResponse(res, abort);
@@ -387,21 +375,18 @@ async function performSubmit(
       return;
     }
     if (parsed === null) {
-      location.assign(res.url);
+      location.assign(destUrl);
       return;
     }
-    if (res.redirected) {
-      await commitDocument(host, parsed, abort, {
-        url: res.url,
-        options: { push: true },
-      });
-      return;
-    }
-    await commitDocument(host, parsed, abort, null);
+    await commitDocument(host, parsed, abort, {
+      url: destUrl,
+      options: { push: true },
+    });
   } catch {
     if (abort.signal.aborted) {
       return;
     }
+    location.assign(destUrl);
   } finally {
     if (inflight === abort) {
       inflight = null;
@@ -492,17 +477,9 @@ class NavigationRoot extends HTMLElement {
   };
 }
 
-registerWriteHost("navigation-root", (host, intent) => {
-  if (!(host instanceof NavigationRoot)) {
-    return;
-  }
-  // A second submit is dropped. A click still aborts this apply, so a
-  // navigation can win; another POST cannot.
-  if (inflight !== null) {
-    return;
-  }
-  void performSubmit(host, intent);
+registerPage({
+  navigate,
+  commitDocument: commitFetchedDocument,
 });
-registerSoftNavigate(navigate);
 
 customElements.define("navigation-root", NavigationRoot);
