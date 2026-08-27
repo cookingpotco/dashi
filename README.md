@@ -13,7 +13,7 @@
 
 ## What is dashi?
 
-Server-first web framework for Deno that compiles JSX to HTML strings on the
+dashi is a server-first web framework for Deno that compiles JSX to HTML strings on the
 server. No VDOM, no hydration, no client framework. Pages update by swapping
 server-rendered fragments, in the spirit of [Hotwire](https://hotwired.dev/) and
 [htmx](https://htmx.org/).
