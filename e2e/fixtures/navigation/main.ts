@@ -4,6 +4,8 @@ import { About } from "./about_route.tsx";
 import { Tall } from "./tall_route.tsx";
 import { WidgetPage } from "./widget_route.tsx";
 import { Slow } from "./slow_route.tsx";
+import { homeCss } from "./home_css_route.ts";
+import { aboutCss } from "./about_css_route.ts";
 import { data } from "./data_route.ts";
 import { Bare } from "./bare_route.tsx";
 import { RootLayout } from "./root_layout.tsx";
@@ -23,6 +25,8 @@ if (import.meta.main) {
           route("/tall", { GET: Tall }),
           route("/widget", { GET: WidgetPage }),
           route("/slow", { GET: Slow }),
+          route("/home.css", { GET: homeCss }),
+          route("/about.css", { GET: aboutCss }),
           route("/data", { GET: data }),
         ],
       })),

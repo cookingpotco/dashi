@@ -1,11 +1,14 @@
-import { client } from "dashi";
+import { client, type Ctx } from "dashi";
+import type { AppState } from "./state.ts";
 
 const GoAbout = client.element(
   "go-about",
   new URL("./go_client.ts", import.meta.url),
 );
 
-export function Home() {
+export function Home(ctx: Ctx<Record<string, never>, AppState>) {
+  ctx.state.title = "home";
+  ctx.state.stylesheet = "/home.css";
   return (
     <div>
       <h1 id="heading">home</h1>

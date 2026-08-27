@@ -65,6 +65,25 @@ function snapshot() {
   };
 }
 
+function headSnapshot() {
+  const heading = document.getElementById("heading");
+  return {
+    title: document.title,
+    color: heading ? getComputedStyle(heading).color : "",
+    sheets: [...document.head.querySelectorAll("link")].flatMap((el) => {
+      if (
+        !(el instanceof HTMLLinkElement) ||
+        !el.relList.contains("stylesheet")
+      ) {
+        return [];
+      }
+      return [new URL(el.href).pathname];
+    }),
+    heading: heading ? heading.textContent : null,
+    url: location.pathname,
+  };
+}
+
 Deno.test("navigation fixture", async (t) => {
   await withBrowser(
     new URL("./main.ts", import.meta.url),
@@ -297,6 +316,112 @@ Deno.test("navigation fixture", async (t) => {
           assertEquals(result.persistent, "mutated");
           assertEquals(result.heading, "about");
           assertEquals(result.url, `${app.origin}/about`);
+        },
+      );
+
+      await t.step(
+        "home to about merges title and stylesheets; back restores",
+        async () => {
+          await prepare(page, app.origin, "/");
+          const home = await page.evaluate(headSnapshot);
+          assertEquals(home.title, "home");
+          assertEquals(home.color, "rgb(255, 0, 0)");
+          assertEquals(home.sheets, ["/home.css"]);
+          await clickId(page, "to-about");
+          await waitForHeading(page, "about");
+          const about = await page.evaluate(headSnapshot);
+          assertEquals(about.title, "about");
+          assertEquals(about.color, "rgb(0, 0, 255)");
+          assertEquals(about.sheets, ["/about.css"]);
+          assertEquals(about.heading, "about");
+          await page.evaluate(() => history.back());
+          await waitForHeading(page, "home");
+          const back = await page.evaluate(headSnapshot);
+          assertEquals(back.title, "home");
+          assertEquals(back.color, "rgb(255, 0, 0)");
+          assertEquals(back.sheets, ["/home.css"]);
+        },
+      );
+
+      await t.step(
+        "swap waits for a slow stylesheet before committing",
+        async () => {
+          await prepare(page, app.origin, "/");
+          await clickId(page, "to-about");
+          await page.evaluate(() =>
+            new Promise((resolve) => setTimeout(resolve, 500))
+          );
+          const mid = await page.evaluate(headSnapshot);
+          assertEquals(mid.heading, "home");
+          assertEquals(mid.url, "/");
+          assertEquals(mid.title, "home");
+          await waitForHeading(page, "about");
+          const committed = await page.evaluate(headSnapshot);
+          assertEquals(committed.heading, "about");
+          assertEquals(committed.url, "/about");
+          assertEquals(committed.title, "about");
+          assertEquals(committed.color, "rgb(0, 0, 255)");
+        },
+      );
+
+      await t.step(
+        "a fast navigation wins over an in-flight slow stylesheet",
+        async () => {
+          await prepare(page, app.origin, "/");
+          await clickId(page, "to-about");
+          await clickId(page, "to-widget");
+          await waitForPath(page, "/widget");
+          await page.evaluate(() =>
+            new Promise((resolve) => setTimeout(resolve, 2500))
+          );
+          const result = await page.evaluate(headSnapshot);
+          assertEquals(result.heading, "widget");
+          assertEquals(result.url, "/widget");
+          assertEquals(result.title, "nav");
+          assertEquals(result.sheets.includes("/about.css"), false);
+        },
+      );
+
+      await t.step(
+        "focus moves to the host, or to autofocus when present",
+        async () => {
+          await prepare(page, app.origin, "/");
+          await clickId(page, "to-widget");
+          await waitForHeading(page, "widget");
+          const host = await page.evaluate(() => ({
+            tag: document.activeElement?.localName ?? null,
+            tabIndex: document.activeElement instanceof HTMLElement
+              ? document.activeElement.tabIndex
+              : null,
+          }));
+          assertEquals(host.tag, "navigation-root");
+          assertEquals(host.tabIndex, -1);
+          await prepare(page, app.origin, "/");
+          await clickId(page, "to-about");
+          await waitForHeading(page, "about");
+          const autofocus = await page.evaluate(() =>
+            document.activeElement?.id ?? null
+          );
+          assertEquals(autofocus, "about-field");
+        },
+      );
+
+      await t.step(
+        "an assertive live region announces the new title",
+        async () => {
+          await prepare(page, app.origin, "/");
+          await clickId(page, "to-widget");
+          await waitForHeading(page, "widget");
+          const announced = await page.evaluate(() => {
+            const live = document.querySelector(
+              '[aria-live="assertive"]',
+            );
+            return {
+              text: live?.textContent ?? null,
+              atomic: live?.getAttribute("aria-atomic") ?? null,
+            };
+          });
+          assertEquals(announced, { text: "nav", atomic: "true" });
         },
       );
     },
