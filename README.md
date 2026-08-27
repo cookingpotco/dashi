@@ -9,7 +9,7 @@
 
 <picture>
   <source media="(max-width: 768px)" srcset="logo-empty.svg">
-  <img align="right" alt="dashi" src="logo.svg" hspace="24">
+  <img align="right" alt="dashi" src="logo.svg" width="220" hspace="24">
 </picture>
 <div align="center">
   <picture>
@@ -17,6 +17,7 @@
     <img alt="" src="logo-empty.svg">
   </picture>
 </div>
+<div style="overflow: auto;">
 
 Server-first web framework for Deno that compiles JSX to HTML strings on the
 server. No VDOM, no hydration, no client framework. Pages update by swapping
@@ -34,6 +35,8 @@ serve(({ route }) => ({
   ],
 }));
 ```
+
+</div>
 
 ## Features
 
