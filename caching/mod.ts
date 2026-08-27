@@ -7,8 +7,7 @@ export const enum CacheStrategy {
   NoStore = "no-store",
 }
 
-export interface ImmutableCacheConfig {
-  strategy: CacheStrategy.Immutable;
+export interface BaseCacheConfig {
   /**
    * Request header names for `Vary`. Cookie is the whole jar.
    * Public and Immutable refuse `Cookie` and `*`.
@@ -16,37 +15,26 @@ export interface ImmutableCacheConfig {
   varyHeaders?: string[];
 }
 
-export interface PublicCacheConfig {
+export interface ImmutableCacheConfig extends BaseCacheConfig {
+  strategy: CacheStrategy.Immutable;
+}
+
+export interface PublicCacheConfig extends BaseCacheConfig {
   strategy: CacheStrategy.Public;
   maxAge: number;
   sMaxAge?: number;
   staleWhileRevalidate?: number;
   staleIfError?: number;
-  /**
-   * Request header names for `Vary`. Cookie is the whole jar.
-   * Public and Immutable refuse `Cookie` and `*`.
-   */
-  varyHeaders?: string[];
 }
 
-export interface PrivateCacheConfig {
+export interface PrivateCacheConfig extends BaseCacheConfig {
   strategy: CacheStrategy.Private;
   maxAge: number;
   staleWhileRevalidate?: number;
-  /**
-   * Request header names for `Vary`. Cookie is the whole jar.
-   * Public and Immutable refuse `Cookie` and `*`.
-   */
-  varyHeaders?: string[];
 }
 
-export interface NoStoreCacheConfig {
+export interface NoStoreCacheConfig extends BaseCacheConfig {
   strategy: CacheStrategy.NoStore;
-  /**
-   * Request header names for `Vary`. Cookie is the whole jar.
-   * Public and Immutable refuse `Cookie` and `*`.
-   */
-  varyHeaders?: string[];
 }
 
 export type CacheConfig =
@@ -148,7 +136,7 @@ export function applyVaryHeaders(
   headers: Headers,
   cache: CacheConfig,
 ): void {
-  if (cache.varyHeaders === undefined) {
+  if (!cache.varyHeaders) {
     return;
   }
   if (
