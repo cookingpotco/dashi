@@ -70,7 +70,7 @@ async function parseResponse(
 }
 
 // DOMParser documents resolve URLs against about:blank.
-function assetUrl(el: HTMLLinkElement | HTMLScriptElement): string {
+function getLinkedUrl(el: HTMLLinkElement | HTMLScriptElement): string {
   const attr = el instanceof HTMLScriptElement
     ? el.getAttribute("src")
     : el.getAttribute("href");
@@ -92,13 +92,13 @@ function matchingLive(
     incoming instanceof HTMLLinkElement &&
     incoming.relList.contains("stylesheet")
   ) {
-    const href = assetUrl(incoming);
+    const href = getLinkedUrl(incoming);
     for (const node of live) {
       if (
         !kept.has(node) &&
         node instanceof HTMLLinkElement &&
         node.relList.contains("stylesheet") &&
-        assetUrl(node) === href
+        getLinkedUrl(node) === href
       ) {
         return node;
       }
@@ -112,12 +112,12 @@ function matchingLive(
   if (src === null || src === "") {
     return null;
   }
-  const url = assetUrl(incoming);
+  const url = getLinkedUrl(incoming);
   for (const node of live) {
     if (
       !kept.has(node) &&
       node instanceof HTMLScriptElement &&
-      assetUrl(node) === url
+      getLinkedUrl(node) === url
     ) {
       return node;
     }
@@ -185,9 +185,17 @@ async function mergeHead(
   }
 
   for (const node of live) {
-    if (!kept.has(node)) {
-      node.remove();
+    if (kept.has(node)) {
+      continue;
     }
+    // Import maps stay; later import() still needs the live map.
+    if (
+      node instanceof HTMLScriptElement &&
+      (node.getAttribute("src") === null || node.getAttribute("src") === "")
+    ) {
+      continue;
+    }
+    node.remove();
   }
   return true;
 }
