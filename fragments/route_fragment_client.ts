@@ -33,6 +33,13 @@ class RouteFragment extends HTMLElement {
     void this.fetchAndSwap(abort);
   }
 
+  refresh(): void {
+    this.abort?.abort();
+    const abort = new AbortController();
+    this.abort = abort;
+    void this.fetchAndSwap(abort);
+  }
+
   disconnectedCallback() {
     queueMicrotask(() => {
       if (!this.isConnected) {

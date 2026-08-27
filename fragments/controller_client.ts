@@ -5,6 +5,7 @@ const enum SwapKind {
   Replace = "replace",
   Append = "append",
   Remove = "remove",
+  Refresh = "refresh",
 }
 
 function applyAction(action: Element) {
@@ -31,6 +32,15 @@ function applyAction(action: Element) {
       const clone = action.cloneNode(true);
       if (clone instanceof Element) {
         host.append(...clone.childNodes);
+      }
+    }
+    return;
+  }
+  if (kind === SwapKind.Refresh) {
+    for (const host of hosts) {
+      const refresh = Reflect.get(host, "refresh");
+      if (typeof refresh === "function") {
+        refresh.call(host);
       }
     }
   }

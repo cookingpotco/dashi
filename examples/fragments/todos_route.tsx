@@ -29,5 +29,6 @@ export async function create(ctx: Ctx) {
   return [
     fragment.append("/todos", <li>{title}</li>),
     fragment.replace("/todo-count", <span>{todos.length}</span>),
+    fragment.refresh("/time"),
   ];
 }

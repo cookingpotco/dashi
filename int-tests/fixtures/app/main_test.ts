@@ -246,6 +246,11 @@ const appCases: IntegrationTestCase[] = [
           text: "3",
           attr: { src: "/todo-count" },
         },
+        {
+          selector: 'route-action[action="refresh"]',
+          text: "",
+          attr: { src: "/hits" },
+        },
       ],
     },
   },
@@ -273,6 +278,11 @@ const appCases: IntegrationTestCase[] = [
           selector: 'route-action[action="replace"]',
           text: "3",
           attr: { src: "/todo-count" },
+        },
+        {
+          selector: 'route-action[action="refresh"]',
+          text: "",
+          attr: { src: "/hits" },
         },
       ],
     },
