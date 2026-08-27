@@ -8,13 +8,13 @@
 > development. Expect breaking changes in minor versions.
 
 <picture>
-  <source media="(min-width: 769px)" srcset="logo.svg">
-  <img align="right" alt="dashi" src="logo-empty.svg" hspace="24">
+  <source media="(max-width: 768px)" srcset="logo-empty.svg">
+  <img align="right" alt="dashi" src="logo.svg" hspace="24">
 </picture>
 <div align="center">
   <picture>
-    <source media="(min-width: 769px)" srcset="logo-empty.svg">
-    <img alt="dashi" src="logo.svg">
+    <source media="(max-width: 768px)" srcset="logo.svg">
+    <img alt="" src="logo-empty.svg">
   </picture>
 </div>
 
