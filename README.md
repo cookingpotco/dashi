@@ -1,16 +1,17 @@
-# dashi
-
 > **Not production ready.** dashi has not hit v1 yet and is under active
 > development. Expect breaking changes in minor versions.
 
-<img align="left" alt="dashi" src="logo.svg" width="220" height="220">
-<p><svg xmlns="http://www.w3.org/2000/svg" width="1" height="52" aria-hidden="true"></svg></p>
-<p>
-<a href="https://jsr.io/@cookingpot/dashi"><img src="https://jsr.io/badges/@cookingpot/dashi" alt="JSR"></a><br>
-<a href="https://github.com/cookingpotco/dashi/actions/workflows/ci.yml"><img src="https://github.com/cookingpotco/dashi/actions/workflows/ci.yml/badge.svg" alt="CI"></a><br>
+<p align="center">
+<img alt="dashi" src="logo.svg" width="220" height="220">
+</p>
+
+<p align="center">
+<a href="https://jsr.io/@cookingpot/dashi"><img src="https://jsr.io/badges/@cookingpot/dashi" alt="JSR"></a>
+<a href="https://github.com/cookingpotco/dashi/actions/workflows/ci.yml"><img src="https://github.com/cookingpotco/dashi/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
 </p>
-<br clear="all">
+
+## What is dashi?
 
 Server-first web framework for Deno that compiles JSX to HTML strings on the
 server. No VDOM, no hydration, no client framework. Pages update by swapping
@@ -46,10 +47,10 @@ serve(({ route }) => ({
 ## By design
 
 - No runtime dependencies.
-- One way to do a thing.
+- Small and powerful API, with only one way to do each thing.
 - Explicit client inclusion: JS ships only when you call `client.module` or
   `client.element` at module scope.
-- Explicit over magic: no file-system routing, no `_` prefixes.
+- Explicit over magic: no file-system routing, no prefixes or hidden flows.
 
 ## Quick start
 
