@@ -17,7 +17,8 @@ The planner follows the `plan-ticket` skill. The implementing agent follows
 2. A plan is written and approved. After approval, the plan is posted as a
    Linear comment that begins with `@Cursor`, which starts the implementing
    agent. The ticket stays at `Ready`.
-3. The implementing agent builds it, then the human reviews.
+3. The implementing agent builds it and marks the PR ready. Then the human
+   reviews.
 4. Merge once checks are green, Bugbot has had its pass, and the human has
    approved.
 
@@ -27,6 +28,8 @@ The planner follows the `plan-ticket` skill. The implementing agent follows
   starts the implementor and does not change the status.
 - `In Progress` means a draft PR exists. The GitHub integration sets this when
   the agent opens the PR on init.
+- `In Review` means the PR left draft. The GitHub integration sets this when
+  `gh pr ready` takes.
 - Never set Linear status by hand. The GitHub integration moves the ticket.
 
 ## Feedback

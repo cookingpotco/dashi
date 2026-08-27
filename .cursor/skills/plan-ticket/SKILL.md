@@ -52,6 +52,10 @@ stop: tell the human rather than silently substituting another issue.
    cloud agent. Leave the status at `Ready`. The GitHub integration sets
    `In Progress` when the agent opens its draft PR.
 
+   The comment is the plan only. Do not add Done or handoff instructions there —
+   the implementor follows `AGENTS.md` either way, including when a human posts
+   the `@Cursor` mention themselves.
+
    Do not also set Linear `delegate` or assignee to Cursor. Delegating the issue
    and mentioning `@Cursor` are two independent starts; using both launches two
    agents, two PRs, and two bills. Linear fills in `delegate` itself once the
