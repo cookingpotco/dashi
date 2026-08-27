@@ -3,22 +3,14 @@
 > **Not production ready.** dashi has not hit v1 yet and is under active
 > development. Expect breaking changes in minor versions.
 
-<table>
-<tr>
-<td valign="middle">
-
-[![JSR](https://jsr.io/badges/@cookingpot/dashi)](https://jsr.io/@cookingpot/dashi)
-
-[![CI](https://github.com/cookingpotco/dashi/actions/workflows/ci.yml/badge.svg)](https://github.com/cookingpotco/dashi/actions/workflows/ci.yml)
-
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-
-</td>
-<td valign="middle">
-<img alt="dashi" src="logo.svg" width="220">
-</td>
-</tr>
-</table>
+<img align="left" alt="dashi" src="logo.svg" width="220" height="220">
+<p><svg xmlns="http://www.w3.org/2000/svg" width="1" height="52" aria-hidden="true"></svg></p>
+<p>
+<a href="https://jsr.io/@cookingpot/dashi"><img src="https://jsr.io/badges/@cookingpot/dashi" alt="JSR"></a><br>
+<a href="https://github.com/cookingpotco/dashi/actions/workflows/ci.yml"><img src="https://github.com/cookingpotco/dashi/actions/workflows/ci.yml/badge.svg" alt="CI"></a><br>
+<a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
+</p>
+<br clear="all">
 
 Server-first web framework for Deno that compiles JSX to HTML strings on the
 server. No VDOM, no hydration, no client framework. Pages update by swapping
