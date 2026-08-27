@@ -15,5 +15,6 @@ export async function apply(ctx: Ctx) {
   return [
     fragment.append("/todos", <li id="appended-todo">{text}</li>),
     fragment.replace("/todo-count", <span id="todo-count">1</span>),
+    fragment.refresh("/hits"),
   ];
 }

@@ -8,10 +8,12 @@ Deno.test("action list serializes to sibling route-action elements", () => {
       fragment.append("/todos", <li>milk</li>),
       fragment.replace("/todo-count", <span>3</span>),
       fragment.remove("/notice"),
+      fragment.refresh("/hits"),
     ])),
     '<route-action action="append" src="/todos"><li>milk</li></route-action>' +
       '<route-action action="replace" src="/todo-count"><span>3</span></route-action>' +
-      '<route-action action="remove" src="/notice"></route-action>',
+      '<route-action action="remove" src="/notice"></route-action>' +
+      '<route-action action="refresh" src="/hits"></route-action>',
   );
 });
 

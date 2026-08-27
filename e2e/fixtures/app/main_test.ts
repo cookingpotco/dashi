@@ -279,6 +279,51 @@ Deno.test("app fixture", async (t) => {
         },
       );
 
+      await t.step("action list refresh re-GETs the host", async () => {
+        await page.goto(`${app.origin}/actions-page`);
+        await page.evaluate(() => customElements.whenDefined("route-fragment"));
+        const initial = await page.evaluate(() =>
+          document.getElementById("refresh-stamp")?.textContent
+        );
+        assertEquals(initial, "1");
+        const add = await page.$("#actions-form button");
+        if (add === null) {
+          throw new Error("actions form is missing");
+        }
+        await add.click();
+        await page.evaluate(async () => {
+          const start = Date.now();
+          while (document.getElementById("refresh-stamp")?.textContent !== "2") {
+            if (Date.now() - start > 10000) {
+              throw new Error("refresh stamp did not become 2");
+            }
+            await new Promise((resolve) => setTimeout(resolve, 25));
+          }
+        });
+        await add.click();
+        const result = await page.evaluate(async () => {
+          const start = Date.now();
+          while (document.getElementById("refresh-stamp")?.textContent !== "3") {
+            if (Date.now() - start > 10000) {
+              throw new Error("refresh stamp did not become 3");
+            }
+            await new Promise((resolve) => setTimeout(resolve, 25));
+          }
+          return {
+            url: location.href,
+            stamp: document.getElementById("refresh-stamp")?.textContent,
+            stampInHost: document.querySelector(
+              "route-fragment[src='/hits']",
+            )?.querySelector("#refresh-stamp")?.textContent ?? null,
+          };
+        });
+        assertEquals(result, {
+          url: `${app.origin}/actions-page`,
+          stamp: "3",
+          stampInHost: "3",
+        });
+      });
+
       await t.step(
         "action list appends and replaces without a page load",
         async () => {

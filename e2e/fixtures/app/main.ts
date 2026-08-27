@@ -22,6 +22,7 @@ import {
   form as actionsForm,
 } from "./actions_route.tsx";
 import { list as listTodoCount } from "./todo_count_route.tsx";
+import { list as listHits } from "./hits_route.tsx";
 import {
   dismiss as dismissNotice,
   list as listNotice,
@@ -54,6 +55,7 @@ if (import.meta.main) {
       route("/actions-page", { GET: ActionsPage }),
       route("/actions", { GET: actionsForm, POST: applyActions }),
       route("/todo-count", { GET: listTodoCount }),
+      route("/hits", { GET: listHits }),
       route("/notice", { GET: listNotice, POST: dismissNotice }),
     ],
   }), { errorFallback, port: 0 });

@@ -5,6 +5,13 @@ const enum SwapKind {
   Replace = "replace",
   Append = "append",
   Remove = "remove",
+  Refresh = "refresh",
+}
+
+let refreshHost: ((host: Element) => void) | null = null;
+
+export function registerRefresh(handler: (host: Element) => void): void {
+  refreshHost = handler;
 }
 
 function applyAction(action: Element) {
@@ -32,6 +39,12 @@ function applyAction(action: Element) {
       if (clone instanceof Element) {
         host.append(...clone.childNodes);
       }
+    }
+    return;
+  }
+  if (kind === SwapKind.Refresh) {
+    for (const host of hosts) {
+      refreshHost?.(host);
     }
   }
 }

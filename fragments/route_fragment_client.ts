@@ -1,4 +1,4 @@
-import "./controller_client.ts";
+import { registerRefresh } from "./controller_client.ts";
 
 const fragmentHeaders = new Headers();
 fragmentHeaders.append("Accept", "text/html");
@@ -28,6 +28,13 @@ class RouteFragment extends HTMLElement {
     if (!this.lazy || this.loaded || this.abort !== null) {
       return;
     }
+    const abort = new AbortController();
+    this.abort = abort;
+    void this.fetchAndSwap(abort);
+  }
+
+  refresh(): void {
+    this.abort?.abort();
     const abort = new AbortController();
     this.abort = abort;
     void this.fetchAndSwap(abort);
@@ -97,5 +104,11 @@ class RouteFragment extends HTMLElement {
     this.innerHTML = html;
   }
 }
+
+registerRefresh((host) => {
+  if (host instanceof RouteFragment) {
+    host.refresh();
+  }
+});
 
 customElements.define("route-fragment", RouteFragment);
