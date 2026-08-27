@@ -1,23 +1,24 @@
 # dashi
 
-[![JSR](https://jsr.io/badges/@cookingpot/dashi)](https://jsr.io/@cookingpot/dashi)
-[![CI](https://github.com/cookingpotco/dashi/actions/workflows/ci.yml/badge.svg)](https://github.com/cookingpotco/dashi/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-
 > **Not production ready.** dashi has not hit v1 yet and is under active
 > development. Expect breaking changes in minor versions.
 
-<picture>
-  <source media="(max-width: 768px)" srcset="logo-empty.svg">
-  <img align="right" alt="dashi" src="logo.svg" width="220" hspace="24">
-</picture>
-<div align="center">
-  <picture>
-    <source media="(max-width: 768px)" srcset="logo.svg">
-    <img alt="" src="logo-empty.svg">
-  </picture>
-</div>
-<div style="overflow: auto;">
+<table>
+<tr>
+<td valign="middle">
+
+[![JSR](https://jsr.io/badges/@cookingpot/dashi)](https://jsr.io/@cookingpot/dashi)
+
+[![CI](https://github.com/cookingpotco/dashi/actions/workflows/ci.yml/badge.svg)](https://github.com/cookingpotco/dashi/actions/workflows/ci.yml)
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+</td>
+<td valign="middle">
+<img alt="dashi" src="logo.svg" width="220">
+</td>
+</tr>
+</table>
 
 Server-first web framework for Deno that compiles JSX to HTML strings on the
 server. No VDOM, no hydration, no client framework. Pages update by swapping
@@ -35,8 +36,6 @@ serve(({ route }) => ({
   ],
 }));
 ```
-
-</div>
 
 ## Features
 

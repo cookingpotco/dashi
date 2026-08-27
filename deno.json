@@ -58,7 +58,6 @@
       "README.md",
       "LICENSE",
       "logo.svg",
-      "logo-empty.svg",
       "caching",
       "client",
       "cors",
