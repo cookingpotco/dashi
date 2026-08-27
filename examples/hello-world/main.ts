@@ -1,4 +1,4 @@
-import { type GroupCallback, type GroupFields, serve } from "dashi";
+import { serve } from "dashi";
 import { Home } from "./home_route.tsx";
 import { RootLayout } from "./root_layout.tsx";
 import { logger } from "./logger_middleware.ts";
@@ -7,8 +7,8 @@ import { nested } from "./nested/mod.tsx";
 import { secret } from "./secret/mod.tsx";
 import { guestbook } from "./guestbook/mod.tsx";
 
-function app({ route }: GroupCallback): GroupFields {
-  return {
+if (import.meta.main) {
+  serve(({ route }) => ({
     layouts: [RootLayout],
     middleware: [logger],
     notFound: NotFound,
@@ -19,9 +19,5 @@ function app({ route }: GroupCallback): GroupFields {
       secret,
       guestbook,
     ],
-  };
-}
-
-if (import.meta.main) {
-  serve(app, { errorFallback });
+  }), { errorFallback });
 }

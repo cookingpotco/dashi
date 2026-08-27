@@ -70,21 +70,17 @@ declare. Shared data goes on `ctx.state`.
 `main.ts` is:
 
 ```ts
-import { type GroupCallback, type GroupFields, serve } from "dashi";
+import { serve } from "dashi";
 import { Home } from "./home_route.tsx";
 import { RootLayout } from "./root_layout.tsx";
 import { errorFallback } from "./errors.tsx";
 import { menu } from "./menu/mod.ts";
 
-function app({ route }: GroupCallback): GroupFields {
-  return {
+if (import.meta.main) {
+  serve(({ route }) => ({
     layouts: [RootLayout],
     routes: [route("/", { GET: Home }), menu],
-  };
-}
-
-if (import.meta.main) {
-  serve(app, { errorFallback });
+  }), { errorFallback });
 }
 ```
 

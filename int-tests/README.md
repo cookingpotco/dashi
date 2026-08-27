@@ -39,6 +39,6 @@ workspace member. Extra fixtures (`cors`, `error-defaults`,
 because they cannot share the main app's `serve()` table; they stay inline
 `serve(callback)` harnesses.
 
-`fixtures/app` calls `serve(app, { port: 0, errorFallback })`. Extra fixtures
-call `serve(({ route }) => ({ … }), { port: 0, errorFallback })`.
+`fixtures/app` and extra fixtures call
+`serve(({ route }) => ({ … }), { port: 0, errorFallback })`.
 `deno task test:int` picks up every `*_test.ts` under `int-tests/`.

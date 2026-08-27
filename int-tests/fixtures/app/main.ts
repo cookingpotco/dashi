@@ -1,8 +1,6 @@
 import {
   CacheStrategy,
   type Ctx,
-  type GroupCallback,
-  type GroupFields,
   serve,
   staticFile,
   type WriteHandler,
@@ -107,10 +105,8 @@ const missingDir = (ctx: Ctx<{ path: string }, AppState>) =>
     ctx.params.path,
   );
 
-function app(
-  { route }: GroupCallback<"", AppState>,
-): GroupFields<AppState> {
-  return {
+if (import.meta.main) {
+  serve<AppState>(({ route }) => ({
     layouts: [RootLayout],
     middleware: [root],
     notFound: NotFound,
@@ -190,9 +186,5 @@ function app(
       route("/embed-slow", { GET: EmbedSlow }),
       route("/embed-slow-empty", { GET: EmbedSlowEmpty }),
     ],
-  };
-}
-
-if (import.meta.main) {
-  serve(app, { errorFallback, port: 0 });
+  }), { errorFallback, port: 0 });
 }

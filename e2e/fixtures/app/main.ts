@@ -1,4 +1,4 @@
-import { type GroupCallback, type GroupFields, serve } from "dashi";
+import { serve } from "dashi";
 import { Home } from "./home_route.tsx";
 import { RootLayout } from "./root_layout.tsx";
 import { errorFallback, ErrorPage } from "./errors.tsx";
@@ -24,8 +24,8 @@ import { todoCount } from "./todo_count/mod.tsx";
 import { hits } from "./hits/mod.tsx";
 import { notice } from "./notice/mod.tsx";
 
-function app({ route }: GroupCallback): GroupFields {
-  return {
+if (import.meta.main) {
+  serve(({ route }) => ({
     layouts: [RootLayout],
     error: ErrorPage,
     routes: [
@@ -52,9 +52,5 @@ function app({ route }: GroupCallback): GroupFields {
       hits,
       notice,
     ],
-  };
-}
-
-if (import.meta.main) {
-  serve(app, { errorFallback, port: 0 });
+  }), { errorFallback, port: 0 });
 }
