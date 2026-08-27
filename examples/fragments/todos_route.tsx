@@ -28,6 +28,6 @@ export async function create(ctx: Ctx) {
   todos.push(title);
   return [
     fragment.append("/todos", <li>{title}</li>),
-    fragment.refresh("/todo-count"),
+    fragment.replace("/todo-count", <span>{todos.length}</span>),
   ];
 }

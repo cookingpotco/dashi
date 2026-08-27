@@ -1,4 +1,4 @@
-import { registerRefresh } from "./controller_client.ts";
+import "./controller_client.ts";
 
 const fragmentHeaders = new Headers();
 fragmentHeaders.append("Accept", "text/html");
@@ -104,11 +104,5 @@ class RouteFragment extends HTMLElement {
     this.innerHTML = html;
   }
 }
-
-registerRefresh((host) => {
-  if (host instanceof RouteFragment) {
-    host.refresh();
-  }
-});
 
 customElements.define("route-fragment", RouteFragment);

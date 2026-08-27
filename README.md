@@ -37,9 +37,8 @@ serve(({ route }) => ({
   and `timeout`.
 - **Fragment actions.** A write handler returns `fragment.replace`,
   `fragment.append`, `fragment.remove`, or `fragment.refresh`, targeting every
-  host rendering that route. Use `replace` when the write has the markup; use
-  `refresh` when the host should GET that route. The submitting form does not
-  have to sit inside the fragment.
+  host rendering that route. The submitting form does not have to sit inside the
+  fragment.
 - **Explicit route table.** Typed params from the path literal, and per-method
   handlers, in one `serve()` callback.
 - **Web standards.** Handlers read `ctx.req` as a `Request` and return JSX or a
@@ -147,9 +146,9 @@ serve(({ route }) => ({
 
 A GET or lazy fetch replaces the host that asked with markup. `fragment.replace`
 / `append` / `remove` / `refresh` update every `<RouteFragment>` rendering that
-`src`. Use `replace` when the write has the markup; use `refresh` when the host
-should GET that route. A write handler returns that list or a `Response` — not a
-document. The form can sit anywhere on the page.
+`src`. Use `replace` when the write has the markup; use `refresh` when fragments
+should re-fetch themselves asynchronously. A write handler returns that list or
+a `Response` — not a document. The form can sit anywhere on the page.
 
 ## Other features
 

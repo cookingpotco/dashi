@@ -25,8 +25,8 @@ interface BaseRouteFragmentProps extends HTMLAttributes {
    * A GET or lazy fetch replaces this host with markup. A write handler
    * returns `fragment.replace`, `fragment.append`, `fragment.remove`, or
    * `fragment.refresh` to update every host rendering those routes. Use
-   * `replace` when the write has the markup; use `refresh` when the host
-   * should GET that route.
+   * `replace` when the write has the markup; use `refresh` when fragments
+   * should re-fetch themselves asynchronously.
    */
   src: InternalSrc;
 }

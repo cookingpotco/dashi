@@ -62,7 +62,8 @@ function refresh(src: InternalSrc): FragmentAction {
  *
  * `replace`, `append`, `remove`, and `refresh` each target every
  * `<RouteFragment>` rendering that `src`. Use `replace` when the write
- * has the markup; use `refresh` when the host should GET that route.
+ * has the markup; use `refresh` when fragments should re-fetch
+ * themselves asynchronously.
  */
 export const fragment = { replace, append, remove, refresh };
 

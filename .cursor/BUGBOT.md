@@ -102,10 +102,10 @@ cannot see project rules.
 - Fragment updates are `fragment.replace`, `fragment.append`, `fragment.remove`,
   and `fragment.refresh` on one primitive, targeting every `route-fragment` with
   that `src`. Use `replace` when the write has the markup; use `refresh` when
-  the host should GET that route. Write handlers return that list or a Response,
-  not markup or a 2xx `text/html` document. `route-action` is the wire format,
-  not a user-writable element. Flag a second update path, targeting by DOM id,
-  or a write that returns JSX.
+  fragments should re-fetch themselves asynchronously. Write handlers return
+  that list or a Response, not markup or a 2xx `text/html` document.
+  `route-action` is the wire format, not a user-writable element. Flag a second
+  update path, targeting by DOM id, or a write that returns JSX.
 - An object shape is an `interface`. `type` is for unions, aliases, mapped
   types. Flag an object shape written as a `type`.
 - Flag a helper that is a short, obvious check or a few straightforward lines

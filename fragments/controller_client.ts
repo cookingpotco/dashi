@@ -8,12 +8,6 @@ const enum SwapKind {
   Refresh = "refresh",
 }
 
-let refreshHost: ((host: Element) => void) | null = null;
-
-export function registerRefresh(handler: (host: Element) => void): void {
-  refreshHost = handler;
-}
-
 function applyAction(action: Element) {
   const kind = action.getAttribute("action");
   const src = action.getAttribute("src");
@@ -44,7 +38,10 @@ function applyAction(action: Element) {
   }
   if (kind === SwapKind.Refresh) {
     for (const host of hosts) {
-      refreshHost?.(host);
+      const refresh = Reflect.get(host, "refresh");
+      if (typeof refresh === "function") {
+        refresh.call(host);
+      }
     }
   }
 }
