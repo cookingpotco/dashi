@@ -1,4 +1,10 @@
-export async function Fragment() {
+import { group } from "dashi";
+
+export const fragment = group("/fragment", ({ route }) => ({
+  routes: [route("/", { GET: Fragment })],
+}));
+
+async function Fragment() {
   const res = await fetch(new URL("https://bored-api.appbrewery.com/random"));
 
   const json = await res.json();

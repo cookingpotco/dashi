@@ -1,8 +1,12 @@
-import type { Ctx } from "dashi";
+import { type Ctx, group } from "dashi";
 
 const entries: string[] = [];
 
-export function list() {
+export const guestbook = group("/guestbook", ({ route }) => ({
+  routes: [route("/", { GET: list, POST: add })],
+}));
+
+function list() {
   return (
     <div>
       <h2>Guestbook</h2>
@@ -17,7 +21,7 @@ export function list() {
   );
 }
 
-export async function add(ctx: Ctx) {
+async function add(ctx: Ctx) {
   const data = await ctx.req.formData();
   const body = data.get("body");
   if (typeof body === "string") {

@@ -1,11 +1,15 @@
-import { type Ctx, fragment } from "dashi";
-import { todos } from "./todos.ts";
+import { type Ctx, fragment, group } from "dashi";
+import { todos as items } from "../todos.ts";
+
+export const todos = group("/todos", ({ route }) => ({
+  routes: [route("/", { GET: list, POST: create })],
+}));
 
 function TodoList({ error }: { error?: string }) {
   return (
     <div>
       <ul id="todos">
-        {todos.map((t) => <li>{t}</li>)}
+        {items.map((t) => <li>{t}</li>)}
       </ul>
       {error ? <p id="todo-error">{error}</p> : null}
       <form method="POST" action="/todos">
@@ -16,19 +20,19 @@ function TodoList({ error }: { error?: string }) {
   );
 }
 
-export function list() {
+function list() {
   return <TodoList />;
 }
 
-export async function create(ctx: Ctx) {
+async function create(ctx: Ctx) {
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
     return [fragment.replace("/todos", <TodoList error="title is required" />)];
   }
-  todos.push(title);
+  items.push(title);
   return [
     fragment.append("/todos", <li>{title}</li>),
-    fragment.replace("/todo-count", <span>{todos.length}</span>),
+    fragment.replace("/todo-count", <span>{items.length}</span>),
     fragment.refresh("/time"),
   ];
 }
