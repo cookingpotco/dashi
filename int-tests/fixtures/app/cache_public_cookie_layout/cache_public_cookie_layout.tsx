@@ -1,5 +1,5 @@
 import { cached, CacheStrategy, type Element, type WrapperCtx } from "dashi";
-import type { AppState } from "./state.ts";
+import type { AppState } from "../state.ts";
 
 export function CachePublicCookieLayout(
   _ctx: WrapperCtx<AppState>,
