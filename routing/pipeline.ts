@@ -1,9 +1,9 @@
 import {
+  applyVaryHeaders,
   type CacheConfig,
   cacheControl,
   type CachedElement,
   CacheStrategy,
-  mergeVary,
 } from "../caching/mod.ts";
 import { clientImportMap, getCompiledFile } from "../client/mod.ts";
 import {
@@ -158,9 +158,7 @@ async function htmlResponse(
   res.headers.set("Content-Length", String(bytes.byteLength));
   const cache = options.cache ?? { strategy: CacheStrategy.NoStore };
   res.headers.set("Cache-Control", cacheControl(cache));
-  if (cache.vary) {
-    mergeVary(res.headers, cache.vary);
-  }
+  applyVaryHeaders(res.headers, cache);
   if (options.isPartial && store.pageReq === options.req) {
     appendModulePreloads(res.headers, store.clientEntries, clientImportMap());
   }

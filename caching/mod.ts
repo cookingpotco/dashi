@@ -7,30 +7,34 @@ export const enum CacheStrategy {
   NoStore = "no-store",
 }
 
-export interface ImmutableCacheConfig {
-  strategy: CacheStrategy.Immutable;
-  vary?: string[];
+export interface BaseCacheConfig {
+  /**
+   * Request header names for `Vary`. Cookie is the whole jar.
+   * Public and Immutable refuse `Cookie` and `*`.
+   */
+  varyHeaders?: string[];
 }
 
-export interface PublicCacheConfig {
+export interface ImmutableCacheConfig extends BaseCacheConfig {
+  strategy: CacheStrategy.Immutable;
+}
+
+export interface PublicCacheConfig extends BaseCacheConfig {
   strategy: CacheStrategy.Public;
   maxAge: number;
   sMaxAge?: number;
   staleWhileRevalidate?: number;
   staleIfError?: number;
-  vary?: string[];
 }
 
-export interface PrivateCacheConfig {
+export interface PrivateCacheConfig extends BaseCacheConfig {
   strategy: CacheStrategy.Private;
   maxAge: number;
   staleWhileRevalidate?: number;
-  vary?: string[];
 }
 
-export interface NoStoreCacheConfig {
+export interface NoStoreCacheConfig extends BaseCacheConfig {
   strategy: CacheStrategy.NoStore;
-  vary?: string[];
 }
 
 export type CacheConfig =
@@ -50,6 +54,8 @@ export interface CachedElement {
 /**
  * Attach a cache policy to an Element return. The most specific
  * `cached()` on the handler-to-layout walk wins. Omitted: `no-store`.
+ * `varyHeaders` names request headers; Cookie is the whole jar;
+ * Public and Immutable refuse `Cookie` and `*`.
  */
 export function cached(page: Element, cache: CacheConfig): CachedElement {
   return { [cachedBrand]: true, page, cache };
@@ -124,4 +130,27 @@ export function mergeVary(
   if (merged.length > 0) {
     headers.set("Vary", merged.join(", "));
   }
+}
+
+export function applyVaryHeaders(
+  headers: Headers,
+  cache: CacheConfig,
+): void {
+  if (!cache.varyHeaders) {
+    return;
+  }
+  if (
+    cache.strategy === CacheStrategy.Public ||
+    cache.strategy === CacheStrategy.Immutable
+  ) {
+    for (const token of cache.varyHeaders) {
+      const key = token.trim().toLowerCase();
+      if (key === "cookie" || key === "*") {
+        throw new Error(
+          "Shared cache cannot Vary on Cookie (the whole jar) or * (every request). Use Private or NoStore, or Vary on a header the edge already copied.",
+        );
+      }
+    }
+  }
+  mergeVary(headers, cache.varyHeaders);
 }

@@ -791,6 +791,65 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
+    name: "public Cookie Vary is a root error",
+    request: { path: "/cache-public-cookie" },
+    status: 500,
+    html: {
+      select: [
+        { selector: "html > body > #root-error", text: "root-error" },
+      ],
+    },
+  },
+  {
+    name: "public star Vary is a root error",
+    request: { path: "/cache-public-star" },
+    status: 500,
+    html: {
+      select: [
+        { selector: "html > body > #root-error", text: "root-error" },
+      ],
+    },
+  },
+  {
+    name: "private may Vary on Cookie",
+    request: { path: "/cache-private-cookie" },
+    status: 200,
+    headers: {
+      "cache-control": "private, max-age=60",
+      vary: "Cookie",
+    },
+    html: {
+      select: [{
+        selector: "#cache-private-cookie",
+        text: "cached-private-cookie",
+      }],
+    },
+  },
+  {
+    name: "handler no-store wins over public Cookie layout",
+    request: { path: "/cache-nostore-over-cookie" },
+    status: 200,
+    headers: {
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+    },
+    html: {
+      select: [{
+        selector: "#cache-nostore-over-cookie",
+        text: "cached-nostore-over-cookie",
+      }],
+    },
+  },
+  {
+    name: "immutable static Cookie Vary is a root error",
+    request: { path: "/static-immutable-cookie/app.css" },
+    status: 500,
+    html: {
+      select: [
+        { selector: "html > body > #root-error", text: "root-error" },
+      ],
+    },
+  },
+  {
     name: "cors merges Origin into route Vary",
     request: {
       path: "/cache-cors",
