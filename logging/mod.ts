@@ -19,26 +19,66 @@ function enabled(level: Level): boolean {
   return LEVELS.indexOf(level) >= min;
 }
 
-export function debug(...data: unknown[]): void {
-  if (enabled(Level.Debug)) {
-    console.debug(...data);
-  }
+function collapse(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
 }
 
-export function info(...data: unknown[]): void {
-  if (enabled(Level.Info)) {
-    console.info(...data);
+function formatCause(cause: unknown): string {
+  if (cause instanceof Error) {
+    if (cause.stack) {
+      return collapse(cause.stack);
+    }
+    return collapse(`${cause.name}: ${cause.message}`);
   }
+  return collapse(String(cause));
 }
 
-export function warn(...data: unknown[]): void {
-  if (enabled(Level.Warn)) {
-    console.warn(...data);
+function formatLine(
+  level: Level,
+  labels: readonly string[],
+  message: string,
+  cause?: unknown,
+): string {
+  const parts = [new Date().toISOString(), level.toUpperCase()];
+  for (const label of labels) {
+    parts.push(`[${label}]`);
   }
+  if (cause !== undefined) {
+    parts.push(`${message}: ${formatCause(cause)}`);
+  } else {
+    parts.push(message);
+  }
+  return collapse(parts.join(" "));
 }
 
-export function error(...data: unknown[]): void {
-  if (enabled(Level.Error)) {
-    console.error(...data);
+export class Logger {
+  private constructor() {}
+
+  static debug(labels: readonly string[], message: string): void {
+    if (enabled(Level.Debug)) {
+      console.debug(formatLine(Level.Debug, labels, message));
+    }
+  }
+
+  static info(labels: readonly string[], message: string): void {
+    if (enabled(Level.Info)) {
+      console.info(formatLine(Level.Info, labels, message));
+    }
+  }
+
+  static warn(labels: readonly string[], message: string): void {
+    if (enabled(Level.Warn)) {
+      console.warn(formatLine(Level.Warn, labels, message));
+    }
+  }
+
+  static error(
+    labels: readonly string[],
+    message: string,
+    cause?: unknown,
+  ): void {
+    if (enabled(Level.Error)) {
+      console.error(formatLine(Level.Error, labels, message, cause));
+    }
   }
 }

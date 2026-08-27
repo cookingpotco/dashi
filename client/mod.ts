@@ -1,5 +1,5 @@
 import { type Element, jsx, jsxTemplate } from "../jsx-runtime/mod.ts";
-import { error as logError } from "../logging/mod.ts";
+import { Logger } from "../logging/mod.ts";
 import { cacheControl, CacheStrategy } from "../caching/mod.ts";
 import { type Ctx, DASHI_PREFIX } from "../shared/mod.ts";
 import { getRenderStore } from "../ssr/mod.ts";
@@ -159,7 +159,7 @@ async function bundleRegistered(): Promise<void> {
   });
   if (!result.success || result.errors.length > 0) {
     for (const message of result.errors) {
-      logError(`[client] bundle: ${formatBundleMessage(message)}`);
+      Logger.error(["client"], `bundle: ${formatBundleMessage(message)}`);
     }
     throw new Error("client bundle failed");
   }
@@ -206,11 +206,7 @@ export async function compileClient(): Promise<void> {
   try {
     await bundleRegistered();
   } catch (thrown) {
-    logError(
-      `[client] bundle failed: ${
-        thrown instanceof Error ? thrown.message : thrown
-      }`,
-    );
+    Logger.error(["client"], "bundle failed", thrown);
     Deno.exit(1);
   } finally {
     hasCompiled = true;

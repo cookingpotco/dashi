@@ -1586,7 +1586,7 @@ Deno.test("main fixture app over HTTP", async (t) => {
     try {
       assertEquals(res.status, 404);
       assertEquals(body, "Not found");
-      assertStringIncludes(app.stderr, "staticFile: directory not found:");
+      assertStringIncludes(app.stderr, "ERROR [static] directory not found:");
       assertStringIncludes(app.stderr, "no-such-static");
     } catch (error) {
       const dump = formatIntegrationFailure(

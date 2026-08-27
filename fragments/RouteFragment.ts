@@ -6,7 +6,7 @@ import {
 } from "../jsx-runtime/mod.ts";
 import { client } from "../client/mod.ts";
 import type { InternalSrc } from "./actions.ts";
-import { error as logError } from "../logging/mod.ts";
+import { Logger } from "../logging/mod.ts";
 import { runRoute } from "../routing/mod.ts";
 import { getFragmentSlot, getRenderStore } from "../ssr/mod.ts";
 
@@ -103,11 +103,7 @@ function requestEagerFragment(src: string, timeoutMs: number) {
       });
       return out?.html ?? null;
     } catch (thrown) {
-      logError(
-        `[fragments] eager fragment failed: ${
-          thrown instanceof Error ? thrown.message : thrown
-        }`,
-      );
+      Logger.error(["fragments"], "eager fragment failed", thrown);
       return null;
     }
   })();

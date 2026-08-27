@@ -5,7 +5,7 @@ import {
   isCachedElement,
 } from "../caching/mod.ts";
 import { type Element, jsx } from "../jsx-runtime/mod.ts";
-import { error as logError } from "../logging/mod.ts";
+import { Logger } from "../logging/mod.ts";
 import type { Ctx, ErrorHandler, Layout } from "../shared/mod.ts";
 
 interface FragmentFault {
@@ -211,11 +211,7 @@ async function recover<
   boundary: Boundary<State> | undefined,
   ctx: Ctx<Record<string, string>, State>,
 ): Promise<RenderResult> {
-  logError(
-    `[ssr] render recovering from: ${
-      thrown instanceof Error ? thrown.message : thrown
-    }`,
-  );
+  Logger.error(["ssr"], "render recovering from", thrown);
 
   if (ctx.isFragment) {
     try {
@@ -233,11 +229,7 @@ async function recover<
         cache: taken.cache,
       };
     } catch (nextThrown) {
-      logError(
-        `[ssr] render recovering from: ${
-          nextThrown instanceof Error ? nextThrown.message : nextThrown
-        }`,
-      );
+      Logger.error(["ssr"], "render recovering from", nextThrown);
       return { kind: RenderKind.Exhausted };
     }
   }
@@ -255,11 +247,7 @@ async function recover<
       errorResult = await current.error(ctx, thrown);
     } catch (nextThrown) {
       thrown = nextThrown;
-      logError(
-        `[ssr] render recovering from: ${
-          thrown instanceof Error ? thrown.message : thrown
-        }`,
-      );
+      Logger.error(["ssr"], "render recovering from", thrown);
       continue;
     }
     if (errorResult instanceof Response) {
