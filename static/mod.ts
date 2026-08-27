@@ -4,7 +4,7 @@ import {
   cacheControl,
   CacheStrategy,
 } from "../caching/mod.ts";
-import { error as logError } from "../logging/mod.ts";
+import { Logger } from "../logging/mod.ts";
 import type { Ctx } from "../shared/mod.ts";
 
 const NOT_FOUND_BODY = "Not found";
@@ -130,7 +130,7 @@ export async function staticFile(
 
   const root = await realPath(dir);
   if (root === null) {
-    logError(`staticFile: directory not found: ${dir}`);
+    Logger.error(["static"], `directory not found: ${dir}`);
     return notFound();
   }
 

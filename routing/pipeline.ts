@@ -11,7 +11,7 @@ import {
   renderFragmentActions,
 } from "../fragments/mod.ts";
 import type { Element } from "../jsx-runtime/mod.ts";
-import { error as logError, info } from "../logging/mod.ts";
+import { Logger } from "../logging/mod.ts";
 import {
   type Ctx,
   DASHI_PREFIX,
@@ -499,7 +499,7 @@ export function init<
     }
     prev = r.declarationIndex;
     const methods = advertisedMethods(r.handlers).join(",");
-    info(`[ROUTE]      ${methods} ${r.path}`);
+    Logger.info(["route"], `${methods} ${r.path}`);
   }
 }
 
@@ -519,11 +519,7 @@ export async function handle(
         });
         return out!.response;
       } catch (thrown) {
-        logError(
-          `[routing] handle recovering from: ${
-            thrown instanceof Error ? thrown.message : thrown
-          }`,
-        );
+        Logger.error(["routing"], "handle recovering from", thrown);
         return (await htmlResponse(
           lastResort({
             isPartial: isFragment,
