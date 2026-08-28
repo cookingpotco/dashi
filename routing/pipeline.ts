@@ -44,7 +44,7 @@ import {
 } from "../ssr/mod.ts";
 
 const DEFAULT_NOT_FOUND_BODY = "Not found";
-const DEFAULT_ERROR_FALLBACK_BODY = "Something Went Wrong";
+const DEFAULT_FATAL_BODY = "Something Went Wrong";
 const RESERVED_PATH =
   `${DASHI_PREFIX}/* is used by the framework for internal purposes, please use a different path.`;
 
@@ -68,8 +68,11 @@ interface Executed {
 
 type RequestCtx = Ctx<Record<string, string>, Record<string, unknown>>;
 
-function isMethod(method: string): method is Method {
-  return (METHODS as readonly string[]).includes(method);
+function isMethod(
+  method: string,
+): method is Exclude<Method, "HEAD" | "OPTIONS"> {
+  return method !== "HEAD" && method !== "OPTIONS" &&
+    (METHODS as readonly string[]).includes(method);
 }
 
 function advertisedMethods(
@@ -123,7 +126,7 @@ function lastResort(options: {
     return new Response("", { status: 500 });
   }
   if (options.fatal === undefined) {
-    return new Response(DEFAULT_ERROR_FALLBACK_BODY, { status: 500 });
+    return new Response(DEFAULT_FATAL_BODY, { status: 500 });
   }
   return options.fatal;
 }
@@ -217,7 +220,7 @@ async function runHandler(
   let handler;
   if (method === "HEAD") {
     handler = matched.handlers.GET;
-  } else if (isMethod(method) && method !== "HEAD" && method !== "OPTIONS") {
+  } else if (isMethod(method)) {
     handler = matched.handlers[method];
   }
   if (!handler) {
