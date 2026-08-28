@@ -64,6 +64,10 @@ export function getRenderStore(): RenderStore {
   return store;
 }
 
+export function inRender(): boolean {
+  return als.getStore() !== undefined;
+}
+
 /** Document include: the compile import map, then one module script per entry. */
 export function injectModuleScripts(
   html: string,

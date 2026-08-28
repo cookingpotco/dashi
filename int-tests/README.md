@@ -1,7 +1,8 @@
 # Integration tests
 
-These cases boot a real app in a subprocess, request a URL, and assert on the
-response. Adding coverage should mean writing a case, not writing plumbing.
+These cases boot a real app in-process via `serve()`, request a URL, and assert
+on the response. Adding coverage should mean writing a case, not writing
+plumbing.
 
 ```sh
 deno task test:int
@@ -25,8 +26,8 @@ empty 303). `runCase` parses HTML only when `html` is set.
 
 `runCase` executes that data. Flows that are not one request (cookies,
 concurrent requests) use `boot` / `App.fetch` from `mod.ts` inside a `t.step`.
-Sequential cases share the fixture process, so a POST can be followed by a GET
-that observes it.
+Sequential cases share the fixture, so a POST can be followed by a GET that
+observes it.
 
 ## Add a fixture app
 
@@ -39,6 +40,7 @@ workspace member. Extra fixtures (`cors`, `error-defaults`,
 because they cannot share the main app's `serve()` table; they stay inline
 `serve(callback)` harnesses.
 
-`fixtures/app` and extra fixtures call
-`serve(({ route }) => ({ … }), { port: 0, fatal })`. `deno task test:int` picks
-up every `*_test.ts` under `int-tests/`.
+`fixtures/app` and extra fixtures export `start()`, which calls
+`serve(({ route }) => ({ … }), { hostname: "127.0.0.1", port: 0, fatal })`.
+`deno run` on the fixture file still boots it. `deno task test:int` picks up
+every `*_test.ts` under `int-tests/`.

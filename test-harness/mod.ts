@@ -1,7 +1,8 @@
-const LISTEN_RE = /Listening on https?:\/\/(?:\[[^\]]+\]|[\w.]+):(\d+)\//;
 const BOOT_TIMEOUT_MS = 15_000;
 const READY_POLL_MS = 25;
-const KILL_WAIT_MS = 2_000;
+
+Deno.env.set("DASHI_LOG", "error");
+Deno.env.set("DASHI_MINIFY_CLIENT", "0");
 
 export interface AppRequest {
   method?: string;
@@ -10,15 +11,51 @@ export interface AppRequest {
   body?: string | URLSearchParams | FormData;
 }
 
-async function readStream(
-  stream: ReadableStream<Uint8Array>,
-  onText: (text: string) => void,
-): Promise<void> {
-  const decoder = new TextDecoder();
-  for await (const chunk of stream) {
-    onText(decoder.decode(chunk, { stream: true }));
+const consoleMethods = ["debug", "info", "warn", "error"] as const;
+type ConsoleMethod = typeof consoleMethods[number];
+
+const originalConsole: Record<
+  ConsoleMethod,
+  (...args: unknown[]) => void
+> = {
+  debug: console.debug.bind(console),
+  info: console.info.bind(console),
+  warn: console.warn.bind(console),
+  error: console.error.bind(console),
+};
+
+const stderrBuffers = new Set<{ text: string }>();
+let consolePatched = false;
+
+function formatConsoleArgs(args: unknown[]): string {
+  return args.map((arg) => typeof arg === "string" ? arg : Deno.inspect(arg))
+    .join(" ");
+}
+
+function patchConsole(): void {
+  if (consolePatched) {
+    return;
   }
-  onText(decoder.decode());
+  consolePatched = true;
+  for (const method of consoleMethods) {
+    console[method] = (...args: unknown[]) => {
+      const line = `${formatConsoleArgs(args)}\n`;
+      for (const buffer of stderrBuffers) {
+        buffer.text += line;
+      }
+      originalConsole[method](...args);
+    };
+  }
+}
+
+function unpatchConsole(): void {
+  if (stderrBuffers.size > 0 || !consolePatched) {
+    return;
+  }
+  consolePatched = false;
+  for (const method of consoleMethods) {
+    console[method] = originalConsole[method];
+  }
 }
 
 async function withTimeout<T>(
@@ -37,37 +74,28 @@ async function withTimeout<T>(
   }
 }
 
-/** Child process serving an app on an ephemeral port. */
+function originOf(server: Deno.HttpServer): string {
+  const addr = server.addr;
+  if (addr.transport !== "tcp") {
+    throw new Error(`expected TCP server, got ${addr.transport}`);
+  }
+  return `http://127.0.0.1:${addr.port}`;
+}
+
+/** In-process app from `serve()`, listening on an ephemeral port. */
 export class App implements AsyncDisposable {
   readonly origin: string;
-  #child: Deno.ChildProcess;
-  #stdout: { text: string };
+  #server: Deno.HttpServer;
   #stderr: { text: string };
-  #stdoutDone: Promise<void>;
-  #stderrDone: Promise<void>;
 
-  constructor(
-    child: Deno.ChildProcess,
-    port: number,
-    stdout: { text: string },
-    stderr: { text: string },
-    stdoutDone: Promise<void>,
-    stderrDone: Promise<void>,
-  ) {
-    this.#child = child;
-    this.origin = `http://127.0.0.1:${port}`;
-    this.#stdout = stdout;
+  constructor(server: Deno.HttpServer, stderr: { text: string }) {
+    this.#server = server;
+    this.origin = originOf(server);
     this.#stderr = stderr;
-    this.#stdoutDone = stdoutDone;
-    this.#stderrDone = stderrDone;
   }
 
   get stderr(): string {
     return this.#stderr.text;
-  }
-
-  get stdout(): string {
-    return this.#stdout.text;
   }
 
   fetch(request: AppRequest): Promise<Response> {
@@ -81,22 +109,10 @@ export class App implements AsyncDisposable {
 
   async [Symbol.asyncDispose](): Promise<void> {
     try {
-      this.#child.kill("SIGTERM");
-    } catch {
-      // Process already exited.
-    }
-    const killTimer = setTimeout(() => {
-      try {
-        this.#child.kill("SIGKILL");
-      } catch {
-        // Process already exited.
-      }
-    }, KILL_WAIT_MS);
-    try {
-      await this.#child.status;
+      await this.#server.shutdown();
     } finally {
-      clearTimeout(killTimer);
-      await Promise.all([this.#stdoutDone, this.#stderrDone]);
+      stderrBuffers.delete(this.#stderr);
+      unpatchConsole();
     }
   }
 }
@@ -114,80 +130,39 @@ async function waitUntilAccepting(app: App): Promise<void> {
     }
   }
   throw new Error(
-    `app at ${app.origin} did not accept connections\nstderr:\n${app.stderr}\nstdout:\n${app.stdout}`,
+    `app at ${app.origin} did not accept connections\nstderr:\n${app.stderr}`,
   );
 }
 
-/** Spawn `mainPath` and wait until it accepts HTTP. */
+interface FixtureModule {
+  start?: () => Promise<Deno.HttpServer> | Deno.HttpServer;
+}
+
+/** Import `start()` from `mainPath`, serve in-process, wait until it accepts HTTP. */
 export async function boot(mainPath: string | URL): Promise<App> {
   const spec = mainPath instanceof URL ? mainPath.href : mainPath;
-  const child = new Deno.Command(Deno.execPath(), {
-    args: ["run", "-A", spec],
-    stdin: "null",
-    stdout: "piped",
-    stderr: "piped",
-    env: {
-      ...Deno.env.toObject(),
-      DASHI_LOG: "error",
-      DASHI_MINIFY_CLIENT: "0",
-    },
-  }).spawn();
-
-  const stdout = { text: "" };
   const stderr = { text: "" };
-  let found = false;
-  let resolvePort: (port: number) => void = () => {};
-  let rejectPort: (error: Error) => void = () => {};
-  const portPromise = new Promise<number>((resolve, reject) => {
-    resolvePort = resolve;
-    rejectPort = reject;
-  });
-  portPromise.catch(() => {});
-
-  const onText = (bag: { text: string }, chunk: string) => {
-    bag.text += chunk;
-    if (found) {
-      return;
-    }
-    const match = bag.text.match(LISTEN_RE);
-    if (match) {
-      found = true;
-      resolvePort(Number(match[1]));
-    }
-  };
-
-  const stdoutDone = readStream(child.stdout, (chunk) => onText(stdout, chunk));
-  const stderrDone = readStream(child.stderr, (chunk) => onText(stderr, chunk));
-
-  child.status.then((status) => {
-    if (!found) {
-      rejectPort(
-        new Error(
-          `app exited with code ${status.code} before listening\nstderr:\n${stderr.text}\nstdout:\n${stdout.text}`,
-        ),
-      );
-    }
-  });
-
+  patchConsole();
+  stderrBuffers.add(stderr);
   try {
-    const port = await withTimeout(
-      portPromise,
+    const mod = await import(spec) as FixtureModule;
+    if (typeof mod.start !== "function") {
+      throw new Error(`${spec} must export start()`);
+    }
+    const server = await withTimeout(
+      Promise.resolve(mod.start()),
       BOOT_TIMEOUT_MS,
       () =>
         new Error(
-          `timed out waiting for listen line\nstderr:\n${stderr.text}\nstdout:\n${stdout.text}`,
+          `timed out waiting for serve()\nstderr:\n${stderr.text}`,
         ),
     );
-    const app = new App(child, port, stdout, stderr, stdoutDone, stderrDone);
+    const app = new App(server, stderr);
     await waitUntilAccepting(app);
     return app;
   } catch (error) {
-    try {
-      child.kill("SIGKILL");
-    } catch {
-      // Process already exited.
-    }
-    await Promise.allSettled([child.status, stdoutDone, stderrDone]);
+    stderrBuffers.delete(stderr);
+    unpatchConsole();
     throw error;
   }
 }

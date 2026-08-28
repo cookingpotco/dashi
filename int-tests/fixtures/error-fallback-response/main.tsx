@@ -20,8 +20,8 @@ function okPage(): Element {
   return <p id="ok-page">ok</p>;
 }
 
-if (import.meta.main) {
-  serve(({ route }) => ({
+export function start() {
+  return serve(({ route }) => ({
     layouts: [rootLayout],
     routes: [
       route("/", { GET: home }),
@@ -32,6 +32,11 @@ if (import.meta.main) {
       status: 500,
       headers: { "x-fallback": "1" },
     }),
+    hostname: "127.0.0.1",
     port: 0,
   });
+}
+
+if (import.meta.main) {
+  start();
 }

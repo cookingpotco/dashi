@@ -21,12 +21,16 @@ function caught(ctx: Ctx<{ path: string }>) {
   return new Response(`caught:${ctx.params.path}`);
 }
 
-if (import.meta.main) {
-  serve(({ route }) => ({
+export function start() {
+  return serve(({ route }) => ({
     routes: [
       route("/", { GET: home }),
       route("/files/:id", { GET: param }),
       route("/:path*", { GET: caught }),
     ],
-  }), { port: 0 });
+  }), { hostname: "127.0.0.1", port: 0 });
+}
+
+if (import.meta.main) {
+  start();
 }

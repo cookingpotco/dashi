@@ -24,8 +24,8 @@ import { todoCount } from "./todo_count/mod.tsx";
 import { hits } from "./hits/mod.tsx";
 import { notice } from "./notice/mod.tsx";
 
-if (import.meta.main) {
-  serve(({ route }) => ({
+export function start() {
+  return serve(({ route }) => ({
     layouts: [RootLayout],
     error: ErrorPage,
     routes: [
@@ -52,5 +52,9 @@ if (import.meta.main) {
       hits,
       notice,
     ],
-  }), { fatal, port: 0 });
+  }), { fatal, hostname: "127.0.0.1", port: 0 });
+}
+
+if (import.meta.main) {
+  start();
 }

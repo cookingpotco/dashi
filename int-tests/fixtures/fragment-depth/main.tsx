@@ -36,8 +36,8 @@ function c(): Element {
   return <p id="c">c</p>;
 }
 
-if (import.meta.main) {
-  serve(({ route }) => ({
+export function start() {
+  return serve(({ route }) => ({
     error: faultError,
     routes: [
       route("/two", { GET: two }),
@@ -48,5 +48,9 @@ if (import.meta.main) {
       route("/b", { GET: b }),
       route("/c", { GET: c }),
     ],
-  }), { fragmentDepthLimit: 2, port: 0 });
+  }), { fragmentDepthLimit: 2, hostname: "127.0.0.1", port: 0 });
+}
+
+if (import.meta.main) {
+  start();
 }

@@ -98,8 +98,8 @@ const missingDir = (ctx: Ctx<{ path: string }, AppState>) =>
     ctx.params.path,
   );
 
-if (import.meta.main) {
-  serve<AppState>(({ route }) => ({
+export function start() {
+  return serve<AppState>(({ route }) => ({
     layouts: [RootLayout],
     middleware: [root],
     notFound: NotFound,
@@ -171,5 +171,9 @@ if (import.meta.main) {
       route("/embed-slow", { GET: EmbedSlow }),
       route("/embed-slow-empty", { GET: EmbedSlowEmpty }),
     ],
-  }), { fatal, port: 0 });
+  }), { fatal, hostname: "127.0.0.1", port: 0 });
+}
+
+if (import.meta.main) {
+  start();
 }

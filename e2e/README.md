@@ -1,8 +1,8 @@
 # Browser tests
 
-These cases boot a real app in a subprocess, open it in Chromium, and assert on
-the live DOM after JS has run. HTTP status, headers, and HTML bytes stay in
-`int-tests/`.
+These cases boot a real app in-process via `serve()`, open it in Chromium, and
+assert on the live DOM after JS has run. HTTP status, headers, and HTML bytes
+stay in `int-tests/`.
 
 ```sh
 deno task test:e2e

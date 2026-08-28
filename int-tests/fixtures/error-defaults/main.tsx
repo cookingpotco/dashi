@@ -30,8 +30,8 @@ function okPage(): Element {
   return <p id="ok-page">ok</p>;
 }
 
-if (import.meta.main) {
-  serve(({ route }) => ({
+export function start() {
+  return serve(({ route }) => ({
     layouts: [rootLayout],
     middleware: [logger],
     routes: [
@@ -39,5 +39,9 @@ if (import.meta.main) {
       route("/throw", { GET: boom }),
       route("/root-layout-throws", { GET: okPage }),
     ],
-  }), { port: 0 });
+  }), { hostname: "127.0.0.1", port: 0 });
+}
+
+if (import.meta.main) {
+  start();
 }
