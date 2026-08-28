@@ -252,6 +252,21 @@ const appCases: IntegrationTestCase[] = [
           text: "",
           attr: { src: "/hits" },
         },
+        {
+          selector: 'route-action[action="prepend"]',
+          text: "bread",
+          attr: { src: "/todos" },
+        },
+        {
+          selector: 'route-action[action="before"]',
+          text: "before",
+          attr: { src: "/slot" },
+        },
+        {
+          selector: 'route-action[action="after"]',
+          text: "after",
+          attr: { src: "/slot" },
+        },
       ],
     },
   },
@@ -284,6 +299,21 @@ const appCases: IntegrationTestCase[] = [
           selector: 'route-action[action="refresh"]',
           text: "",
           attr: { src: "/hits" },
+        },
+        {
+          selector: 'route-action[action="prepend"]',
+          text: "bread",
+          attr: { src: "/todos" },
+        },
+        {
+          selector: 'route-action[action="before"]',
+          text: "before",
+          attr: { src: "/slot" },
+        },
+        {
+          selector: 'route-action[action="after"]',
+          text: "after",
+          attr: { src: "/slot" },
         },
       ],
     },

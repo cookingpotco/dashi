@@ -6,6 +6,9 @@ export type InternalSrc = `/${string}`;
 const enum ActionKind {
   Replace = "replace",
   Append = "append",
+  Prepend = "prepend",
+  Before = "before",
+  After = "after",
   Remove = "remove",
   Refresh = "refresh",
 }
@@ -18,6 +21,24 @@ interface ReplaceAction {
 
 interface AppendAction {
   readonly kind: ActionKind.Append;
+  readonly src: InternalSrc;
+  readonly body: Element;
+}
+
+interface PrependAction {
+  readonly kind: ActionKind.Prepend;
+  readonly src: InternalSrc;
+  readonly body: Element;
+}
+
+interface BeforeAction {
+  readonly kind: ActionKind.Before;
+  readonly src: InternalSrc;
+  readonly body: Element;
+}
+
+interface AfterAction {
+  readonly kind: ActionKind.After;
   readonly src: InternalSrc;
   readonly body: Element;
 }
@@ -36,6 +57,9 @@ interface RefreshAction {
 export type FragmentAction =
   | ReplaceAction
   | AppendAction
+  | PrependAction
+  | BeforeAction
+  | AfterAction
   | RemoveAction
   | RefreshAction;
 
@@ -45,6 +69,18 @@ function replace(src: InternalSrc, body: Element): FragmentAction {
 
 function append(src: InternalSrc, body: Element): FragmentAction {
   return { kind: ActionKind.Append, src, body };
+}
+
+function prepend(src: InternalSrc, body: Element): FragmentAction {
+  return { kind: ActionKind.Prepend, src, body };
+}
+
+function before(src: InternalSrc, body: Element): FragmentAction {
+  return { kind: ActionKind.Before, src, body };
+}
+
+function after(src: InternalSrc, body: Element): FragmentAction {
+  return { kind: ActionKind.After, src, body };
 }
 
 function remove(src: InternalSrc): FragmentAction {
@@ -60,24 +96,32 @@ function refresh(src: InternalSrc): FragmentAction {
  * non-empty list. GET cannot return these; a GET or lazy fetch still
  * replaces the host that asked.
  *
- * `replace`, `append`, `remove`, and `refresh` each target every
- * `<RouteFragment>` rendering that `src`. Use `replace` when the write
- * has the markup; use `refresh` when fragments should re-fetch
- * themselves asynchronously.
+ * `replace`, `append`, `prepend`, `before`, `after`, `remove`, and
+ * `refresh` each target every `<RouteFragment>` rendering that `src`.
+ * `replace` / `append` / `prepend` mutate the host's children; `before`
+ * / `after` insert siblings of the host; `remove` drops the host;
+ * `refresh` re-GETs. Use `replace` when the write has the markup; use
+ * `refresh` when fragments should re-fetch themselves asynchronously.
  */
-export const fragment = { replace, append, remove, refresh };
+export const fragment = {
+  replace,
+  append,
+  prepend,
+  before,
+  after,
+  remove,
+  refresh,
+};
 
 function serializeAction(action: FragmentAction): Element {
   switch (action.kind) {
     case ActionKind.Replace:
-      return jsx("route-action", {
-        action: ActionKind.Replace,
-        src: action.src,
-        children: action.body,
-      });
     case ActionKind.Append:
+    case ActionKind.Prepend:
+    case ActionKind.Before:
+    case ActionKind.After:
       return jsx("route-action", {
-        action: ActionKind.Append,
+        action: action.kind,
         src: action.src,
         children: action.body,
       });

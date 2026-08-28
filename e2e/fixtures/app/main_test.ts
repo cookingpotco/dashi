@@ -417,6 +417,60 @@ Deno.test("app fixture", async (t) => {
           notice: false,
         });
       });
+
+      await t.step(
+        "action list prepends inside and inserts beside the host",
+        async () => {
+          await page.goto(`${app.origin}/actions-page`);
+          await page.evaluate(() =>
+            customElements.whenDefined("route-fragment")
+          );
+          const submit = await page.$("#inserts-form button");
+          if (submit === null) {
+            throw new Error("inserts form is missing");
+          }
+          await submit.click();
+          await page.evaluate(async () => {
+            const start = Date.now();
+            while (
+              document.getElementById("prepended") === null ||
+              document.getElementById("before-slot") === null ||
+              document.getElementById("after-slot") === null
+            ) {
+              if (Date.now() - start > 10000) {
+                throw new Error("insert actions did not apply");
+              }
+              await new Promise((resolve) => setTimeout(resolve, 25));
+            }
+          });
+          const result = await page.evaluate(() => {
+            const host = document.querySelector(
+              "route-fragment[src='/slot']",
+            );
+            return {
+              url: location.href,
+              host: host !== null,
+              firstChild: host?.firstElementChild?.id ?? null,
+              prev: host?.previousElementSibling?.id ?? null,
+              next: host?.nextElementSibling?.id ?? null,
+              inside: host?.querySelector("#slot-inside")?.textContent ??
+                null,
+              beforeInside: host?.querySelector("#before-slot") !== null,
+              afterInside: host?.querySelector("#after-slot") !== null,
+            };
+          });
+          assertEquals(result, {
+            url: `${app.origin}/actions-page`,
+            host: true,
+            firstChild: "prepended",
+            prev: "before-slot",
+            next: "after-slot",
+            inside: "inside",
+            beforeInside: false,
+            afterInside: false,
+          });
+        },
+      );
     },
   );
 });

@@ -103,7 +103,8 @@ cannot see project rules.
   per-element submit listener or a GET form that swaps a fragment.
 - A closed set of cases is a `const enum` (plain `enum` only when it must exist
   at runtime). Flag a string-literal union used as a discriminant.
-- Fragment updates are `fragment.replace`, `fragment.append`, `fragment.remove`,
+- Fragment updates are `fragment.replace`, `fragment.append`,
+  `fragment.prepend`, `fragment.before`, `fragment.after`, `fragment.remove`,
   and `fragment.refresh` on one primitive, targeting every `route-fragment` with
   that `src`. Use `replace` when the write has the markup; use `refresh` when
   fragments should re-fetch themselves asynchronously. Write handlers return

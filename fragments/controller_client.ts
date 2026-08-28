@@ -4,6 +4,9 @@ import "../forms/submit_client.ts";
 const enum SwapKind {
   Replace = "replace",
   Append = "append",
+  Prepend = "prepend",
+  Before = "before",
+  After = "after",
   Remove = "remove",
   Refresh = "refresh",
 }
@@ -32,6 +35,33 @@ function applyAction(action: Element) {
       const clone = action.cloneNode(true);
       if (clone instanceof Element) {
         host.append(...clone.childNodes);
+      }
+    }
+    return;
+  }
+  if (kind === SwapKind.Prepend) {
+    for (const host of hosts) {
+      const clone = action.cloneNode(true);
+      if (clone instanceof Element) {
+        host.prepend(...clone.childNodes);
+      }
+    }
+    return;
+  }
+  if (kind === SwapKind.Before) {
+    for (const host of hosts) {
+      const clone = action.cloneNode(true);
+      if (clone instanceof Element) {
+        host.before(...clone.childNodes);
+      }
+    }
+    return;
+  }
+  if (kind === SwapKind.After) {
+    for (const host of hosts) {
+      const clone = action.cloneNode(true);
+      if (clone instanceof Element) {
+        host.after(...clone.childNodes);
       }
     }
     return;

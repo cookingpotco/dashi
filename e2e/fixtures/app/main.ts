@@ -23,6 +23,8 @@ import { actions } from "./actions/mod.tsx";
 import { todoCount } from "./todo_count/mod.tsx";
 import { hits } from "./hits/mod.tsx";
 import { notice } from "./notice/mod.tsx";
+import { slot } from "./slot/mod.tsx";
+import { inserts } from "./inserts/mod.tsx";
 
 export function start() {
   return serve(({ route }) => ({
@@ -51,6 +53,8 @@ export function start() {
       todoCount,
       hits,
       notice,
+      slot,
+      inserts,
     ],
   }), { fatal, hostname: "127.0.0.1", port: 0 });
 }
