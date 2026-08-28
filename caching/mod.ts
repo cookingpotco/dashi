@@ -1,24 +1,32 @@
 import type { Element } from "../jsx-runtime/mod.ts";
 
+/** Predefined strategies translated later to Cache-Control headers - for CDN and browser use */
 export const enum CacheStrategy {
+  /** `public, max-age=31536000, immutable` */
   Immutable = "immutable",
+  /** `public, max-age=…`, plus optional `s-maxage`, `stale-while-revalidate`, `stale-if-error` */
   Public = "public",
+  /** `private, max-age=…`, plus optional `stale-while-revalidate` */
   Private = "private",
+  /** `no-cache, no-store, max-age=0, must-revalidate` */
   NoStore = "no-store",
 }
 
+/** @internal */
 export interface BaseCacheConfig {
   /**
-   * Request header names for `Vary`. Cookie is the whole jar.
-   * Public and Immutable refuse `Cookie` and `*`.
+   * Request header names for `Vary`. Shared caches cannot vary on
+   * `Cookie` or `*`.
    */
   varyHeaders?: string[];
 }
 
+/** @internal */
 export interface ImmutableCacheConfig extends BaseCacheConfig {
   strategy: CacheStrategy.Immutable;
 }
 
+/** @internal */
 export interface PublicCacheConfig extends BaseCacheConfig {
   strategy: CacheStrategy.Public;
   maxAge: number;
@@ -27,35 +35,50 @@ export interface PublicCacheConfig extends BaseCacheConfig {
   staleIfError?: number;
 }
 
+/** @internal */
 export interface PrivateCacheConfig extends BaseCacheConfig {
   strategy: CacheStrategy.Private;
   maxAge: number;
   staleWhileRevalidate?: number;
 }
 
+/** @internal */
 export interface NoStoreCacheConfig extends BaseCacheConfig {
   strategy: CacheStrategy.NoStore;
 }
 
+/** Configure how this resource should be cached (Affects Cache-Control headers). */
 export type CacheConfig =
   | ImmutableCacheConfig
   | PublicCacheConfig
   | PrivateCacheConfig
   | NoStoreCacheConfig;
 
+/** @internal */
 const cachedBrand: unique symbol = Symbol("dashi.cached");
 
+/** Markup with a cache policy attached by `cached()`. */
 export interface CachedElement {
+  /** @internal */
   readonly [cachedBrand]: true;
+  /** Rendered page body. */
   readonly page: Element;
+  /** How this resource should be cached. */
   readonly cache: CacheConfig;
 }
 
 /**
- * Attach a cache policy to an Element return. The most specific
- * `cached()` on the handler-to-layout walk wins. Omitted: `no-store`.
- * `varyHeaders` names request headers; Cookie is the whole jar;
- * Public and Immutable refuse `Cookie` and `*`.
+ * Attach a cache policy to returned markup. The closest `cached()` from
+ * the handler out through layouts wins. Without one, the response is
+ * no-store.
+ *
+ * @param page Markup to cache.
+ * @param cache How this resource should be cached.
+ *
+ * @example
+ * ```ts
+ * return cached(<div>page</div>, { strategy: CacheStrategy.Public, maxAge: 60 });
+ * ```
  */
 export function cached(page: Element, cache: CacheConfig): CachedElement {
   return { [cachedBrand]: true, page, cache };

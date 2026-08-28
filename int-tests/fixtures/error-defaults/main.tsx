@@ -1,4 +1,5 @@
-import { type Element, serve, type WrapperCtx } from "dashi";
+import { serve, type WrapperCtx } from "dashi";
+import type { Element } from "dashi/jsx-runtime";
 
 async function logger(_ctx: WrapperCtx, next: () => Promise<Response>) {
   const res = await next();

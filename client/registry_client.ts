@@ -21,10 +21,18 @@ export function registerActions(apply: (html: string) => boolean): void {
 }
 
 /**
- * Fetch `url` and swap the connected `<navigation-root>` in place.
- * Pushes history and scrolls to the top, or to the hash target.
- * Without a page host, or when the response cannot be swapped, does a
- * real navigation.
+ * Browser-only. Fetch `url` and swap the connected `<navigation-root>`
+ * in place. Pushes history and scrolls to the top, or to the hash
+ * target. Without a page host, or when the response cannot be swapped,
+ * does a real navigation.
+ *
+ * @param url Destination, resolved against `location.href` if relative.
+ *
+ * @example
+ * ```ts
+ * import { navigate } from "dashi/client";
+ * await navigate("/about");
+ * ```
  */
 export function navigate(url: string | URL): Promise<void> {
   if (page !== null) {

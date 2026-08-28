@@ -1,11 +1,11 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import { jsx, jsxAttr, jsxEscape, jsxTemplate } from "./mod.ts";
-import { trustedHtmlBrand } from "./jsx_types.ts";
+import { isTrustedHtml } from "./jsx_types.ts";
 
 Deno.test("jsxTemplate joins statics with slots without re-escaping", () => {
   const empty = jsxTemplate([""]);
   assertEquals(String(empty), "");
-  assertEquals(trustedHtmlBrand in empty, true);
+  assertEquals(isTrustedHtml(empty), true);
 
   assertEquals(String(jsxTemplate(["<div></div>"])), "<div></div>");
   assertEquals(
@@ -66,6 +66,13 @@ Deno.test("jsxAttr throws when value is an array", () => {
 
 Deno.test("jsxAttr throws when given rendered HTML", () => {
   assertThrows(() => jsxAttr("title", jsx("b", { children: "x" })));
+});
+
+Deno.test("jsxAttr remaps closed-list names", () => {
+  assertEquals(jsxAttr("className", "x"), 'class="x"');
+  assertEquals(jsxAttr("htmlFor", "id"), 'for="id"');
+  assertEquals(jsxAttr("strokeWidth", "1"), 'stroke-width="1"');
+  assertEquals(jsxAttr("viewBox", "0 0 1 1"), 'viewBox="0 0 1 1"');
 });
 
 Deno.test('jsxAttr returns name="value" when value is a string', () => {

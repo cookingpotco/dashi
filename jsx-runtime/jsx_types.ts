@@ -1,22 +1,45 @@
 import type * as dom from "./dom_types.ts";
 
+/** @internal */
 export const trustedHtmlBrand: unique symbol = Symbol("dashi.trustedHtml");
 
-export type Element = string & { readonly [trustedHtmlBrand]: true };
+/** HTML returned by JSX. */
+export type Element = string & {
+  /** @internal */
+  readonly [trustedHtmlBrand]: true;
+};
+
+/** @internal */
+export function isTrustedHtml(value: unknown): value is Element {
+  return typeof value === "object" && value !== null &&
+    trustedHtmlBrand in value;
+}
+
+/** @internal */
+export function asTrustedHtml(html: string): Element {
+  const value = new String(html) as Element;
+  Object.defineProperty(value, trustedHtmlBrand, { value: true });
+  return value;
+}
+
+/** A value that can appear as a JSX child. */
 export type DashiNode = dom.Node | Element;
 
+/** @internal */
 export type ElementType<P extends Record<string, unknown> = never> =
   | keyof IntrinsicElements
   | ((props: P) => DashiNode)
   | null;
 
-// We don't plan to support class components, so making them never
+/** @internal */
 export type ElementClass = never;
 
+/** @internal */
 export interface ElementChildrenAttribute {
   children: DashiNode | DashiNode[];
 }
 
+/** @ignore */
 export interface IntrinsicElements {
   a: dom.AnchorHTMLAttributes;
   abbr: dom.HTMLAttributes;

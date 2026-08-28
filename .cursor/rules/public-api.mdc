@@ -1,0 +1,38 @@
+---
+description: Published package exports and import specifiers
+alwaysApply: true
+---
+
+# Public API
+
+App code imports from `dashi`, except JSX types from `dashi/jsx-runtime`,
+browser APIs from `dashi/client`, and CORS from `dashi/cors`. Do not
+re-export JSX types from root `mod.ts`. Do not star-export internals. Do
+not add a second specifier for something already on one entry.
+
+Adding a published export is fine. Removing or renaming one is a breaking
+0.x change.
+
+## `dashi`
+
+`cached`, `CacheStrategy`, `CacheConfig`, `CachedElement`, `client`,
+`fragment`, `FragmentAction`, `RouteFragment`, `NavigationRoot`, `group`,
+`Group`, `serve`, `staticFile`, `ParamsOf`, `Ctx`, `WrapperCtx`.
+
+## `dashi/jsx-runtime`
+
+`jsxImportSource` runtime and JSX types.
+
+Values: `jsx`, `jsxTemplate`, `jsxAttr`, `jsxEscape`, `JsxRuntimeError`
+(compiler runtime; `@internal`, still exported for `jsxImportSource`).
+
+Types: `JSX` namespace, `Element`, `DashiNode`, `HTMLAttributes`,
+`SVGAttributes` (siblings of the namespace, not nested in it).
+
+## `dashi/client`
+
+`navigate`
+
+## `dashi/cors`
+
+`cors`, `CorsOptions`, `CorsOrigin`

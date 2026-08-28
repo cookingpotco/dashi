@@ -1,4 +1,5 @@
-import { type Element, RouteFragment, serve, type WrapperCtx } from "dashi";
+import { RouteFragment, serve, type WrapperCtx } from "dashi";
+import type { Element } from "dashi/jsx-runtime";
 
 function faultError(_ctx: WrapperCtx, thrown: unknown): Element {
   return (

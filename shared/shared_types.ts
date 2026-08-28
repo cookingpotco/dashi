@@ -3,18 +3,22 @@ import type { FragmentAction } from "../fragments/mod.ts";
 import type { Element } from "../jsx-runtime/mod.ts";
 
 /**
- * Per-invocation request context. `state` is a `Partial` bag: mutate
- * fields in place, do not replace the object. `isFragment` is the mode
- * bit; layouts never run when it is true.
+ * Per-invocation request context. Mutate `state` in place; do not
+ * replace the object. Layouts do not run when `isFragment` is true.
  */
 export interface Ctx<
   Params extends Record<string, string> = Record<string, never>,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
+  /** Incoming request. */
   readonly req: Request;
+  /** Request URL. */
   readonly url: URL;
+  /** Path params from the matched route. */
   readonly params: Params;
+  /** True when this hit is a fragment include or lazy fetch. */
   readonly isFragment: boolean;
+  /** Per-request state. Mutate fields in place; do not replace the object. */
   readonly state: Partial<State>;
 }
 
@@ -38,6 +42,7 @@ export type WrapperCtx<
  * `ctx`. Share markup as a component; include another route's rendered
  * output with `<RouteFragment src>`.
  */
+/** @internal */
 export type Handler<
   Params extends Record<string, string> = Record<string, never>,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
@@ -54,6 +59,7 @@ export type Handler<
  * sent as-is; `Element` is wrapped in remaining parent layouts (skipped
  * on fragment hits). `cached()` attaches a cache policy.
  */
+/** @internal */
 export type ErrorHandler<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
@@ -70,6 +76,7 @@ export type ErrorHandler<
  * path answers OPTIONS. HEAD and OPTIONS are not handler keys on the
  * route map.
  */
+/** @internal */
 export const METHODS = [
   "GET",
   "HEAD",
@@ -79,12 +86,14 @@ export const METHODS = [
   "DELETE",
   "OPTIONS",
 ] as const;
+/** @internal */
 export type Method = typeof METHODS[number];
 
 /**
  * POST/PUT/PATCH/DELETE. Return fragment actions (no layouts, no
  * DOCTYPE) or a Response. A 2xx `text/html` Response is rejected.
  */
+/** @internal */
 export type WriteHandler<
   Params extends Record<string, string> = Record<string, never>,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
@@ -99,6 +108,7 @@ export type WriteHandler<
  * Per-method handlers on a route. GET returns a page or fragment body.
  * Writes return a list of fragment actions, or a Response.
  */
+/** @internal */
 export type MethodHandlers<
   Params extends Record<string, string> = Record<string, never>,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
@@ -112,6 +122,7 @@ export type MethodHandlers<
  * UI that wraps the route on document render, outermost first. Does not
  * run on fragment renders (eager `<RouteFragment>` or a lazy fetch).
  */
+/** @internal */
 export type Layout<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
@@ -123,6 +134,7 @@ export type Layout<
  * Request pipeline, outermost first. Runs for document hits and fragment
  * hits.
  */
+/** @internal */
 export type Middleware<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
@@ -137,6 +149,7 @@ export type Middleware<
  * group's own layouts. `notFound` handles document misses captured
  * here; omitted walks to the parent.
  */
+/** @internal */
 export interface GroupBoundary<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {

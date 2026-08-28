@@ -1,5 +1,4 @@
 import { assertEquals } from "@std/assert";
-import { MAPPED_HTML_ATTR_NAMES } from "dashi/jsx-runtime";
 
 Deno.test("renders an interpolated script tag inert in body position", () => {
   const payload = "<script>alert(1)</script>";
@@ -76,13 +75,11 @@ Deno.test("emits for when htmlFor is set", () => {
 });
 
 Deno.test("remaps closed-list names on a DOM spread", () => {
-  const props = Object.fromEntries(
-    Object.keys(MAPPED_HTML_ATTR_NAMES).map((name) => [name, "x"]),
+  const props = { className: "x", htmlFor: "y", viewBox: "0 0 1 1" };
+  assertEquals(
+    String(<div {...props}></div>),
+    `<div class="x" for="y" viewBox="0 0 1 1"></div>`,
   );
-  const attrs = Object.values(MAPPED_HTML_ATTR_NAMES)
-    .map((name) => `${name}="x"`)
-    .join(" ");
-  assertEquals(String(<div {...props}></div>), `<div ${attrs}></div>`);
 });
 
 Deno.test("passes className through to a function component", () => {

@@ -95,6 +95,7 @@ the same rule.
 
 ## Imports
 
-App code imports from `dashi`. `dashi/jsx-runtime` is the Deno
-`jsxImportSource` subpath, not a second public import style. The public vs
-internal export list and the JSR `exports` map stay COO-27.
+App code imports from `dashi`. JSX types (`Element`, `HTMLAttributes`,
+`DashiNode`, `JSX`) import from `dashi/jsx-runtime`. Browser APIs import
+from `dashi/client`. CORS imports from `dashi/cors`. The published export
+list lives in the public-api rule.
