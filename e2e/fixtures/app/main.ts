@@ -1,7 +1,7 @@
 import { serve } from "dashi";
 import { Home } from "./home_route.tsx";
 import { RootLayout } from "./root_layout.tsx";
-import { errorFallback, ErrorPage } from "./errors.tsx";
+import { ErrorPage, fatal } from "./errors.tsx";
 import { mark } from "./mark/mod.tsx";
 import { paint } from "./paint/mod.tsx";
 import { embed } from "./embed/mod.tsx";
@@ -52,5 +52,5 @@ if (import.meta.main) {
       hits,
       notice,
     ],
-  }), { errorFallback, port: 0 });
+  }), { fatal, port: 0 });
 }

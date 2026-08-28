@@ -78,13 +78,25 @@ function typechecks() {
     ],
   }));
 
-  group("/users/:id", ({ group }) => ({
+  group<AppState>("/users/:id", ({ route }) => ({
     routes: [
+      route("/update/:field", {
+        GET: (ctx) => {
+          ctx.params.field;
+          ctx.state.user;
+          return "" as Element;
+        },
+      }),
+    ],
+  }));
+
+  group("/users/:id", ({ route }) => ({
+    routes: [
+      route("/", get),
       group("/posts/:postId", ({ route }) => ({
         routes: [
           route("/edit", {
             GET: (ctx) => {
-              ctx.params.id;
               ctx.params.postId;
               return "" as Element;
             },
@@ -93,6 +105,12 @@ function typechecks() {
       })),
     ],
   }));
+
+  group((cb) => {
+    // @ts-expect-error GroupCallback is only { route }
+    cb.group("/x", () => ({ routes: [] }));
+    return { routes: [] };
+  });
 
   group("/users/:id", ({ route }) => {
     // @ts-expect-error duplicate param names across the join
@@ -270,7 +288,7 @@ Deno.test("compile inherits wraps outermost-first and preserves declaration orde
   const postsNew = () => "" as Element;
   const postsId = () => "" as Element;
 
-  const compiled = compile(group(({ route, group }) => ({
+  const compiled = compile(group(({ route }) => ({
     layouts: [rootLayout],
     middleware: [rootMw],
     routes: [
@@ -331,7 +349,7 @@ Deno.test("compile keeps per-group error on the boundary chain", () => {
   const nestedError = () => "" as Element;
   const page = () => "" as Element;
 
-  const compiled = compile(group(({ group }) => ({
+  const compiled = compile(group(() => ({
     error: rootError,
     routes: [
       group(({ route }) => ({
@@ -369,7 +387,7 @@ Deno.test("GET+POST share one path; empty map throws", () => {
 Deno.test("compile matches joined paths from a prefixed group", () => {
   const index = () => "" as Element;
   const field = () => new Response();
-  const compiled = compile(group(({ group }) => ({
+  const compiled = compile(group(() => ({
     routes: [
       group("/users/:id", ({ route }) => ({
         routes: [

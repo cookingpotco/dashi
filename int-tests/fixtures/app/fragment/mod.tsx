@@ -1,10 +1,10 @@
-import { type Ctx, fragment as actions, group, type Middleware } from "dashi";
+import { type Ctx, fragment as actions, group, type WrapperCtx } from "dashi";
 import type { AppState } from "../state.ts";
 
-const fragOnly: Middleware<AppState> = (ctx, next) => {
+function fragOnly(ctx: WrapperCtx<AppState>, next: () => Promise<Response>) {
   ctx.state.fragOnly = "yes";
   return next();
-};
+}
 
 export const fragment = group<AppState>(({ route }) => ({
   middleware: [fragOnly],

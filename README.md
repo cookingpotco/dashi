@@ -184,8 +184,8 @@ serve(({ route }) => ({
 }));
 ```
 
-**Error boundaries.** `notFound` and `error` live on the table. `errorFallback`
-is the last-resort 500 on `serve()` options: no layouts, no `ctx`, no `thrown`.
+**Error boundaries.** `notFound` and `error` live on the table. `fatal` is the
+last-resort 500 on `serve()` options: no layouts, no `ctx`, no `thrown`.
 
 **Client TypeScript** attaches with `client.module` / `client.element` at module
 scope, not inside a component or handler. Documents get an import map. A module

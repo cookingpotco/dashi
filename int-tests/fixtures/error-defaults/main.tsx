@@ -1,10 +1,10 @@
-import { type Element, type Middleware, serve, type WrapperCtx } from "dashi";
+import { type Element, serve, type WrapperCtx } from "dashi";
 
-const logger: Middleware = async (_ctx, next) => {
+async function logger(_ctx: WrapperCtx, next: () => Promise<Response>) {
   const res = await next();
   res.headers.set("x-mw", "ok");
   return res;
-};
+}
 
 function rootLayout(ctx: WrapperCtx, children: Element): Element {
   if (ctx.url.pathname === "/root-layout-throws") {

@@ -40,5 +40,5 @@ because they cannot share the main app's `serve()` table; they stay inline
 `serve(callback)` harnesses.
 
 `fixtures/app` and extra fixtures call
-`serve(({ route }) => ({ … }), { port: 0, errorFallback })`.
-`deno task test:int` picks up every `*_test.ts` under `int-tests/`.
+`serve(({ route }) => ({ … }), { port: 0, fatal })`. `deno task test:int` picks
+up every `*_test.ts` under `int-tests/`.

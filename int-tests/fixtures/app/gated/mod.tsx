@@ -1,12 +1,15 @@
-import { group, type Middleware } from "dashi";
+import { group, type WrapperCtx } from "dashi";
 import type { AppState } from "../state.ts";
 
-const requireSession: Middleware<AppState> = (ctx, next) => {
+function requireSession(
+  ctx: WrapperCtx<AppState>,
+  next: () => Promise<Response>,
+) {
   if (!ctx.req.headers.get("cookie")?.includes("session=")) {
     return Response.redirect(new URL("/", ctx.url), 303);
   }
   return next();
-};
+}
 
 export const gated = group<AppState>(({ route }) => ({
   middleware: [requireSession],

@@ -28,7 +28,7 @@ if (import.meta.main) {
       route("/root-layout-throws", { GET: okPage }),
     ],
   }), {
-    errorFallback: new Response("fallback-response", {
+    fatal: new Response("fallback-response", {
       status: 500,
       headers: { "x-fallback": "1" },
     }),

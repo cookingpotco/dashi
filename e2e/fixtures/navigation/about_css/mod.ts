@@ -1,7 +1,7 @@
 import { group } from "dashi";
 import type { AppState } from "../state.ts";
 
-export const aboutCss = group<"/about.css", AppState>(
+export const aboutCss = group<AppState>(
   "/about.css",
   ({ route }) => ({
     routes: [route("/", { GET: aboutCssHandler })],

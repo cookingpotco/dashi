@@ -16,7 +16,7 @@ Deno.test("error-fallback-response fixture over HTTP", async (t) => {
 
   await runCases(t, app, [
     {
-      name: "root layout throws uses errorFallback Response",
+      name: "root layout throws uses fatal Response",
       request: { path: "/root-layout-throws" },
       status: 500,
       headers: { "x-fallback": "1" },

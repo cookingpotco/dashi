@@ -1,10 +1,10 @@
-import { group, type Middleware, RouteFragment } from "dashi";
+import { group, RouteFragment, type WrapperCtx } from "dashi";
 import type { AppState } from "../state.ts";
 
-const embedOnly: Middleware<AppState> = (ctx, next) => {
+function embedOnly(ctx: WrapperCtx<AppState>, next: () => Promise<Response>) {
   ctx.state.embedOnly = "yes";
   return next();
-};
+}
 
 export const embed = group<AppState>(({ route }) => ({
   middleware: [embedOnly],

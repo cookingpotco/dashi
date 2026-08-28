@@ -15,6 +15,7 @@ import { Logger } from "../logging/mod.ts";
 import {
   type Ctx,
   DASHI_PREFIX,
+  type GroupBoundary,
   type Method,
   METHODS,
   REQUEST_HEADERS,
@@ -24,7 +25,6 @@ import {
   type CompiledTable,
   DEFAULT_FRAGMENT_DEPTH_LIMIT,
   group,
-  type GroupBoundary,
   type GroupCallback,
   type GroupFields,
   match,
@@ -117,15 +117,15 @@ async function withoutContent(res: Response): Promise<Response> {
 
 function lastResort(options: {
   isPartial: boolean;
-  errorFallback: Element | Response | undefined;
+  fatal: Element | Response | undefined;
 }): Element | Response {
   if (options.isPartial) {
     return new Response("", { status: 500 });
   }
-  if (options.errorFallback === undefined) {
+  if (options.fatal === undefined) {
     return new Response(DEFAULT_ERROR_FALLBACK_BODY, { status: 500 });
   }
-  return options.errorFallback;
+  return options.fatal;
 }
 
 async function htmlResponse(
@@ -191,7 +191,7 @@ async function respond(
       return await htmlResponse(
         lastResort({
           isPartial: ctx.isFragment,
-          errorFallback: compiled.errorFallback,
+          fatal: compiled.fatal,
         }),
         { status: 500, isPartial: ctx.isFragment, req: ctx.req },
       );
@@ -451,38 +451,32 @@ function assertReservedClient(
   }
 }
 
-function withCompiledClient<
-  State extends Record<string, unknown>,
->(
-  cb: GroupCallback<"", State>,
-  fields: GroupFields<State>,
-): GroupFields<State> {
-  return {
-    ...fields,
-    routes: [
-      cb.group(DASHI_PREFIX, ({ route }) => ({
-        routes: [
-          route("/client/:file*", { GET: getCompiledFile }),
-          route("/:rest*", { GET: reservedNotFound }),
-        ],
-      })),
-      ...fields.routes,
-    ],
-  };
-}
-
 export function init<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(
   build: (cb: GroupCallback<"", State>) => GroupFields<State>,
-  errorFallback?: Element | Response,
+  fatal?: Element | Response,
   fragmentDepthLimit?: number,
 ) {
   // handle() has no State parameter. The table is only invoked with a ctx
   // whose state bag is the object the request created.
   compiled = compile(
-    group((cb: GroupCallback<"", State>) => withCompiledClient(cb, build(cb))),
-    errorFallback,
+    group((cb: GroupCallback<"", State>) => {
+      const fields = build(cb);
+      return {
+        ...fields,
+        routes: [
+          group<State>(DASHI_PREFIX, ({ route }) => ({
+            routes: [
+              route("/client/:file*", { GET: getCompiledFile }),
+              route("/:rest*", { GET: reservedNotFound }),
+            ],
+          })),
+          ...fields.routes,
+        ],
+      };
+    }),
+    fatal,
     fragmentDepthLimit,
   ) as CompiledTable<
     Record<string, unknown>
@@ -523,7 +517,7 @@ export async function handle(
         return (await htmlResponse(
           lastResort({
             isPartial: isFragment,
-            errorFallback: compiled.errorFallback,
+            fatal: compiled.fatal,
           }),
           { status: 500, isPartial: isFragment, req },
         )).response;

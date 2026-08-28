@@ -24,7 +24,7 @@ Deno.test("error-defaults fixture over HTTP", async (t) => {
       bodyExact: "Not found",
     },
     {
-      name: "handler throws with no error uses errorFallback",
+      name: "handler throws with no error uses fatal",
       request: { path: "/throw" },
       status: 500,
       headers: { "x-mw": "ok" },
@@ -32,7 +32,7 @@ Deno.test("error-defaults fixture over HTTP", async (t) => {
       stillServes: true,
     },
     {
-      name: "root layout throws with omitted errorFallback",
+      name: "root layout throws with omitted fatal",
       request: { path: "/root-layout-throws" },
       status: 500,
       bodyExact: "Something Went Wrong",

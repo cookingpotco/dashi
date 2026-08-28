@@ -20,7 +20,7 @@ export function ErrorPage(
   );
 }
 
-export const errorFallback = (
+export const fatal = (
   <html>
     <body>Something went wrong</body>
   </html>

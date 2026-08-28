@@ -1,7 +1,7 @@
 import { group } from "dashi";
 import type { AppState } from "../state.ts";
 
-export const bare = group<"/bare", AppState>("/bare", ({ route }) => ({
+export const bare = group<AppState>("/bare", ({ route }) => ({
   routes: [route("/", { GET: Bare })],
 }));
 

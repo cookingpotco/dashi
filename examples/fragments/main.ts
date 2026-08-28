@@ -2,7 +2,7 @@ import { serve } from "dashi";
 import { Home } from "./home_route.tsx";
 import { RootLayout } from "./root_layout.tsx";
 import { logger } from "./logger_middleware.ts";
-import { errorFallback, ErrorPage } from "./errors.tsx";
+import { ErrorPage, fatal } from "./errors.tsx";
 import { fragment } from "./fragment/mod.tsx";
 import { todos } from "./todos/mod.tsx";
 import { time } from "./time/mod.tsx";
@@ -20,5 +20,5 @@ if (import.meta.main) {
       time,
       notice,
     ],
-  }), { errorFallback });
+  }), { fatal });
 }

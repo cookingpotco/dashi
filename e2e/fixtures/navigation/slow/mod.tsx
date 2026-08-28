@@ -1,7 +1,7 @@
 import { group } from "dashi";
 import type { AppState } from "../state.ts";
 
-export const slow = group<"/slow", AppState>("/slow", ({ route }) => ({
+export const slow = group<AppState>("/slow", ({ route }) => ({
   routes: [route("/", { GET: Slow })],
 }));
 

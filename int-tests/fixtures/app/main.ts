@@ -1,10 +1,4 @@
-import {
-  CacheStrategy,
-  type Ctx,
-  serve,
-  staticFile,
-  type WriteHandler,
-} from "dashi";
+import { CacheStrategy, type Ctx, serve, staticFile } from "dashi";
 import type { AppState } from "./state.ts";
 import { Home } from "./home_route.tsx";
 import { RootLayout } from "./root_layout.tsx";
@@ -12,7 +6,6 @@ import { root } from "./root_middleware.ts";
 import { Echo } from "./echo_route.tsx";
 import { post as postActions } from "./actions_route.tsx";
 import { postHtml } from "./write_html_route.ts";
-import { postJsx } from "./write_jsx_route.tsx";
 import { NestEmbed } from "./nest_embed_route.tsx";
 import { NestInner } from "./nest_inner_route.tsx";
 import { NestMid } from "./nest_mid_route.tsx";
@@ -69,7 +62,7 @@ import {
   embedFragThrow,
   EmbedSlow,
   EmbedSlowEmpty,
-  errorFallback,
+  fatal,
   NotFound,
   okPage,
   RootError,
@@ -139,14 +132,6 @@ if (import.meta.main) {
       route("/peer", { GET: Peer }),
       route("/actions", { POST: postActions }),
       route("/write-html", { POST: postHtml }),
-      route("/write-jsx", {
-        // The table type cannot express an invalid Element return; the
-        // pipeline still rejects it at runtime.
-        POST: postJsx as unknown as WriteHandler<
-          Record<string, never>,
-          AppState
-        >,
-      }),
       route("/posts/new", { GET: PostsNew }),
       route("/posts/:id", { GET: Post }),
       route("/guestbook", { GET: listGuestbook, POST: addGuestbook }),
@@ -186,5 +171,5 @@ if (import.meta.main) {
       route("/embed-slow", { GET: EmbedSlow }),
       route("/embed-slow-empty", { GET: EmbedSlowEmpty }),
     ],
-  }), { errorFallback, port: 0 });
+  }), { fatal, port: 0 });
 }

@@ -4,7 +4,7 @@ export function ErrorPage(): Element {
   return <p id="heading">error</p>;
 }
 
-export const errorFallback = (
+export const fatal = (
   <html>
     <body>Something went wrong</body>
   </html>

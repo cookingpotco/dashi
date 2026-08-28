@@ -6,7 +6,7 @@ const Widget = client.element(
   new URL("./widget_client.ts", import.meta.url),
 );
 
-export const widget = group<"/widget", AppState>("/widget", ({ route }) => ({
+export const widget = group<AppState>("/widget", ({ route }) => ({
   routes: [route("/", { GET: WidgetPage })],
 }));
 
