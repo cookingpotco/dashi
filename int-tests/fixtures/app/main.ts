@@ -13,6 +13,7 @@ import { NestOuter } from "./nest_outer_route.tsx";
 import { LazyNest } from "./lazy_nest_route.tsx";
 import { LazyNestEmbed } from "./lazy_nest_embed_route.tsx";
 import { DupSrc } from "./dup_src_route.tsx";
+import { DistinctQuery, QueryFrag } from "./distinct_query_route.tsx";
 import { ProbePage } from "./probe_route.tsx";
 import { Peer } from "./peer_route.tsx";
 import { PostsNew } from "./posts_new_route.tsx";
@@ -62,6 +63,7 @@ import {
   embedFragThrow,
   EmbedSlow,
   EmbedSlowEmpty,
+  EmbedSlowHeld,
   fatal,
   NotFound,
   okPage,
@@ -128,6 +130,8 @@ export function start() {
       route("/lazy-nest", { GET: LazyNest }),
       route("/lazy-nest-embed", { GET: LazyNestEmbed }),
       route("/dup-src", { GET: DupSrc }),
+      route("/distinct-query", { GET: DistinctQuery }),
+      route("/query-frag", { GET: QueryFrag }),
       fragment,
       route("/peer", { GET: Peer }),
       route("/actions", { POST: postActions }),
@@ -170,6 +174,7 @@ export function start() {
       route("/slow-no-error", { GET: Slow }),
       route("/embed-slow", { GET: EmbedSlow }),
       route("/embed-slow-empty", { GET: EmbedSlowEmpty }),
+      route("/embed-slow-held", { GET: EmbedSlowHeld }),
     ],
   }), { fatal, hostname: "127.0.0.1", port: 0 });
 }

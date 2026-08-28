@@ -236,9 +236,11 @@ function raceTimeout<T>(
   promise: Promise<T>,
   timeoutMs: number,
   message: string,
+  onTimeout: () => void,
 ): Promise<T> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
+      onTimeout();
       reject(new Error(message));
     }, timeoutMs);
     promise.then(
@@ -258,6 +260,7 @@ async function executeMatched(
   ctx: RequestCtx,
   matched: MatchedRoute<Record<string, unknown>>,
   timeoutMs?: number,
+  abortTimeout?: () => void,
 ): Promise<Executed> {
   try {
     const handlerPromise = runHandler(ctx, matched);
@@ -267,6 +270,7 @@ async function executeMatched(
         handlerPromise,
         timeoutMs,
         `Route timed out: ${ctx.url.pathname}`,
+        () => abortTimeout?.(),
       );
     if (out instanceof Response) {
       if (ctx.req.method !== "GET" && ctx.req.method !== "HEAD") {
@@ -356,6 +360,7 @@ async function runPipeline(
     if (ctx.isFragment) {
       const store = getRenderStore();
       store.includeChain = [...store.includeChain, ctx.url.pathname];
+      store.includeSignal = ctx.req.signal;
     }
     let html: string | null = null;
     let index = -1;
@@ -388,6 +393,15 @@ export async function runRoute(
   },
 ): Promise<Executed | null> {
   const url = new URL(req.url);
+  let request = req;
+  let abortTimeout: (() => void) | undefined;
+  if (options.timeoutMs !== undefined) {
+    const controller = new AbortController();
+    abortTimeout = () => controller.abort();
+    request = new Request(req, {
+      signal: AbortSignal.any([req.signal, controller.signal]),
+    });
+  }
   const matched = match(compiled, url.pathname);
   if (!matched) {
     if (!options.recoverMiss) {
@@ -395,7 +409,7 @@ export async function runRoute(
     }
     const miss = matchMiss(compiled, url.pathname);
     const ctx: RequestCtx = {
-      req,
+      req: request,
       url,
       params: miss.params,
       isFragment: options.isFragment,
@@ -409,7 +423,7 @@ export async function runRoute(
   }
 
   const ctx: RequestCtx = {
-    req,
+    req: request,
     url,
     params: matched.params,
     isFragment: options.isFragment,
@@ -418,7 +432,7 @@ export async function runRoute(
   return await runPipeline(
     ctx,
     matched.middleware,
-    () => executeMatched(ctx, matched, options.timeoutMs),
+    () => executeMatched(ctx, matched, options.timeoutMs, abortTimeout),
   );
 }
 
