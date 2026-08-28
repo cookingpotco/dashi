@@ -1,3 +1,10 @@
+/**
+ * @module
+ *
+ * Server-first JSX framework. App API: `serve`, routes, fragments, cache,
+ * and the client factory.
+ */
+
 export {
   type CacheConfig,
   cached,
@@ -11,13 +18,6 @@ export {
   RouteFragment,
 } from "./fragments/mod.ts";
 export { NavigationRoot } from "./navigation/mod.ts";
-export type {
-  DashiNode,
-  Element,
-  HTMLAttributes,
-  JSX,
-  SVGAttributes,
-} from "./jsx-runtime/mod.ts";
 export { type Group, group, type ParamsOf } from "./routing/mod.ts";
 export { serve } from "./serve/mod.ts";
 export type { Ctx, WrapperCtx } from "./shared/mod.ts";

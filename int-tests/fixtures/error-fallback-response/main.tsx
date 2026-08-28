@@ -1,4 +1,5 @@
-import { type Element, serve, type WrapperCtx } from "dashi";
+import { serve, type WrapperCtx } from "dashi";
+import type { Element } from "dashi/jsx-runtime";
 
 function rootLayout(ctx: WrapperCtx, children: Element): Element {
   if (ctx.url.pathname === "/root-layout-throws") {

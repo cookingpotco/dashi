@@ -27,6 +27,15 @@ import {
  * `group()` values in `routes`.
  * @param options Forwarded to `Deno.serve`, plus `fatal` and
  * `fragmentDepthLimit`. `handler` is always the router.
+ *
+ * @example
+ * ```ts
+ * import { serve } from "dashi";
+ *
+ * serve(({ route }) => ({
+ *   routes: [route("/", { GET: () => <h1>Hi</h1> })],
+ * }));
+ * ```
  */
 export async function serve<
   State extends Record<string, unknown> = Record<PropertyKey, never>,

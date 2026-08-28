@@ -1,6 +1,6 @@
 import { type Element, jsx, jsxTemplate } from "../jsx-runtime/mod.ts";
 
-/** Path identity shared by `<RouteFragment src>` and fragment actions. */
+/** @internal */
 export type InternalSrc = `/${string}`;
 
 const enum ActionKind {
@@ -13,41 +13,48 @@ const enum ActionKind {
   Refresh = "refresh",
 }
 
+/** @internal */
 interface ReplaceAction {
   readonly kind: ActionKind.Replace;
   readonly src: InternalSrc;
   readonly body: Element;
 }
 
+/** @internal */
 interface AppendAction {
   readonly kind: ActionKind.Append;
   readonly src: InternalSrc;
   readonly body: Element;
 }
 
+/** @internal */
 interface PrependAction {
   readonly kind: ActionKind.Prepend;
   readonly src: InternalSrc;
   readonly body: Element;
 }
 
+/** @internal */
 interface BeforeAction {
   readonly kind: ActionKind.Before;
   readonly src: InternalSrc;
   readonly body: Element;
 }
 
+/** @internal */
 interface AfterAction {
   readonly kind: ActionKind.After;
   readonly src: InternalSrc;
   readonly body: Element;
 }
 
+/** @internal */
 interface RemoveAction {
   readonly kind: ActionKind.Remove;
   readonly src: InternalSrc;
 }
 
+/** @internal */
 interface RefreshAction {
   readonly kind: ActionKind.Refresh;
   readonly src: InternalSrc;
@@ -63,30 +70,47 @@ export type FragmentAction =
   | RemoveAction
   | RefreshAction;
 
+/**
+ * Replace the host's children with `body`.
+ *
+ * @param src Path every matching `<RouteFragment>` renders.
+ * @param body Markup that becomes the host's children.
+ *
+ * @example
+ * ```ts
+ * return [fragment.replace("/todos", <TodoList />)];
+ * ```
+ */
 function replace(src: InternalSrc, body: Element): FragmentAction {
   return { kind: ActionKind.Replace, src, body };
 }
 
+/** Append `body` to the host's children. */
 function append(src: InternalSrc, body: Element): FragmentAction {
   return { kind: ActionKind.Append, src, body };
 }
 
+/** Prepend `body` to the host's children. */
 function prepend(src: InternalSrc, body: Element): FragmentAction {
   return { kind: ActionKind.Prepend, src, body };
 }
 
+/** Insert `body` as a sibling before the host. */
 function before(src: InternalSrc, body: Element): FragmentAction {
   return { kind: ActionKind.Before, src, body };
 }
 
+/** Insert `body` as a sibling after the host. */
 function after(src: InternalSrc, body: Element): FragmentAction {
   return { kind: ActionKind.After, src, body };
 }
 
+/** Drop the host from the document. */
 function remove(src: InternalSrc): FragmentAction {
   return { kind: ActionKind.Remove, src };
 }
 
+/** Re-GET every host rendering `src`. */
 function refresh(src: InternalSrc): FragmentAction {
   return { kind: ActionKind.Refresh, src };
 }

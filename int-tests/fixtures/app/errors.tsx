@@ -1,4 +1,5 @@
-import { type Ctx, type Element, RouteFragment, type WrapperCtx } from "dashi";
+import { type Ctx, RouteFragment, type WrapperCtx } from "dashi";
+import type { Element } from "dashi/jsx-runtime";
 import type { AppState } from "./state.ts";
 
 export function NotFound(

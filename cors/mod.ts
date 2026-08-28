@@ -1,11 +1,19 @@
+/**
+ * @module
+ *
+ * CORS middleware for `group()`.
+ */
+
 import { mergeVary } from "../caching/mod.ts";
 import { METHODS, type Middleware } from "../shared/mod.ts";
 
+/** Allowed origin: a string, a list, or a function of the request Origin. */
 export type CorsOrigin =
   | string
   | readonly string[]
   | ((origin: string) => string | undefined);
 
+/** @internal */
 interface CorsOptionsBase {
   origin?: CorsOrigin;
   allowMethods?: readonly string[];
@@ -14,6 +22,7 @@ interface CorsOptionsBase {
   maxAge?: number;
 }
 
+/** CORS options. `credentials: true` requires an explicit `origin`. */
 export type CorsOptions =
   | (CorsOptionsBase & { credentials?: false })
   | (CorsOptionsBase & { origin: CorsOrigin; credentials: true });
@@ -63,6 +72,16 @@ function assignCorsHeaders(
  *
  * OPTIONS returns 204 with CORS headers and does not call `next()`.
  * Other methods call `next()` and add CORS headers to that response.
+ *
+ * @param options Origin, methods, headers, credentials, and max-age.
+ *
+ * @example
+ * ```ts
+ * export const api = group("/api", ({ route }) => ({
+ *   middleware: [cors()],
+ *   routes: [route("/ok", { GET: () => Response.json({ ok: true }) })],
+ * }));
+ * ```
  */
 export function cors<
   State extends Record<string, unknown> = Record<PropertyKey, never>,

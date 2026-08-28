@@ -106,7 +106,7 @@ async function realPath(path: string): Promise<string | null> {
 /**
  * Streams a file from `dir`.
  *
- * @param ctx
+ * @param ctx Request context; used for `If-None-Match`.
  * @param dir Directory to read from. Relative paths resolve against
  *   `Deno.cwd()`; pass `${import.meta.dirname}/static` so the folder
  *   travels with the module.
@@ -114,6 +114,14 @@ async function realPath(path: string): Promise<string | null> {
  * @param cache Cache-Control. Defaults to immutable.
  *   `varyHeaders` names request headers; Cookie is the whole jar;
  *   Public and Immutable refuse `Cookie` and `*`.
+ *
+ * @example
+ * ```ts
+ * route("/assets/:path*", {
+ *   GET: (ctx) =>
+ *     staticFile(ctx, `${import.meta.dirname}/static`, ctx.params.path),
+ * })
+ * ```
  */
 export async function staticFile(
   ctx: Ctx<Record<string, string>, Record<string, unknown>>,

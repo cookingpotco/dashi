@@ -26,7 +26,8 @@ to a path inside the package. Workspace members map `dashi` to the checkout.
 
 The root `deno.json` carries no JSX configuration. A JSR consumer does not
 inherit a package's `compilerOptions`, and the setting makes the package
-resolve itself by name against the registry.
+resolve itself by name against the registry. JSX types are imported from
+`dashi/jsx-runtime`; the published keep-lists live in the public-api rule.
 
 ## Route modules
 

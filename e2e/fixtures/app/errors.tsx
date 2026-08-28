@@ -1,4 +1,4 @@
-import { type Element } from "dashi";
+import type { Element } from "dashi/jsx-runtime";
 
 export function ErrorPage(): Element {
   return <p id="frag-error">frag-error-ui</p>;

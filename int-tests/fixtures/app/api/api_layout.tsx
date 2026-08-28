@@ -1,4 +1,5 @@
-import { type Element, type WrapperCtx } from "dashi";
+import { type WrapperCtx } from "dashi";
+import type { Element } from "dashi/jsx-runtime";
 import type { AppState } from "../state.ts";
 
 export function ApiLayout(

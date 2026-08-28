@@ -65,10 +65,12 @@ type ValidName<Name extends string> = Name extends `${infer First}${infer Rest}`
   ? First extends Alpha ? RestAlnum<Rest> : false
   : false;
 
+/** @internal */
 type Split<Remaining extends string> = Remaining extends
   `${infer Head}/${infer Tail}` ? [Head, ...Split<Tail>]
   : [Remaining];
 
+/** @internal */
 type SegmentsOf<Path extends string> = Path extends "/" ? []
   : Path extends `/${infer Rest}` ? Split<Rest>
   : [];
@@ -124,6 +126,7 @@ type WalkSegments<Segments extends string[], Seen extends string[] = []> =
     : ContinueWalk<Head, Rest, Seen>
     : never;
 
+/** @internal */
 export type PathError<Path extends string> = Path extends "/" ? never
   : Path extends `/${infer Rest}`
     ? Rest extends `${string}/`
@@ -137,6 +140,7 @@ type EndsWithOptionalOrCatchall<Path extends string> = Path extends `${string}?`
   : false;
 
 /** A group prefix: a valid path that does not end in optional or catch-all. */
+/** @internal */
 export type GroupPrefixError<Path extends string> = Path extends "" | "/"
   ? never
   : PathError<Path> extends infer Error
@@ -151,19 +155,23 @@ export type GroupPrefixError<Path extends string> = Path extends "" | "/"
  * Join a group prefix and a child path. `""` and `"/"` add no segments;
  * a child of `"/"` is the prefix itself.
  */
+/** @internal */
 export type Join<Prefix extends string, Path extends string> = Prefix extends
   "" | "/" ? Path extends "" | "/" ? "/" : Path
   : Path extends "" | "/" ? Prefix
   : `${Prefix}${Path}`;
 
+/** @internal */
 type SegmentParams<Segment extends string> = Segment extends `:${infer Name}?`
   ? { [Key in Name]?: string }
   : Segment extends `:${infer Name}*` ? { [Key in Name]: string }
   : Segment extends `:${infer Name}` ? { [Key in Name]: string }
   : never;
 
+/** @internal */
 type Flatten<Params> = { [Key in keyof Params]: Params[Key] };
 
+/** @internal */
 type MergeParams<Segments extends string[]> = Segments extends
   [infer Head extends string, ...infer Rest extends string[]]
   ? SegmentParams<Head> extends infer HeadParams

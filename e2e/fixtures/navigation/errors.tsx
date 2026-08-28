@@ -1,4 +1,5 @@
-import { type Element, NavigationRoot } from "dashi";
+import { NavigationRoot } from "dashi";
+import type { Element } from "dashi/jsx-runtime";
 
 export function NotFound(): Element {
   return (

@@ -1,8 +1,17 @@
-import { type Element, trustedHtmlBrand } from "./jsx_types.ts";
+/**
+ * @module
+ *
+ * `jsxImportSource` runtime and JSX types.
+ */
 
+import { asTrustedHtml, type Element, isTrustedHtml } from "./jsx_types.ts";
+
+/** JSX namespace used by `jsxImportSource`. */
 export type * as JSX from "./jsx_types.ts";
-export * from "./dom_types.ts";
+export { type HTMLAttributes, type SVGAttributes } from "./dom_types.ts";
 export { type DashiNode, type Element } from "./jsx_types.ts";
+/** @internal */
+export type { trustedHtmlBrand } from "./jsx_types.ts";
 
 // Closed list matching Deno's jsx precompile void elements.
 const VOID_ELEMENTS = new Set([
@@ -35,23 +44,15 @@ function escapeHtml(value: string): string {
   return value.replace(ESCAPE_RE, (ch) => ESCAPE_MAP[ch]!);
 }
 
-function isTrustedHtml(value: unknown): value is Element {
-  return typeof value === "object" && value !== null &&
-    trustedHtmlBrand in value;
-}
-
-function asTrustedHtml(html: string): Element {
-  const value = new String(html) as Element;
-  Object.defineProperty(value, trustedHtmlBrand, { value: true });
-  return value;
-}
-
+/** Thrown when the JSX runtime is given a value it cannot render. */
 export class JsxRuntimeError extends Error {
+  /** Join message parts into the error text. */
   constructor(...message: string[]) {
     super(message.join(" "));
   }
 }
 
+/** Join static strings with dynamic slots into trusted HTML. */
 export function jsxTemplate(
   strings: string[],
   ...dynamic: Array<string | Element>
@@ -69,7 +70,7 @@ export function jsxTemplate(
 
 // Closed list matching Deno's jsx precompile remaps. Unknown names pass
 // through; lowercasing would break viewBox and data-* on spreads.
-export const MAPPED_HTML_ATTR_NAMES: Record<string, string> = {
+const MAPPED_HTML_ATTR_NAMES: Record<string, string> = {
   className: "class",
   htmlFor: "for",
   panose1: "panose-1",
@@ -162,6 +163,7 @@ export const MAPPED_HTML_ATTR_NAMES: Record<string, string> = {
   xHeight: "x-height",
 };
 
+/** Serialize one HTML attribute, remapping closed-list JSX names. */
 export function jsxAttr(name: string, value: unknown): string {
   if (value === null || value === undefined || value === false) {
     return "";
@@ -184,6 +186,7 @@ export function jsxAttr(name: string, value: unknown): string {
   return `${attr}="${escapeHtml(String(value))}"`;
 }
 
+/** Escape a JSX child for HTML body position. */
 export function jsxEscape(value: unknown): string {
   if (value === null || value === undefined || typeof value === "boolean") {
     return "";
@@ -216,6 +219,7 @@ function innerHtmlFromProp(value: unknown): string {
   );
 }
 
+/** Compile a tag or component to HTML. Used by `jsxImportSource`. */
 export function jsx(
   type: ((props?: Record<string, unknown>) => unknown) | string,
   props?: Record<string, unknown> | null,

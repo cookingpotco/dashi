@@ -1,4 +1,5 @@
-import { type Element, type WrapperCtx } from "dashi";
+import { type WrapperCtx } from "dashi";
+import type { Element } from "dashi/jsx-runtime";
 
 export function BareLayout(
   _ctx: WrapperCtx,

@@ -1,12 +1,18 @@
 import type { Element } from "../jsx-runtime/mod.ts";
 
+/** CDN cache policy. Pick a member; `cached()` takes a `CacheConfig`. */
 export const enum CacheStrategy {
+  /** Shared cache, long-lived, never revalidate. */
   Immutable = "immutable",
+  /** Shared cache with an age. */
   Public = "public",
+  /** Browser cache only. */
   Private = "private",
+  /** Do not cache. */
   NoStore = "no-store",
 }
 
+/** @internal */
 export interface BaseCacheConfig {
   /**
    * Request header names for `Vary`. Cookie is the whole jar.
@@ -15,10 +21,12 @@ export interface BaseCacheConfig {
   varyHeaders?: string[];
 }
 
+/** @internal */
 export interface ImmutableCacheConfig extends BaseCacheConfig {
   strategy: CacheStrategy.Immutable;
 }
 
+/** @internal */
 export interface PublicCacheConfig extends BaseCacheConfig {
   strategy: CacheStrategy.Public;
   maxAge: number;
@@ -27,27 +35,35 @@ export interface PublicCacheConfig extends BaseCacheConfig {
   staleIfError?: number;
 }
 
+/** @internal */
 export interface PrivateCacheConfig extends BaseCacheConfig {
   strategy: CacheStrategy.Private;
   maxAge: number;
   staleWhileRevalidate?: number;
 }
 
+/** @internal */
 export interface NoStoreCacheConfig extends BaseCacheConfig {
   strategy: CacheStrategy.NoStore;
 }
 
+/** Cache policy bag passed to `cached()` and `staticFile()`. */
 export type CacheConfig =
   | ImmutableCacheConfig
   | PublicCacheConfig
   | PrivateCacheConfig
   | NoStoreCacheConfig;
 
+/** @internal */
 const cachedBrand: unique symbol = Symbol("dashi.cached");
 
+/** An `Element` with a cache policy attached by `cached()`. */
 export interface CachedElement {
+  /** @internal */
   readonly [cachedBrand]: true;
+  /** Rendered page body. */
   readonly page: Element;
+  /** Cache policy for this return. */
   readonly cache: CacheConfig;
 }
 
@@ -56,6 +72,14 @@ export interface CachedElement {
  * `cached()` on the handler-to-layout walk wins. Omitted: `no-store`.
  * `varyHeaders` names request headers; Cookie is the whole jar;
  * Public and Immutable refuse `Cookie` and `*`.
+ *
+ * @param page Markup to cache.
+ * @param cache Policy for this return.
+ *
+ * @example
+ * ```ts
+ * return cached(page, { strategy: CacheStrategy.Public, maxAge: 60 });
+ * ```
  */
 export function cached(page: Element, cache: CacheConfig): CachedElement {
   return { [cachedBrand]: true, page, cache };

@@ -17,6 +17,7 @@ const RouteFragmentElement = client.element(
 
 const DEFAULT_FRAGMENT_TIMEOUT_MS = 5000;
 
+/** @internal */
 interface BaseRouteFragmentProps extends HTMLAttributes {
   /**
    * Fragment is fetched from this location, either eagerly during SSR or after
@@ -32,6 +33,7 @@ interface BaseRouteFragmentProps extends HTMLAttributes {
   src: InternalSrc;
 }
 
+/** @internal */
 interface LazyFragmentProps extends BaseRouteFragmentProps {
   /**
    * Will not render the fragment during SSR; it is fetched after page load.
@@ -48,6 +50,7 @@ interface LazyFragmentProps extends BaseRouteFragmentProps {
   timeout?: never;
 }
 
+/** @internal */
 interface EagerFragmentProps extends BaseRouteFragmentProps {
   lazy?: never;
   fallback?: never;
@@ -58,6 +61,7 @@ interface EagerFragmentProps extends BaseRouteFragmentProps {
   timeout?: number;
 }
 
+/** @internal */
 type FragmentSlotProps = LazyFragmentProps | EagerFragmentProps;
 
 function resolveFragmentSrc(src: string, base: string): {
@@ -132,6 +136,15 @@ function requestEagerFragment(src: string, timeoutMs: number): string {
   return identity;
 }
 
+/**
+ * Include another route's rendered output. Eager during SSR, or `lazy`
+ * after load.
+ *
+ * @example
+ * ```tsx
+ * <RouteFragment src="/todos" lazy fallback={<p>Loading…</p>} />
+ * ```
+ */
 export function RouteFragment(
   { src, lazy, fallback, timeout, ...rest }: FragmentSlotProps,
 ): Element {

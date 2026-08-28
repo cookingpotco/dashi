@@ -1,4 +1,5 @@
-import { type Element, NavigationRoot, type WrapperCtx } from "dashi";
+import { NavigationRoot, type WrapperCtx } from "dashi";
+import type { Element } from "dashi/jsx-runtime";
 import type { AppState } from "./state.ts";
 
 export function RootLayout(

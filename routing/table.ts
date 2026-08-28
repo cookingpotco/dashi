@@ -18,6 +18,7 @@ import type {
 export type { ErrorHandler, Method, MethodHandlers } from "../shared/mod.ts";
 export type { ParamsOf } from "./path_types.ts";
 
+/** @internal */
 const enum NodeKind {
   Route = "route",
   Group = "group",
@@ -46,6 +47,7 @@ type ConcreteSegment =
   | { kind: SegmentKind.Param; name: string }
   | { kind: SegmentKind.Catchall; name: string };
 
+/** @internal */
 export interface Route<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
@@ -71,15 +73,23 @@ interface FlattenedRoute<
 export interface Group<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
+  /** Discriminant. Always the group kind. */
   kind: NodeKind.Group;
+  /** This group's path prefix, or `null` if pathless. */
   prefix: string | null;
+  /** Document layouts, outermost first. */
   layouts: Layout<State>[];
+  /** Request pipeline, outermost first. */
   middleware: Middleware<State>[];
+  /** Catches handler throws and inner group failures. */
   error?: ErrorHandler<State>;
+  /** Document miss handler under this group's prefix. */
   notFound?: Handler<Record<string, string>, State>;
+  /** Child routes and nested groups. */
   routes: Array<Route<State> | Group<State>>;
 }
 
+/** @internal */
 export interface GroupFields<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
@@ -118,6 +128,7 @@ type ValidChildPath<Prefix extends string, Path extends string> = string extends
 type ChildParams<Prefix extends string, Path extends string> = string extends
   Prefix ? ParamsOf<Path> : ParamsOf<Join<Prefix, Path>>;
 
+/** @internal */
 type PrefixConstraint<Prefix extends string> = string extends Prefix ? unknown
   : [GroupPrefixError<Prefix>] extends [never] ? unknown
   : GroupPrefixError<Prefix>;
@@ -125,6 +136,7 @@ type PrefixConstraint<Prefix extends string> = string extends Prefix ? unknown
 /**
  * `route` closed over the group's prefix.
  */
+/** @internal */
 export interface GroupCallback<
   Prefix extends string = "",
   State extends Record<string, unknown> = Record<PropertyKey, never>,
@@ -140,6 +152,7 @@ export interface GroupCallback<
   ): Route<State>;
 }
 
+/** @internal */
 export interface CompiledRoute<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
@@ -151,6 +164,7 @@ export interface CompiledRoute<
   path: string;
 }
 
+/** @internal */
 export interface MatchedRoute<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
@@ -160,6 +174,7 @@ export interface MatchedRoute<
   boundary?: GroupBoundary<State>;
 }
 
+/** @internal */
 export interface CompiledTable<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
@@ -184,6 +199,7 @@ interface PrefixCapture<
  * Group that owns a document miss: the deepest prefixed group whose
  * prefix matches, or the root when none do.
  */
+/** @internal */
 export interface MissMatch<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
@@ -655,6 +671,16 @@ function createGroupCallback<
  * outermost first, and runs for document hits and fragment hits.
  * `error` catches handler throws and inner group failures; it does not
  * catch this group's own layouts.
+ *
+ * @param prefix Path joined onto child routes. Omit for a pathless shell.
+ * @param build Callback that receives `route` closed over `prefix`.
+ *
+ * @example
+ * ```ts
+ * export const menu = group("/menu", ({ route }) => ({
+ *   routes: [route("/", { GET: Menu })],
+ * }));
+ * ```
  */
 export function group<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
@@ -663,6 +689,7 @@ export function group<
   prefix: Prefix & PrefixConstraint<Prefix>,
   build: (cb: GroupCallback<Prefix, State>) => GroupFields<State>,
 ): Group<State>;
+/** Pathless group: a layout/middleware shell with no extra prefix. */
 export function group<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(

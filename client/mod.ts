@@ -40,7 +40,16 @@ function recordEntry(href: string): void {
   getRenderStore().clientEntries.add(path);
 }
 
-/** Register a client module. Renders nothing. Call at module scope. */
+/**
+ * Register a client module. Renders nothing. Call at module scope.
+ *
+ * @param url Absolute source URL, typically `new URL("./x_client.ts", import.meta.url)`.
+ *
+ * @example
+ * ```ts
+ * const Clock = client.module(new URL("./clock_client.ts", import.meta.url));
+ * ```
+ */
 function module(url: URL): () => Element {
   assertCanRegister();
   registered.set(url.href, url);
@@ -63,6 +72,7 @@ function element(
   };
 }
 
+/** Client module factory. Call `module` / `element` at module scope. */
 export const client = { module, element };
 
 // Deno.bundle names entries from the source path (basename, or more

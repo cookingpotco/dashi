@@ -73,6 +73,9 @@ jobs:
           - name: E2E
             run: deno task test:e2e
             timeout: 20
+          - name: Docs
+            run: deno task doc:lint
+            timeout: 10
           - name: Publish dry-run
             run: deno publish --dry-run
             timeout: 10
