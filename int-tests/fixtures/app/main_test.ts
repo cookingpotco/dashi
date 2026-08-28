@@ -123,8 +123,46 @@ const appCases: IntegrationTestCase[] = [
     html: {
       bodyExcludes: ["{{fragment:", "Fragment cycle:"],
       select: [
-        { selector: "#dup-a", text: "nested-fragment-body" },
-        { selector: "#dup-b", text: "nested-fragment-body" },
+        {
+          selector: "#dup-a route-fragment",
+          text: "nested-fragment-body",
+          attr: { src: "/nest-inner" },
+        },
+        {
+          selector: "#dup-b route-fragment",
+          text: "nested-fragment-body",
+          attr: { src: "/nest-inner" },
+        },
+        {
+          selector: "#dup-c route-fragment",
+          text: "nested-fragment-body",
+          attr: { src: "/nest-inner" },
+        },
+        {
+          selector: "#dup-d route-fragment",
+          text: "nested-fragment-body",
+          attr: { src: "/nest-inner" },
+        },
+      ],
+    },
+  },
+  {
+    name: "path with a different query is a distinct fragment host",
+    request: { path: "/distinct-query" },
+    status: 200,
+    html: {
+      bodyExcludes: ["{{fragment:", "Fragment cycle:"],
+      select: [
+        {
+          selector: "#q-none route-fragment",
+          text: "query-frag-none",
+          attr: { src: "/query-frag" },
+        },
+        {
+          selector: "#q-one route-fragment",
+          text: "query-frag-1",
+          attr: { src: "/query-frag?q=1" },
+        },
       ],
     },
   },
@@ -1218,6 +1256,21 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     stillServes: true,
   },
   {
+    name: "search-only loop is a pathname cycle",
+    request: { path: "/embed-cycle-query" },
+    status: 500,
+    html: {
+      bodyIncludes: ["Fragment cycle: /cycle-query → /cycle-query"],
+      select: [
+        {
+          selector: "#fragment-fault",
+          text: "Fragment cycle: /cycle-query → /cycle-query",
+        },
+      ],
+    },
+    stillServes: true,
+  },
+  {
     name: "six-deep eager chain exceeds default depth",
     request: { path: "/depth-embed" },
     status: 500,
@@ -1260,6 +1313,23 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
         { selector: "#peer", text: "peer-body" },
         { selector: "#slow", exists: false },
         { selector: "#frag-error", exists: false },
+      ],
+    },
+    stillServes: true,
+  },
+  {
+    name: "timed-out include does not splice into a later include",
+    request: { path: "/embed-slow-held" },
+    status: 200,
+    html: {
+      bodyExcludes: ["{{fragment:", "slow-short-body"],
+      select: [
+        {
+          selector: "#slow-held route-fragment #frag-error",
+          text: "frag-error-ui",
+        },
+        { selector: "#held", text: "wait-out-body" },
+        { selector: "#slow-short", exists: false },
       ],
     },
     stillServes: true,

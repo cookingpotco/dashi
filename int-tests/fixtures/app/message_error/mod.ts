@@ -3,6 +3,7 @@ import type { AppState } from "../state.ts";
 import {
   CycleA,
   CycleB,
+  CycleQuery,
   Depth1,
   Depth2,
   Depth3,
@@ -11,6 +12,7 @@ import {
   Depth6,
   DepthEmbed,
   EmbedCycle,
+  EmbedCycleQuery,
   messageError as messageErrorPage,
   SelfInclude,
 } from "../errors.tsx";
@@ -21,7 +23,9 @@ export const messageError = group<AppState>(({ route }) => ({
     route("/self-include", { GET: SelfInclude }),
     route("/cycle-a", { GET: CycleA }),
     route("/cycle-b", { GET: CycleB }),
+    route("/cycle-query", { GET: CycleQuery }),
     route("/embed-cycle", { GET: EmbedCycle }),
+    route("/embed-cycle-query", { GET: EmbedCycleQuery }),
     route("/depth-embed", { GET: DepthEmbed }),
     route("/d1", { GET: Depth1 }),
     route("/d2", { GET: Depth2 }),

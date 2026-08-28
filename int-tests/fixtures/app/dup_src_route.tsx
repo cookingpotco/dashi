@@ -9,6 +9,12 @@ export function DupSrc() {
       <div id="dup-b">
         <RouteFragment src="/nest-inner" />
       </div>
+      <div id="dup-c">
+        <RouteFragment src="/./nest-inner" />
+      </div>
+      <div id="dup-d">
+        <RouteFragment src="/nest-inner?" />
+      </div>
     </div>
   );
 }

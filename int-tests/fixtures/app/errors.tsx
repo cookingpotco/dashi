@@ -175,6 +175,14 @@ export function EmbedCycle(): Element {
   return <RouteFragment src="/cycle-a" />;
 }
 
+export function CycleQuery(): Element {
+  return <RouteFragment src="/cycle-query?y=2" />;
+}
+
+export function EmbedCycleQuery(): Element {
+  return <RouteFragment src="/cycle-query?x=1" />;
+}
+
 export function DepthEmbed(): Element {
   return <RouteFragment src="/d1" />;
 }
@@ -203,9 +211,42 @@ export function Depth6(): Element {
   return <p id="depth-leaf">depth-leaf</p>;
 }
 
-export async function Slow(): Promise<Element> {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+function delay(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal.aborted) {
+      reject(signal.reason);
+      return;
+    }
+    const timer = setTimeout(resolve, ms);
+    signal.addEventListener("abort", () => {
+      clearTimeout(timer);
+      reject(signal.reason);
+    }, { once: true });
+  });
+}
+
+export async function Slow(
+  ctx: Ctx<Record<string, never>, AppState>,
+): Promise<Element> {
+  await delay(1000, ctx.req.signal);
   return <p id="slow">slow-body</p>;
+}
+
+export async function SlowShort(
+  ctx: Ctx<Record<string, never>, AppState>,
+): Promise<Element> {
+  await delay(150, ctx.req.signal);
+  return (
+    <div>
+      <p id="slow-short">slow-short-body</p>
+      <RouteFragment src="/wait-out" />
+    </div>
+  );
+}
+
+export async function WaitOut(): Promise<Element> {
+  await new Promise((resolve) => setTimeout(resolve, 200));
+  return <p id="wait-out">wait-out-body</p>;
 }
 
 export function EmbedSlow(): Element {
@@ -222,6 +263,19 @@ export function EmbedSlowEmpty(): Element {
     <div id="embed-slow-empty">
       <RouteFragment src="/slow-no-error" timeout={50} />
       <RouteFragment src="/peer" />
+    </div>
+  );
+}
+
+export function EmbedSlowHeld(): Element {
+  return (
+    <div id="embed-slow-held">
+      <div id="slow-held">
+        <RouteFragment src="/slow-short" timeout={50} />
+      </div>
+      <div id="held">
+        <RouteFragment src="/wait-out" />
+      </div>
     </div>
   );
 }

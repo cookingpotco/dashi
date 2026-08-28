@@ -18,6 +18,7 @@ interface RenderStore {
   clientEntries: Set<string>;
   currentState: Partial<Record<string, unknown>>;
   includeChain: string[];
+  includeSignal?: AbortSignal;
   fragmentFault: FragmentFault;
   fragmentDepthLimit: number;
 }
@@ -51,6 +52,7 @@ export function runWithNestedRenderStore<T>(
     clientEntries: parent.clientEntries,
     currentState,
     includeChain: parent.includeChain,
+    includeSignal: parent.includeSignal,
     fragmentFault: parent.fragmentFault,
     fragmentDepthLimit: parent.fragmentDepthLimit,
   }, fn);

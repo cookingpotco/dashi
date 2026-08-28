@@ -60,29 +60,48 @@ interface EagerFragmentProps extends BaseRouteFragmentProps {
 
 type FragmentSlotProps = LazyFragmentProps | EagerFragmentProps;
 
-function requestEagerFragment(src: string, timeoutMs: number) {
-  const store = getRenderStore();
+function resolveFragmentSrc(src: string, base: string): {
+  identity: string;
+  pathname: string;
+  url: URL;
+} {
+  const url = new URL(src, base);
+  return {
+    identity: `${url.pathname}${url.search}`,
+    pathname: url.pathname,
+    url,
+  };
+}
 
-  if (store.includeChain.includes(src)) {
-    store.fragmentFault.error = new Error(
-      `Fragment cycle: ${[...store.includeChain, src].join(" → ")}`,
-    );
-    return;
+function requestEagerFragment(src: string, timeoutMs: number): string {
+  const store = getRenderStore();
+  const { identity, pathname, url } = resolveFragmentSrc(
+    src,
+    store.pageReq.url,
+  );
+
+  if (store.includeSignal?.aborted) {
+    return identity;
   }
-  const chain = [...store.includeChain, src];
+  if (store.includeChain.includes(pathname)) {
+    store.fragmentFault.error = new Error(
+      `Fragment cycle: ${[...store.includeChain, pathname].join(" → ")}`,
+    );
+    return identity;
+  }
+  const chain = [...store.includeChain, pathname];
   if (chain.length > store.fragmentDepthLimit) {
     store.fragmentFault.error = new Error(
       `Fragment depth exceeded (${store.fragmentDepthLimit}): ${
         chain.join(" → ")
       }`,
     );
-    return;
+    return identity;
   }
-  if (store.inflightFragments.has(src)) {
-    return;
+  if (store.inflightFragments.has(identity)) {
+    return identity;
   }
 
-  const url = new URL(src, store.pageReq.url);
   const headers = new Headers();
   const cookie = store.pageReq.headers.get("cookie");
   const authorization = store.pageReq.headers.get("authorization");
@@ -109,25 +128,30 @@ function requestEagerFragment(src: string, timeoutMs: number) {
     }
   })();
 
-  store.inflightFragments.set(src, promise);
+  store.inflightFragments.set(identity, promise);
+  return identity;
 }
 
 export function RouteFragment(
   { src, lazy, fallback, timeout, ...rest }: FragmentSlotProps,
 ): Element {
   if (lazy) {
+    const { identity } = resolveFragmentSrc(src, getRenderStore().pageReq.url);
     return jsx(RouteFragmentElement, {
-      src,
+      src: identity,
       lazy,
       ...rest,
       children: fallback,
     });
   }
 
-  requestEagerFragment(src, timeout ?? DEFAULT_FRAGMENT_TIMEOUT_MS);
-  return jsx(RouteFragmentElement, {
+  const identity = requestEagerFragment(
     src,
+    timeout ?? DEFAULT_FRAGMENT_TIMEOUT_MS,
+  );
+  return jsx(RouteFragmentElement, {
+    src: identity,
     ...rest,
-    dangerouslySetInnerHTML: { __html: getFragmentSlot(src) },
+    dangerouslySetInnerHTML: { __html: getFragmentSlot(identity) },
   });
 }
