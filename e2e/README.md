@@ -34,7 +34,7 @@ and writes HTML, stderr, and a screenshot under `e2e/results/` (gitignored).
 
 ## Add a fixture app
 
-`fixtures/app` is the main fixture: `main.ts` is the `serve()` callback and
-boots it, and every page path is a prefixed feature group, matching the
+`fixtures/app` is the main fixture: `main.ts` exports `start()`, which calls
+`serve()`, and every page path is a prefixed feature group, matching the
 examples. Put a new folder next to it only when the behaviour cannot live on
 that app. Do not add a fixture as its own workspace member.

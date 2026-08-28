@@ -50,7 +50,3 @@ export function start() {
     ],
   }), { fragmentDepthLimit: 2, hostname: "127.0.0.1", port: 0 });
 }
-
-if (import.meta.main) {
-  start();
-}

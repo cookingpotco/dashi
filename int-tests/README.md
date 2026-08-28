@@ -32,17 +32,13 @@ observes it.
 
 ## Add a fixture app
 
-`fixtures/app` is the main fixture: `main.ts` is the `serve()` callback and
-boots it, and every `group()` lives in a feature folder that exports that
-`Group`. Probe `route()`s stay on the root. Put a new folder next to it only
-when the behaviour cannot live on that app. Do not add a fixture as its own
-workspace member. Extra fixtures (`cors`, `error-defaults`,
-`error-fallback-response`, `fragment-depth`) are a small `main.ts` or `main.tsx`
-because they cannot share the main app's `serve()` table; they stay inline
-`serve(callback)` harnesses.
-
-`fixtures/app` and extra fixtures export `start()`, which calls
-`serve(({ route }) => ({ … }), { hostname: "127.0.0.1", port: 0, fatal })`. The
-test file imports that function and passes it to `boot`. `deno run` on the
-fixture file still boots it. `deno task test:int` picks up every `*_test.ts`
-under `int-tests/`.
+`fixtures/app` is the main fixture: `main.ts` exports `start()`, which calls
+`serve(({ route }) => ({ … }), { hostname: "127.0.0.1", port: 0, fatal })`, and
+every `group()` lives in a feature folder that exports that `Group`. Probe
+`route()`s stay on the root. Put a new folder next to it only when the behaviour
+cannot live on that app. Do not add a fixture as its own workspace member. Extra
+fixtures (`cors`, `error-defaults`, `error-fallback-response`, `fragment-depth`)
+are a small `main.ts` or `main.tsx` because they cannot share the main app's
+`serve()` table; they stay inline `serve(callback)` harnesses. The test file
+imports `start` and passes it to `boot`. `deno task test:int` picks up every
+`*_test.ts` under `int-tests/`.

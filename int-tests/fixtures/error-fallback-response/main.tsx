@@ -36,7 +36,3 @@ export function start() {
     port: 0,
   });
 }
-
-if (import.meta.main) {
-  start();
-}

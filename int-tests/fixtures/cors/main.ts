@@ -7,7 +7,3 @@ export function start() {
     routes: [route("/", { GET: () => Response.json({ ok: true }) })],
   }), { hostname: "127.0.0.1", port: 0 });
 }
-
-if (import.meta.main) {
-  start();
-}

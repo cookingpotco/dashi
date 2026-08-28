@@ -89,8 +89,9 @@ if (import.meta.main) {
 The main fixture (`int-tests/fixtures/app/`) matches this layout. Extra
 fixtures that cannot share that `serve()` table are a small `main.ts` or
 `main.tsx` in their own folder, inline `serve(callback)` harnesses. They are
-not workspace members. The e2e fixtures use the same tree; extra e2e fixtures
-follow the same rule.
+not workspace members. Fixture `main.ts` exports `start()` for `boot` /
+`withBrowser`. The e2e fixtures use the same tree; extra e2e fixtures follow
+the same rule.
 
 ## Imports
 
