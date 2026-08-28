@@ -3,8 +3,6 @@ export {
   group,
   type GroupCallback,
   type GroupFields,
-  type Method,
-  type MethodHandlers,
   type ParamsOf,
 } from "./table.ts";
 

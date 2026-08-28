@@ -1,6 +1,7 @@
 import type { Element } from "../jsx-runtime/mod.ts";
 import {
   type ErrorHandler,
+  type GroupBoundary,
   type Handler,
   type Layout,
   type MethodHandlers,
@@ -16,22 +17,6 @@ import type {
 
 export type { ErrorHandler, Method, MethodHandlers } from "../shared/mod.ts";
 export type { ParamsOf } from "./path_types.ts";
-
-/**
- * One group's layouts, optional `error`, and optional `notFound`.
- * `parent` is the enclosing group, if any. A group's `error` catches
- * handler throws and inner group failures; it does not catch that
- * group's own layouts. `notFound` handles document misses captured
- * here; omitted walks to the parent.
- */
-export interface GroupBoundary<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
-> {
-  layouts: Layout<State>[];
-  error?: ErrorHandler<State>;
-  notFound?: Handler<Record<string, string>, State>;
-  parent?: GroupBoundary<State>;
-}
 
 const enum NodeKind {
   Route = "route",
@@ -65,6 +50,13 @@ export interface Route<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
   kind: NodeKind.Route;
+  path: string;
+  handlers: MethodHandlers<Record<string, string>, State>;
+}
+
+interface FlattenedRoute<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> {
   path: string;
   handlers: MethodHandlers<Record<string, string>, State>;
   boundary?: GroupBoundary<State>;
@@ -116,22 +108,22 @@ export interface GroupFields<
   routes: Array<Route<State> | Group<State>>;
 }
 
-type ValidChildPath<Prefix extends string, Path extends string> =
-  [PathError<Path>] extends [never]
+type ValidChildPath<Prefix extends string, Path extends string> = string extends
+  Prefix ? [PathError<Path>] extends [never] ? Path : PathError<Path>
+  : [PathError<Path>] extends [never]
     ? [PathError<Join<Prefix, Path>>] extends [never] ? Path
     : PathError<Join<Prefix, Path>>
-    : PathError<Path>;
+  : PathError<Path>;
 
-type ValidChildPrefix<Prefix extends string, ChildPrefix extends string> =
-  [GroupPrefixError<ChildPrefix>] extends [never]
-    ? [GroupPrefixError<Join<Prefix, ChildPrefix>>] extends [never]
-      ? ChildPrefix
-    : GroupPrefixError<Join<Prefix, ChildPrefix>>
-    : GroupPrefixError<ChildPrefix>;
+type ChildParams<Prefix extends string, Path extends string> = string extends
+  Prefix ? ParamsOf<Path> : ParamsOf<Join<Prefix, Path>>;
+
+type PrefixConstraint<Prefix extends string> = string extends Prefix ? unknown
+  : [GroupPrefixError<Prefix>] extends [never] ? unknown
+  : GroupPrefixError<Prefix>;
 
 /**
- * `route` and `group` closed over the accumulated prefix. Nested
- * `group` from this callback threads that prefix.
+ * `route` closed over the group's prefix.
  */
 export interface GroupCallback<
   Prefix extends string = "",
@@ -144,17 +136,8 @@ export interface GroupCallback<
    */
   route<Path extends string>(
     path: ValidChildPath<Prefix, Path>,
-    handlers: MethodHandlers<ParamsOf<Join<Prefix, Path>>, State>,
+    handlers: MethodHandlers<ChildParams<Prefix, Path>, State>,
   ): Route<State>;
-  group<ChildPrefix extends string>(
-    prefix: ValidChildPrefix<Prefix, ChildPrefix>,
-    build: (
-      cb: GroupCallback<Join<Prefix, ChildPrefix>, State>,
-    ) => GroupFields<State>,
-  ): Group<State>;
-  group(
-    build: (cb: GroupCallback<Prefix, State>) => GroupFields<State>,
-  ): Group<State>;
 }
 
 export interface CompiledRoute<
@@ -185,7 +168,7 @@ export interface CompiledTable<
   rootBoundary: GroupBoundary<State>;
   rootMiddleware: Middleware<State>[];
   prefixCaptures: PrefixCapture<State>[];
-  errorFallback?: Element | Response;
+  fatal?: Element | Response;
   fragmentDepthLimit: number;
 }
 
@@ -366,7 +349,7 @@ export function compile<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(
   table: Group<State>,
-  errorFallback?: Element | Response,
+  fatal?: Element | Response,
   fragmentDepthLimit = DEFAULT_FRAGMENT_DEPTH_LIMIT,
 ): CompiledTable<State> {
   const rootBoundary: GroupBoundary<State> = {
@@ -374,7 +357,7 @@ export function compile<
     error: table.error,
     notFound: table.notFound,
   };
-  const routes: Route<State>[] = [];
+  const routes: FlattenedRoute<State>[] = [];
   const prefixCaptures: PrefixCapture<State>[] = [];
   if (table.prefix !== null && table.prefix !== "/") {
     prefixCaptures.push({
@@ -436,7 +419,7 @@ export function compile<
     rootBoundary,
     rootMiddleware: table.middleware,
     prefixCaptures,
-    errorFallback,
+    fatal,
     fragmentDepthLimit,
   };
 }
@@ -640,7 +623,6 @@ function declareRoute<
     kind: NodeKind.Route,
     path,
     handlers,
-    middleware: [],
   };
 }
 
@@ -648,51 +630,6 @@ function createGroupCallback<
   Prefix extends string,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(prefix: string | null): GroupCallback<Prefix, State> {
-  function nestedGroup<ChildPrefix extends string>(
-    childPrefix: ValidChildPrefix<Prefix, ChildPrefix>,
-    build: (
-      cb: GroupCallback<Join<Prefix, ChildPrefix>, State>,
-    ) => GroupFields<State>,
-  ): Group<State>;
-  function nestedGroup(
-    build: (cb: GroupCallback<Prefix, State>) => GroupFields<State>,
-  ): Group<State>;
-  function nestedGroup(
-    prefixOrBuild:
-      | string
-      | ((cb: GroupCallback<string, State>) => GroupFields<State>),
-    maybeBuild?: (cb: GroupCallback<string, State>) => GroupFields<State>,
-  ): Group<State> {
-    if (typeof prefixOrBuild === "function") {
-      const fields = prefixOrBuild(
-        createGroupCallback<Prefix, State>(prefix),
-      );
-      return {
-        kind: NodeKind.Group,
-        prefix: null,
-        layouts: fields.layouts ?? [],
-        middleware: fields.middleware ?? [],
-        error: fields.error,
-        notFound: fields.notFound,
-        routes: fields.routes,
-      };
-    }
-    const fields = maybeBuild!(
-      createGroupCallback<string, State>(
-        joinPath(prefix, prefixOrBuild),
-      ),
-    );
-    return {
-      kind: NodeKind.Group,
-      prefix: prefixOrBuild,
-      layouts: fields.layouts ?? [],
-      middleware: fields.middleware ?? [],
-      error: fields.error,
-      notFound: fields.notFound,
-      routes: fields.routes,
-    };
-  }
-
   return {
     route: (path, handlers) =>
       declareRoute(
@@ -702,17 +639,16 @@ function createGroupCallback<
         // only fills the declared keys, so this widening is safe.
         handlers as Route<State>["handlers"],
       ),
-    group: nestedGroup,
   };
 }
 
 /**
  * Declares a node in the route tree. Pass a prefix to join onto child
  * paths, or omit it for a pathless layout/middleware shell. `"/"` is
- * not a valid prefix. The callback's `route` and `group` close over
- * this group's prefix so handlers see joined params. `notFound`
- * handles document misses under this prefix; omitted walks to the
- * parent.
+ * not a valid prefix. The callback's `route` closes over this group's
+ * prefix so handlers see joined params. Nested groups are `group()`
+ * values in `routes`. `notFound` handles document misses under this
+ * prefix; omitted walks to the parent.
  *
  * Layouts wrap the route on document render, outermost first, and do
  * not run on fragment renders. Middleware is the request pipeline,
@@ -721,11 +657,10 @@ function createGroupCallback<
  * catch this group's own layouts.
  */
 export function group<
-  Prefix extends string,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
+  const Prefix extends string = string,
 >(
-  prefix: [GroupPrefixError<Prefix>] extends [never] ? Prefix
-    : GroupPrefixError<Prefix>,
+  prefix: Prefix & PrefixConstraint<Prefix>,
   build: (cb: GroupCallback<Prefix, State>) => GroupFields<State>,
 ): Group<State>;
 export function group<
@@ -774,7 +709,7 @@ function append<
   parent: GroupBoundary<State>,
   middleware: Middleware<State>[],
   ancestorPrefix: string | null,
-  routes: Route<State>[],
+  routes: FlattenedRoute<State>[],
   prefixCaptures: PrefixCapture<State>[],
 ): void {
   for (const node of nodes) {
@@ -805,11 +740,10 @@ function append<
       continue;
     }
     routes.push({
-      kind: NodeKind.Route,
       path: joinPath(ancestorPrefix, node.path),
       handlers: node.handlers,
       boundary: parent,
-      middleware: [...middleware, ...node.middleware],
+      middleware,
     });
   }
 }

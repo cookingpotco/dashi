@@ -16,15 +16,19 @@ import {
  * document render, outermost first, and do not run on fragment
  * renders. Middleware is the request pipeline, outermost first, and
  * runs for document hits and fragment hits. `error` catches handler
- * throws and inner group failures. `errorFallback` is the last-resort
- * 500 value when the error walk is exhausted.
+ * throws and inner group failures. `fatal` is the last-resort 500
+ * value when the error walk is exhausted.
+ *
+ * Compiles the client graph, then returns the `Deno.HttpServer` that
+ * `Deno.serve` returns. Callers that only boot a process may omit
+ * `await`.
  *
  * @param build Root table. Pathless; nested prefixes live on imported
  * `group()` values in `routes`.
- * @param options Forwarded to `Deno.serve`, plus `errorFallback` and
+ * @param options Forwarded to `Deno.serve`, plus `fatal` and
  * `fragmentDepthLimit`. `handler` is always the router.
  */
-export function serve<
+export async function serve<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(
   build: (cb: GroupCallback<"", State>) => GroupFields<State>,
@@ -35,22 +39,16 @@ export function serve<
      * as-is. Omitted: `new Response("Something Went Wrong", {
      * status: 500 })`.
      */
-    errorFallback?: Element | Response;
+    fatal?: Element | Response;
     /**
      * Max eager include chain length. Omitted is 5. A longer chain
      * fails the request.
      */
     fragmentDepthLimit?: number;
   },
-) {
-  const { errorFallback, fragmentDepthLimit, ...serveOptions } = options ?? {};
-  init(build, errorFallback, fragmentDepthLimit);
-  void compileThenListen(serveOptions);
-}
-
-async function compileThenListen(
-  serveOptions: Omit<Deno.ServeTcpOptions & Deno.ServeInit, "handler">,
-): Promise<void> {
+): Promise<Deno.HttpServer> {
+  const { fatal, fragmentDepthLimit, ...serveOptions } = options ?? {};
+  init(build, fatal, fragmentDepthLimit);
   await compileClient();
-  Deno.serve({ ...serveOptions, handler: handle });
+  return Deno.serve({ ...serveOptions, handler: handle });
 }

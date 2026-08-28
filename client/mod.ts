@@ -2,7 +2,7 @@ import { type Element, jsx, jsxTemplate } from "../jsx-runtime/mod.ts";
 import { Logger } from "../logging/mod.ts";
 import { cacheControl, CacheStrategy } from "../caching/mod.ts";
 import { type Ctx, DASHI_PREFIX } from "../shared/mod.ts";
-import { getRenderStore } from "../ssr/mod.ts";
+import { getRenderStore, inRender } from "../ssr/mod.ts";
 
 /** Reserved URL prefix for compiled client modules. */
 const CLIENT_PREFIX = `${DASHI_PREFIX}/client`;
@@ -25,10 +25,9 @@ const registered = new Map<string, URL>();
 const publicByHref = new Map<string, string>();
 const compiledFiles = new Map<string, CompiledFile>();
 const importMap: Record<string, string> = {};
-let hasCompiled = false;
 
 function assertCanRegister(): void {
-  if (hasCompiled) {
+  if (inRender()) {
     throw new Error(FACTORY_SCOPE);
   }
 }
@@ -201,15 +200,13 @@ export function clientImportMap(): Record<string, string> {
   return importMap;
 }
 
-/** Compile every registered client URL, then mark the graph closed. */
+/** Compile every registered client URL. */
 export async function compileClient(): Promise<void> {
   try {
     await bundleRegistered();
   } catch (thrown) {
     Logger.error(["client"], "bundle failed", thrown);
-    Deno.exit(1);
-  } finally {
-    hasCompiled = true;
+    throw thrown instanceof Error ? thrown : new Error("client bundle failed");
   }
 }
 

@@ -11,6 +11,7 @@ import {
   type IntegrationTestCase,
   runCases,
 } from "../../mod.ts";
+import { start } from "./main.ts";
 
 const guestbookMultipart = new FormData();
 guestbookMultipart.set("body", "from-formdata");
@@ -292,19 +293,6 @@ const appCases: IntegrationTestCase[] = [
     request: {
       method: "POST",
       path: "/write-html",
-    },
-    status: 500,
-    html: {
-      select: [
-        { selector: "html > body > #root-error", text: "root-error" },
-      ],
-    },
-  },
-  {
-    name: "write returning JSX is rejected",
-    request: {
-      method: "POST",
-      path: "/write-jsx",
     },
     status: 500,
     html: {
@@ -898,7 +886,7 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     stillServes: true,
   },
   {
-    name: "notFound ok and root layout throws uses errorFallback",
+    name: "notFound ok and root layout throws uses fatal",
     request: { path: "/miss-layout-throws" },
     status: 500,
     html: {
@@ -1048,7 +1036,7 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     stillServes: true,
   },
   {
-    name: "root layout throws uses errorFallback JSX",
+    name: "root layout throws uses fatal JSX",
     request: { path: "/root-layout-throws" },
     status: 500,
     html: {
@@ -1058,7 +1046,7 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     stillServes: true,
   },
   {
-    name: "root error throws uses errorFallback",
+    name: "root error throws uses fatal",
     request: { path: "/root-error-throws" },
     status: 500,
     html: {
@@ -1068,7 +1056,7 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     stillServes: true,
   },
   {
-    name: "middleware throws uses errorFallback immediately",
+    name: "middleware throws uses fatal immediately",
     request: { path: "/mw-throws" },
     status: 500,
     html: {
@@ -1160,7 +1148,7 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     stillServes: true,
   },
   {
-    name: "x-fragment last-resort is empty 500 not errorFallback",
+    name: "x-fragment last-resort is empty 500 not fatal",
     request: {
       path: "/frag-error-throws",
       headers: { "x-fragment": "1" },
@@ -1272,9 +1260,7 @@ async function assertHeadMatchesGet(app: App, path: string): Promise<void> {
 }
 
 Deno.test("main fixture app over HTTP", async (t) => {
-  await using app = await boot(
-    new URL("./main.ts", import.meta.url),
-  );
+  await using app = await boot(start);
 
   await runCases(t, app, appCases);
   await runCases(t, app, errorCases, stillServes);

@@ -1,7 +1,7 @@
 import { type Ctx, group } from "dashi";
 import type { AppState } from "../state.ts";
 
-export const about = group<"/about", AppState>("/about", ({ route }) => ({
+export const about = group<AppState>("/about", ({ route }) => ({
   routes: [route("/", { GET: About })],
 }));
 

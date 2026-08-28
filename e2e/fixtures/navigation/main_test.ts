@@ -1,6 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { boot, withBrowser } from "../../harness.ts";
 import type { Page } from "../../harness.ts";
+import { start } from "./main.ts";
 
 async function clickId(page: Page, id: string) {
   await page.evaluate((sel) => {
@@ -86,7 +87,7 @@ function headSnapshot() {
 
 Deno.test("navigation fixture", async (t) => {
   await withBrowser(
-    new URL("./main.ts", import.meta.url),
+    start,
     async ({ app, page }) => {
       await t.step(
         "clicking a link from a scrolled page swaps in place",
@@ -246,7 +247,7 @@ Deno.test("navigation fixture", async (t) => {
       await t.step(
         "a cross-origin link does a real document load",
         async () => {
-          await using other = await boot(new URL("./main.ts", import.meta.url));
+          await using other = await boot(start);
           await prepare(page, app.origin, "/");
           await page.evaluate((href) => {
             const el = document.getElementById("to-cross");

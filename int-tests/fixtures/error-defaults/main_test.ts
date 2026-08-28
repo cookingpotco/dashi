@@ -1,4 +1,5 @@
 import { boot, type IntegrationTestCase, runCases } from "../../mod.ts";
+import { start } from "./main.tsx";
 
 const stillServes: IntegrationTestCase = {
   name: "known-good route is 200",
@@ -11,9 +12,7 @@ const stillServes: IntegrationTestCase = {
 };
 
 Deno.test("error-defaults fixture over HTTP", async (t) => {
-  await using app = await boot(
-    new URL("./main.tsx", import.meta.url),
-  );
+  await using app = await boot(start);
 
   await runCases(t, app, [
     {
@@ -24,7 +23,7 @@ Deno.test("error-defaults fixture over HTTP", async (t) => {
       bodyExact: "Not found",
     },
     {
-      name: "handler throws with no error uses errorFallback",
+      name: "handler throws with no error uses fatal",
       request: { path: "/throw" },
       status: 500,
       headers: { "x-mw": "ok" },
@@ -32,7 +31,7 @@ Deno.test("error-defaults fixture over HTTP", async (t) => {
       stillServes: true,
     },
     {
-      name: "root layout throws with omitted errorFallback",
+      name: "root layout throws with omitted fatal",
       request: { path: "/root-layout-throws" },
       status: 500,
       bodyExact: "Something Went Wrong",

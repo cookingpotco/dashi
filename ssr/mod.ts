@@ -6,7 +6,7 @@ import {
 } from "../caching/mod.ts";
 import { type Element, jsx } from "../jsx-runtime/mod.ts";
 import { Logger } from "../logging/mod.ts";
-import type { Ctx, ErrorHandler, Layout } from "../shared/mod.ts";
+import type { Ctx, GroupBoundary } from "../shared/mod.ts";
 
 interface FragmentFault {
   error?: Error;
@@ -64,6 +64,10 @@ export function getRenderStore(): RenderStore {
   return store;
 }
 
+export function inRender(): boolean {
+  return als.getStore() !== undefined;
+}
+
 /** Document include: the compile import map, then one module script per entry. */
 export function injectModuleScripts(
   html: string,
@@ -103,14 +107,6 @@ export function appendModulePreloads(
     const href = importMap[src] ?? src;
     headers.append("Link", `<${href}>; rel="modulepreload"`);
   }
-}
-
-interface Boundary<
-  State extends Record<string, unknown> = Record<string, unknown>,
-> {
-  layouts: Layout<State>[];
-  error?: ErrorHandler<State>;
-  parent?: Boundary<State>;
 }
 
 export const enum RenderKind {
@@ -153,7 +149,7 @@ export async function renderWithRecovery<
   page: Element | CachedElement | { thrown: unknown },
   options: {
     ctx: Ctx<Record<string, string>, State>;
-    boundary?: Boundary<State>;
+    boundary?: GroupBoundary<State>;
   },
 ): Promise<RenderResult> {
   // Element is a String object at runtime, so `typeof` is `"object"`.
@@ -176,10 +172,10 @@ async function wrapBoundaries<
 >(
   page: Element | CachedElement,
   ctx: Ctx<Record<string, string>, State>,
-  boundary: Boundary<State> | undefined,
+  boundary: GroupBoundary<State> | undefined,
 ): Promise<
   | { ok: true; page: Element; cache?: CacheConfig }
-  | { ok: false; thrown: unknown; parent?: Boundary<State> }
+  | { ok: false; thrown: unknown; parent?: GroupBoundary<State> }
 > {
   const first = takeCached(page, undefined);
   let rendered = first.page;
@@ -208,7 +204,7 @@ async function recover<
   State extends Record<string, unknown>,
 >(
   thrown: unknown,
-  boundary: Boundary<State> | undefined,
+  boundary: GroupBoundary<State> | undefined,
   ctx: Ctx<Record<string, string>, State>,
 ): Promise<RenderResult> {
   Logger.error(["ssr"], "render recovering from", thrown);

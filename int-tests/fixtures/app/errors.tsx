@@ -28,7 +28,7 @@ export function RootError(
   return <p id="root-error">root-error</p>;
 }
 
-export const errorFallback = (
+export const fatal = (
   <html>
     <body>
       <p id="fallback">crash-fallback</p>

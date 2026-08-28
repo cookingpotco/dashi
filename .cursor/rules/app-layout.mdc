@@ -21,10 +21,10 @@ Deno snake_case. Feature folders match the path (`slow_write/` for
 (`clock_client.ts`) and sit beside the file that registers them. No `routes/`
 directory, no app `client/` folder, and no `_` magic prefixes.
 
-`errors.tsx` holds the named `notFound`, `error`, and `errorFallback`
+`errors.tsx` holds the named `notFound`, `error`, and `fatal`
 exports. Those are not routes. Root `notFound` / `error` live on the root
 callback; a feature group's `notFound` / `error` live on that group's `mod.ts`.
-`errorFallback` stays on `serve()` options.
+`fatal` stays on `serve()` options.
 
 Ordinary extra modules (`todos.ts`, later `db.ts`) sit beside the handlers.
 No blessed view / service / DAL layer: extract `menu_service.ts` or a
@@ -73,14 +73,14 @@ declare. Shared data goes on `ctx.state`.
 import { serve } from "dashi";
 import { Home } from "./home_route.tsx";
 import { RootLayout } from "./root_layout.tsx";
-import { errorFallback } from "./errors.tsx";
+import { fatal } from "./errors.tsx";
 import { menu } from "./menu/mod.ts";
 
 if (import.meta.main) {
   serve(({ route }) => ({
     layouts: [RootLayout],
     routes: [route("/", { GET: Home }), menu],
-  }), { errorFallback });
+  }), { fatal });
 }
 ```
 
@@ -89,8 +89,9 @@ if (import.meta.main) {
 The main fixture (`int-tests/fixtures/app/`) matches this layout. Extra
 fixtures that cannot share that `serve()` table are a small `main.ts` or
 `main.tsx` in their own folder, inline `serve(callback)` harnesses. They are
-not workspace members. The e2e fixtures use the same tree; extra e2e fixtures
-follow the same rule.
+not workspace members. Fixture `main.ts` exports `start()` for `boot` /
+`withBrowser`. The e2e fixtures use the same tree; extra e2e fixtures follow
+the same rule.
 
 ## Imports
 

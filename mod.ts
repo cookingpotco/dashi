@@ -1,13 +1,8 @@
 export {
-  type BaseCacheConfig,
   type CacheConfig,
   cached,
   type CachedElement,
   CacheStrategy,
-  type ImmutableCacheConfig,
-  type NoStoreCacheConfig,
-  type PrivateCacheConfig,
-  type PublicCacheConfig,
 } from "./caching/mod.ts";
 export { client } from "./client/mod.ts";
 export {
@@ -23,23 +18,7 @@ export type {
   JSX,
   SVGAttributes,
 } from "./jsx-runtime/mod.ts";
-export {
-  type Group,
-  group,
-  type GroupCallback,
-  type GroupFields,
-  type Method,
-  type MethodHandlers,
-  type ParamsOf,
-} from "./routing/mod.ts";
+export { type Group, group, type ParamsOf } from "./routing/mod.ts";
 export { serve } from "./serve/mod.ts";
-export type {
-  Ctx,
-  ErrorHandler,
-  Handler,
-  Layout,
-  Middleware,
-  WrapperCtx,
-  WriteHandler,
-} from "./shared/mod.ts";
+export type { Ctx, WrapperCtx } from "./shared/mod.ts";
 export { staticFile } from "./static/mod.ts";

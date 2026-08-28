@@ -1,8 +1,8 @@
 # Browser tests
 
-These cases boot a real app in a subprocess, open it in Chromium, and assert on
-the live DOM after JS has run. HTTP status, headers, and HTML bytes stay in
-`int-tests/`.
+These cases boot a real app in-process via `serve()`, open it in Chromium, and
+assert on the live DOM after JS has run. HTTP status, headers, and HTML bytes
+stay in `int-tests/`.
 
 ```sh
 deno task test:e2e
@@ -23,8 +23,8 @@ If the fixture already has the page, append a `t.step` inside that fixture's
 exports a `Group` and drop it into the root callback. A new fixture folder is a
 new `Deno.test` that calls `withBrowser` once.
 
-`withBrowser` boots the app, launches Chromium, and gives
-`{ app, page, browser }`. Use Astral's page API (`goto`, `$`, `evaluate`,
+`withBrowser` takes the fixture `start`, boots the app, launches Chromium, and
+gives `{ app, page, browser }`. Use Astral's page API (`goto`, `$`, `evaluate`,
 `waitForNavigation`, …) and `@std/assert`. Assert on the DOM and URL, not on
 screenshots.
 
@@ -34,7 +34,7 @@ and writes HTML, stderr, and a screenshot under `e2e/results/` (gitignored).
 
 ## Add a fixture app
 
-`fixtures/app` is the main fixture: `main.ts` is the `serve()` callback and
-boots it, and every page path is a prefixed feature group, matching the
+`fixtures/app` is the main fixture: `main.ts` exports `start()`, which calls
+`serve()`, and every page path is a prefixed feature group, matching the
 examples. Put a new folder next to it only when the behaviour cannot live on
 that app. Do not add a fixture as its own workspace member.

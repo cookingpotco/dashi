@@ -129,3 +129,19 @@ export type Middleware<
   ctx: WrapperCtx<State>,
   next: () => Promise<Response>,
 ) => Response | Promise<Response>;
+
+/**
+ * One group's layouts, optional `error`, and optional `notFound`.
+ * `parent` is the enclosing group, if any. A group's `error` catches
+ * handler throws and inner group failures; it does not catch that
+ * group's own layouts. `notFound` handles document misses captured
+ * here; omitted walks to the parent.
+ */
+export interface GroupBoundary<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> {
+  layouts: Layout<State>[];
+  error?: ErrorHandler<State>;
+  notFound?: Handler<Record<string, string>, State>;
+  parent?: GroupBoundary<State>;
+}

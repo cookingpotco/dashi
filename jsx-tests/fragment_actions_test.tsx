@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { fragment, type GroupCallback } from "dashi";
+import { fragment, group } from "dashi";
 import { renderFragmentActions } from "../fragments/mod.ts";
 
 Deno.test("action list serializes to sibling route-action elements", () => {
@@ -26,17 +26,20 @@ Deno.test("action src attribute is escaped", () => {
   );
 });
 
-function typechecks(cb: GroupCallback) {
-  cb.route("/x", {
-    // @ts-expect-error GET cannot return fragment actions
-    GET: () => [fragment.remove("/x")],
-  });
-  cb.route("/x", {
-    POST: () => [fragment.remove("/x")],
-  });
-  cb.route("/x", {
-    // @ts-expect-error writes cannot return markup
-    POST: () => <div />,
+function typechecks() {
+  group(({ route }) => {
+    route("/x", {
+      // @ts-expect-error GET cannot return fragment actions
+      GET: () => [fragment.remove("/x")],
+    });
+    route("/x", {
+      POST: () => [fragment.remove("/x")],
+    });
+    route("/x", {
+      // @ts-expect-error writes cannot return markup
+      POST: () => <div />,
+    });
+    return { routes: [] };
   });
 }
 

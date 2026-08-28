@@ -13,11 +13,8 @@ export interface BrowserTest {
   browser: Browser;
 }
 
-function fixtureSlug(mainPath: string | URL): string {
-  const href = mainPath instanceof URL ? mainPath.href : mainPath;
-  const dir = href.replace(/\/[^/]*$/, "");
-  const name = dir.split("/").filter(Boolean).at(-1) ?? "fixture";
-  return `${name}-${Date.now()}`;
+function fixtureSlug(): string {
+  return `e2e-${Date.now()}`;
 }
 
 async function formatE2eFailure(
@@ -60,11 +57,11 @@ async function formatE2eFailure(
 
 /** Boot the fixture, launch Chromium, and run `fn`. Dumps DOM and stderr on failure. */
 export async function withBrowser(
-  mainPath: string | URL,
+  start: () => Promise<Deno.HttpServer> | Deno.HttpServer,
   fn: (t: BrowserTest) => Promise<void>,
 ): Promise<void> {
   await Deno.mkdir(RESULTS_DIR, { recursive: true });
-  await using app = await boot(mainPath);
+  await using app = await boot(start);
   const args: string[] = [];
   if (Deno.env.get("GITHUB_ACTIONS")) {
     args.push("--no-sandbox", "--disable-setuid-sandbox");
@@ -79,7 +76,7 @@ export async function withBrowser(
   } catch (error) {
     let dump = `stderr:\n${app.stderr}`;
     try {
-      dump = await formatE2eFailure(app, page, fixtureSlug(mainPath));
+      dump = await formatE2eFailure(app, page, fixtureSlug());
     } catch {
       // Keep stderr if the dump itself fails.
     }

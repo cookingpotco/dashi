@@ -1,7 +1,7 @@
 import { serve } from "dashi";
 import { Home } from "./home_route.tsx";
 import { RootLayout } from "./root_layout.tsx";
-import { errorFallback, ErrorPage } from "./errors.tsx";
+import { ErrorPage, fatal } from "./errors.tsx";
 import { mark } from "./mark/mod.tsx";
 import { paint } from "./paint/mod.tsx";
 import { embed } from "./embed/mod.tsx";
@@ -24,8 +24,8 @@ import { todoCount } from "./todo_count/mod.tsx";
 import { hits } from "./hits/mod.tsx";
 import { notice } from "./notice/mod.tsx";
 
-if (import.meta.main) {
-  serve(({ route }) => ({
+export function start() {
+  return serve(({ route }) => ({
     layouts: [RootLayout],
     error: ErrorPage,
     routes: [
@@ -52,5 +52,5 @@ if (import.meta.main) {
       hits,
       notice,
     ],
-  }), { errorFallback, port: 0 });
+  }), { fatal, hostname: "127.0.0.1", port: 0 });
 }

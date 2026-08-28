@@ -1,7 +1,8 @@
 # Integration tests
 
-These cases boot a real app in a subprocess, request a URL, and assert on the
-response. Adding coverage should mean writing a case, not writing plumbing.
+These cases boot a real app in-process via `serve()`, request a URL, and assert
+on the response. Adding coverage should mean writing a case, not writing
+plumbing.
 
 ```sh
 deno task test:int
@@ -25,20 +26,19 @@ empty 303). `runCase` parses HTML only when `html` is set.
 
 `runCase` executes that data. Flows that are not one request (cookies,
 concurrent requests) use `boot` / `App.fetch` from `mod.ts` inside a `t.step`.
-Sequential cases share the fixture process, so a POST can be followed by a GET
-that observes it.
+The test file imports `start` from the fixture and passes it to `boot(start)`.
+Sequential cases share the fixture, so a POST can be followed by a GET that
+observes it.
 
 ## Add a fixture app
 
-`fixtures/app` is the main fixture: `main.ts` is the `serve()` callback and
-boots it, and every `group()` lives in a feature folder that exports that
-`Group`. Probe `route()`s stay on the root. Put a new folder next to it only
-when the behaviour cannot live on that app. Do not add a fixture as its own
-workspace member. Extra fixtures (`cors`, `error-defaults`,
-`error-fallback-response`, `fragment-depth`) are a small `main.ts` or `main.tsx`
-because they cannot share the main app's `serve()` table; they stay inline
-`serve(callback)` harnesses.
-
-`fixtures/app` and extra fixtures call
-`serve(({ route }) => ({ … }), { port: 0, errorFallback })`.
-`deno task test:int` picks up every `*_test.ts` under `int-tests/`.
+`fixtures/app` is the main fixture: `main.ts` exports `start()`, which calls
+`serve(({ route }) => ({ … }), { hostname: "127.0.0.1", port: 0, fatal })`, and
+every `group()` lives in a feature folder that exports that `Group`. Probe
+`route()`s stay on the root. Put a new folder next to it only when the behaviour
+cannot live on that app. Do not add a fixture as its own workspace member. Extra
+fixtures (`cors`, `error-defaults`, `error-fallback-response`, `fragment-depth`)
+are a small `main.ts` or `main.tsx` because they cannot share the main app's
+`serve()` table; they stay inline `serve(callback)` harnesses. The test file
+imports `start` and passes it to `boot`. `deno task test:int` picks up every
+`*_test.ts` under `int-tests/`.

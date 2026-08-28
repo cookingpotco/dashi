@@ -5,6 +5,7 @@ import {
   type IntegrationTestCase,
   runCases,
 } from "../../mod.ts";
+import { start } from "./main.ts";
 
 const corsCases: IntegrationTestCase[] = [
   {
@@ -37,9 +38,7 @@ const corsCases: IntegrationTestCase[] = [
 ];
 
 Deno.test("cors fixture over HTTP", async (t) => {
-  await using app = await boot(
-    new URL("./main.ts", import.meta.url),
-  );
+  await using app = await boot(start);
 
   await runCases(t, app, corsCases);
 

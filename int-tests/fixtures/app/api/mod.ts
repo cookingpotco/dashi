@@ -1,17 +1,20 @@
-import { group, type Middleware } from "dashi";
+import { group, type WrapperCtx } from "dashi";
 import type { AppState } from "../state.ts";
 import { ApiLayout } from "./api_layout.tsx";
 import { ApiNotFound } from "../errors.tsx";
 import { ok } from "../ok_route.ts";
 import { v2 } from "./v2/mod.ts";
 
-const apiMw: Middleware<AppState> = async (_ctx, next) => {
+async function apiMw(
+  _ctx: WrapperCtx<AppState>,
+  next: () => Promise<Response>,
+) {
   const res = await next();
   res.headers.set("x-api", "1");
   return res;
-};
+}
 
-export const api = group<"/api", AppState>("/api", ({ route }) => ({
+export const api = group<AppState>("/api", ({ route }) => ({
   layouts: [ApiLayout],
   middleware: [apiMw],
   notFound: ApiNotFound,

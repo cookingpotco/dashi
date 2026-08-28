@@ -1,10 +1,10 @@
-import { type Element, type Middleware, serve, type WrapperCtx } from "dashi";
+import { type Element, serve, type WrapperCtx } from "dashi";
 
-const logger: Middleware = async (_ctx, next) => {
+async function logger(_ctx: WrapperCtx, next: () => Promise<Response>) {
   const res = await next();
   res.headers.set("x-mw", "ok");
   return res;
-};
+}
 
 function rootLayout(ctx: WrapperCtx, children: Element): Element {
   if (ctx.url.pathname === "/root-layout-throws") {
@@ -30,8 +30,8 @@ function okPage(): Element {
   return <p id="ok-page">ok</p>;
 }
 
-if (import.meta.main) {
-  serve(({ route }) => ({
+export function start() {
+  return serve(({ route }) => ({
     layouts: [rootLayout],
     middleware: [logger],
     routes: [
@@ -39,5 +39,5 @@ if (import.meta.main) {
       route("/throw", { GET: boom }),
       route("/root-layout-throws", { GET: okPage }),
     ],
-  }), { port: 0 });
+  }), { hostname: "127.0.0.1", port: 0 });
 }
