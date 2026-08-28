@@ -111,9 +111,8 @@ async function realPath(path: string): Promise<string | null> {
  *   `Deno.cwd()`; pass `${import.meta.dirname}/static` so the folder
  *   travels with the module.
  * @param relative Path under `dir`, typically a catch-all route param.
- * @param cache Cache-Control. Defaults to immutable.
- *   `varyHeaders` names request headers; Cookie is the whole jar;
- *   Public and Immutable refuse `Cookie` and `*`.
+ * @param cache How this resource should be cached. Defaults to immutable.
+ *   Shared caches cannot vary on `Cookie` or `*`.
  *
  * @example
  * ```ts

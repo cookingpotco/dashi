@@ -3,7 +3,7 @@ import type * as dom from "./dom_types.ts";
 /** @internal */
 export const trustedHtmlBrand: unique symbol = Symbol("dashi.trustedHtml");
 
-/** Rendered HTML. A branded string; interpolate as a JSX child. */
+/** HTML returned by JSX. */
 export type Element = string & {
   /** @internal */
   readonly [trustedHtmlBrand]: true;

@@ -3,9 +3,8 @@ import type { FragmentAction } from "../fragments/mod.ts";
 import type { Element } from "../jsx-runtime/mod.ts";
 
 /**
- * Per-invocation request context. `state` is a `Partial` bag: mutate
- * fields in place, do not replace the object. `isFragment` is the mode
- * bit; layouts never run when it is true.
+ * Per-invocation request context. Mutate `state` in place; do not
+ * replace the object. Layouts do not run when `isFragment` is true.
  */
 export interface Ctx<
   Params extends Record<string, string> = Record<string, never>,
@@ -19,7 +18,7 @@ export interface Ctx<
   readonly params: Params;
   /** True when this hit is a fragment include or lazy fetch. */
   readonly isFragment: boolean;
-  /** Mutable per-request bag. Do not replace the object. */
+  /** Per-request state. Mutate fields in place; do not replace the object. */
   readonly state: Partial<State>;
 }
 

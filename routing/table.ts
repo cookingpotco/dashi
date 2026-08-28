@@ -73,7 +73,7 @@ interface FlattenedRoute<
 export interface Group<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
-  /** Discriminant. Always the group kind. */
+  /** Marks this as a group. */
   kind: NodeKind.Group;
   /** This group's path prefix, or `null` if pathless. */
   prefix: string | null;
@@ -678,7 +678,7 @@ function createGroupCallback<
  * @example
  * ```ts
  * export const menu = group("/menu", ({ route }) => ({
- *   routes: [route("/", { GET: Menu })],
+ *   routes: [route("/", { GET: () => <h1>Menu</h1> })],
  * }));
  * ```
  */

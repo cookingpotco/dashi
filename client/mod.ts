@@ -59,7 +59,20 @@ function module(url: URL): () => Element {
   };
 }
 
-/** Register a custom element `tag` with a client module. Call at module scope. */
+/**
+ * Register a custom element `tag` with a client module. Call at module scope.
+ *
+ * @param tag Custom element tag (kebab-case).
+ * @param url Absolute source URL, typically `new URL("./x_client.ts", import.meta.url)`.
+ *
+ * @example
+ * ```ts
+ * const Panel = client.element(
+ *   "x-panel",
+ *   new URL("./panel_client.ts", import.meta.url),
+ * );
+ * ```
+ */
 function element(
   tag: string,
   url: URL,

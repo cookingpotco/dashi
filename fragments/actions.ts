@@ -85,32 +85,90 @@ function replace(src: InternalSrc, body: Element): FragmentAction {
   return { kind: ActionKind.Replace, src, body };
 }
 
-/** Append `body` to the host's children. */
+/**
+ * Append `body` to the host's children.
+ *
+ * @param src Path every matching `<RouteFragment>` renders.
+ * @param body Markup to append.
+ *
+ * @example
+ * ```ts
+ * return [fragment.append("/todos", <li>milk</li>)];
+ * ```
+ */
 function append(src: InternalSrc, body: Element): FragmentAction {
   return { kind: ActionKind.Append, src, body };
 }
 
-/** Prepend `body` to the host's children. */
+/**
+ * Prepend `body` to the host's children.
+ *
+ * @param src Path every matching `<RouteFragment>` renders.
+ * @param body Markup to prepend.
+ *
+ * @example
+ * ```ts
+ * return [fragment.prepend("/todos", <li>bread</li>)];
+ * ```
+ */
 function prepend(src: InternalSrc, body: Element): FragmentAction {
   return { kind: ActionKind.Prepend, src, body };
 }
 
-/** Insert `body` as a sibling before the host. */
+/**
+ * Insert `body` as a sibling before the host.
+ *
+ * @param src Path every matching `<RouteFragment>` renders.
+ * @param body Markup to insert.
+ *
+ * @example
+ * ```ts
+ * return [fragment.before("/slot", <p>before</p>)];
+ * ```
+ */
 function before(src: InternalSrc, body: Element): FragmentAction {
   return { kind: ActionKind.Before, src, body };
 }
 
-/** Insert `body` as a sibling after the host. */
+/**
+ * Insert `body` as a sibling after the host.
+ *
+ * @param src Path every matching `<RouteFragment>` renders.
+ * @param body Markup to insert.
+ *
+ * @example
+ * ```ts
+ * return [fragment.after("/slot", <p>after</p>)];
+ * ```
+ */
 function after(src: InternalSrc, body: Element): FragmentAction {
   return { kind: ActionKind.After, src, body };
 }
 
-/** Drop the host from the document. */
+/**
+ * Drop the host from the document.
+ *
+ * @param src Path every matching `<RouteFragment>` renders.
+ *
+ * @example
+ * ```ts
+ * return [fragment.remove("/notice")];
+ * ```
+ */
 function remove(src: InternalSrc): FragmentAction {
   return { kind: ActionKind.Remove, src };
 }
 
-/** Re-GET every host rendering `src`. */
+/**
+ * Re-GET every host rendering `src`.
+ *
+ * @param src Path every matching `<RouteFragment>` renders.
+ *
+ * @example
+ * ```ts
+ * return [fragment.refresh("/hits")];
+ * ```
+ */
 function refresh(src: InternalSrc): FragmentAction {
   return { kind: ActionKind.Refresh, src };
 }

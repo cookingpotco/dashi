@@ -23,7 +23,8 @@ Adding a published export is fine. Removing or renaming one is a breaking
 
 `jsxImportSource` runtime and JSX types.
 
-Values: `jsx`, `jsxTemplate`, `jsxAttr`, `jsxEscape`, `JsxRuntimeError`.
+Values: `jsx`, `jsxTemplate`, `jsxAttr`, `jsxEscape`, `JsxRuntimeError`
+(compiler runtime; `@internal`, still exported for `jsxImportSource`).
 
 Types: `JSX` namespace, `Element`, `DashiNode`, `HTMLAttributes`,
 `SVGAttributes` (siblings of the namespace, not nested in it).

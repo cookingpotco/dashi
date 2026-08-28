@@ -44,7 +44,11 @@ function escapeHtml(value: string): string {
   return value.replace(ESCAPE_RE, (ch) => ESCAPE_MAP[ch]!);
 }
 
-/** Thrown when the JSX runtime is given a value it cannot render. */
+/**
+ * @internal
+ *
+ * Thrown when the JSX runtime is given a value it cannot render.
+ */
 export class JsxRuntimeError extends Error {
   /** Join message parts into the error text. */
   constructor(...message: string[]) {
@@ -52,7 +56,11 @@ export class JsxRuntimeError extends Error {
   }
 }
 
-/** Join static strings with dynamic slots into trusted HTML. */
+/**
+ * @internal
+ *
+ * Join static strings with dynamic slots into trusted HTML.
+ */
 export function jsxTemplate(
   strings: string[],
   ...dynamic: Array<string | Element>
@@ -163,7 +171,11 @@ const MAPPED_HTML_ATTR_NAMES: Record<string, string> = {
   xHeight: "x-height",
 };
 
-/** Serialize one HTML attribute, remapping closed-list JSX names. */
+/**
+ * @internal
+ *
+ * Serialize one HTML attribute, remapping closed-list JSX names.
+ */
 export function jsxAttr(name: string, value: unknown): string {
   if (value === null || value === undefined || value === false) {
     return "";
@@ -186,7 +198,11 @@ export function jsxAttr(name: string, value: unknown): string {
   return `${attr}="${escapeHtml(String(value))}"`;
 }
 
-/** Escape a JSX child for HTML body position. */
+/**
+ * @internal
+ *
+ * Escape a JSX child for HTML body position.
+ */
 export function jsxEscape(value: unknown): string {
   if (value === null || value === undefined || typeof value === "boolean") {
     return "";
@@ -219,7 +235,11 @@ function innerHtmlFromProp(value: unknown): string {
   );
 }
 
-/** Compile a tag or component to HTML. Used by `jsxImportSource`. */
+/**
+ * @internal
+ *
+ * Compile a tag or component to HTML. Used by `jsxImportSource`.
+ */
 export function jsx(
   type: ((props?: Record<string, unknown>) => unknown) | string,
   props?: Record<string, unknown> | null,

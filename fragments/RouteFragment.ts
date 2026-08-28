@@ -140,6 +140,11 @@ function requestEagerFragment(src: string, timeoutMs: number): string {
  * Include another route's rendered output. Eager during SSR, or `lazy`
  * after load.
  *
+ * @param src Path to fetch, like `/todos`.
+ * @param lazy Skip SSR and fetch after load.
+ * @param fallback Shown while a lazy fragment is loading.
+ * @param timeout Milliseconds to wait during SSR. Omitted is 5000.
+ *
  * @example
  * ```tsx
  * <RouteFragment src="/todos" lazy fallback={<p>Loading…</p>} />
