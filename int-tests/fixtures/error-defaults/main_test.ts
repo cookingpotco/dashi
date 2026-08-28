@@ -1,4 +1,5 @@
 import { boot, type IntegrationTestCase, runCases } from "../../mod.ts";
+import { start } from "./main.tsx";
 
 const stillServes: IntegrationTestCase = {
   name: "known-good route is 200",
@@ -11,9 +12,7 @@ const stillServes: IntegrationTestCase = {
 };
 
 Deno.test("error-defaults fixture over HTTP", async (t) => {
-  await using app = await boot(
-    new URL("./main.tsx", import.meta.url),
-  );
+  await using app = await boot(start);
 
   await runCases(t, app, [
     {

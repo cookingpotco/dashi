@@ -23,8 +23,8 @@ If the fixture already has the page, append a `t.step` inside that fixture's
 exports a `Group` and drop it into the root callback. A new fixture folder is a
 new `Deno.test` that calls `withBrowser` once.
 
-`withBrowser` boots the app, launches Chromium, and gives
-`{ app, page, browser }`. Use Astral's page API (`goto`, `$`, `evaluate`,
+`withBrowser` takes the fixture `start`, boots the app, launches Chromium, and
+gives `{ app, page, browser }`. Use Astral's page API (`goto`, `$`, `evaluate`,
 `waitForNavigation`, …) and `@std/assert`. Assert on the DOM and URL, not on
 screenshots.
 

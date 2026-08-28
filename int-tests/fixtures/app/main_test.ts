@@ -11,6 +11,7 @@ import {
   type IntegrationTestCase,
   runCases,
 } from "../../mod.ts";
+import { start } from "./main.ts";
 
 const guestbookMultipart = new FormData();
 guestbookMultipart.set("body", "from-formdata");
@@ -1259,9 +1260,7 @@ async function assertHeadMatchesGet(app: App, path: string): Promise<void> {
 }
 
 Deno.test("main fixture app over HTTP", async (t) => {
-  await using app = await boot(
-    new URL("./main.ts", import.meta.url),
-  );
+  await using app = await boot(start);
 
   await runCases(t, app, appCases);
   await runCases(t, app, errorCases, stillServes);

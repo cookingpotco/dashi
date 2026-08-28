@@ -1,6 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { withBrowser } from "../../harness.ts";
 import type { Page } from "../../harness.ts";
+import { start } from "./main.ts";
 
 async function clickId(page: Page, id: string) {
   await page.evaluate((sel) => {
@@ -114,7 +115,7 @@ function snapshot() {
 
 Deno.test("forms fixture", async (t) => {
   await withBrowser(
-    new URL("./main.ts", import.meta.url),
+    start,
     async ({ app, page }) => {
       await t.step(
         "page-host write that redirects swaps in place at the new URL",

@@ -134,23 +134,16 @@ async function waitUntilAccepting(app: App): Promise<void> {
   );
 }
 
-interface FixtureModule {
-  start?: () => Promise<Deno.HttpServer> | Deno.HttpServer;
-}
-
-/** Import `start()` from `mainPath`, serve in-process, wait until it accepts HTTP. */
-export async function boot(mainPath: string | URL): Promise<App> {
-  const spec = mainPath instanceof URL ? mainPath.href : mainPath;
+/** Call fixture `start()`, attach stderr capture, wait until it accepts HTTP. */
+export async function boot(
+  start: () => Promise<Deno.HttpServer> | Deno.HttpServer,
+): Promise<App> {
   const stderr = { text: "" };
   patchConsole();
   stderrBuffers.add(stderr);
   try {
-    const mod = await import(spec) as FixtureModule;
-    if (typeof mod.start !== "function") {
-      throw new Error(`${spec} must export start()`);
-    }
     const server = await withTimeout(
-      Promise.resolve(mod.start()),
+      Promise.resolve(start()),
       BOOT_TIMEOUT_MS,
       () =>
         new Error(

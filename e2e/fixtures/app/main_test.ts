@@ -1,9 +1,10 @@
 import { assertEquals } from "@std/assert";
 import { withBrowser } from "../../harness.ts";
+import { start } from "./main.ts";
 
 Deno.test("app fixture", async (t) => {
   await withBrowser(
-    new URL("./main.ts", import.meta.url),
+    start,
     async ({ app, page }) => {
       async function typeField(selector: string, text: string) {
         await page.evaluate((sel) => {

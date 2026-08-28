@@ -1,14 +1,17 @@
 import { assertEquals, assertMatch, assertStringIncludes } from "@std/assert";
 import { boot, formatIntegrationFailure, runCases } from "../../mod.ts";
+import { start as conflictStart } from "../client-reserved-conflict/main.ts";
+import { start as paramStart } from "../client-reserved-param/main.ts";
+import { start } from "./main.tsx";
 
 async function bootFails(
-  spec: URL,
+  start: () => Promise<Deno.HttpServer> | Deno.HttpServer,
   snippet: string,
 ): Promise<void> {
   try {
-    const app = await boot(spec);
+    const app = await boot(start);
     await app[Symbol.asyncDispose]();
-    throw new Error(`expected ${spec.pathname} to fail boot`);
+    throw new Error("expected boot to fail");
   } catch (thrown) {
     const message = thrown instanceof Error ? thrown.message : String(thrown);
     assertStringIncludes(message, snippet);
@@ -16,7 +19,7 @@ async function bootFails(
 }
 
 Deno.test("reserved client path over HTTP", async (t) => {
-  await using app = await boot(new URL("./main.tsx", import.meta.url));
+  await using app = await boot(start);
 
   await runCases(t, app, [
     {
@@ -73,13 +76,13 @@ Deno.test("reserved client path over HTTP", async (t) => {
 Deno.test("declaring the reserved client path fails boot", async (t) => {
   await t.step("same catch-all shape is a duplicate route", async () => {
     await bootFails(
-      new URL("../client-reserved-conflict/main.ts", import.meta.url),
+      conflictStart,
       "Duplicate or unreachable route",
     );
   });
   await t.step("a param on the reserved prefix is rejected", async () => {
     await bootFails(
-      new URL("../client-reserved-param/main.ts", import.meta.url),
+      paramStart,
       "/_dashi/* is used by the framework for internal purposes, please use a different path.",
     );
   });

@@ -1,9 +1,8 @@
 import { boot, runCases } from "../../mod.ts";
+import { start } from "./main.tsx";
 
 Deno.test("fragment-depth fixture over HTTP", async (t) => {
-  await using app = await boot(
-    new URL("./main.tsx", import.meta.url),
-  );
+  await using app = await boot(start);
 
   await runCases(t, app, [
     {
