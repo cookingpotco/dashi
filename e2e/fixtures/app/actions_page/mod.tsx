@@ -13,6 +13,8 @@ function ActionsPage() {
       <RouteFragment src="/hits" />
       <RouteFragment src="/actions" />
       <RouteFragment src="/notice" />
+      <RouteFragment src="/slot" />
+      <RouteFragment src="/inserts" />
     </div>
   );
 }
