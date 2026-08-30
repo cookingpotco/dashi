@@ -41,7 +41,8 @@ serve(({ route }) => ({
 - **Fragment actions.** A write handler returns `fragment.replace`,
   `fragment.append`, `fragment.prepend`, `fragment.before`, `fragment.after`,
   `fragment.remove`, or `fragment.refresh`, targeting every host rendering that
-  route. The submitting form does not have to sit inside the fragment.
+  route. The submitting form does not have to sit inside the fragment. An
+  applied action-list write resets the submitting form.
 - **Explicit route table.** Typed params from the path literal, and per-method
   handlers, in one `serve()` callback.
 - **Web standards.** Handlers read `ctx.req` as a `Request` and return JSX or a

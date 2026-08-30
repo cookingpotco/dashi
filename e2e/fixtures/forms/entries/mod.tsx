@@ -25,6 +25,10 @@ function EntriesPage() {
       <form id="json-form" method="POST" action="/json-write">
         <button id="json-submit" type="submit">Json</button>
       </form>
+      <form id="drop-form" method="POST" action="/drop-write">
+        <input id="drop-title" name="title" />
+        <button id="drop-submit" type="submit">Drop</button>
+      </form>
       <form id="page-search" method="GET" action="/search">
         <input id="page-search-q" name="q" />
         <button id="page-search-submit" type="submit">Find</button>

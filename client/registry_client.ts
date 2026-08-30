@@ -42,7 +42,7 @@ export function navigate(url: string | URL): Promise<void> {
   return Promise.resolve();
 }
 
-export async function submitWrite(intent: SubmitIntent): Promise<void> {
+export async function submitWrite(intent: SubmitIntent): Promise<boolean> {
   try {
     const res = await fetch(intent.url, {
       method: intent.method,
@@ -51,15 +51,15 @@ export async function submitWrite(intent: SubmitIntent): Promise<void> {
     });
     if (new URL(res.url, location.href).origin !== location.origin) {
       location.assign(res.url);
-      return;
+      return false;
     }
     if (res.redirected) {
       if (page !== null) {
         await page.commitDocument(res, res.url);
-        return;
+        return false;
       }
       location.assign(res.url);
-      return;
+      return false;
     }
     if (actions !== null) {
       const html = await res.text();
@@ -73,11 +73,12 @@ export async function submitWrite(intent: SubmitIntent): Promise<void> {
       }
       await Promise.all(pending);
       if (actions(html)) {
-        return;
+        return true;
       }
     }
     location.assign(res.url);
+    return false;
   } catch {
-    return;
+    return false;
   }
 }

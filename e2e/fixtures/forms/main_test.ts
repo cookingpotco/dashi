@@ -232,21 +232,26 @@ Deno.test("forms fixture", async (t) => {
           await typeField(page, "#header-write-title", "from-header");
           await clickId(page, "header-write-submit");
           await waitForText(page, "frag-item", "from-header");
-          const result = await page.evaluate(() => ({
-            survived: Reflect.get(globalThis, "__dashiDoc") === true,
-            persistent: document.getElementById("persistent")?.textContent ??
-              null,
-            heading: document.getElementById("heading")?.textContent ?? null,
-            marker: document.getElementById("page-marker")?.textContent ??
-              null,
-            item: document.getElementById("frag-item")?.textContent ?? null,
-            url: location.href,
-          }));
+          const result = await page.evaluate(() => {
+            const title = document.getElementById("header-write-title");
+            return {
+              survived: Reflect.get(globalThis, "__dashiDoc") === true,
+              persistent: document.getElementById("persistent")?.textContent ??
+                null,
+              heading: document.getElementById("heading")?.textContent ?? null,
+              marker: document.getElementById("page-marker")?.textContent ??
+                null,
+              item: document.getElementById("frag-item")?.textContent ?? null,
+              title: title instanceof HTMLInputElement ? title.value : null,
+              url: location.href,
+            };
+          });
           assertEquals(result.survived, true);
           assertEquals(result.persistent, "mutated");
           assertEquals(result.heading, "frag-page");
           assertEquals(result.marker, "mutated");
           assertEquals(result.item, "from-header");
+          assertEquals(result.title, "");
           assertEquals(result.url, `${app.origin}/frag-page`);
         },
       );
@@ -356,6 +361,38 @@ Deno.test("forms fixture", async (t) => {
           assertEquals(result.survived, true);
           assertEquals(result.heading, "wrote");
           assertEquals(result.url, `${app.origin}/wrote`);
+        },
+      );
+
+      await t.step(
+        "a write that never applies leaves the submitting fields alone",
+        async () => {
+          await prepareHosted(page, app.origin, "/entries");
+          await typeField(page, "#drop-title", "keep-me");
+          await clickId(page, "drop-submit");
+          await page.evaluate(async () => {
+            const form = document.getElementById("drop-form");
+            const start = Date.now();
+            while (form?.hasAttribute("aria-busy")) {
+              if (Date.now() - start > 5000) {
+                throw new Error("drop-form still busy");
+              }
+              await new Promise((resolve) => setTimeout(resolve, 25));
+            }
+          });
+          const result = await page.evaluate(() => {
+            const title = document.getElementById("drop-title");
+            return {
+              survived: Reflect.get(globalThis, "__dashiDoc") === true,
+              heading: document.getElementById("heading")?.textContent ?? null,
+              title: title instanceof HTMLInputElement ? title.value : null,
+              url: location.pathname,
+            };
+          });
+          assertEquals(result.survived, true);
+          assertEquals(result.heading, "entries");
+          assertEquals(result.title, "keep-me");
+          assertEquals(result.url, "/entries");
         },
       );
 
