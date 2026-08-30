@@ -3,8 +3,8 @@
 
 <p align="center">
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="logo-dark.png">
-  <img alt="dashi" src="logo.png" width="400" height="169">
+  <source media="(prefers-color-scheme: dark)" srcset="logo-dark.svg">
+  <img alt="dashi" src="logo.svg" width="400" height="148">
 </picture>
 </p>
 
