@@ -8,10 +8,15 @@ function dropWriteHandler() {
   return new Response(
     new ReadableStream({
       start(controller) {
-        controller.enqueue(new TextEncoder().encode("x"));
-        controller.error(new Error("drop-write"));
+        // After the Response leaves the handler. A sync stream error becomes
+        // a rendered 500; a 2xx text/html write is rejected before the body
+        // is streamed.
+        queueMicrotask(() => {
+          controller.enqueue(new TextEncoder().encode("x"));
+          controller.error(new Error("drop-write"));
+        });
       },
     }),
-    { headers: { "content-type": "text/html; charset=utf-8" } },
+    { headers: { "content-type": "application/octet-stream" } },
   );
 }
