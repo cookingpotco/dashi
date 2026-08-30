@@ -99,9 +99,9 @@ cannot see project rules.
   `client/registry_client.ts` is the browser bus. One document-level submit
   listener in `forms/` owns interception. There is no per-element submit
   listener and no nearest-host targeting. GET navigates the page; a write goes
-  through the registry. An applied action-list write resets the submitting
-  form. Client features assume the client runtime. Flag a per-element submit
-  listener or a GET form that swaps a fragment.
+  through the registry. An applied action-list write resets the submitting form.
+  Client features assume the client runtime. Flag a per-element submit listener
+  or a GET form that swaps a fragment.
 - A closed set of cases is a `const enum` (plain `enum` only when it must exist
   at runtime). Flag a string-literal union used as a discriminant.
 - Fragment updates are `fragment.replace`, `fragment.append`,
