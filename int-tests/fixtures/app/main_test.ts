@@ -261,10 +261,10 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
-    name: "POST x-fragment actions are sibling route-action elements",
+    name: "POST x-fragment patches are sibling dashi-patch elements",
     request: {
       method: "POST",
-      path: "/actions",
+      path: "/patches",
       headers: { "x-fragment": "1" },
     },
     status: 200,
@@ -276,44 +276,49 @@ const appCases: IntegrationTestCase[] = [
       bodyExcludes: ["<!DOCTYPE html>", "{{fragment:"],
       select: [
         {
-          selector: 'route-action[action="append"]',
+          selector: 'dashi-patch[kind="append"]',
           text: "milk",
-          attr: { src: "/todos" },
+          attr: { target: "#todos" },
         },
         {
-          selector: 'route-action[action="replace"]',
+          selector: 'dashi-patch[kind="replace"][target="/todo-count"]',
           text: "3",
-          attr: { src: "/todo-count" },
+          attr: { target: "/todo-count" },
         },
         {
-          selector: 'route-action[action="refresh"]',
+          selector: 'dashi-patch[kind="replace"][target="#status"]',
+          text: "Saved",
+          attr: { target: "#status" },
+        },
+        {
+          selector: 'dashi-patch[kind="refresh"]',
           text: "",
-          attr: { src: "/hits" },
+          attr: { target: "/hits" },
         },
         {
-          selector: 'route-action[action="prepend"]',
+          selector: 'dashi-patch[kind="prepend"]',
           text: "bread",
-          attr: { src: "/todos" },
+          attr: { target: "/todos" },
         },
         {
-          selector: 'route-action[action="before"]',
+          selector: 'dashi-patch[kind="before"]',
           text: "before",
-          attr: { src: "/slot" },
+          attr: { target: "/slot" },
         },
         {
-          selector: 'route-action[action="after"]',
+          selector: 'dashi-patch[kind="after"]',
           text: "after",
-          attr: { src: "/slot" },
+          attr: { target: "/slot" },
         },
       ],
     },
   },
   {
     name:
-      "POST actions without fragment header are sibling route-action elements",
+      "POST patches without fragment header are sibling dashi-patch elements",
     request: {
       method: "POST",
-      path: "/actions",
+      path: "/patches",
     },
     status: 200,
     headers: {
@@ -324,34 +329,39 @@ const appCases: IntegrationTestCase[] = [
       bodyExcludes: ["<!DOCTYPE html>", "{{fragment:"],
       select: [
         {
-          selector: 'route-action[action="append"]',
+          selector: 'dashi-patch[kind="append"]',
           text: "milk",
-          attr: { src: "/todos" },
+          attr: { target: "#todos" },
         },
         {
-          selector: 'route-action[action="replace"]',
+          selector: 'dashi-patch[kind="replace"][target="/todo-count"]',
           text: "3",
-          attr: { src: "/todo-count" },
+          attr: { target: "/todo-count" },
         },
         {
-          selector: 'route-action[action="refresh"]',
+          selector: 'dashi-patch[kind="replace"][target="#status"]',
+          text: "Saved",
+          attr: { target: "#status" },
+        },
+        {
+          selector: 'dashi-patch[kind="refresh"]',
           text: "",
-          attr: { src: "/hits" },
+          attr: { target: "/hits" },
         },
         {
-          selector: 'route-action[action="prepend"]',
+          selector: 'dashi-patch[kind="prepend"]',
           text: "bread",
-          attr: { src: "/todos" },
+          attr: { target: "/todos" },
         },
         {
-          selector: 'route-action[action="before"]',
+          selector: 'dashi-patch[kind="before"]',
           text: "before",
-          attr: { src: "/slot" },
+          attr: { target: "/slot" },
         },
         {
-          selector: 'route-action[action="after"]',
+          selector: 'dashi-patch[kind="after"]',
           text: "after",
-          attr: { src: "/slot" },
+          attr: { target: "/slot" },
         },
       ],
     },

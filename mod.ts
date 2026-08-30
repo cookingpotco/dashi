@@ -12,11 +12,8 @@ export {
   CacheStrategy,
 } from "./caching/mod.ts";
 export { client } from "./client/mod.ts";
-export {
-  fragment,
-  type FragmentAction,
-  RouteFragment,
-} from "./fragments/mod.ts";
+export { RouteFragment } from "./fragments/mod.ts";
+export { type Patch, patch } from "./patching/mod.ts";
 export { NavigationRoot } from "./navigation/mod.ts";
 export { type Group, group, type ParamsOf } from "./routing/mod.ts";
 export { serve } from "./serve/mod.ts";

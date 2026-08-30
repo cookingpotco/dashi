@@ -6,10 +6,7 @@ import {
   CacheStrategy,
 } from "../caching/mod.ts";
 import { clientImportMap, getCompiledFile } from "../client/mod.ts";
-import {
-  type FragmentAction,
-  renderFragmentActions,
-} from "../fragments/mod.ts";
+import { type Patch, renderPatches } from "../patching/mod.ts";
 import type { Element } from "../jsx-runtime/mod.ts";
 import { Logger } from "../logging/mod.ts";
 import {
@@ -208,7 +205,7 @@ async function runHandler(
   | Element
   | CachedElement
   | Response
-  | FragmentAction[]
+  | Patch[]
 > {
   const method = ctx.req.method;
   if (method === "OPTIONS") {
@@ -287,7 +284,7 @@ async function executeMatched(
       return { response: out, html: null };
     }
     if (Array.isArray(out)) {
-      return await htmlResponse(renderFragmentActions(out), {
+      return await htmlResponse(renderPatches(out), {
         status: 200,
         isPartial: true,
         req: ctx.req,
@@ -295,7 +292,7 @@ async function executeMatched(
     }
     if (ctx.req.method !== "GET" && ctx.req.method !== "HEAD") {
       throw new Error(
-        `Write handlers return fragment actions or a Response: ${ctx.url.pathname}`,
+        `Write handlers return patches or a Response: ${ctx.url.pathname}`,
       );
     }
     return await respond(

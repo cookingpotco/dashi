@@ -99,19 +99,22 @@ cannot see project rules.
   `client/registry_client.ts` is the browser bus. One document-level submit
   listener in `forms/` owns interception. There is no per-element submit
   listener and no nearest-host targeting. GET navigates the page; a write goes
-  through the registry. An applied action-list write resets the submitting form.
+  through the registry. An applied patch-list write resets the submitting form.
   Client features assume the client runtime. Flag a per-element submit listener
   or a GET form that swaps a fragment.
 - A closed set of cases is a `const enum` (plain `enum` only when it must exist
   at runtime). Flag a string-literal union used as a discriminant.
-- Fragment updates are `fragment.replace`, `fragment.append`,
-  `fragment.prepend`, `fragment.before`, `fragment.after`, `fragment.remove`,
-  and `fragment.refresh` on one primitive, targeting every `route-fragment` with
-  that `src`. Use `replace` when the write has the markup; use `refresh` when
-  fragments should re-fetch themselves asynchronously. Write handlers return
-  that list or a Response, not markup or a 2xx `text/html` document.
-  `route-action` is the wire format, not a user-writable element. Flag a second
-  update path, targeting by DOM id, or a write that returns JSX.
+- Document updates are `patch.replace`, `patch.append`, `patch.prepend`,
+  `patch.before`, `patch.after`, `patch.remove`, and `patch.refresh` on one
+  primitive. The target is required: `/${string}` updates every `route-fragment`
+  with that `src`; `#${string}` updates `document.getElementById`. `refresh`
+  accepts only a route. Use `replace` when the write has the markup; use
+  `refresh` when fragments should re-fetch themselves asynchronously. Write
+  handlers return that list or a Response, not markup or a 2xx `text/html`
+  document. `dashi-patch` is the wire format, not a user-writable element. Flag
+  a third address space, a `fragment` alias, an omitted target, leftover
+  `action` / `route-action` names, a user-written `<dashi-patch>`, or a write
+  that returns JSX.
 - An object shape is an `interface`. `type` is for unions, aliases, mapped
   types. Flag an object shape written as a `type`.
 - Flag a helper that is a short, obvious check or a few straightforward lines

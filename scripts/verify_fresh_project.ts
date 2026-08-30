@@ -15,8 +15,7 @@ const LISTEN_RE = /Listening on https?:\/\/(?:\[[^\]]+\]|[\w.]+):(\d+)\//;
 const UNUSED_LINK_RE = /Linked package '[^']+' was not used[^\n]*/;
 const BOOT_TIMEOUT_MS = 30_000;
 
-const MAIN_TSX =
-  `import { type Ctx, fragment, RouteFragment, serve } from "dashi";
+const MAIN_TSX = `import { type Ctx, patch, RouteFragment, serve } from "dashi";
 
 const todos: string[] = [];
 
@@ -56,11 +55,11 @@ async function create(ctx: Ctx) {
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
     return [
-      fragment.replace("/todos", <TodoList error="title is required" />),
+      patch.replace("/todos", <TodoList error="title is required" />),
     ];
   }
   todos.push(title);
-  return [fragment.replace("/todos", <TodoList />)];
+  return [patch.replace("/todos", <TodoList />)];
 }
 
 serve(({ route }) => ({

@@ -1,4 +1,4 @@
-import { fragment, group } from "dashi";
+import { group, patch } from "dashi";
 
 export const notice = group("/notice", ({ route }) => ({
   routes: [route("/", { GET: list, POST: dismiss })],
@@ -16,5 +16,5 @@ function list() {
 }
 
 function dismiss() {
-  return [fragment.remove("/notice")];
+  return [patch.remove("/notice")];
 }

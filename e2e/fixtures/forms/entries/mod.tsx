@@ -1,4 +1,4 @@
-import { type Ctx, fragment, group, RouteFragment } from "dashi";
+import { type Ctx, group, patch, RouteFragment } from "dashi";
 import { EntriesForm } from "../entries_form.tsx";
 import { recordWrite } from "../writes.ts";
 
@@ -47,13 +47,13 @@ async function write(ctx: Ctx) {
     const title = data.get("title");
     if (typeof title !== "string" || title.trim() === "") {
       return [
-        fragment.replace(
+        patch.replace(
           "/entries-form",
           <EntriesForm error="title is required" />,
         ),
       ];
     }
-    return [fragment.replace("/entries-form", <EntriesForm />)];
+    return [patch.replace("/entries-form", <EntriesForm />)];
   }
   recordWrite();
   return Response.redirect(new URL("/search", ctx.url), 303);

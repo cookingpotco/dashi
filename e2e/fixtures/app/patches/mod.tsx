@@ -1,0 +1,25 @@
+import { type Ctx, group, patch } from "dashi";
+
+export const patches = group("/patches", ({ route }) => ({
+  routes: [route("/", { GET: form, POST: apply })],
+}));
+
+function form() {
+  return (
+    <form id="patches-form" method="POST" action="/patches">
+      <input name="title" />
+      <button type="submit">Add</button>
+    </form>
+  );
+}
+
+async function apply(ctx: Ctx) {
+  const title = (await ctx.req.formData()).get("title");
+  const text = typeof title === "string" && title !== "" ? title : "item";
+  return [
+    patch.append("#todos", <li id="appended-todo">{text}</li>),
+    patch.replace("/todo-count", <span id="todo-count">1</span>),
+    patch.replace("#status", <p>Saved</p>),
+    patch.refresh("/hits"),
+  ];
+}

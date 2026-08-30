@@ -16,7 +16,7 @@ Adding a published export is fine. Removing or renaming one is a breaking
 ## `dashi`
 
 `cached`, `CacheStrategy`, `CacheConfig`, `CachedElement`, `client`,
-`fragment`, `FragmentAction`, `RouteFragment`, `NavigationRoot`, `group`,
+`patch`, `Patch`, `RouteFragment`, `NavigationRoot`, `group`,
 `Group`, `serve`, `staticFile`, `ParamsOf`, `Ctx`, `WrapperCtx`.
 
 ## `dashi/jsx-runtime`

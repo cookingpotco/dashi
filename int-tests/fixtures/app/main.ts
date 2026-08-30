@@ -4,7 +4,7 @@ import { Home } from "./home_route.tsx";
 import { RootLayout } from "./root_layout.tsx";
 import { root } from "./root_middleware.ts";
 import { Echo } from "./echo_route.tsx";
-import { post as postActions } from "./actions_route.tsx";
+import { post as postPatches } from "./patches_route.tsx";
 import { postHtml } from "./write_html_route.ts";
 import { NestEmbed } from "./nest_embed_route.tsx";
 import { NestInner } from "./nest_inner_route.tsx";
@@ -134,7 +134,7 @@ export function start() {
       route("/query-frag", { GET: QueryFrag }),
       fragment,
       route("/peer", { GET: Peer }),
-      route("/actions", { POST: postActions }),
+      route("/patches", { POST: postPatches }),
       route("/write-html", { POST: postHtml }),
       route("/posts/new", { GET: PostsNew }),
       route("/posts/:id", { GET: Post }),
