@@ -8,6 +8,7 @@ import { slowWrite } from "../slow_write/mod.tsx";
 import { wrote } from "../wrote/mod.tsx";
 import { writes } from "../writes/mod.ts";
 import { jsonWrite } from "../json_write/mod.ts";
+import { dropWrite } from "../drop_write/mod.ts";
 import { fragPage } from "../frag_page/mod.tsx";
 import { frag } from "../frag/mod.tsx";
 import { fragLeave } from "../frag_leave/mod.tsx";
@@ -23,6 +24,7 @@ export const chrome = group(() => ({
     wrote,
     writes,
     jsonWrite,
+    dropWrite,
     fragPage,
     frag,
     fragLeave,
