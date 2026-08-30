@@ -2,7 +2,10 @@
 > development. Expect breaking changes in minor versions.
 
 <p align="center">
-<img alt="dashi" src="logo.svg" width="220" height="220">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="logo-dark.png">
+  <img alt="dashi" src="logo.png" width="400" height="169">
+</picture>
 </p>
 
 <p align="center">
