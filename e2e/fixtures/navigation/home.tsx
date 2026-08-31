@@ -1,6 +1,6 @@
 import { type Ctx } from "dashi";
 import type { AppState } from "./state.ts";
-import { GoAbout } from "./chrome/go_about.tsx";
+import { GoAbout } from "./chrome/mod.tsx";
 
 export function Home(ctx: Ctx<Record<string, never>, AppState>) {
   ctx.state.title = "home";

@@ -11,6 +11,8 @@ import { homeCss } from "../home_css.ts";
 import { aboutCss } from "../about_css.ts";
 import { data } from "../data.ts";
 
+export { GoAbout } from "./go_about.tsx";
+
 export const chrome = group<AppState>(({ route }) => ({
   layouts: [RootLayout],
   error: ErrorPage,
