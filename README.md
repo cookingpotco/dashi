@@ -38,9 +38,9 @@ serve(({ route }) => ({
 - **Route fragments.** Compose one route into another with
   `<RouteFragment src>`. Eager during SSR, or `lazy` after load, with `fallback`
   and `timeout`.
-- **Patches.** In reaponse to form submissions or manual API calls, handlers
-  can return patches like `patch.replace` that target a specific fragment or 
-  element on the page.
+- **Patches.** In reaponse to form submissions or manual API calls, handlers can
+  return patches like `patch.replace` that target a specific fragment or element
+  on the page.
 - **Explicit route table.** Typed params from the path literal, and per-method
   handlers, in one `serve()` callback.
 - **Web standards.** Handlers read `ctx.req` as a `Request` and return JSX or a
