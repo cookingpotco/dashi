@@ -33,10 +33,10 @@ resolve itself by name against the registry. JSX types are imported from
 
 A page is handlers for one path, bound with `route("/path", { GET, POST })`
 on the table that owns that path. The page module never calls `route()` or
-`group()`, and never exports a `{ GET }` bag or a function named `GET`. A
-file next to the table when the page is only handlers; a folder
-(`home/mod.tsx`) when it has page-local components, a `*_client.ts`, or
-other tables import that page. No `*_route.tsx`.
+`group()`, and never exports a `{ GET }` bag or a function named `GET`.
+Examples and real apps always use a folder (`home/mod.tsx`,
+`guestbook/mod.tsx`). Int-tests and e2e fixtures may use a file next to the
+table when the page is only handlers. No `*_route.tsx`.
 
 `group()` is only a prefixed subtree or a pathless wrap. Shared values live
 in a module that is not a page.

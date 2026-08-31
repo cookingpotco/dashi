@@ -78,17 +78,18 @@ cannot see project rules.
   `compilerOptions.jsxImportSource` on the root config.
 - A page is handlers for one path, bound with `route("/path", { GET, POST })` on
   the table that owns that path. The page module never calls `route()` or
-  `group()`, and never exports a `{ GET }` bag or a function named `GET`. A file
-  next to the table when the page is only handlers; a folder when it has
-  page-local components, a `*_client.ts`, or other tables import that page.
+  `group()`, and never exports a `{ GET }` bag or a function named `GET`.
+  Examples and real apps always use a folder (`home/mod.tsx`). Int-tests and e2e
+  fixtures may use a file next to the table when the page is only handlers.
   `group()` is only a prefixed subtree or a pathless wrap. Flag application code
   that calls a handler, including as a JSX child: it skips the target's
   middleware and error boundary, applies its cache policy to the caller's
   response, and leaves it reading the caller's `ctx`. Shared markup is a
   component in a non-page module; another route's rendered output is
-  `<RouteFragment src>`. Flag a `*_route.tsx`, a one-path page declared as
-  `group("/path")` + `route("/")`, or `group()` inlined in a `serve()` bag
-  instead of an imported `Group`.
+  `<RouteFragment src>`. Flag a `*_route.tsx`, a one-path page in `examples/` as
+  a file next to the table, a one-path page declared as `group("/path")` +
+  `route("/")`, or `group()` inlined in a `serve()` bag instead of an imported
+  `Group`.
 - Client JS attaches only via `client.module` / `client.element` at module
   scope. App files are `*_client.ts` beside the registrar. Browser-safe APIs
   import from `dashi/client`; client modules do not import `dashi`. Compiled

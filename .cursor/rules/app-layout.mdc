@@ -8,10 +8,11 @@ alwaysApply: true
 Every app in this repo is one tree. `main.ts` is the `serve()` callback and
 boots it.
 
-A **page** is handlers for one path. The table that owns that path binds them
-with `route("/guestbook", { GET: list, POST: add })`. That table is the
-`serve()` callback or a wrap / prefix group's callback. A page module never
-calls `route()` or `group()`, and never exports a `{ GET }` bag or a function
+A **page** is a folder that exports handlers for one path (`Home`, `list`,
+`add`). The table that owns that path binds them with
+`route("/guestbook", { GET: list, POST: add })`. That table is the `serve()`
+callback or a wrap / prefix group's callback. A page module never calls
+`route()` or `group()`, and never exports a `{ GET }` bag or a function
 named `GET`.
 
 `group()` is only a **prefixed subtree** (nested URLs, or layouts /
@@ -21,30 +22,15 @@ is illegal. Pathless `group()` is not the `/` page.
 README snippets may inline `serve(callback)` to show the whole flow; those
 are not apps.
 
-## File vs folder
-
-- **File** next to the table (`echo.tsx`, `guestbook.tsx`) when the page is
-  only handlers.
-- **Folder** (`home/mod.tsx`) when the page has page-local components or a
-  `*_client.ts`, or when other tables import that page (`ok/mod.ts` is `/ok`;
-  `api` and the cors groups import `{ ok }` from there).
-- If `name.tsx` is already a shared module, the page is `name/mod.tsx` so
-  the two do not collide.
-
-No `*_route.tsx`. Shared non-page values stay ordinary modules (`todos.ts`,
-`state.ts`, `errors.tsx`). Wrap-owned handlers that are not themselves a
-root page live in that group's folder.
-
 ## File names
 
-Deno snake_case. Feature folders match the path (`slow_write/` for
-`/slow-write`). Layout and middleware files are `{folder}_{role}`:
-`menu_layout.tsx`, `menu_middleware.ts`. Nested `reviews/` uses
-`reviews_layout.tsx`. At the app root: `root_layout.tsx`,
-`logger_middleware.ts`, `errors.tsx`. Client modules are `*_client.ts`
-(`clock_client.ts`) and sit beside the file that registers them. No `routes/`
-directory, no app `client/` folder, no `_` magic prefixes, and no
-`*_route.tsx`.
+Deno snake_case. Feature folders match the path (`docs/` for `/docs`).
+Layout and middleware files are `{folder}_{role}`: `menu_layout.tsx`,
+`menu_middleware.ts`. Nested `reviews/` uses `reviews_layout.tsx`. At the app
+root: `root_layout.tsx`, `logger_middleware.ts`, `errors.tsx`. Client modules
+are `*_client.ts` (`clock_client.ts`) and sit beside the file that registers
+them. No `routes/` directory, no app `client/` folder, no `_` magic prefixes,
+and no `*_route.tsx`.
 
 `errors.tsx` holds the named `notFound`, `error`, and `fatal`
 exports. Those are not routes. Root `notFound` / `error` live on the root
@@ -75,22 +61,13 @@ callback. Do not export `route()`.
 
 ```tsx
 // home/mod.tsx
-const TestComponent = ({ text }: { text: string }) => {
-  return <footer>{text}</footer>;
-};
-
 export function Home() {
-  return (
-    <h1>
-      Hello
-      <TestComponent text="footer" />
-    </h1>
-  );
+  return <h1>Hello</h1>;
 }
 ```
 
 ```tsx
-// guestbook.tsx
+// guestbook/mod.tsx
 export function list() {
   return <h1>Guestbook</h1>;
 }
@@ -110,7 +87,7 @@ they did not declare. Shared data goes on `ctx.state`.
 ```ts
 import { serve } from "dashi";
 import { Home } from "./home/mod.tsx";
-import { list, add } from "./guestbook.tsx";
+import { add, list } from "./guestbook/mod.tsx";
 import { RootLayout } from "./root_layout.tsx";
 import { fatal } from "./errors.tsx";
 import { nested } from "./nested/mod.tsx";
@@ -142,10 +119,17 @@ export const nested = group("/nested", ({ route }) => ({
 
 ## Fixtures
 
-The main fixture (`int-tests/fixtures/app/`) matches this layout. Extra
-fixtures that cannot share that `serve()` table are a small `main.ts` or
-`main.tsx` in their own folder, inline `serve(callback)` harnesses. They are
-not workspace members. Fixture `main.ts` exports `start()` for `boot` /
+Int-tests and e2e fixtures may use a **file** next to the table when the
+page is only handlers (`echo.tsx`), and a **folder** when it has page-local
+components, a `*_client.ts`, or other tables import that page (`ok/mod.ts`).
+If `name.tsx` is already a shared module, the page is `name/mod.tsx` so the
+two do not collide. Wrap-owned handlers that are not themselves a root page
+live in that group's folder. Examples and real apps always use a folder.
+
+The main fixture (`int-tests/fixtures/app/`) follows that fixture split.
+Extra fixtures that cannot share that `serve()` table are a small `main.ts`
+or `main.tsx` in their own folder, inline `serve(callback)` harnesses. They
+are not workspace members. Fixture `main.ts` exports `start()` for `boot` /
 `withBrowser`. The e2e fixtures use the same tree; extra e2e fixtures follow
 the same rule.
 

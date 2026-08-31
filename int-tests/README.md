@@ -14,11 +14,12 @@ way `examples/` do.
 ## Add a case
 
 If the fixture already has the route, append an `IntegrationTestCase` in that
-fixture's `main_test.ts` and stop. If it needs a new path, add a page module and
-bind it with `route()` on the root table under the shared root wraps. Use a
-`group()` only when the path needs a prefix or wraps (layouts, middleware,
-`notFound`). One request, several asserts: status, headers, then at most one of
-`html` or `json`. `html` covers parsed DOM `select` plus raw `bodyIncludes` /
+fixture's `main_test.ts` and stop. If it needs a new path, add a page module (a
+file next to the table when it is only handlers, otherwise a folder) and bind it
+with `route()` on the root table under the shared root wraps. Use a `group()`
+only when the path needs a prefix or wraps (layouts, middleware, `notFound`).
+One request, several asserts: status, headers, then at most one of `html` or
+`json`. `html` covers parsed DOM `select` plus raw `bodyIncludes` /
 `bodyExcludes` (escaping, DOCTYPE, leftover `{{fragment:` markers). `json` is
 the expected parsed object. Raw top-level `bodyIncludes` / `bodyExcludes` are
 for responses that are neither (404, 405, empty 303). `runCase` parses HTML only
