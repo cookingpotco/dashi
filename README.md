@@ -38,11 +38,12 @@ serve(({ route }) => ({
 - **Route fragments.** Compose one route into another with
   `<RouteFragment src>`. Eager during SSR, or `lazy` after load, with `fallback`
   and `timeout`.
-- **Fragment actions.** A write handler returns `fragment.replace`,
-  `fragment.append`, `fragment.prepend`, `fragment.before`, `fragment.after`,
-  `fragment.remove`, or `fragment.refresh`, targeting every host rendering that
-  route. The submitting form does not have to sit inside the fragment. An
-  applied action-list write resets the submitting form.
+- **Patches.** A write handler returns `patch.replace`, `patch.append`,
+  `patch.prepend`, `patch.before`, `patch.after`, `patch.remove`, or
+  `patch.refresh`. A `/${string}` target updates every host rendering that
+  route; a `#${string}` target updates that element. The submitting form does
+  not have to sit inside the fragment. An applied patch-list write resets the
+  submitting form.
 - **Explicit route table.** Typed params from the path literal, and per-method
   handlers, in one `serve()` callback.
 - **Web standards.** Handlers read `ctx.req` as a `Request` and return JSX or a
@@ -99,7 +100,7 @@ Omit `lazy` to include during SSR. `timeout` is milliseconds to wait (5000 if
 omitted), and a timeout fails the include.
 
 ```tsx
-import { type Ctx, fragment, RouteFragment, serve } from "dashi";
+import { type Ctx, patch, RouteFragment, serve } from "dashi";
 
 const todos: string[] = [];
 
@@ -134,10 +135,10 @@ function list() {
 async function create(ctx: Ctx) {
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
-    return [fragment.replace("/todos", <TodoList error="title is required" />)];
+    return [patch.replace("/todos", <TodoList error="title is required" />)];
   }
   todos.push(title);
-  return [fragment.replace("/todos", <TodoList />)];
+  return [patch.replace("/todos", <TodoList />)];
 }
 
 serve(({ route }) => ({
@@ -148,13 +149,15 @@ serve(({ route }) => ({
 }));
 ```
 
-A GET or lazy fetch replaces the host that asked with markup. `fragment.replace`
-/ `append` / `prepend` / `before` / `after` / `remove` / `refresh` update every
-`<RouteFragment>` rendering that `src`. `before` / `after` sit beside the host;
-replacing the host itself is `before` or `after` then `remove`. Use `replace`
-when the write has the markup; use `refresh` when fragments should re-fetch
-themselves asynchronously. A write handler returns that list or a `Response` —
-not a document. The form can sit anywhere on the page.
+A GET or lazy fetch replaces the host that asked with markup. `patch.replace` /
+`append` / `prepend` / `before` / `after` / `remove` / `refresh` take a required
+target: `/${string}` updates every `<RouteFragment>` rendering that `src`;
+`#${string}` updates that element. `refresh` accepts only a route. `before` /
+`after` sit beside the target; replacing the node itself is `before` or `after`
+then `remove`. Use `replace` when the write has the markup; use `refresh` when
+fragments should re-fetch themselves asynchronously. A write handler returns
+that list or a `Response` — not a document. The form can sit anywhere on the
+page.
 
 ## Other features
 

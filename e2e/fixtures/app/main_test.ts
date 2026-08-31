@@ -280,16 +280,16 @@ Deno.test("app fixture", async (t) => {
         },
       );
 
-      await t.step("action list refresh re-GETs the host", async () => {
-        await page.goto(`${app.origin}/actions-page`);
+      await t.step("patch list refresh re-GETs the host", async () => {
+        await page.goto(`${app.origin}/patches-page`);
         await page.evaluate(() => customElements.whenDefined("route-fragment"));
         const initial = await page.evaluate(() =>
           document.getElementById("refresh-stamp")?.textContent
         );
         assertEquals(initial, "1");
-        const add = await page.$("#actions-form button");
+        const add = await page.$("#patches-form button");
         if (add === null) {
-          throw new Error("actions form is missing");
+          throw new Error("patches form is missing");
         }
         await add.click();
         await page.evaluate(async () => {
@@ -323,16 +323,16 @@ Deno.test("app fixture", async (t) => {
           };
         });
         assertEquals(result, {
-          url: `${app.origin}/actions-page`,
+          url: `${app.origin}/patches-page`,
           stamp: "3",
           stampInHost: "3",
         });
       });
 
       await t.step(
-        "action list appends and replaces without a page load",
+        "patch list appends to #id, replaces a route, and updates status",
         async () => {
-          await page.goto(`${app.origin}/actions-page`);
+          await page.goto(`${app.origin}/patches-page`);
           await page.evaluate(() =>
             customElements.whenDefined("route-fragment")
           );
@@ -342,11 +342,11 @@ Deno.test("app fixture", async (t) => {
               marker.textContent = "mutated";
             }
           });
-          const add = await page.$("#actions-form button");
+          const add = await page.$("#patches-form button");
           if (add === null) {
-            throw new Error("actions form is missing");
+            throw new Error("patches form is missing");
           }
-          await typeField("#actions-form input[name=title]", "action-milk");
+          await typeField("#patches-form input[name=title]", "action-milk");
           await add.click();
           await page.evaluate(async () => {
             const start = Date.now();
@@ -358,36 +358,38 @@ Deno.test("app fixture", async (t) => {
             }
           });
           const result = await page.evaluate(() => {
-            const todosHost = document.querySelector(
-              "route-fragment[src='/todos']",
-            );
-            const countHost = document.querySelector(
-              "route-fragment[src='/todo-count']",
-            );
+            const list = document.getElementById("todos");
+            const counts = [
+              ...document.querySelectorAll("route-fragment[src='/todo-count']"),
+            ].map((host) => host.textContent);
+            const status = document.getElementById("status");
             return {
               url: location.href,
               marker: document.getElementById("page-marker")?.textContent,
               item: document.getElementById("appended-todo")?.textContent,
-              itemInHost: todosHost?.querySelector("#appended-todo")
+              itemInList: list?.querySelector("#appended-todo")
                 ?.textContent ?? null,
-              count: document.getElementById("todo-count")?.textContent,
-              countInHost: countHost?.querySelector("#todo-count")
-                ?.textContent ?? null,
+              listTag: list?.localName ?? null,
+              counts,
+              statusTag: status?.localName ?? null,
+              statusText: status?.textContent ?? null,
             };
           });
           assertEquals(result, {
-            url: `${app.origin}/actions-page`,
+            url: `${app.origin}/patches-page`,
             marker: "mutated",
             item: "action-milk",
-            itemInHost: "action-milk",
-            count: "1",
-            countInHost: "1",
+            itemInList: "action-milk",
+            listTag: "ul",
+            counts: ["1", "1"],
+            statusTag: "div",
+            statusText: "Saved",
           });
         },
       );
 
-      await t.step("action list removes a host", async () => {
-        await page.goto(`${app.origin}/actions-page`);
+      await t.step("patch list removes a host", async () => {
+        await page.goto(`${app.origin}/patches-page`);
         await page.evaluate(() => customElements.whenDefined("route-fragment"));
         const dismiss = await page.$("#dismiss-form button");
         if (dismiss === null) {
@@ -412,16 +414,16 @@ Deno.test("app fixture", async (t) => {
           notice: document.getElementById("notice") !== null,
         }));
         assertEquals(result, {
-          url: `${app.origin}/actions-page`,
+          url: `${app.origin}/patches-page`,
           host: false,
           notice: false,
         });
       });
 
       await t.step(
-        "action list prepends inside and inserts beside the host",
+        "patch list prepends inside and inserts beside the host",
         async () => {
-          await page.goto(`${app.origin}/actions-page`);
+          await page.goto(`${app.origin}/patches-page`);
           await page.evaluate(() =>
             customElements.whenDefined("route-fragment")
           );
@@ -438,7 +440,7 @@ Deno.test("app fixture", async (t) => {
               document.getElementById("after-slot") === null
             ) {
               if (Date.now() - start > 10000) {
-                throw new Error("insert actions did not apply");
+                throw new Error("insert patches did not apply");
               }
               await new Promise((resolve) => setTimeout(resolve, 25));
             }
@@ -460,7 +462,7 @@ Deno.test("app fixture", async (t) => {
             };
           });
           assertEquals(result, {
-            url: `${app.origin}/actions-page`,
+            url: `${app.origin}/patches-page`,
             host: true,
             firstChild: "prepended",
             prev: "before-slot",

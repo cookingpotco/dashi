@@ -34,8 +34,8 @@ function typechecks() {
   <form method="DELETE" />;
   // @ts-expect-error encType is the three spec keywords
   <form encType="application/json" />;
-  // @ts-expect-error route-action is not a JSX intrinsic
-  <route-action action="remove" src="/x" />;
+  // @ts-expect-error dashi-patch is not a JSX intrinsic
+  <dashi-patch kind="remove" target="/x" />;
 
   // @ts-expect-error cached() is not a JSX child
   <div>{cached(<span>x</span>, { strategy: CacheStrategy.NoStore })}</div>;

@@ -1,5 +1,5 @@
 import type { CachedElement } from "../caching/mod.ts";
-import type { FragmentAction } from "../fragments/mod.ts";
+import type { Patch } from "../patching/mod.ts";
 import type { Element } from "../jsx-runtime/mod.ts";
 
 /**
@@ -90,8 +90,8 @@ export const METHODS = [
 export type Method = typeof METHODS[number];
 
 /**
- * POST/PUT/PATCH/DELETE. Return fragment actions (no layouts, no
- * DOCTYPE) or a Response. A 2xx `text/html` Response is rejected.
+ * POST/PUT/PATCH/DELETE. Return patches (no layouts, no DOCTYPE) or
+ * a Response. A 2xx `text/html` Response is rejected.
  */
 /** @internal */
 export type WriteHandler<
@@ -101,12 +101,12 @@ export type WriteHandler<
   ctx: Ctx<Params, State>,
 ) =>
   | Response
-  | FragmentAction[]
-  | Promise<Response | FragmentAction[]>;
+  | Patch[]
+  | Promise<Response | Patch[]>;
 
 /**
  * Per-method handlers on a route. GET returns a page or fragment body.
- * Writes return a list of fragment actions, or a Response.
+ * Writes return a list of patches, or a Response.
  */
 /** @internal */
 export type MethodHandlers<

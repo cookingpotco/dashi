@@ -68,6 +68,7 @@
       "jsx-runtime",
       "logging",
       "navigation",
+      "patching",
       "routing",
       "serve",
       "shared",

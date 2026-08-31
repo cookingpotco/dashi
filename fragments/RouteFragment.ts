@@ -5,7 +5,6 @@ import {
   jsx,
 } from "../jsx-runtime/mod.ts";
 import { client } from "../client/mod.ts";
-import type { InternalSrc } from "./actions.ts";
 import { Logger } from "../logging/mod.ts";
 import { runRoute } from "../routing/mod.ts";
 import { getFragmentSlot, getRenderStore } from "../ssr/mod.ts";
@@ -24,13 +23,13 @@ interface BaseRouteFragmentProps extends HTMLAttributes {
    * load when `lazy` is set.
    *
    * A GET or lazy fetch replaces this host with markup. A write handler
-   * returns `fragment.replace`, `fragment.append`, `fragment.prepend`,
-   * `fragment.before`, `fragment.after`, `fragment.remove`, or
-   * `fragment.refresh` to update every host rendering those routes. Use
-   * `replace` when the write has the markup; use `refresh` when fragments
-   * should re-fetch themselves asynchronously.
+   * returns `patch.replace`, `patch.append`, `patch.prepend`,
+   * `patch.before`, `patch.after`, `patch.remove`, or `patch.refresh`
+   * to update every host rendering those routes, or a `#id` in the live
+   * document. Use `replace` when the write has the markup; use `refresh`
+   * when fragments should re-fetch themselves asynchronously.
    */
-  src: InternalSrc;
+  src: `/${string}`;
 }
 
 /** @internal */

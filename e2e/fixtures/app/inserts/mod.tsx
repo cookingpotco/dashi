@@ -1,4 +1,4 @@
-import { fragment, group } from "dashi";
+import { group, patch } from "dashi";
 
 export const inserts = group("/inserts", ({ route }) => ({
   routes: [route("/", { GET: form, POST: apply })],
@@ -14,8 +14,8 @@ function form() {
 
 function apply() {
   return [
-    fragment.prepend("/slot", <span id="prepended">pre</span>),
-    fragment.before("/slot", <span id="before-slot">before</span>),
-    fragment.after("/slot", <span id="after-slot">after</span>),
+    patch.prepend("/slot", <span id="prepended">pre</span>),
+    patch.before("/slot", <span id="before-slot">before</span>),
+    patch.after("/slot", <span id="after-slot">after</span>),
   ];
 }

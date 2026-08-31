@@ -10,14 +10,14 @@ interface PageSlot {
 }
 
 let page: PageSlot | null = null;
-let actions: ((html: string) => boolean) | null = null;
+let patches: ((html: string) => boolean) | null = null;
 
 export function registerPage(slot: PageSlot): void {
   page = slot;
 }
 
-export function registerActions(apply: (html: string) => boolean): void {
-  actions = apply;
+export function registerPatches(apply: (html: string) => boolean): void {
+  patches = apply;
 }
 
 /**
@@ -61,7 +61,7 @@ export async function submitWrite(intent: SubmitIntent): Promise<boolean> {
       location.assign(res.url);
       return false;
     }
-    if (actions !== null) {
+    if (patches !== null) {
       const html = await res.text();
       const link = res.headers.get("link") ?? "";
       const pending: Promise<unknown>[] = [];
@@ -72,7 +72,7 @@ export async function submitWrite(intent: SubmitIntent): Promise<boolean> {
         }
       }
       await Promise.all(pending);
-      if (actions(html)) {
+      if (patches(html)) {
         return true;
       }
     }

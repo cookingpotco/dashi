@@ -1,17 +1,19 @@
 import { group, RouteFragment } from "dashi";
 
-export const actionsPage = group("/actions-page", ({ route }) => ({
-  routes: [route("/", { GET: ActionsPage })],
+export const patchesPage = group("/patches-page", ({ route }) => ({
+  routes: [route("/", { GET: PatchesPage })],
 }));
 
-function ActionsPage() {
+function PatchesPage() {
   return (
     <div>
       <p id="page-marker">outside</p>
+      <div id="status">idle</div>
       <RouteFragment src="/todos" />
       <RouteFragment src="/todo-count" />
+      <RouteFragment src="/todo-count" />
       <RouteFragment src="/hits" />
-      <RouteFragment src="/actions" />
+      <RouteFragment src="/patches" />
       <RouteFragment src="/notice" />
       <RouteFragment src="/slot" />
       <RouteFragment src="/inserts" />

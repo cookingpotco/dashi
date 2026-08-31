@@ -18,8 +18,8 @@ import { counted } from "./counted/mod.tsx";
 import { countedHits } from "./counted_hits/mod.ts";
 import { todosPage } from "./todos_page/mod.tsx";
 import { todos } from "./todos/mod.tsx";
-import { actionsPage } from "./actions_page/mod.tsx";
-import { actions } from "./actions/mod.tsx";
+import { patchesPage } from "./patches_page/mod.tsx";
+import { patches } from "./patches/mod.tsx";
 import { todoCount } from "./todo_count/mod.tsx";
 import { hits } from "./hits/mod.tsx";
 import { notice } from "./notice/mod.tsx";
@@ -48,8 +48,8 @@ export function start() {
       countedHits,
       todosPage,
       todos,
-      actionsPage,
-      actions,
+      patchesPage,
+      patches,
       todoCount,
       hits,
       notice,

@@ -1,4 +1,4 @@
-import { registerActions } from "../client/registry_client.ts";
+import { registerPatches } from "../client/registry_client.ts";
 import "../forms/submit_client.ts";
 
 const enum SwapKind {
@@ -11,13 +11,21 @@ const enum SwapKind {
   Refresh = "refresh",
 }
 
-function applyAction(action: Element) {
-  const kind = action.getAttribute("action");
-  const src = action.getAttribute("src");
-  if (src === null) {
+function resolveHosts(target: string): Iterable<Element> {
+  if (target.startsWith("#")) {
+    const node = document.getElementById(target.slice(1));
+    return node === null ? [] : [node];
+  }
+  return document.querySelectorAll(`route-fragment[src="${target}"]`);
+}
+
+function applyPatch(item: Element) {
+  const kind = item.getAttribute("kind");
+  const target = item.getAttribute("target");
+  if (target === null) {
     return;
   }
-  const hosts = document.querySelectorAll(`route-fragment[src="${src}"]`);
+  const hosts = resolveHosts(target);
   if (kind === SwapKind.Remove) {
     for (const host of hosts) {
       host.remove();
@@ -26,13 +34,13 @@ function applyAction(action: Element) {
   }
   if (kind === SwapKind.Replace) {
     for (const host of hosts) {
-      host.innerHTML = action.innerHTML;
+      host.innerHTML = item.innerHTML;
     }
     return;
   }
   if (kind === SwapKind.Append) {
     for (const host of hosts) {
-      const clone = action.cloneNode(true);
+      const clone = item.cloneNode(true);
       if (clone instanceof Element) {
         host.append(...clone.childNodes);
       }
@@ -41,7 +49,7 @@ function applyAction(action: Element) {
   }
   if (kind === SwapKind.Prepend) {
     for (const host of hosts) {
-      const clone = action.cloneNode(true);
+      const clone = item.cloneNode(true);
       if (clone instanceof Element) {
         host.prepend(...clone.childNodes);
       }
@@ -50,7 +58,7 @@ function applyAction(action: Element) {
   }
   if (kind === SwapKind.Before) {
     for (const host of hosts) {
-      const clone = action.cloneNode(true);
+      const clone = item.cloneNode(true);
       if (clone instanceof Element) {
         host.before(...clone.childNodes);
       }
@@ -59,7 +67,7 @@ function applyAction(action: Element) {
   }
   if (kind === SwapKind.After) {
     for (const host of hosts) {
-      const clone = action.cloneNode(true);
+      const clone = item.cloneNode(true);
       if (clone instanceof Element) {
         host.after(...clone.childNodes);
       }
@@ -76,7 +84,7 @@ function applyAction(action: Element) {
   }
 }
 
-function applyActions(html: string): boolean {
+function applyPatches(html: string): boolean {
   const template = document.createElement("template");
   template.innerHTML = html;
   const list: Element[] = [];
@@ -84,7 +92,7 @@ function applyActions(html: string): boolean {
     if (!(node instanceof Element)) {
       continue;
     }
-    if (node.localName !== "route-action") {
+    if (node.localName !== "dashi-patch") {
       return false;
     }
     list.push(node);
@@ -92,10 +100,10 @@ function applyActions(html: string): boolean {
   if (list.length === 0) {
     return false;
   }
-  for (const action of list) {
-    applyAction(action);
+  for (const item of list) {
+    applyPatch(item);
   }
   return true;
 }
 
-registerActions(applyActions);
+registerPatches(applyPatches);

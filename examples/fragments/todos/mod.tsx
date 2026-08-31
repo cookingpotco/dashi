@@ -1,4 +1,4 @@
-import { type Ctx, fragment, group } from "dashi";
+import { type Ctx, group, patch } from "dashi";
 import { todos as items } from "../todos.ts";
 
 export const todos = group("/todos", ({ route }) => ({
@@ -34,15 +34,15 @@ function count() {
 async function create(ctx: Ctx) {
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
-    return [fragment.replace("/todos", <TodoList error="title is required" />)];
+    return [patch.replace("/todos", <TodoList error="title is required" />)];
   }
   items.push(title);
   return [
-    fragment.append("/todos", <li>{title}</li>),
-    fragment.replace(
+    patch.append("#todos", <li>{title}</li>),
+    patch.replace(
       "/todos/count",
       <span id="todo-count">{items.length}</span>,
     ),
-    fragment.refresh("/time"),
+    patch.refresh("/time"),
   ];
 }

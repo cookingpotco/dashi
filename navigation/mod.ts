@@ -20,7 +20,7 @@ const NavigationRootElement = client.element(
  * client TypeScript, `import { navigate } from "dashi/client"`.
  *
  * Without this element, GET navigation is a real load. Writes still
- * apply fragment actions when that runtime loaded.
+ * apply patches when that runtime loaded.
  */
 export function NavigationRoot(props: HTMLAttributes): Element {
   return jsx(NavigationRootElement, { ...props });

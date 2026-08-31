@@ -1,4 +1,4 @@
-import { type Ctx, fragment, group } from "dashi";
+import { type Ctx, group, patch } from "dashi";
 
 export const frag = group("/frag", ({ route }) => ({
   routes: [route("/", { GET: list, POST: update })],
@@ -27,5 +27,5 @@ function list() {
 async function update(ctx: Ctx) {
   const title = (await ctx.req.formData()).get("title");
   const text = typeof title === "string" && title !== "" ? title : "item";
-  return [fragment.replace("/frag", <Frag item={text} />)];
+  return [patch.replace("/frag", <Frag item={text} />)];
 }

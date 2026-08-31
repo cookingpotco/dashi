@@ -1,4 +1,4 @@
-import { type Ctx, fragment as actions, group, type WrapperCtx } from "dashi";
+import { type Ctx, group, patch, type WrapperCtx } from "dashi";
 import type { AppState } from "../state.ts";
 
 function fragOnly(ctx: WrapperCtx<AppState>, next: () => Promise<Response>) {
@@ -29,7 +29,7 @@ function Fragment(
 
 function post() {
   return [
-    actions.replace(
+    patch.replace(
       "/fragment",
       <aside id="frag">posted-fragment-body</aside>,
     ),
