@@ -46,11 +46,23 @@ stop: tell the human rather than silently substituting another issue.
    S-pointed issues whose ticket already reads like a plan. Present the full
    plan in the chat. After every alteration, show the full plan again — do not
    describe the delta and leave the plan implied.
-3. **Start the implementor.** After approval, post the plan as a Linear comment
-   that begins with `@Cursor`, then the full approved plan. That mention is the
-   only handoff: Linear puts this comment in the agent's prompt and starts one
-   cloud agent. Leave the status at `Ready`. The GitHub integration sets
-   `In Progress` when the agent opens its draft PR.
+3. **Start the implementor.** After approval:
+
+   **Figma.** If this ticket must read or write Figma (design brainstorm, edits,
+   or pixel-matching a design in code), do **not** post `@Cursor`. Cloud Agents
+   cannot use Figma MCP. Post the approved plan as a Linear comment **without**
+   that mention. Tell the human to run it in a **local** `agent` session with
+   Figma MCP connected. Leave the status at `Ready`.
+
+   While planning those tickets, use Figma MCP in this session. Put file URLs
+   and node IDs in the plan; screenshots are for the human reviewing the plan,
+   not a stand-in spec for a cloud agent.
+
+   **Otherwise** post the plan as a Linear comment that begins with `@Cursor`,
+   then the full approved plan. That mention is the only cloud handoff: Linear
+   puts this comment in the agent's prompt and starts one cloud agent. Leave
+   the status at `Ready`. The GitHub integration sets `In Progress` when the
+   agent opens its draft PR.
 
    The comment is the plan only. Do not add Done or handoff instructions there —
    the implementor follows `AGENTS.md` either way, including when a human posts
@@ -66,6 +78,9 @@ stop: tell the human rather than silently substituting another issue.
 
 - **Do not start an implementor on spikes.** Design issues produce a written
   decision and stay with the human.
+- **Figma is local.** Cloud Agents cannot use Figma MCP. Design tickets and
+  tickets that must match a Figma file run in a local session. Do not `@Cursor`
+  them.
 - **Name the test layer.** Follow the Tests section in `AGENTS.md`. Unit tests
   for pure functions. Behaviour at the path that actually runs — compiled JSX
   for markup, HTTP cases in `int-tests/`, live DOM after JS in `e2e/`. No stubs,
