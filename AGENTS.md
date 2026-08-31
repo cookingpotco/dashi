@@ -8,6 +8,13 @@ started you; that and this file are the brief. Skip the `plan-ticket` skill.
 Do not set Linear status. Opening the draft PR on init moves the ticket to
 `In Progress`; the GitHub integration handles `In Review` and `Done` after that.
 
+## Figma
+
+Cloud Agents cannot use Figma MCP. Tickets that must read or write Figma are
+implemented in a local session, not via `@Cursor`. When you have Figma MCP,
+match frames with `get_design_context`. Do not invent layout from screenshots
+in the plan.
+
 ## Done
 
 Follow the `pr-handoff` skill every time you hand the PR back, including after

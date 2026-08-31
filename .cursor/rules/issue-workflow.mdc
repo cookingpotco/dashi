@@ -14,18 +14,36 @@ The planner follows the `plan-ticket` skill. The implementing agent follows
 
 1. An issue is picked from `Dashi F&F Launch`, respecting milestone order and
    `blocked by` relations.
-2. A plan is written and approved. After approval, the plan is posted as a
-   Linear comment that begins with `@Cursor`, which starts the implementing
-   agent. The ticket stays at `Ready`.
+2. A plan is written and approved. After approval:
+   - **Figma** (read or write: design, edits, or pixel-matching a design in
+     code): post the plan as a Linear comment **without** `@Cursor`. The human
+     runs a local `agent` session. Cloud Agents cannot use Figma MCP.
+   - **Otherwise**: post a comment that begins with `@Cursor`, which starts the
+     cloud implementor.
+   The ticket stays at `Ready`.
 3. The implementing agent builds it and marks the PR ready. Then the human
    reviews.
 4. Merge once checks are green, Bugbot has had its pass, and the human has
    approved.
 
+## Figma
+
+Cloud Agents cannot use Figma MCP. Brainstorm, edits, reads, and any
+implementation that must match Figma run in a **local** session with Figma MCP.
+
+The planner reads (and, on design tickets, writes) Figma while planning. The
+plan may include file URLs, node IDs, and screenshots so a human can review it.
+Screenshots are not the spec: the implementor uses `get_design_context` on the
+live file.
+
+Do not `@Cursor` those tickets. GitHub review-followup resumes a cloud agent,
+which also has no Figma; continue visual follow-up in a local session.
+
 ## Status
 
-- `Ready` means the ticket has an approved plan. `@Cursor` on that comment
-  starts the implementor and does not change the status.
+- `Ready` means the ticket has an approved plan. On a non-Figma ticket,
+  `@Cursor` on that comment starts the cloud implementor and does not change
+  the status. On a Figma ticket, `Ready` means the local session can start.
 - `In Progress` means a draft PR exists. The GitHub integration sets this when
   the agent opens the PR on init.
 - `In Review` means the PR left draft. The GitHub integration sets this when
