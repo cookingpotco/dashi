@@ -1,14 +1,10 @@
-import { client, group } from "dashi";
+import { client } from "dashi";
 
 const LazyMark = client.element(
   "lazy-el",
   new URL("./lazy_client.ts", import.meta.url),
 );
 
-export const lazy = group("/lazy", ({ route }) => ({
-  routes: [route("/", { GET: LazyFrag })],
-}));
-
-function LazyFrag() {
+export function LazyFrag() {
   return <LazyMark />;
 }

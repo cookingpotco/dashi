@@ -19,9 +19,10 @@ a visible window, for local debugging. The first run downloads Chrome into
 ## Add a case
 
 If the fixture already has the page, append a `t.step` inside that fixture's
-`withBrowser` and stop. If it needs a new path, add a feature folder that
-exports a `Group` and drop it into the root callback. A new fixture folder is a
-new `Deno.test` that calls `withBrowser` once.
+`withBrowser` and stop. If it needs a new path, add a page module and bind it
+with `route()` on the table. Use a `group()` only when the path needs a prefix
+or wraps. A new fixture folder is a new `Deno.test` that calls `withBrowser`
+once.
 
 `withBrowser` takes the fixture `start`, boots the app, launches Chromium, and
 gives `{ app, page, browser }`. Use Astral's page API (`goto`, `$`, `evaluate`,
@@ -35,6 +36,7 @@ and writes HTML, stderr, and a screenshot under `e2e/results/` (gitignored).
 ## Add a fixture app
 
 `fixtures/app` is the main fixture: `main.ts` exports `start()`, which calls
-`serve()`, and every page path is a prefixed feature group, matching the
-examples. Put a new folder next to it only when the behaviour cannot live on
-that app. Do not add a fixture as its own workspace member.
+`serve()`. A one-path page is a page module bound on the table; `group()` is
+only a prefixed subtree or a wrap shell. Put a new folder next to it only when
+the behaviour cannot live on that app. Do not add a fixture as its own workspace
+member.

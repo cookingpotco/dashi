@@ -1,12 +1,12 @@
 import { serve } from "dashi";
-import { Home } from "./home_route.tsx";
+import { Home } from "./home/mod.tsx";
 import { RootLayout } from "./root_layout.tsx";
 import { logger } from "./logger_middleware.ts";
 import { ErrorPage, fatal } from "./errors.tsx";
-import { fragment } from "./fragment/mod.tsx";
+import { Fragment } from "./fragment.tsx";
 import { todos } from "./todos/mod.tsx";
-import { time } from "./time/mod.tsx";
-import { notice } from "./notice/mod.tsx";
+import { list as time } from "./time.tsx";
+import { dismiss, list as notice } from "./notice.tsx";
 
 if (import.meta.main) {
   serve(({ route }) => ({
@@ -15,10 +15,10 @@ if (import.meta.main) {
     error: ErrorPage,
     routes: [
       route("/", { GET: Home }),
-      fragment,
+      route("/fragment", { GET: Fragment }),
       todos,
-      time,
-      notice,
+      route("/time", { GET: time }),
+      route("/notice", { GET: notice, POST: dismiss }),
     ],
   }), { fatal });
 }

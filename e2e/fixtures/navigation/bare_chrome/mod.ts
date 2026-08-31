@@ -1,9 +1,9 @@
 import { group } from "dashi";
 import { BareLayout } from "../bare_layout.tsx";
-import { bare } from "../bare/mod.tsx";
+import { Bare } from "../bare.tsx";
 import type { AppState } from "../state.ts";
 
-export const bareChrome = group<AppState>(() => ({
+export const bareChrome = group<AppState>(({ route }) => ({
   layouts: [BareLayout],
-  routes: [bare],
+  routes: [route("/bare", { GET: Bare })],
 }));

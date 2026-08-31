@@ -2,7 +2,7 @@ import { group, type WrapperCtx } from "dashi";
 import type { AppState } from "../state.ts";
 import { ApiLayout } from "./api_layout.tsx";
 import { ApiNotFound } from "../errors.tsx";
-import { ok } from "../ok_route.ts";
+import { ok } from "../ok/mod.ts";
 import { v2 } from "./v2/mod.ts";
 
 async function apiMw(

@@ -678,7 +678,11 @@ function createGroupCallback<
  * @example
  * ```ts
  * export const menu = group("/menu", ({ route }) => ({
- *   routes: [route("/", { GET: () => <h1>Menu</h1> })],
+ *   layouts: [MenuLayout],
+ *   routes: [
+ *     route("/", { GET: () => <h1>Menu</h1> }),
+ *     route("/specials", { GET: () => <p>Today</p> }),
+ *   ],
  * }));
  * ```
  */

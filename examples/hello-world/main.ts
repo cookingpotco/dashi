@@ -1,11 +1,11 @@
 import { serve } from "dashi";
-import { Home } from "./home_route.tsx";
+import { Home } from "./home/mod.tsx";
 import { RootLayout } from "./root_layout.tsx";
 import { logger } from "./logger_middleware.ts";
 import { ErrorPage, fatal, NotFound } from "./errors.tsx";
 import { nested } from "./nested/mod.tsx";
-import { secret } from "./secret/mod.tsx";
-import { guestbook } from "./guestbook/mod.tsx";
+import { Secret } from "./secret.tsx";
+import { add, list } from "./guestbook.tsx";
 
 if (import.meta.main) {
   serve(({ route }) => ({
@@ -16,8 +16,8 @@ if (import.meta.main) {
     routes: [
       route("/", { GET: Home }),
       nested,
-      secret,
-      guestbook,
+      route("/secret", { GET: Secret }),
+      route("/guestbook", { GET: list, POST: add }),
     ],
   }), { fatal });
 }

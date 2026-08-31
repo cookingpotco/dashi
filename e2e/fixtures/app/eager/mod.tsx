@@ -1,15 +1,11 @@
-import { client, group, RouteFragment } from "dashi";
+import { client, RouteFragment } from "dashi";
 
 const EagerMark = client.element(
   "eager-el",
   new URL("./eager_client.ts", import.meta.url),
 );
 
-export const eager = group("/eager", ({ route }) => ({
-  routes: [route("/", { GET: EagerFrag })],
-}));
-
-function EagerFrag() {
+export function EagerFrag() {
   return (
     <div>
       <EagerMark />

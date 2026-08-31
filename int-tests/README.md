@@ -14,15 +14,15 @@ way `examples/` do.
 ## Add a case
 
 If the fixture already has the route, append an `IntegrationTestCase` in that
-fixture's `main_test.ts` and stop. If it needs a new path, add a `route()` leaf
-on the root group in `main.ts` under the shared root wraps, or a feature folder
-that exports a `Group` when it needs extra wraps or a path prefix, and import
-that `Group` into the root callback. One request, several asserts: status,
-headers, then at most one of `html` or `json`. `html` covers parsed DOM `select`
-plus raw `bodyIncludes` / `bodyExcludes` (escaping, DOCTYPE, leftover
-`{{fragment:` markers). `json` is the expected parsed object. Raw top-level
-`bodyIncludes` / `bodyExcludes` are for responses that are neither (404, 405,
-empty 303). `runCase` parses HTML only when `html` is set.
+fixture's `main_test.ts` and stop. If it needs a new path, add a page module and
+bind it with `route()` on the root table under the shared root wraps. Use a
+`group()` only when the path needs a prefix or wraps (layouts, middleware,
+`notFound`). One request, several asserts: status, headers, then at most one of
+`html` or `json`. `html` covers parsed DOM `select` plus raw `bodyIncludes` /
+`bodyExcludes` (escaping, DOCTYPE, leftover `{{fragment:` markers). `json` is
+the expected parsed object. Raw top-level `bodyIncludes` / `bodyExcludes` are
+for responses that are neither (404, 405, empty 303). `runCase` parses HTML only
+when `html` is set.
 
 `runCase` executes that data. Flows that are not one request (cookies,
 concurrent requests) use `boot` / `App.fetch` from `mod.ts` inside a `t.step`.
@@ -33,12 +33,12 @@ observes it.
 ## Add a fixture app
 
 `fixtures/app` is the main fixture: `main.ts` exports `start()`, which calls
-`serve(({ route }) => ({ … }), { hostname: "127.0.0.1", port: 0, fatal })`, and
-every `group()` lives in a feature folder that exports that `Group`. Probe
-`route()`s stay on the root. Put a new folder next to it only when the behaviour
-cannot live on that app. Do not add a fixture as its own workspace member. Extra
-fixtures (`cors`, `error-defaults`, `error-fallback-response`, `fragment-depth`)
-are a small `main.ts` or `main.tsx` because they cannot share the main app's
-`serve()` table; they stay inline `serve(callback)` harnesses. The test file
-imports `start` and passes it to `boot`. `deno task test:int` picks up every
-`*_test.ts` under `int-tests/`.
+`serve(({ route }) => ({ … }), { hostname: "127.0.0.1", port: 0, fatal })`. A
+one-path page is a page module bound on the root table. `group()` is only a
+prefixed subtree or a wrap shell. Put a new folder next to the fixture only when
+the behaviour cannot live on that app. Do not add a fixture as its own workspace
+member. Extra fixtures (`cors`, `error-defaults`, `error-fallback-response`,
+`fragment-depth`) are a small `main.ts` or `main.tsx` because they cannot share
+the main app's `serve()` table; they stay inline `serve(callback)` harnesses.
+The test file imports `start` and passes it to `boot`. `deno task test:int`
+picks up every `*_test.ts` under `int-tests/`.
