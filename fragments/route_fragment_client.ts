@@ -29,33 +29,26 @@ class RouteFragment extends HTMLElement {
     if (this.lazyAttr === null || this.loaded || this.abort !== null) {
       return;
     }
-    if (this.lazyAttr === "visible") {
-      const box = this.getBoundingClientRect();
-      if (box.width === 0 && box.height === 0) {
-        this.beginFetch();
-        return;
-      }
-      const observer = new IntersectionObserver((entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) {
-            continue;
-          }
-          observer.disconnect();
-          if (this.observer === observer) {
-            this.observer = null;
-          }
-          if (!this.isConnected || this.loaded || this.abort !== null) {
-            return;
-          }
-          this.beginFetch();
-          return;
-        }
-      });
-      this.observer = observer;
-      observer.observe(this);
+    if (this.lazyAttr !== "visible") {
+      this.beginFetch();
       return;
     }
-    this.beginFetch();
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries.find((e) => e.isIntersecting);
+      if (entry === undefined) {
+        return;
+      }
+      observer.disconnect();
+      if (this.observer === observer) {
+        this.observer = null;
+      }
+      if (!this.isConnected || this.loaded || this.abort !== null) {
+        return;
+      }
+      this.beginFetch();
+    });
+    this.observer = observer;
+    observer.observe(this);
   }
 
   refresh(): void {
