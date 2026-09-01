@@ -76,15 +76,19 @@ cannot see project rules.
   a path inside the package. Flag `"./…"`, `"../…"`, or `"/…"` values there.
   Workspace members mapping `dashi` to the checkout are fine. Flag a re-added
   `compilerOptions.jsxImportSource` on the root config.
-- Feature folders export a `Group` from `mod.ts` (`mod.tsx` when the file
-  contains JSX); handlers for that group live there. Root `/` and one-off probes
-  are `*_route.ts(x)`: they export handlers only, and only the root table
-  imports from them. Flag application code that calls a handler, including as a
-  JSX child: it skips the target's middleware and error boundary, applies its
-  cache policy to the caller's response, and leaves it reading the caller's
-  `ctx`. Shared markup is a component in a non-route module; another route's
-  rendered output is `<RouteFragment src>`. Flag a `*_route.tsx` inside a
-  feature folder, or `group()` inlined in a `serve()` bag instead of an imported
+- A page is handlers for one path, bound with `route("/path", { GET, POST })` on
+  the table that owns that path. The page module never calls `route()` or
+  `group()`, and never exports a `{ GET }` bag or a function named `GET`.
+  Examples and real apps always use a folder (`home/mod.tsx`). Int-tests and e2e
+  fixtures may use a file next to the table when the page is only handlers.
+  `group()` is only a prefixed subtree or a pathless wrap. Flag application code
+  that calls a handler, including as a JSX child: it skips the target's
+  middleware and error boundary, applies its cache policy to the caller's
+  response, and leaves it reading the caller's `ctx`. Shared markup is a
+  component in a non-page module; another route's rendered output is
+  `<RouteFragment src>`. Flag a `*_route.tsx`, a one-path page in `examples/` as
+  a file next to the table, a one-path page declared as `group("/path")` +
+  `route("/")`, or `group()` inlined in a `serve()` bag instead of an imported
   `Group`.
 - Client JS attaches only via `client.module` / `client.element` at module
   scope. App files are `*_client.ts` beside the registrar. Browser-safe APIs

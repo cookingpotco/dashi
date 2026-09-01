@@ -60,9 +60,9 @@ stop: tell the human rather than silently substituting another issue.
 
    **Otherwise** post the plan as a Linear comment that begins with `@Cursor`,
    then the full approved plan. That mention is the only cloud handoff: Linear
-   puts this comment in the agent's prompt and starts one cloud agent. Leave
-   the status at `Ready`. The GitHub integration sets `In Progress` when the
-   agent opens its draft PR.
+   puts this comment in the agent's prompt and starts one cloud agent. Leave the
+   status at `Ready`. The GitHub integration sets `In Progress` when the agent
+   opens its draft PR.
 
    The comment is the plan only. Do not add Done or handoff instructions there —
    the implementor follows `AGENTS.md` either way, including when a human posts

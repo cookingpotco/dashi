@@ -1,9 +1,12 @@
 import { group } from "dashi";
 import { BareLayout } from "../bare_layout.tsx";
-import { bare } from "../bare/mod.tsx";
-import { bareFragPage } from "../bare_frag_page/mod.tsx";
+import { Bare, post } from "../bare.tsx";
+import { FragPage as BareFragPage } from "../bare_frag_page.tsx";
 
-export const bareChrome = group(() => ({
+export const bareChrome = group(({ route }) => ({
   layouts: [BareLayout],
-  routes: [bareFragPage, bare],
+  routes: [
+    route("/bare-frag-page", { GET: BareFragPage }),
+    route("/bare", { GET: Bare, POST: post }),
+  ],
 }));

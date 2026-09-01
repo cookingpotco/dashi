@@ -1,6 +1,6 @@
 import { group } from "dashi";
 import type { AppState } from "../state.ts";
-import { CachePublic } from "../cache_public_route.tsx";
+import { CachePublic } from "../cache_public.tsx";
 import { throwingLayout } from "../errors.tsx";
 
 export const cachePublicThenThrow = group<AppState>(({ route }) => ({

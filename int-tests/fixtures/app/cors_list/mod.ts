@@ -1,8 +1,8 @@
 import { group } from "dashi";
 import { cors } from "dashi/cors";
 import type { AppState } from "../state.ts";
-import { ok } from "../ok_route.ts";
-import { CacheCors } from "../cache_cors_route.tsx";
+import { ok } from "../ok/mod.ts";
+import { CacheCors } from "./cache_cors.tsx";
 
 export const corsList = group<AppState>(({ route }) => ({
   middleware: [cors({
