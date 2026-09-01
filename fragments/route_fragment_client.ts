@@ -35,7 +35,7 @@ class RouteFragment extends HTMLElement {
     }
     const observer = new IntersectionObserver((entries) => {
       const entry = entries.find((e) => e.isIntersecting);
-      if (entry === undefined) {
+      if (!entry) {
         return;
       }
       observer.disconnect();
