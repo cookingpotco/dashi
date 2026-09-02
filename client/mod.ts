@@ -88,18 +88,25 @@ function element(
 /** Client module factory. Call `module` / `element` at module scope. */
 export const client = { module, element };
 
-// Deno.bundle names entries from the source path (basename, or more
-// directories on collision) and has no entry map. The factory URL is the
-// absolute source path; the output path is a suffix of that path with .js.
+// Deno.bundle names each output from the source specifier and has no
+// entry map. Same-scheme graphs emit a short suffix of the path
+// (`/_dashi/client/fragments/foo.js`). Mixed schemes encode the
+// specifier (`/_dashi/client/https_/jsr.io/…/foo.js`,
+// `/_dashi/client/file_/…/foo.js`). Match the longest short suffix of
+// the source path, or the scheme-encoded name for that URL.
 function outputPathForEntry(url: URL, outputPaths: string[]): string {
   const sourceJs = url.pathname.replace(/\.tsx?$/, ".js");
+  const scheme = url.protocol.slice(0, -1);
+  const encoded = url.host !== ""
+    ? `/${scheme}_/${url.host}${sourceJs}`
+    : `/${scheme}_${sourceJs}`;
   let best: string | undefined;
   let bestLen = 0;
   for (const path of outputPaths) {
     const rel = path.startsWith(`${CLIENT_PREFIX}/`)
       ? path.slice(CLIENT_PREFIX.length)
       : path;
-    if (sourceJs.endsWith(rel) && rel.length > bestLen) {
+    if ((sourceJs.endsWith(rel) || rel === encoded) && rel.length > bestLen) {
       best = path;
       bestLen = rel.length;
     }
