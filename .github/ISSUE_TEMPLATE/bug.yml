@@ -1,5 +1,6 @@
 name: Bug report
 description: Something in dashi did not work the way you expected.
+labels: [bug]
 body:
   - type: textarea
     id: happened

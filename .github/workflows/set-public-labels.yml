@@ -1,0 +1,41 @@
+name: Set public labels
+
+on:
+  push:
+    branches: [cursor/github-hygiene-6ff5]
+  pull_request:
+    branches: [main]
+
+permissions:
+  issues: write
+  contents: write
+
+jobs:
+  labels:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Replace the label set
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh label create bug --description "something is broken" --color d73a4a --force
+          gh label create feature --description "a request or proposal" --color a2eeef --force
+          gh label create docs --description "docs/handbook/README" --color 0075ca --force
+          gh label delete assigned --yes
+          gh label delete future --yes
+          gh label delete tech --yes
+
+      - name: Set repository topics
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh api --method PUT "repos/${GH_REPO}/topics" \
+            -H "Accept: application/vnd.github+json" \
+            --input - <<'EOF'
+          {"names":["deno","typescript","jsx"]}
+          EOF
