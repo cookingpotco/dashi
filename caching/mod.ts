@@ -1,4 +1,5 @@
 import type { Element } from "../jsx-runtime/mod.ts";
+import { REQUEST_HEADERS } from "../shared/mod.ts";
 
 /** Predefined strategies translated later to Cache-Control headers - for CDN and browser use */
 export const enum CacheStrategy {
@@ -155,10 +156,12 @@ export function mergeVary(
   }
 }
 
+/** Always Vary on `x-fragment`, then any app `varyHeaders`. */
 export function applyVaryHeaders(
   headers: Headers,
   cache: CacheConfig,
 ): void {
+  mergeVary(headers, [REQUEST_HEADERS.FRAGMENT]);
   if (!cache.varyHeaders) {
     return;
   }

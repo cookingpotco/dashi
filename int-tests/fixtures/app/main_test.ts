@@ -742,6 +742,7 @@ const appCases: IntegrationTestCase[] = [
     status: 200,
     headers: {
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      vary: "x-fragment",
     },
   },
   {
@@ -750,6 +751,7 @@ const appCases: IntegrationTestCase[] = [
     status: 200,
     headers: {
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      vary: "x-fragment",
     },
     bodyExact: "",
   },
@@ -760,11 +762,14 @@ const appCases: IntegrationTestCase[] = [
     headers: {
       "cache-control":
         "public, max-age=60, stale-while-revalidate=3600, stale-if-error=120",
-      vary: "Accept-Language",
+      vary: "x-fragment, Accept-Language",
     },
     html: {
       bodyIncludes: ["<!DOCTYPE html>"],
-      select: [{ selector: "#cache-public", text: "cached-public" }],
+      select: [
+        { selector: "html > body > h1", text: "Website Title" },
+        { selector: "#cache-public", text: "cached-public" },
+      ],
     },
   },
   {
@@ -774,7 +779,7 @@ const appCases: IntegrationTestCase[] = [
     headers: {
       "cache-control":
         "public, max-age=60, stale-while-revalidate=3600, stale-if-error=120",
-      vary: "Accept-Language",
+      vary: "x-fragment, Accept-Language",
     },
     bodyExact: "",
   },
@@ -785,7 +790,7 @@ const appCases: IntegrationTestCase[] = [
     headers: {
       "cache-control":
         "public, max-age=60, stale-while-revalidate=3600, stale-if-error=120",
-      vary: "Accept-Language",
+      vary: "x-fragment, Accept-Language",
     },
   },
   {
@@ -798,11 +803,14 @@ const appCases: IntegrationTestCase[] = [
     headers: {
       "cache-control":
         "public, max-age=60, stale-while-revalidate=3600, stale-if-error=120",
-      vary: "Accept-Language",
+      vary: "x-fragment, Accept-Language",
     },
     html: {
       bodyExcludes: ["<!DOCTYPE html>"],
-      select: [{ selector: "#cache-public", text: "cached-public" }],
+      select: [
+        { selector: "h1", exists: false },
+        { selector: "#cache-public", text: "cached-public" },
+      ],
     },
   },
   {
@@ -882,7 +890,7 @@ const appCases: IntegrationTestCase[] = [
     status: 200,
     headers: {
       "cache-control": "private, max-age=60",
-      vary: "Cookie",
+      vary: "x-fragment, Cookie",
     },
     html: {
       select: [{
@@ -924,7 +932,7 @@ const appCases: IntegrationTestCase[] = [
     status: 200,
     headers: {
       "cache-control": "public, max-age=60",
-      vary: "Accept-Language, Origin",
+      vary: "x-fragment, Accept-Language, Origin",
       "access-control-allow-origin": "https://app.example",
     },
     html: {
