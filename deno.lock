@@ -44,6 +44,9 @@
         "jsr:@denosaurs/plug"
       ]
     },
+    "@cookingpot/dashi@0.6.0": {
+      "integrity": "82c0ec05407d17380f6c5b33b9d684824329be597e3c7a55d6f09b601f26bac7"
+    },
     "@deno-library/progress@1.5.1": {
       "integrity": "966611826b8bb27baae73ab1c4fa4317cd4edd2abb99750cd6f8488d22d5b121",
       "dependencies": [

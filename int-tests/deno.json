@@ -10,6 +10,7 @@
     "dashi": "../mod.ts",
     "dashi/client": "../client.ts",
     "dashi/cors": "../cors/mod.ts",
-    "dashi/jsx-runtime": "../jsx-runtime/mod.ts"
+    "dashi/jsx-runtime": "../jsx-runtime/mod.ts",
+    "dashi-jsr-fragment": "https://jsr.io/@cookingpot/dashi/0.6.0/fragments/route_fragment_client.ts"
   }
 }
