@@ -5,6 +5,9 @@ const Local = client.element(
   new URL("./local_client.ts", import.meta.url),
 );
 
+// Same specifier a JSR consumer gets from
+// `new URL("./route_fragment_client.ts", import.meta.url)` on a
+// published host.
 const JsrFragment = client.module(
   new URL(
     "https://jsr.io/@cookingpot/dashi/0.6.0/fragments/route_fragment_client.ts",
