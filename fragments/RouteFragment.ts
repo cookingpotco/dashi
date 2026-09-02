@@ -20,7 +20,7 @@ const DEFAULT_FRAGMENT_TIMEOUT_MS = 5000;
 interface BaseRouteFragmentProps extends HTMLAttributes {
   /**
    * Fragment is fetched from this location, either eagerly during SSR or after
-   * load when `lazy` is set.
+   * connect when `lazy` is set.
    *
    * A GET or lazy fetch replaces this host with markup. A write handler
    * returns `patch.replace`, `patch.append`, `patch.prepend`,
@@ -33,10 +33,9 @@ interface BaseRouteFragmentProps extends HTMLAttributes {
 }
 
 /** @internal */
-interface LazyFragmentProps extends BaseRouteFragmentProps {
+interface ConnectLazyFragmentProps extends BaseRouteFragmentProps {
   /**
-   * Will not render the fragment during SSR; it is fetched after page load.
-   * Useful for deferring rendering and separating cache control.
+   * Skip SSR and fetch after the host connects.
    *
    * Passing `fallback` adds a pending UI until the actual fragment is loaded.
    */
@@ -46,6 +45,21 @@ interface LazyFragmentProps extends BaseRouteFragmentProps {
    * nonempty error body replaces it.
    */
   fallback?: DashiNode;
+  timeout?: never;
+}
+
+/** @internal */
+interface VisibleLazyFragmentProps extends BaseRouteFragmentProps {
+  /**
+   * Skip SSR and fetch on first viewport intersection. `fallback` is required
+   * so the host has something to paint and a box to intersect.
+   */
+  lazy: "visible";
+  /**
+   * Shown during SSR. Stays until a successful body or a nonempty error body
+   * replaces it.
+   */
+  fallback: DashiNode;
   timeout?: never;
 }
 
@@ -61,7 +75,10 @@ interface EagerFragmentProps extends BaseRouteFragmentProps {
 }
 
 /** @internal */
-type FragmentSlotProps = LazyFragmentProps | EagerFragmentProps;
+type FragmentSlotProps =
+  | ConnectLazyFragmentProps
+  | VisibleLazyFragmentProps
+  | EagerFragmentProps;
 
 function resolveFragmentSrc(src: string, base: string): {
   identity: string;
@@ -136,17 +153,20 @@ function requestEagerFragment(src: string, timeoutMs: number): string {
 }
 
 /**
- * Include another route's rendered output. Eager during SSR, or `lazy`
- * after load.
+ * Include another route's rendered output. Eager during SSR, `lazy` after
+ * connect, or `lazy="visible"` on first viewport intersection.
  *
  * @param src Path to fetch, like `/todos`.
- * @param lazy Skip SSR and fetch after load.
- * @param fallback Shown while a lazy fragment is loading.
+ * @param lazy `true` skips SSR and fetches after connect. `"visible"` skips
+ * SSR and fetches on first intersection; `fallback` is required.
+ * @param fallback Shown while a lazy fragment is loading. Stays until a
+ * successful body or a nonempty error body.
  * @param timeout Milliseconds to wait during SSR. Omitted is 5000.
  *
  * @example
  * ```tsx
  * <RouteFragment src="/todos" lazy fallback={<p>Loading…</p>} />
+ * <RouteFragment src="/demo" lazy="visible" fallback={<p>Loading…</p>} />
  * ```
  */
 export function RouteFragment(

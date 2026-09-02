@@ -36,8 +36,8 @@ serve(({ route }) => ({
 ## Features
 
 - **Route fragments.** Compose one route into another with
-  `<RouteFragment src>`. Eager during SSR, or `lazy` after load, with `fallback`
-  and `timeout`.
+  `<RouteFragment src>`. Eager during SSR, `lazy` after connect, or
+  `lazy="visible"` on first intersection, with `fallback` and `timeout`.
 - **Patches.** In reaponse to form submissions or manual API calls, handlers can
   return patches like `patch.replace` that target a specific fragment or element
   on the page.
@@ -93,9 +93,15 @@ Open http://localhost:8000. Running without permission flags dies on
 
 ## Fragments
 
-A lazy fragment shows `fallback` during SSR and fetches its route after load.
-Omit `lazy` to include during SSR. `timeout` is milliseconds to wait (5000 if
-omitted), and a timeout fails the include.
+A lazy fragment shows `fallback` during SSR. `lazy` fetches after the host
+connects; `lazy="visible"` waits for the first viewport intersection (`fallback`
+is required). Omit `lazy` to include during SSR. `timeout` is milliseconds to
+wait (5000 if omitted), and a timeout fails the include.
+
+```tsx
+<RouteFragment src="/todos" lazy fallback={<p>Loading...</p>} />
+<RouteFragment src="/demo" lazy="visible" fallback={<p>Loading...</p>} />
+```
 
 ```tsx
 import { type Ctx, patch, RouteFragment, serve } from "dashi";

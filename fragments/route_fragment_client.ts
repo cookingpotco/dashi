@@ -5,15 +5,16 @@ fragmentHeaders.append("Accept", "text/html");
 fragmentHeaders.append("X-Fragment", "1");
 
 class RouteFragment extends HTMLElement {
-  private readonly lazy: boolean;
+  private readonly lazyAttr: string | null;
   private readonly src: string;
   private loaded = false;
   private abort: AbortController | null = null;
+  private observer: IntersectionObserver | null = null;
 
   constructor() {
     super();
 
-    this.lazy = this.getAttribute("lazy") !== null;
+    this.lazyAttr = this.getAttribute("lazy");
 
     const srcAttr = this.getAttribute("src");
 
@@ -25,28 +26,53 @@ class RouteFragment extends HTMLElement {
   }
 
   connectedCallback() {
-    if (!this.lazy || this.loaded || this.abort !== null) {
+    if (this.lazyAttr === null || this.loaded || this.abort !== null) {
       return;
     }
-    const abort = new AbortController();
-    this.abort = abort;
-    void this.fetchAndSwap(abort);
+    if (this.lazyAttr !== "visible") {
+      this.beginFetch();
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries.find((e) => e.isIntersecting);
+      if (!entry) {
+        return;
+      }
+      observer.disconnect();
+      if (this.observer === observer) {
+        this.observer = null;
+      }
+      if (!this.isConnected || this.loaded || this.abort !== null) {
+        return;
+      }
+      this.beginFetch();
+    });
+    this.observer = observer;
+    observer.observe(this);
   }
 
   refresh(): void {
+    this.observer?.disconnect();
+    this.observer = null;
     this.abort?.abort();
-    const abort = new AbortController();
-    this.abort = abort;
-    void this.fetchAndSwap(abort);
+    this.beginFetch();
   }
 
   disconnectedCallback() {
+    this.observer?.disconnect();
+    this.observer = null;
     queueMicrotask(() => {
       if (!this.isConnected) {
         this.abort?.abort();
         this.abort = null;
       }
     });
+  }
+
+  private beginFetch() {
+    const abort = new AbortController();
+    this.abort = abort;
+    void this.fetchAndSwap(abort);
   }
 
   private async fetchAndSwap(abort: AbortController) {

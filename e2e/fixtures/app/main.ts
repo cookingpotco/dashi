@@ -16,6 +16,10 @@ import { Slow } from "./slow.tsx";
 import { Count } from "./count.tsx";
 import { Counted } from "./counted.tsx";
 import { countedHitsHandler } from "./counted_hits.ts";
+import { VisibleBelow } from "./visible_below.tsx";
+import { VisibleCounted, visibleHitsHandler } from "./visible_counted.tsx";
+import { LazyBelow } from "./lazy_below.tsx";
+import { BelowCounted, belowHitsHandler } from "./below_counted.tsx";
 import { TodosPage } from "./todos_page.tsx";
 import { create as createTodo, list as listTodos } from "./todos/mod.tsx";
 import { PatchesPage } from "./patches_page.tsx";
@@ -46,6 +50,12 @@ export function start() {
       route("/count", { GET: Count }),
       route("/counted", { GET: Counted }),
       route("/counted-hits", { GET: countedHitsHandler }),
+      route("/visible-below", { GET: VisibleBelow }),
+      route("/visible-counted", { GET: VisibleCounted }),
+      route("/visible-hits", { GET: visibleHitsHandler }),
+      route("/lazy-below", { GET: LazyBelow }),
+      route("/below-counted", { GET: BelowCounted }),
+      route("/below-hits", { GET: belowHitsHandler }),
       route("/todos-page", { GET: TodosPage }),
       route("/todos", { GET: listTodos, POST: createTodo }),
       route("/patches-page", { GET: PatchesPage }),

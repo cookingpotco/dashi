@@ -169,6 +169,83 @@ Deno.test("app fixture", async (t) => {
         });
       });
 
+      await t.step(
+        'lazy="visible" below the fold waits for intersection',
+        async () => {
+          await page.goto(`${app.origin}/visible-below`);
+          const before = await page.evaluate(async () => {
+            await customElements.whenDefined("route-fragment");
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            const hits = await (await fetch("/visible-hits")).text();
+            return {
+              hits,
+              fallback: document.getElementById("visible-fallback") !== null,
+              body: document.getElementById("visible-counted") !== null,
+            };
+          });
+          assertEquals(before, {
+            hits: "0",
+            fallback: true,
+            body: false,
+          });
+          const after = await page.evaluate(async () => {
+            const host = document.querySelector(
+              "route-fragment[lazy='visible']",
+            );
+            if (host === null) {
+              throw new Error("missing visible host");
+            }
+            host.scrollIntoView();
+            const start = Date.now();
+            while (document.getElementById("visible-counted") === null) {
+              if (Date.now() - start > 5000) {
+                throw new Error("visible fragment did not load");
+              }
+              await new Promise((resolve) => setTimeout(resolve, 25));
+            }
+            const hits = await (await fetch("/visible-hits")).text();
+            return {
+              hits,
+              fallback: document.getElementById("visible-fallback") !== null,
+              body: document.getElementById("visible-counted")?.textContent,
+            };
+          });
+          assertEquals(after, {
+            hits: "1",
+            fallback: false,
+            body: "visible-counted",
+          });
+        },
+      );
+
+      await t.step(
+        "boolean lazy below the fold fetches without scroll",
+        async () => {
+          await page.goto(`${app.origin}/lazy-below`);
+          const result = await page.evaluate(async () => {
+            await customElements.whenDefined("route-fragment");
+            const start = Date.now();
+            while (document.getElementById("below-counted") === null) {
+              if (Date.now() - start > 5000) {
+                throw new Error("boolean lazy fragment did not load");
+              }
+              await new Promise((resolve) => setTimeout(resolve, 25));
+            }
+            const hits = await (await fetch("/below-hits")).text();
+            return {
+              hits,
+              fallback: document.getElementById("below-fallback") !== null,
+              body: document.getElementById("below-counted")?.textContent,
+            };
+          });
+          assertEquals(result, {
+            hits: "1",
+            fallback: false,
+            body: "below-counted",
+          });
+        },
+      );
+
       await t.step("moving a lazy fragment does not refetch", async () => {
         await page.goto(`${app.origin}/count`);
         const result = await page.evaluate(async () => {
