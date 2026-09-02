@@ -6,7 +6,9 @@ const Local = client.element(
 );
 
 const JsrFragment = client.module(
-  new URL(import.meta.resolve("dashi-jsr-fragment")),
+  new URL(
+    "https://jsr.io/@cookingpot/dashi/0.6.0/fragments/route_fragment_client.ts",
+  ),
 );
 
 function home() {
