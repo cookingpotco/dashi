@@ -29,6 +29,13 @@ inherit a package's `compilerOptions`, and the setting makes the package
 resolve itself by name against the registry. JSX types are imported from
 `dashi/jsx-runtime`; the published keep-lists live in the public-api rule.
 
+## TypeScript lib
+
+`compilerOptions.lib` is `["dom", "deno.ns", "deno.unstable"]` on this
+package and on every app `deno.json`. That list is complete: `dom` types
+client modules; the Deno entries are what `Deno.bundle` needs. Do not
+leave `lib` unset. Do not add `/// <reference lib="dom" />`.
+
 ## Route modules
 
 A page is handlers for one path, bound with `route("/path", { GET, POST })`
@@ -81,7 +88,8 @@ Do not chain ternary operators. Use `if`.
 
 Client TypeScript attaches only via `client.module` / `client.element` at
 module scope. Browser-safe APIs import from `dashi/client`; client modules
-do not import `dashi`. The factory throws after compile. App files are `*_client.ts`
+do not import `dashi`. DOM types come from the project `lib`, not a
+per-file `/// <reference lib="dom" />`. The factory throws after compile. App files are `*_client.ts`
 and sit beside the module that registers them. The factory returns a
 PascalCase component; `client.element` takes the custom element tag
 (kebab-case). Compiled files are served at `/_dashi/client/` by a reserved

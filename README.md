@@ -67,7 +67,8 @@ Every config key a consumer needs, in one `deno.json`:
 {
   "compilerOptions": {
     "jsx": "precompile",
-    "jsxImportSource": "dashi"
+    "jsxImportSource": "dashi",
+    "lib": ["dom", "deno.ns", "deno.unstable"]
   },
   "unstable": ["bundle"],
   "imports": {
@@ -78,8 +79,8 @@ Every config key a consumer needs, in one `deno.json`:
 
 `unstable: ["bundle"]` is required until runtime `Deno.bundle` becomes stable.
 
-Leave `compilerOptions.lib` unset. Deno's default is enough. A partial `lib`
-array drops types the compiler and `Deno.bundle` need.
+`lib` is that exact list. `dom` types client modules. `deno.ns` and
+`deno.unstable` are what `Deno.bundle` needs. A shorter array drops those.
 
 Save the snippet at the top as `main.tsx`, then:
 

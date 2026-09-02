@@ -75,7 +75,10 @@ cannot see project rules.
 - Root `deno.json` `imports` may map a bare specifier to a dependency, never to
   a path inside the package. Flag `"./…"`, `"../…"`, or `"/…"` values there.
   Workspace members mapping `dashi` to the checkout are fine. Flag a re-added
-  `compilerOptions.jsxImportSource` on the root config.
+  `compilerOptions.jsxImportSource` on the root config. `compilerOptions.lib`
+  is `["dom", "deno.ns", "deno.unstable"]` on this package and on every app
+  `deno.json`. Flag a missing or shorter `lib`, or a
+  `/// <reference lib="dom" />`.
 - A page is handlers for one path, bound with `route("/path", { GET, POST })` on
   the table that owns that path. The page module never calls `route()` or
   `group()`, and never exports a `{ GET }` bag or a function named `GET`.
