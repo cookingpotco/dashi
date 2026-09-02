@@ -1,0 +1,38 @@
+name: Bug report
+description: Something in dashi did not work the way you expected.
+body:
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: Steps, a snippet, or a link. Enough that someone else can hit it.
+    validations:
+      required: true
+  - type: input
+    id: deno-version
+    attributes:
+      label: Deno version
+      description: Output of `deno --version`.
+      placeholder: deno 2.9.5
+    validations:
+      required: true
+  - type: input
+    id: dashi-version
+    attributes:
+      label: dashi version
+      description: The jsr:@cookingpot/dashi version you are using.
+      placeholder: 0.6.0
+    validations:
+      required: true

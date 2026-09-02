@@ -1,0 +1,16 @@
+name: Feature request
+description: Something you want dashi to do, and why.
+body:
+  - type: textarea
+    id: want
+    attributes:
+      label: What do you want?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why?
+      description: What are you trying to do that you cannot do today?
+    validations:
+      required: true
