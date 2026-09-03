@@ -45,7 +45,8 @@ serve(({ route }) => ({
   handlers, in one `serve()` callback.
 - **Web standards.** Handlers read `ctx.req` as a `Request` and return JSX or a
   `Response`. Client code uses native custom elements and plain DOM access.
-- **Per-route cache control.** Wrap any handler or layout return in `cached()`.
+- **Per-route cache control.** Wrap a handler, `notFound`, or error return in
+  `cached()`.
 
 ## By design
 

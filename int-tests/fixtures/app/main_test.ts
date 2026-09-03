@@ -451,7 +451,11 @@ const appCases: IntegrationTestCase[] = [
     name: "root miss uses root notFound",
     request: { path: "/nope" },
     status: 404,
-    headers: { "content-type": "text/html", "x-mw": "ok" },
+    headers: {
+      "content-type": "text/html",
+      "x-mw": "ok",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+    },
     html: {
       bodyExcludes: ["api-404"],
       select: [
@@ -825,16 +829,18 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
-    name: "layout cached() applies when handler is a plain Element",
+    name: "plain Element under a layout is no-store",
     request: { path: "/cache-from-layout" },
     status: 200,
-    headers: { "cache-control": "public, max-age=30" },
+    headers: {
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+    },
     html: {
       select: [{ selector: "#cache-from-layout", text: "from-handler" }],
     },
   },
   {
-    name: "handler cached() wins over layout cached()",
+    name: "handler cached() applies under a layout wrapper",
     request: { path: "/cache-override" },
     status: 200,
     headers: { "cache-control": "public, max-age=60" },
@@ -854,7 +860,7 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
-    name: "handler no-store wins over public layout",
+    name: "handler no-store applies under a layout wrapper",
     request: { path: "/cache-nostore" },
     status: 200,
     headers: {
@@ -900,7 +906,7 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
-    name: "handler no-store wins over public Cookie layout",
+    name: "handler no-store applies under a cookie layout wrapper",
     request: { path: "/cache-nostore-over-cookie" },
     status: 200,
     headers: {
@@ -912,6 +918,29 @@ const appCases: IntegrationTestCase[] = [
         text: "cached-nostore-over-cookie",
       }],
     },
+  },
+  {
+    name: "notFound cached() sets Cache-Control",
+    request: { path: "/cache-boundary/nope" },
+    status: 404,
+    headers: {
+      "cache-control": "public, max-age=90",
+    },
+    html: {
+      select: [{ selector: "#cache-not-found", text: "cached-not-found" }],
+    },
+  },
+  {
+    name: "error cached() sets Cache-Control",
+    request: { path: "/cache-boundary/throw" },
+    status: 500,
+    headers: {
+      "cache-control": "public, max-age=45",
+    },
+    html: {
+      select: [{ selector: "#cache-error", text: "cached-error" }],
+    },
+    stillServes: true,
   },
   {
     name: "immutable static Cookie Vary is a root error",

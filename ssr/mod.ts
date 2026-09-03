@@ -126,12 +126,11 @@ export type RenderResult =
 
 function takeCached(
   out: Element | CachedElement,
-  collected: CacheConfig | undefined,
 ): { page: Element; cache: CacheConfig | undefined } {
   if (isCachedElement(out)) {
-    return { page: out.page, cache: collected ?? out.cache };
+    return { page: out.page, cache: out.cache };
   }
-  return { page: out, cache: collected };
+  return { page: out, cache: undefined };
 }
 
 /**
@@ -179,9 +178,9 @@ async function wrapBoundaries<
   | { ok: true; page: Element; cache?: CacheConfig }
   | { ok: false; thrown: unknown; parent?: GroupBoundary<State> }
 > {
-  const first = takeCached(page, undefined);
+  const first = takeCached(page);
   let rendered = first.page;
-  let cache = first.cache;
+  const cache = first.cache;
   if (ctx.isFragment) {
     return { ok: true, page: rendered, cache };
   }
@@ -190,9 +189,11 @@ async function wrapBoundaries<
       let wrapped = rendered;
       for (let i = current.layouts.length - 1; i >= 0; i--) {
         const out = await current.layouts[i]!(ctx, wrapped);
-        const taken = takeCached(out, cache);
-        wrapped = taken.page;
-        cache = taken.cache;
+        if (isCachedElement(out)) {
+          wrapped = out.page;
+        } else {
+          wrapped = out;
+        }
       }
       rendered = wrapped;
     } catch (thrown) {
@@ -220,7 +221,7 @@ async function recover<
       if (errorResult instanceof Response) {
         return { kind: RenderKind.Response, response: errorResult };
       }
-      const taken = takeCached(errorResult, undefined);
+      const taken = takeCached(errorResult);
       return {
         kind: RenderKind.Recovered,
         page: taken.page,
