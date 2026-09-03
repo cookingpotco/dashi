@@ -120,19 +120,31 @@ export type WriteHandler<
   | Patch[]
   | Promise<Response | Patch[]>;
 
+type HandlerMethod = Exclude<Method, "HEAD" | "OPTIONS">;
+
+type MethodHandlerMap<
+  Params extends Record<string, string>,
+  State extends Record<string, unknown>,
+> = {
+  [M in HandlerMethod]?: M extends "GET" ? Handler<Params, State>
+    : WriteHandler<Params, State>;
+};
+
+type RequireAtLeastOne<T> = {
+  [K in keyof T]-?: Required<Pick<T, K>> & Partial<Omit<T, K>>;
+}[keyof T];
+
 /**
- * Per-method handlers on a route. GET returns a page or fragment body.
- * Writes return a list of patches, or a Response.
+ * Per-method handlers on a route. At least one method is required. GET
+ * returns a page or fragment body. Writes return a list of patches, or
+ * a Response.
+ *
+ * @internal
  */
-/** @internal */
 export type MethodHandlers<
   Params extends Record<string, string> = Record<string, never>,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
-> = {
-  [M in Exclude<Method, "HEAD" | "OPTIONS">]?: M extends "GET"
-    ? Handler<Params, State>
-    : WriteHandler<Params, State>;
-};
+> = RequireAtLeastOne<MethodHandlerMap<Params, State>>;
 
 /**
  * Shared UI that wraps the route on document render, outermost first.

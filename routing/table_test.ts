@@ -61,6 +61,18 @@ function typechecks() {
     route("/files/*", get);
     // @ts-expect-error wraps belong on group(), not route()
     route("/", { GET: noop }, { layouts: [] });
+    // @ts-expect-error empty method map
+    route("/", {});
+    // @ts-expect-error undefined is not a method handler
+    route("/", { GET: undefined });
+    route("/write", {
+      POST: () => new Response(),
+    });
+    route("/async-write", {
+      POST: () => Promise.resolve(new Response()),
+    });
+    const extra = { POST: () => new Response() };
+    route("/both", { GET: noop, ...extra });
     return { routes: [] };
   });
 
@@ -123,6 +135,25 @@ function typechecks() {
 
   // @ts-expect-error catch-all cannot end a group prefix
   group("/files/:path*", (_cb) => ({ routes: [] }));
+
+  // @ts-expect-error "/" is not a valid group prefix
+  group("/", (_cb) => ({ routes: [] }));
+
+  // @ts-expect-error "" is not a valid group prefix
+  group("", (_cb) => ({ routes: [] }));
+
+  group("/posts", ({ route }) => ({
+    routes: [route("/", get)],
+  }));
+
+  group("/:id", ({ route }) => ({
+    routes: [route("/", get)],
+  }));
+
+  const prefix: string = "/api";
+  group(prefix, ({ route }) => ({
+    routes: [route("/x", get)],
+  }));
 }
 
 Deno.test("ParamsOf infers params from path literals", () => {
@@ -378,7 +409,7 @@ Deno.test("GET+POST share one path; empty map throws", () => {
   assertEquals(matched?.handlers.POST, add);
 
   assertThrows(
-    () => group(({ route }) => ({ routes: [route("/", {})] })),
+    () => group(({ route }) => ({ routes: [route("/", {} as never)] })),
     Error,
     "has no method handlers",
   );
