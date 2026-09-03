@@ -21,6 +21,12 @@ import { PostsNew } from "./posts_new.tsx";
 import { Post } from "./post.tsx";
 import { add as addGuestbook, list as listGuestbook } from "./guestbook.tsx";
 import { ok } from "./ok/mod.ts";
+import { statusNotFound } from "./status_not_found.tsx";
+import { statusUnauthorized } from "./status_unauthorized.tsx";
+import { statusCached } from "./status_cached.tsx";
+import { statusOk } from "./status_ok.tsx";
+import { statusResponse } from "./status_response.ts";
+import { statusForbidden } from "./status_forbidden.tsx";
 import { CachePublic } from "./cache_public.tsx";
 import { CachePrivate } from "./cache_private.tsx";
 import { CacheEmbed } from "./cache_embed.tsx";
@@ -140,6 +146,12 @@ export function start() {
       route("/posts/:id", { GET: Post }),
       route("/guestbook", { GET: listGuestbook, POST: addGuestbook }),
       route("/ok", { GET: ok }),
+      route("/status-not-found", { GET: statusNotFound }),
+      route("/status-unauthorized", { GET: statusUnauthorized }),
+      route("/status-cached", { GET: statusCached }),
+      route("/status-ok", { GET: statusOk }),
+      route("/status-response", { GET: statusResponse }),
+      route("/status-forbidden", { GET: statusForbidden }),
       api,
       corsStar,
       corsList,

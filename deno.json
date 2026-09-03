@@ -74,7 +74,8 @@
       "serve",
       "shared",
       "ssr",
-      "static"
+      "static",
+      "status"
     ],
     "exclude": ["**/*_test.ts", "**/*_test.tsx"]
   }

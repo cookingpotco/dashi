@@ -380,6 +380,84 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
+    name: "handler status(404) document wraps in layouts",
+    request: { path: "/status-not-found" },
+    status: 404,
+    headers: { "content-type": "text/html", "x-mw": "ok" },
+    html: {
+      bodyIncludes: ["<!DOCTYPE html>"],
+      select: [
+        { selector: "html > body > h1", text: "Website Title" },
+        { selector: "html > body > #pre", text: "from-mw" },
+        { selector: "html > body > #status-not-found", text: "handler-404" },
+        { selector: "#not-found", exists: false },
+      ],
+    },
+  },
+  {
+    name: "handler status(401) document wraps in layouts",
+    request: { path: "/status-unauthorized" },
+    status: 401,
+    headers: { "content-type": "text/html", "x-mw": "ok" },
+    html: {
+      bodyIncludes: ["<!DOCTYPE html>"],
+      select: [
+        { selector: "html > body > h1", text: "Website Title" },
+        { selector: "html > body > #status-unauthorized", text: "handler-401" },
+      ],
+    },
+  },
+  {
+    name: "handler status(404, cached()) sets Cache-Control",
+    request: { path: "/status-cached" },
+    status: 404,
+    headers: {
+      "content-type": "text/html",
+      "cache-control": "public, max-age=30",
+    },
+    html: {
+      select: [
+        { selector: "html > body > h1", text: "Website Title" },
+        { selector: "#status-cached", text: "handler-cached-404" },
+      ],
+    },
+  },
+  {
+    name: "handler Element document is 200",
+    request: { path: "/status-ok" },
+    status: 200,
+    headers: { "content-type": "text/html", "x-mw": "ok" },
+    html: {
+      bodyIncludes: ["<!DOCTYPE html>"],
+      select: [
+        { selector: "html > body > h1", text: "Website Title" },
+        { selector: "html > body > #status-ok", text: "handler-200" },
+      ],
+    },
+  },
+  {
+    name: "handler Response 404 is raw without layouts",
+    request: { path: "/status-response" },
+    status: 404,
+    bodyExact: "raw-404",
+  },
+  {
+    name: "fragment status(403) is a 403 partial",
+    request: {
+      path: "/status-forbidden",
+      headers: { "x-fragment": "1" },
+    },
+    status: 403,
+    headers: { "content-type": "text/html" },
+    html: {
+      bodyExcludes: ["<!DOCTYPE html>"],
+      select: [
+        { selector: "h1", exists: false },
+        { selector: "#status-forbidden", text: "handler-403" },
+      ],
+    },
+  },
+  {
     name: "unmatched path is 404",
     request: { path: "/no-such-page" },
     status: 404,

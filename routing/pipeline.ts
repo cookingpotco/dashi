@@ -5,6 +5,7 @@ import {
   type CachedElement,
   CacheStrategy,
 } from "../caching/mod.ts";
+import { isStatusElement, type StatusElement } from "../status/mod.ts";
 import { clientImportMap, getCompiledFile } from "../client/mod.ts";
 import { type Patch, renderPatches } from "../patching/mod.ts";
 import type { Element } from "../jsx-runtime/mod.ts";
@@ -204,6 +205,7 @@ async function runHandler(
 ): Promise<
   | Element
   | CachedElement
+  | StatusElement
   | Response
   | Patch[]
 > {
@@ -295,9 +297,10 @@ async function executeMatched(
         `Write handlers return patches or a Response: ${ctx.url.pathname}`,
       );
     }
+    const pageStatus = isStatusElement(out) ? out.code : 200;
     return await respond(
       await renderWithRecovery(out, { ctx, boundary: matched.boundary }),
-      { pageStatus: 200, ctx },
+      { pageStatus, ctx },
     );
   } catch (thrown) {
     return await respond(

@@ -12,12 +12,14 @@ import {
  *
  * The first argument is the root table callback. The root itself is
  * pathless; `notFound` here is the default 404. `routes` holds `route()`
- * entries and `group()` values. Layouts wrap the route on document
- * render, outermost first, and do not run on fragment renders.
- * Middleware is the request pipeline, outermost first, and runs for
- * document hits and fragment hits. `error` catches handler throws and
- * inner group failures. `fatal` is the last-resort 500 value when the
- * error walk is exhausted.
+ * entries and `group()` values. Layouts are shared UI only. They wrap
+ * the route on document render, outermost first, after the route has
+ * rendered, and do not run on fragment renders. Never use them for
+ * gating or state-setting — that belongs on middleware or individual
+ * route handlers. Middleware is the request pipeline, outermost first,
+ * and runs for document hits and fragment hits. `error` catches
+ * handler throws and inner group failures. `fatal` is the last-resort
+ * 500 value when the error walk is exhausted.
  *
  * Compiles the client graph, then returns the `Deno.HttpServer` that
  * `Deno.serve` returns. Callers that only boot a process may omit
