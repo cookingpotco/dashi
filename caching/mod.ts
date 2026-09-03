@@ -70,9 +70,7 @@ export interface CachedElement {
 
 /**
  * Attach a cache policy to a handler, `notFound`, or error return.
- * Without one, the response is no-store. Handlers set document status
- * with `status()`. A table miss uses the group's `notFound`. An auth
- * redirect stays a middleware `Response`.
+ * Without one, the response is no-store.
  *
  * @param page Markup to cache.
  * @param cache How this resource should be cached.

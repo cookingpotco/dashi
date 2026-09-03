@@ -46,8 +46,7 @@ serve(({ route }) => ({
 - **Web standards.** Handlers read `ctx.req` as a `Request` and return JSX or a
   `Response`. Client code uses native custom elements and plain DOM access.
 - **Per-route cache control.** Wrap a handler, `notFound`, or error return in
-  `cached()`. Handlers set document status with `status()`. A table miss uses
-  the group's `notFound`. An auth redirect stays a middleware `Response`.
+  `cached()`.
 
 ## By design
 
