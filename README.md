@@ -38,14 +38,15 @@ serve(({ route }) => ({
 - **Route fragments.** Compose one route into another with
   `<RouteFragment src>`. Eager during SSR, `lazy` after connect, or
   `lazy="visible"` on first intersection, with `fallback` and `timeout`.
-- **Patches.** In reaponse to form submissions or manual API calls, handlers can
+- **Patches.** In response to form submissions or manual API calls, handlers can
   return patches like `patch.replace` that target a specific fragment or element
   on the page.
 - **Explicit route table.** Typed params from the path literal, and per-method
   handlers, in one `serve()` callback.
 - **Web standards.** Handlers read `ctx.req` as a `Request` and return JSX or a
   `Response`. Client code uses native custom elements and plain DOM access.
-- **Per-route cache control.** Wrap any handler or layout return in `cached()`.
+- **Per-route cache control.** Wrap a handler, `notFound`, or error return in
+  `cached()`.
 
 ## By design
 
@@ -67,19 +68,20 @@ Every config key a consumer needs, in one `deno.json`:
 {
   "compilerOptions": {
     "jsx": "precompile",
-    "jsxImportSource": "dashi"
+    "jsxImportSource": "dashi",
+    "lib": ["dom", "deno.ns", "deno.unstable"]
   },
   "unstable": ["bundle"],
   "imports": {
-    "dashi": "jsr:@cookingpot/dashi@^0.1.0"
+    "dashi": "jsr:@cookingpot/dashi@^0.7.0"
   }
 }
 ```
 
 `unstable: ["bundle"]` is required until runtime `Deno.bundle` becomes stable.
 
-Leave `compilerOptions.lib` unset. Deno's default is enough. A partial `lib`
-array drops types the compiler and `Deno.bundle` need.
+`lib` is that exact list. `dom` types client modules. `deno.ns` and
+`deno.unstable` are what `Deno.bundle` needs. A shorter array drops those.
 
 Save the snippet at the top as `main.tsx`, then:
 
