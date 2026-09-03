@@ -94,9 +94,10 @@ export interface GroupFields<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
   /**
-   * UI that wraps the route on document render, outermost first. Does
-   * not run on fragment renders (eager `<RouteFragment>` or a lazy
-   * fetch).
+   * Shared UI that wraps the route on document render, outermost first.
+   * Runs after the route has rendered. Does not run on fragment
+   * renders. Never use a layout for gating or state-setting — that
+   * belongs on middleware or individual route handlers.
    */
   layouts?: Layout<State>[];
   /**
@@ -666,11 +667,13 @@ function createGroupCallback<
  * values in `routes`. `notFound` handles document misses under this
  * prefix; omitted walks to the parent.
  *
- * Layouts wrap the route on document render, outermost first, and do
- * not run on fragment renders. Middleware is the request pipeline,
- * outermost first, and runs for document hits and fragment hits.
- * `error` catches handler throws and inner group failures; it does not
- * catch this group's own layouts.
+ * Layouts are shared UI only. They wrap the route on document render,
+ * outermost first, after the route has rendered, and do not run on
+ * fragment renders. Never use them for gating or state-setting — that
+ * belongs on middleware or individual route handlers. Middleware is
+ * the request pipeline, outermost first, and runs for document hits
+ * and fragment hits. `error` catches handler throws and inner group
+ * failures; it does not catch this group's own layouts.
  *
  * @param prefix Path joined onto child routes. Omit for a pathless shell.
  * @param build Callback that receives `route` closed over `prefix`.

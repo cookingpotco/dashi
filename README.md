@@ -166,8 +166,10 @@ page.
 
 ## Other features
 
-**Layouts** wrap the route on document render, outermost first, and do not run
-on fragment renders. A layout is `(ctx, children) => ...`. Attach
+**Layouts** are shared UI only. They wrap the route on document render,
+outermost first, after the route has rendered, and do not run on fragment
+renders. Never use them for gating or state-setting — that belongs on middleware
+or individual route handlers. A layout is `(ctx, children) => ...`. Attach
 `layouts: [RootLayout]` on the table or a `group()`.
 
 **Middleware** is a `(ctx, next) => Response` factory attached on `group()`. It
