@@ -30,6 +30,7 @@ import { CachePrivateCookie } from "./cache_private_cookie.tsx";
 import { cachePublicLayout } from "./cache_public_layout/mod.tsx";
 import { cachePublicCookieLayout } from "./cache_public_cookie_layout/mod.tsx";
 import { cachePrivateLayout } from "./cache_private_layout/mod.tsx";
+import { cacheBoundary } from "./cache_boundary/mod.tsx";
 import { cacheSession } from "./cache_session/mod.ts";
 import { cachePublicThenThrow } from "./cache_public_then_throw/mod.ts";
 import { nested } from "./nested/mod.tsx";
@@ -116,6 +117,7 @@ export function start() {
       cachePublicLayout,
       cachePublicCookieLayout,
       cachePrivateLayout,
+      cacheBoundary,
       cacheSession,
       cachePublicThenThrow,
       nested,

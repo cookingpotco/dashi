@@ -1,4 +1,5 @@
 import type { Element } from "../jsx-runtime/mod.ts";
+import { REQUEST_HEADERS } from "../shared/mod.ts";
 
 /** Predefined strategies translated later to Cache-Control headers - for CDN and browser use */
 export const enum CacheStrategy {
@@ -68,9 +69,8 @@ export interface CachedElement {
 }
 
 /**
- * Attach a cache policy to returned markup. The closest `cached()` from
- * the handler out through layouts wins. Without one, the response is
- * no-store.
+ * Attach a cache policy to a handler, `notFound`, or error return.
+ * Without one, the response is no-store.
  *
  * @param page Markup to cache.
  * @param cache How this resource should be cached.
@@ -155,10 +155,12 @@ export function mergeVary(
   }
 }
 
+/** Always Vary on `x-fragment`, then any app `varyHeaders`. */
 export function applyVaryHeaders(
   headers: Headers,
   cache: CacheConfig,
 ): void {
+  mergeVary(headers, [REQUEST_HEADERS.FRAGMENT]);
   if (!cache.varyHeaders) {
     return;
   }
