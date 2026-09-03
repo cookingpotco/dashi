@@ -131,6 +131,11 @@
       "jsr:@std/assert@1"
     ],
     "members": {
+      "docs": {
+        "dependencies": [
+          "jsr:@std/assert@1"
+        ]
+      },
       "e2e": {
         "dependencies": [
           "jsr:@astral/astral@0.5",

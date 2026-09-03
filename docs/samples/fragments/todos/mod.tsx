@@ -1,0 +1,47 @@
+import { type Ctx, group, patch } from "dashi";
+import { todos as items } from "../todos.ts";
+
+export const todos = group("/todos", ({ route }) => ({
+  routes: [
+    route("/", { GET: list, POST: create }),
+    route("/count", { GET: count }),
+  ],
+}));
+
+function TodoList({ error }: { error?: string }) {
+  return (
+    <div>
+      <ul id="todos">
+        {items.map((todo) => <li>{todo}</li>)}
+      </ul>
+      {error ? <p>{error}</p> : null}
+      <form method="POST" action="/todos">
+        <input name="title" />
+        <button type="submit">Add</button>
+      </form>
+    </div>
+  );
+}
+
+function list() {
+  return <TodoList />;
+}
+
+function count() {
+  return <span id="todo-count">{items.length}</span>;
+}
+
+async function create(ctx: Ctx) {
+  const title = (await ctx.req.formData()).get("title");
+  if (typeof title !== "string" || title.trim() === "") {
+    return [patch.replace("/todos", <TodoList error="title is required" />)];
+  }
+  items.push(title);
+  return [
+    patch.append("#todos", <li>{title}</li>),
+    patch.replace(
+      "/todos/count",
+      <span id="todo-count">{items.length}</span>,
+    ),
+  ];
+}

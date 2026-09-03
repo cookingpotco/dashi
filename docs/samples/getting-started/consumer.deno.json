@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "jsx": "precompile",
+    "jsxImportSource": "dashi",
+    "lib": ["dom", "deno.ns", "deno.unstable"]
+  },
+  "unstable": ["bundle"],
+  "imports": {
+    "dashi": "jsr:@cookingpot/dashi@^0.8.0",
+    "tailwindcss": "npm:tailwindcss@4",
+    "@tailwindcss/cli": "npm:@tailwindcss/cli@4"
+  },
+  "tasks": {
+    "css": "deno run -A css.ts",
+    "css:watch": "deno run -A css.ts --watch",
+    "dev": "DASHI_MINIFY_CLIENT=0 deno run -A --watch main.ts"
+  }
+}

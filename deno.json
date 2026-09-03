@@ -11,7 +11,8 @@
     "./examples/fragments",
     "./int-tests",
     "./e2e",
-    "./jsx-tests"
+    "./jsx-tests",
+    "./docs"
   ],
   "unstable": ["bundle"],
   "lock": {
