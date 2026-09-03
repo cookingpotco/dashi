@@ -34,6 +34,6 @@ body:
     attributes:
       label: dashi version
       description: The jsr:@cookingpot/dashi version you are using.
-      placeholder: 0.6.0
+      placeholder: 0.8.0
     validations:
       required: true
