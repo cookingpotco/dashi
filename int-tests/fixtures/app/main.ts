@@ -81,6 +81,7 @@ const hour = (ctx: Ctx<{ path: string }, AppState>) =>
     maxAge: 3600,
     sMaxAge: 86400,
     staleWhileRevalidate: 120,
+    varyHeaders: ["Accept-Language"],
   });
 const priv = (ctx: Ctx<{ path: string }, AppState>) =>
   staticFile(ctx, staticDir, ctx.params.path, {

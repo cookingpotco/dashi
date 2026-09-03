@@ -609,12 +609,13 @@ const appCases: IntegrationTestCase[] = [
   },
   {
     name:
-      "public cache strategy sets max-age, s-maxage, and stale-while-revalidate",
+      "public cache strategy sets max-age, s-maxage, and app Vary without x-fragment",
     request: { path: "/static-public/app.css" },
     status: 200,
     headers: {
       "cache-control":
         "public, max-age=3600, s-maxage=86400, stale-while-revalidate=120",
+      vary: "Accept-Language",
       "x-mw": "ok",
     },
   },
@@ -1642,6 +1643,28 @@ Deno.test("main fixture app over HTTP", async (t) => {
       throw error;
     }
   });
+
+  await t.step(
+    "static CSS, JS, and image do not Vary on x-fragment",
+    async () => {
+      for (
+        const path of ["/static/app.css", "/static/app.js", "/static/logo.svg"]
+      ) {
+        const res = await app.fetch({ path });
+        const body = await res.text();
+        try {
+          assertEquals(res.status, 200);
+          assertEquals(res.headers.get("vary"), null);
+        } catch (error) {
+          const dump = formatIntegrationFailure(app, { path }, res, body);
+          if (error instanceof Error) {
+            error.message = `${error.message}\n\n${dump}`;
+          }
+          throw error;
+        }
+      }
+    },
+  );
 
   await t.step("conditional GET and HEAD of a stylesheet are 304", async () => {
     const first = await app.fetch({ path: "/static/app.css" });
