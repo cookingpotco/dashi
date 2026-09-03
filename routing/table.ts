@@ -129,8 +129,8 @@ type ChildParams<Prefix extends string, Path extends string> = string extends
   Prefix ? ParamsOf<Path> : ParamsOf<Join<Prefix, Path>>;
 
 /** @internal */
-type PrefixConstraint<Prefix extends string> = string extends Prefix ? unknown
-  : [GroupPrefixError<Prefix>] extends [never] ? unknown
+type PrefixArg<Prefix extends string> = string extends Prefix ? Prefix
+  : [GroupPrefixError<Prefix>] extends [never] ? Prefix
   : GroupPrefixError<Prefix>;
 
 /**
@@ -690,7 +690,7 @@ export function group<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
   const Prefix extends string = string,
 >(
-  prefix: Prefix & PrefixConstraint<Prefix>,
+  prefix: PrefixArg<Prefix>,
   build: (cb: GroupCallback<Prefix, State>) => GroupFields<State>,
 ): Group<State>;
 /** Pathless group: a layout/middleware shell with no extra prefix. */

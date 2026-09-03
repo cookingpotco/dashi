@@ -139,10 +139,15 @@ type EndsWithOptionalOrCatchall<Path extends string> = Path extends `${string}?`
   : Path extends `${string}*` ? true
   : false;
 
-/** A group prefix: a valid path that does not end in optional or catch-all. */
-/** @internal */
+/**
+ * A group prefix: a valid path that does not end in optional or
+ * catch-all. `""` and `"/"` are invalid; omit the argument for a
+ * pathless group.
+ *
+ * @internal
+ */
 export type GroupPrefixError<Path extends string> = Path extends "" | "/"
-  ? never
+  ? "Invalid group prefix: omit the argument for a pathless group"
   : PathError<Path> extends infer Error
     ? [Error] extends [never]
       ? EndsWithOptionalOrCatchall<Path> extends true
