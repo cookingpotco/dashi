@@ -124,16 +124,6 @@ export type RenderResult =
   | { kind: RenderKind.Response; response: Response }
   | { kind: RenderKind.Exhausted };
 
-function takeCached(
-  out: Element | CachedElement,
-  collected: CacheConfig | undefined,
-): { page: Element; cache: CacheConfig | undefined } {
-  if (isCachedElement(out)) {
-    return { page: out.page, cache: collected ?? out.cache };
-  }
-  return { page: out, cache: collected };
-}
-
 /**
  * Wraps `page` in each group's layouts (innermost first) and recovers
  * through `error` when something throws. Fragments skip layouts. A
@@ -158,12 +148,20 @@ export async function renderWithRecovery<
   if (typeof page === "object" && "thrown" in page && !isCachedElement(page)) {
     return await recover(page.thrown, options.boundary, options.ctx);
   }
-  const wrapped = await wrapBoundaries(page, options.ctx, options.boundary);
+  let cache: CacheConfig | undefined;
+  let rendered: Element;
+  if (isCachedElement(page)) {
+    rendered = page.page;
+    cache = page.cache;
+  } else {
+    rendered = page;
+  }
+  const wrapped = await wrapBoundaries(rendered, options.ctx, options.boundary);
   if (wrapped.ok) {
     return {
       kind: RenderKind.Page,
       page: wrapped.page,
-      cache: wrapped.cache,
+      cache,
     };
   }
   return await recover(wrapped.thrown, wrapped.parent, options.ctx);
@@ -172,34 +170,34 @@ export async function renderWithRecovery<
 async function wrapBoundaries<
   State extends Record<string, unknown>,
 >(
-  page: Element | CachedElement,
+  page: Element,
   ctx: Ctx<Record<string, string>, State>,
   boundary: GroupBoundary<State> | undefined,
 ): Promise<
-  | { ok: true; page: Element; cache?: CacheConfig }
+  | { ok: true; page: Element }
   | { ok: false; thrown: unknown; parent?: GroupBoundary<State> }
 > {
-  const first = takeCached(page, undefined);
-  let rendered = first.page;
-  let cache = first.cache;
   if (ctx.isFragment) {
-    return { ok: true, page: rendered, cache };
+    return { ok: true, page };
   }
+  let rendered = page;
   for (let current = boundary; current; current = current.parent) {
     try {
       let wrapped = rendered;
       for (let i = current.layouts.length - 1; i >= 0; i--) {
         const out = await current.layouts[i]!(ctx, wrapped);
-        const taken = takeCached(out, cache);
-        wrapped = taken.page;
-        cache = taken.cache;
+        if (isCachedElement(out)) {
+          wrapped = out.page;
+        } else {
+          wrapped = out;
+        }
       }
       rendered = wrapped;
     } catch (thrown) {
       return { ok: false, thrown, parent: current.parent };
     }
   }
-  return { ok: true, page: rendered, cache };
+  return { ok: true, page: rendered };
 }
 
 async function recover<
@@ -220,12 +218,14 @@ async function recover<
       if (errorResult instanceof Response) {
         return { kind: RenderKind.Response, response: errorResult };
       }
-      const taken = takeCached(errorResult, undefined);
-      return {
-        kind: RenderKind.Recovered,
-        page: taken.page,
-        cache: taken.cache,
-      };
+      if (isCachedElement(errorResult)) {
+        return {
+          kind: RenderKind.Recovered,
+          page: errorResult.page,
+          cache: errorResult.cache,
+        };
+      }
+      return { kind: RenderKind.Recovered, page: errorResult };
     } catch (nextThrown) {
       Logger.error(["ssr"], "render recovering from", nextThrown);
       return { kind: RenderKind.Exhausted };
@@ -252,12 +252,20 @@ async function recover<
       return { kind: RenderKind.Response, response: errorResult };
     }
 
-    const wrapped = await wrapBoundaries(errorResult, ctx, current);
+    let cache: CacheConfig | undefined;
+    let page: Element;
+    if (isCachedElement(errorResult)) {
+      page = errorResult.page;
+      cache = errorResult.cache;
+    } else {
+      page = errorResult;
+    }
+    const wrapped = await wrapBoundaries(page, ctx, current);
     if (wrapped.ok) {
       return {
         kind: RenderKind.Recovered,
         page: wrapped.page,
-        cache: wrapped.cache,
+        cache,
       };
     }
     return await recover(wrapped.thrown, wrapped.parent, ctx);

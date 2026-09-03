@@ -69,9 +69,8 @@ export interface CachedElement {
 }
 
 /**
- * Attach a cache policy to returned markup. The closest `cached()` from
- * the handler out through layouts wins. Without one, the response is
- * no-store.
+ * Attach a cache policy to a handler, `notFound`, or error return.
+ * Without one, the response is no-store.
  *
  * @param page Markup to cache.
  * @param cache How this resource should be cached.

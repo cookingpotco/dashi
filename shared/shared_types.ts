@@ -128,7 +128,7 @@ export type Layout<
 > = (
   ctx: WrapperCtx<State>,
   children: Element,
-) => Element | CachedElement | Promise<Element | CachedElement>;
+) => Element | Promise<Element>;
 
 /**
  * Request pipeline, outermost first. Runs for document hits and fragment
