@@ -931,18 +931,6 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
-    name: "error cached() sets Cache-Control",
-    request: { path: "/cache-boundary/throw" },
-    status: 500,
-    headers: {
-      "cache-control": "public, max-age=45",
-    },
-    html: {
-      select: [{ selector: "#cache-error", text: "cached-error" }],
-    },
-    stillServes: true,
-  },
-  {
     name: "immutable static Cookie Vary is a root error",
     request: { path: "/static-immutable-cookie/app.css" },
     status: 500,
@@ -1058,6 +1046,18 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     status: 500,
     headers: {
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+    },
+    stillServes: true,
+  },
+  {
+    name: "error cached() sets Cache-Control",
+    request: { path: "/cache-boundary/throw" },
+    status: 500,
+    headers: {
+      "cache-control": "public, max-age=45",
+    },
+    html: {
+      select: [{ selector: "#cache-error", text: "cached-error" }],
     },
     stillServes: true,
   },
