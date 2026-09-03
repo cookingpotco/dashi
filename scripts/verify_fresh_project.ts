@@ -11,7 +11,7 @@
 
 import denoJson from "../deno.json" with { type: "json" };
 
-const LISTEN_RE = /\[serve\] https?:\/\/(?:\[[^\]]+\]|[\w.]+):(\d+)/;
+const LISTEN_RE = /Listening on https?:\/\/(?:\[[^\]]+\]|[\w.]+):(\d+)/;
 const UNUSED_LINK_RE = /Linked package '[^']+' was not used[^\n]*/;
 const BOOT_TIMEOUT_MS = 30_000;
 

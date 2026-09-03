@@ -7,15 +7,15 @@ const enum AllInterfaces {
   IPv6 = "::",
 }
 
-interface ListenInterface {
+interface BindInterface {
   family: string;
   address: string;
 }
 
-export function listenUrls(
+export function bindUrls(
   hostname: string,
   port: number,
-  interfaces: readonly ListenInterface[],
+  interfaces: readonly BindInterface[],
 ): string[] {
   if (hostname !== AllInterfaces.IPv4 && hostname !== AllInterfaces.IPv6) {
     return [`http://${hostname}:${port}`];
@@ -39,7 +39,7 @@ export function listenUrls(
   return urls;
 }
 
-export function grantedNetworkInterfaces(): ListenInterface[] {
+export function grantedNetworkInterfaces(): BindInterface[] {
   try {
     if (
       Deno.permissions.querySync({

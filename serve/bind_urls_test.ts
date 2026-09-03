@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { listenUrls } from "./listen_urls.ts";
+import { bindUrls } from "./bind_urls.ts";
 
 const MIXED = [
   { family: "IPv4", address: "127.0.0.1" },
@@ -13,12 +13,12 @@ const MIXED = [
 ];
 
 Deno.test("all-interfaces lists localhost then unique non-loopback IPv4", () => {
-  assertEquals(listenUrls("0.0.0.0", 8000, MIXED), [
+  assertEquals(bindUrls("0.0.0.0", 8000, MIXED), [
     "http://localhost:8000",
     "http://192.168.1.20:8000",
     "http://10.0.0.5:8000",
   ]);
-  assertEquals(listenUrls("::", 3000, MIXED), [
+  assertEquals(bindUrls("::", 3000, MIXED), [
     "http://localhost:3000",
     "http://192.168.1.20:3000",
     "http://10.0.0.5:3000",
@@ -26,16 +26,16 @@ Deno.test("all-interfaces lists localhost then unique non-loopback IPv4", () => 
 });
 
 Deno.test("specific hostname lists that host only", () => {
-  assertEquals(listenUrls("127.0.0.1", 8000, MIXED), [
+  assertEquals(bindUrls("127.0.0.1", 8000, MIXED), [
     "http://127.0.0.1:8000",
   ]);
-  assertEquals(listenUrls("example.test", 8080, MIXED), [
+  assertEquals(bindUrls("example.test", 8080, MIXED), [
     "http://example.test:8080",
   ]);
 });
 
 Deno.test("all-interfaces with no usable addresses lists localhost only", () => {
-  assertEquals(listenUrls("0.0.0.0", 8000, []), [
+  assertEquals(bindUrls("0.0.0.0", 8000, []), [
     "http://localhost:8000",
   ]);
 });

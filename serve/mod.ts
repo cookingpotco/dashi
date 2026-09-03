@@ -7,7 +7,7 @@ import {
   handle,
   init,
 } from "../routing/mod.ts";
-import { grantedNetworkInterfaces, listenUrls } from "./listen_urls.ts";
+import { bindUrls, grantedNetworkInterfaces } from "./bind_urls.ts";
 
 /**
  * Starts the HTTP server.
@@ -25,9 +25,9 @@ import { grantedNetworkInterfaces, listenUrls } from "./listen_urls.ts";
  *
  * Compiles the client graph, then returns the `Deno.HttpServer` that
  * `Deno.serve` returns. Callers that only boot a process may omit
- * `await`. On listen, logs `http://localhost:<port>` and, when bound on
- * all interfaces, each non-loopback IPv4 LAN URL. A caller `onListen`
- * runs after those lines.
+ * `await`. On listen, logs one `Listening on` line with localhost and,
+ * when bound on all interfaces, each non-loopback IPv4 LAN URL. A
+ * caller `onListen` runs after that line.
  *
  * @param build Root table. Pathless. `route()` and `group()` values go
  * in `routes`.
@@ -76,9 +76,8 @@ export async function serve<
       const interfaces = addr.hostname === "0.0.0.0" || addr.hostname === "::"
         ? grantedNetworkInterfaces()
         : [];
-      for (const url of listenUrls(addr.hostname, addr.port, interfaces)) {
-        Logger.info(["serve"], url);
-      }
+      const urls = bindUrls(addr.hostname, addr.port, interfaces);
+      Logger.info(["serve"], `Listening on ${urls.join(", ")}`);
       onListen?.(addr);
     },
     handler: handle,
