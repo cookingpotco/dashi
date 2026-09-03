@@ -4,7 +4,6 @@
     "jsxImportSource": "dashi",
     "lib": ["dom", "deno.ns", "deno.unstable"]
   },
-  "unstable": ["bundle", "no-legacy-abort"],
   "tasks": {
     "dev": "DASHI_MINIFY_CLIENT=0 deno run -A --watch main.ts"
   },
