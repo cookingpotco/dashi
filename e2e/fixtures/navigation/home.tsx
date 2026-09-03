@@ -9,6 +9,7 @@ export function Home(ctx: Ctx<Record<string, never>, AppState>) {
     <div>
       <h1 id="heading">home</h1>
       <p>
+        <a id="to-home" href="/">Home</a>
         <a id="to-about" href="/about">About</a>
         <a id="to-tall" href="/tall">Tall</a>
         <a id="to-widget" href="/widget">Widget</a>

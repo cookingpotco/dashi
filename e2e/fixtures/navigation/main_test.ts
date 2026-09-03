@@ -212,7 +212,37 @@ Deno.test("navigation fixture", async (t) => {
       );
 
       await t.step(
-        "a hash link on the current page is left to the browser",
+        "clicking a same-path link does not reload the document",
+        async () => {
+          await prepare(page, app.origin, "/");
+          await page.evaluate(() => {
+            const heading = document.getElementById("heading");
+            if (heading) {
+              heading.textContent = "mutated-heading";
+            }
+          });
+          await clickId(page, "to-home");
+          await page.evaluate(() =>
+            new Promise((resolve) => setTimeout(resolve, 250))
+          );
+          const result = await page.evaluate(() => ({
+            survived: Reflect.get(globalThis, "__dashiDoc") === true,
+            persistent: document.getElementById("persistent")?.textContent ??
+              null,
+            heading: document.getElementById("heading")?.textContent ?? null,
+            url: location.href,
+          }));
+          assertEquals(result, {
+            survived: true,
+            persistent: "mutated",
+            heading: "mutated-heading",
+            url: `${app.origin}/`,
+          });
+        },
+      );
+
+      await t.step(
+        "clicking a hash link on the current page updates the hash without reloading",
         async () => {
           await prepare(page, app.origin, "/tall");
           await page.evaluate(() => {

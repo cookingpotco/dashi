@@ -453,10 +453,14 @@ class NavigationRoot extends HTMLElement {
     if (dest.protocol !== "http:" && dest.protocol !== "https:") {
       return;
     }
+    event.preventDefault();
     if (samePath(dest, renderedUrl)) {
+      if (dest.hash !== renderedUrl.hash) {
+        location.hash = dest.hash;
+        renderedUrl = dest;
+      }
       return;
     }
-    event.preventDefault();
     void performNavigate(dest.href, { push: true });
   };
 
