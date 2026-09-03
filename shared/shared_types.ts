@@ -1,6 +1,7 @@
 import type { CachedElement } from "../caching/mod.ts";
 import type { Patch } from "../patching/mod.ts";
 import type { Element } from "../jsx-runtime/mod.ts";
+import type { StatusElement } from "../status/mod.ts";
 
 /**
  * Per-invocation request context. Mutate `state` in place; do not
@@ -23,19 +24,33 @@ export interface Ctx<
 }
 
 /**
- * `Ctx` as seen by a layout, middleware, or error handler. Params are a
- * wide string record so one wrap can cover `/` and `/posts/:id`. Same
- * object as the handler's ctx at runtime; precise keys stay on the
- * handler.
+ * `Ctx` as seen by middleware or an error handler. Params are a wide
+ * string record so one wrap can cover `/` and `/posts/:id`. Same object
+ * as the handler's ctx at runtime; precise keys stay on the handler.
  */
 export type WrapperCtx<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = Ctx<Record<string, string>, State>;
 
 /**
+ * `Ctx` as seen by a layout. Same object as the handler's ctx at
+ * runtime; `state` is readonly. Layouts are shared UI only. They run
+ * after the route has rendered. Never use them for gating or
+ * state-setting — that belongs on middleware or individual route
+ * handlers.
+ */
+/** @internal */
+export type LayoutCtx<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> = Omit<WrapperCtx<State>, "state"> & {
+  readonly state: Readonly<Partial<State>>;
+};
+
+/**
  * Route function. A returned `Response` is sent as-is: no layouts,
  * DOCTYPE, or fragment splice. `cached()` attaches a cache policy to an
- * Element return.
+ * Element return. `status()` sets the document HTTP status on the JSX
+ * path; layouts still wrap.
  *
  * Only the router calls a handler. A direct call skips the target's
  * middleware and error boundary and leaves it reading the caller's
@@ -51,8 +66,9 @@ export type Handler<
 ) =>
   | Element
   | CachedElement
+  | StatusElement
   | Response
-  | Promise<Element | CachedElement | Response>;
+  | Promise<Element | CachedElement | StatusElement | Response>;
 
 /**
  * Group error UI. `thrown` is the raw value. A returned `Response` is
@@ -119,14 +135,17 @@ export type MethodHandlers<
 };
 
 /**
- * UI that wraps the route on document render, outermost first. Does not
- * run on fragment renders (eager `<RouteFragment>` or a lazy fetch).
+ * Shared UI that wraps the route on document render, outermost first.
+ * Runs after the route has rendered. Does not run on fragment renders
+ * (eager `<RouteFragment>` or a lazy fetch). Never use a layout for
+ * gating or state-setting — that belongs on middleware or individual
+ * route handlers.
  */
 /** @internal */
 export type Layout<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
-  ctx: WrapperCtx<State>,
+  ctx: LayoutCtx<State>,
   children: Element,
 ) => Element | Promise<Element>;
 

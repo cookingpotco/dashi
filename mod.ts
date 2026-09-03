@@ -19,3 +19,4 @@ export { type Group, group, type ParamsOf } from "./routing/mod.ts";
 export { serve } from "./serve/mod.ts";
 export type { Ctx, WrapperCtx } from "./shared/mod.ts";
 export { staticFile } from "./static/mod.ts";
+export { isStatusElement, status, type StatusElement } from "./status/mod.ts";
