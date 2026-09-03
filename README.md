@@ -38,7 +38,7 @@ serve(({ route }) => ({
 - **Route fragments.** Compose one route into another with
   `<RouteFragment src>`. Eager during SSR, `lazy` after connect, or
   `lazy="visible"` on first intersection, with `fallback` and `timeout`.
-- **Patches.** In reaponse to form submissions or manual API calls, handlers can
+- **Patches.** In response to form submissions or manual API calls, handlers can
   return patches like `patch.replace` that target a specific fragment or element
   on the page.
 - **Explicit route table.** Typed params from the path literal, and per-method
@@ -73,7 +73,7 @@ Every config key a consumer needs, in one `deno.json`:
   },
   "unstable": ["bundle"],
   "imports": {
-    "dashi": "jsr:@cookingpot/dashi@^0.1.0"
+    "dashi": "jsr:@cookingpot/dashi@^0.6.0"
   }
 }
 ```
