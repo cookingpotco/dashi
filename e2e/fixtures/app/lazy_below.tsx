@@ -1,6 +1,6 @@
-import { type Ctx, RouteFragment, type SealHtml } from "dashi";
+import { type ReadArgs, RouteFragment } from "dashi";
 
-export function LazyBelow(_ctx: Ctx, html: SealHtml) {
+export function LazyBelow({ html }: ReadArgs) {
   return html(
     <div>
       <div style="height: 3000px"></div>

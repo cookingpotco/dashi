@@ -1,10 +1,7 @@
-import { type Ctx, patch, type SealPatches } from "dashi";
+import { patch, type WriteArgs } from "dashi";
 import type { AppState } from "./state.ts";
 
-export function post(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  patches: SealPatches,
-) {
+export function post({ patches }: WriteArgs<Record<string, never>, AppState>) {
   return patches([
     patch.append("#todos", <li>milk</li>),
     patch.replace("/todo-count", <span>3</span>),
@@ -17,8 +14,7 @@ export function post(
 }
 
 export function postUnprocessable(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  patches: SealPatches,
+  { patches }: WriteArgs<Record<string, never>, AppState>,
 ) {
   return patches([
     patch.replace("#status", <p>invalid</p>),

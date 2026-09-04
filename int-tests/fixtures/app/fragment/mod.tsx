@@ -1,14 +1,13 @@
 import {
-  type Ctx,
   group,
+  type MiddlewareArgs,
   patch,
-  type SealHtml,
-  type SealPatches,
-  type WrapperCtx,
+  type ReadArgs,
+  type WriteArgs,
 } from "dashi";
 import type { AppState } from "../state.ts";
 
-function fragOnly(ctx: WrapperCtx<AppState>, next: () => Promise<Response>) {
+function fragOnly({ ctx, next }: MiddlewareArgs<AppState>) {
   ctx.state.fragOnly = "yes";
   return next();
 }
@@ -18,10 +17,7 @@ export const fragment = group<AppState>(({ route }) => ({
   routes: [route("/fragment", { GET: Fragment, POST: post })],
 }));
 
-function Fragment(
-  ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
-) {
+function Fragment({ ctx, html }: ReadArgs<Record<string, never>, AppState>) {
   return html(
     <aside
       id="frag"
@@ -35,10 +31,7 @@ function Fragment(
   );
 }
 
-function post(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  patches: SealPatches,
-) {
+function post({ patches }: WriteArgs<Record<string, never>, AppState>) {
   return patches([
     patch.replace(
       "/fragment",

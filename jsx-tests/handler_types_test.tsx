@@ -1,32 +1,62 @@
-import { type Ctx, type SealHtml, type SealPatches, serve } from "dashi";
+import { serve } from "dashi";
 import type { Element } from "dashi/jsx-runtime";
 
 function typechecks() {
   serve(({ route }) => ({
     layouts: [
-      (_ctx, children): Element => children,
+      ({ children }): Element => children,
     ],
-    notFound: (_ctx, html) => html(<p>nope</p>),
-    error: (_ctx, _thrown, html) => html(<p>err</p>),
+    notFound: ({ html }) => html(<p>nope</p>),
+    error: ({ html }) => html(<p>err</p>),
     routes: [
       route("/", {
-        GET: (_ctx, html: SealHtml) => html(<p>ok</p>),
-        POST: (_ctx, patches: SealPatches) => patches([]),
+        GET: ({ html }) => html(<p>ok</p>),
+        POST: ({ patches }) => patches([]),
+      }),
+      route("/zero", {
+        GET: () => new Response("ok"),
+        POST: () => new Response("ok"),
       }),
       route("/bad-write", {
-        // @ts-expect-error write second arg is SealPatches, not SealHtml
-        POST: (_ctx: Ctx, html: SealHtml) => html(<p>nope</p>),
+        // @ts-expect-error write args have patches, not html
+        POST: ({ html }) => html(<p>nope</p>),
+      }),
+      route("/bad-read", {
+        // @ts-expect-error read args have html, not patches
+        GET: ({ patches }) => patches([]),
+      }),
+      route("/positional", {
+        // @ts-expect-error positional (ctx, html) is not ReadArgs
+        GET: (_ctx, html) => html(<p>nope</p>),
       }),
     ],
-  }), { fatal: (html) => html(<p>crash</p>) });
+  }), { fatal: ({ html }) => html(<p>crash</p>) });
+
+  serve(({ route }) => ({
+    layouts: [
+      () => {
+        throw new Error("layout");
+      },
+    ],
+    middleware: [
+      () => {
+        throw new Error("mw");
+      },
+    ],
+    error: () => new Response("err"),
+    notFound: () => new Response("miss"),
+    routes: [
+      route("/", { GET: () => new Response("ok") }),
+    ],
+  }), { fatal: () => new Response("crash") });
 
   serve(({ route }) => ({
     layouts: [
       // @ts-expect-error layouts return Element, not Response
-      (_ctx, _children) => new Response("nope"),
+      () => new Response("nope"),
     ],
     routes: [
-      route("/", { GET: (_ctx, html) => html(<p>x</p>) }),
+      route("/", { GET: ({ html }) => html(<p>x</p>) }),
     ],
   }));
 }

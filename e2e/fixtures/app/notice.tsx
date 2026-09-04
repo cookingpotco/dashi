@@ -1,6 +1,6 @@
-import { type Ctx, patch, type SealHtml, type SealPatches } from "dashi";
+import { patch, type ReadArgs, type WriteArgs } from "dashi";
 
-export function list(_ctx: Ctx, html: SealHtml) {
+export function list({ html }: ReadArgs) {
   return html(
     <div id="notice">
       <p>Notice</p>
@@ -11,6 +11,6 @@ export function list(_ctx: Ctx, html: SealHtml) {
   );
 }
 
-export function dismiss(_ctx: Ctx, patches: SealPatches) {
+export function dismiss({ patches }: WriteArgs) {
   return patches([patch.remove("/notice")]);
 }

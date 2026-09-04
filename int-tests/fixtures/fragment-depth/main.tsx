@@ -1,12 +1,6 @@
-import {
-  type Ctx,
-  RouteFragment,
-  type SealHtml,
-  serve,
-  type WrapperCtx,
-} from "dashi";
+import { type ErrorArgs, type ReadArgs, RouteFragment, serve } from "dashi";
 
-function faultError(_ctx: WrapperCtx, thrown: unknown, html: SealHtml) {
+function faultError({ thrown, html }: ErrorArgs) {
   return html(
     <p id="fault">
       {thrown instanceof Error ? thrown.message : String(thrown)}
@@ -14,31 +8,31 @@ function faultError(_ctx: WrapperCtx, thrown: unknown, html: SealHtml) {
   );
 }
 
-function two(_ctx: Ctx, html: SealHtml) {
+function two({ html }: ReadArgs) {
   return html(<RouteFragment src="/outer" />);
 }
 
-function three(_ctx: Ctx, html: SealHtml) {
+function three({ html }: ReadArgs) {
   return html(<RouteFragment src="/a" />);
 }
 
-function outer(_ctx: Ctx, html: SealHtml) {
+function outer({ html }: ReadArgs) {
   return html(<RouteFragment src="/inner" />);
 }
 
-function inner(_ctx: Ctx, html: SealHtml) {
+function inner({ html }: ReadArgs) {
   return html(<p id="inner">inner</p>);
 }
 
-function a(_ctx: Ctx, html: SealHtml) {
+function a({ html }: ReadArgs) {
   return html(<RouteFragment src="/b" />);
 }
 
-function b(_ctx: Ctx, html: SealHtml) {
+function b({ html }: ReadArgs) {
   return html(<RouteFragment src="/c" />);
 }
 
-function c(_ctx: Ctx, html: SealHtml) {
+function c({ html }: ReadArgs) {
   return html(<p id="c">c</p>);
 }
 

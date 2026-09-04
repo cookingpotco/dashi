@@ -1,8 +1,8 @@
-import { type Ctx, type SealHtml } from "dashi";
+import { type ReadArgs } from "dashi";
 
 let hits = 0;
 
-export function BelowCounted(_ctx: Ctx, html: SealHtml) {
+export function BelowCounted({ html }: ReadArgs) {
   hits += 1;
   return html(<p id="below-counted">below-counted</p>);
 }

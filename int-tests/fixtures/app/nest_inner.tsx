@@ -1,9 +1,6 @@
-import type { Ctx, SealHtml } from "dashi";
+import type { ReadArgs } from "dashi";
 import type { AppState } from "./state.ts";
 
-export function NestInner(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
-) {
+export function NestInner({ html }: ReadArgs<Record<string, never>, AppState>) {
   return html(<p id="nested-frag">nested-fragment-body</p>);
 }

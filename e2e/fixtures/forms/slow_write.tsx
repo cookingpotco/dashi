@@ -1,7 +1,7 @@
-import { type Ctx, type SealHtml } from "dashi";
+import { type ReadArgs, type WriteArgs } from "dashi";
 import { recordWrite } from "./writes.ts";
 
-export function SlowWrite(_ctx: Ctx, html: SealHtml) {
+export function SlowWrite({ html }: ReadArgs) {
   return html(
     <form id="slow-form" method="POST" action="/slow-write">
       <button id="slow-submit" type="submit">Slow</button>
@@ -9,7 +9,7 @@ export function SlowWrite(_ctx: Ctx, html: SealHtml) {
   );
 }
 
-export async function post(ctx: Ctx) {
+export async function post({ ctx }: WriteArgs) {
   await new Promise((resolve) => setTimeout(resolve, 2000));
   recordWrite();
   return Response.redirect(new URL("/wrote", ctx.url), 303);

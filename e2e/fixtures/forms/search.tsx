@@ -1,6 +1,6 @@
-import { type Ctx, type SealHtml } from "dashi";
+import { type ReadArgs } from "dashi";
 
-export function Search(ctx: Ctx, html: SealHtml) {
+export function Search({ ctx, html }: ReadArgs) {
   const q = ctx.url.searchParams.get("q") ?? "";
   return html(
     <div>

@@ -1,10 +1,7 @@
-import { type Ctx, group, type SealHtml, type WrapperCtx } from "dashi";
+import { group, type MiddlewareArgs, type ReadArgs } from "dashi";
 import type { AppState } from "../state.ts";
 
-function requireSession(
-  ctx: WrapperCtx<AppState>,
-  next: () => Promise<Response>,
-) {
+function requireSession({ ctx, next }: MiddlewareArgs<AppState>) {
   if (!ctx.req.headers.get("cookie")?.includes("session=")) {
     return Response.redirect(new URL("/", ctx.url), 303);
   }
@@ -16,6 +13,6 @@ export const gated = group<AppState>(({ route }) => ({
   routes: [route("/gated", { GET: Gated })],
 }));
 
-function Gated(_ctx: Ctx<Record<string, never>, AppState>, html: SealHtml) {
+function Gated({ html }: ReadArgs<Record<string, never>, AppState>) {
   return html(<p id="gated">welcome</p>);
 }

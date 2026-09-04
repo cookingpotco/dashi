@@ -1,10 +1,10 @@
-import { client, type Ctx, type SealHtml } from "dashi";
+import { client, type ReadArgs } from "dashi";
 
 const Mark = client.element(
   "mark-el",
   new URL("./mark_client.ts", import.meta.url),
 );
 
-export function MarkPage(_ctx: Ctx, html: SealHtml) {
+export function MarkPage({ html }: ReadArgs) {
   return html(<Mark />);
 }

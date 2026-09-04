@@ -91,7 +91,7 @@ export function cors<
   const exposeHeaders = options.exposeHeaders?.join(", ");
   const varyOrigin = origin !== "*";
 
-  return async (ctx, next) => {
+  return async ({ ctx, next }) => {
     const allowed = allowOrigin(origin, ctx.req.headers.get("Origin"));
 
     if (ctx.req.method === "OPTIONS") {

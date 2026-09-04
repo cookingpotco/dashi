@@ -1,14 +1,10 @@
-import { type SealHtml, type WrapperCtx } from "dashi";
+import { type ErrorArgs, type FatalArgs } from "dashi";
 
-export function ErrorPage(
-  _ctx: WrapperCtx,
-  _thrown: unknown,
-  html: SealHtml,
-) {
+export function ErrorPage({ html }: ErrorArgs) {
   return html(<p id="heading">error</p>);
 }
 
-export function fatal(html: SealHtml) {
+export function fatal({ html }: FatalArgs) {
   return html(
     <html>
       <body>Something went wrong</body>

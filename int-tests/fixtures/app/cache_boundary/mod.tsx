@@ -1,10 +1,4 @@
-import {
-  CacheStrategy,
-  type Ctx,
-  group,
-  type SealHtml,
-  type WrapperCtx,
-} from "dashi";
+import { CacheStrategy, type ErrorArgs, group, type NotFoundArgs } from "dashi";
 import type { AppState } from "../state.ts";
 
 export const cacheBoundary = group<AppState>(
@@ -16,20 +10,13 @@ export const cacheBoundary = group<AppState>(
   }),
 );
 
-function CacheNotFound(
-  _ctx: Ctx<Record<string, string>, AppState>,
-  html: SealHtml,
-) {
+function CacheNotFound({ html }: NotFoundArgs<AppState>) {
   return html(<p id="cache-not-found">cached-not-found</p>, {
     cache: { strategy: CacheStrategy.Public, maxAge: 90 },
   });
 }
 
-function CacheError(
-  _ctx: WrapperCtx<AppState>,
-  _thrown: unknown,
-  html: SealHtml,
-) {
+function CacheError({ html }: ErrorArgs<AppState>) {
   return html(<p id="cache-error">cached-error</p>, {
     cache: { strategy: CacheStrategy.Public, maxAge: 45 },
   });

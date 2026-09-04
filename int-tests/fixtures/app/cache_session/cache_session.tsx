@@ -1,9 +1,8 @@
-import { CacheStrategy, type Ctx, type SealHtml } from "dashi";
+import { CacheStrategy, type ReadArgs } from "dashi";
 import type { AppState } from "../state.ts";
 
 export function CacheSession(
-  ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
+  { ctx, html }: ReadArgs<Record<string, never>, AppState>,
 ) {
   if (ctx.state.token) {
     return html(<p id="cache-session">signed-in</p>);

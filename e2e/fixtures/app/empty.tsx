@@ -1,6 +1,6 @@
-import { type Ctx, RouteFragment, type SealHtml } from "dashi";
+import { type ReadArgs, RouteFragment } from "dashi";
 
-export function Empty(_ctx: Ctx, html: SealHtml) {
+export function Empty({ html }: ReadArgs) {
   return html(
     <RouteFragment
       src="/empty-fail"

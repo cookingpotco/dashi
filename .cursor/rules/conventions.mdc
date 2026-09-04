@@ -54,6 +54,10 @@ it reading the caller's `ctx`. Share markup as a component, including
 between two methods of one route, and use `<RouteFragment src>` to
 include another route's rendered output.
 
+Pipeline callbacks take one object: `{ ctx, html }`, `{ ctx, patches }`,
+`{ ctx, children }`, `{ ctx, next }`, `{ ctx, thrown, html }`, or
+`{ html }`. A callback that uses nothing is `()`.
+
 ## Discriminants
 
 A closed set of cases is a `const enum`. Comparisons use the enum member, not

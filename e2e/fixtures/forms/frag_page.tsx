@@ -1,6 +1,6 @@
-import { type Ctx, RouteFragment, type SealHtml } from "dashi";
+import { type ReadArgs, RouteFragment } from "dashi";
 
-export function FragPage(_ctx: Ctx, html: SealHtml) {
+export function FragPage({ html }: ReadArgs) {
   return html(
     <div>
       <h1 id="heading">frag-page</h1>

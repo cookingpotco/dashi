@@ -1,6 +1,6 @@
-import { type Ctx, type SealHtml } from "dashi";
+import { type ReadArgs } from "dashi";
 
-export function Wrote(_ctx: Ctx, html: SealHtml) {
+export function Wrote({ html }: ReadArgs) {
   return html(
     <div>
       <h1 id="heading">wrote</h1>

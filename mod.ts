@@ -14,9 +14,17 @@ export { type Group, group, type ParamsOf } from "./routing/mod.ts";
 export { serve } from "./serve/mod.ts";
 export type {
   Ctx,
+  ErrorArgs,
+  FatalArgs,
+  LayoutArgs,
+  LayoutCtx,
+  MiddlewareArgs,
+  NotFoundArgs,
+  ReadArgs,
   SealHtml,
   SealOptions,
   SealPatches,
   WrapperCtx,
+  WriteArgs,
 } from "./shared/mod.ts";
 export { staticFile } from "./static/mod.ts";

@@ -684,8 +684,8 @@ function createGroupCallback<
  * export const menu = group("/menu", ({ route }) => ({
  *   layouts: [MenuLayout],
  *   routes: [
- *     route("/", { GET: (_ctx, html) => html(<h1>Menu</h1>) }),
- *     route("/specials", { GET: (_ctx, html) => html(<p>Today</p>) }),
+ *     route("/", { GET: ({ html }) => html(<h1>Menu</h1>) }),
+ *     route("/specials", { GET: ({ html }) => html(<p>Today</p>) }),
  *   ],
  * }));
  * ```

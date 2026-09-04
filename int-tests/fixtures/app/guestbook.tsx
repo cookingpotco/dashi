@@ -1,12 +1,9 @@
-import type { Ctx, SealHtml } from "dashi";
+import type { ReadArgs, WriteArgs } from "dashi";
 import type { AppState } from "./state.ts";
 
 const entries: string[] = [];
 
-export function list(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
-) {
+export function list({ html }: ReadArgs<Record<string, never>, AppState>) {
   return html(
     <div>
       <ul id="entries">
@@ -20,7 +17,7 @@ export function list(
   );
 }
 
-export async function add(ctx: Ctx<Record<string, never>, AppState>) {
+export async function add({ ctx }: WriteArgs<Record<string, never>, AppState>) {
   const data = await ctx.req.formData();
   const body = data.get("body");
   if (typeof body === "string") {
