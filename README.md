@@ -27,7 +27,7 @@ import { serve } from "dashi";
 serve(({ route }) => ({
   routes: [
     route("/", {
-      GET: (_ctx, html) => html(<h1>Hello</h1>),
+      GET: ({ html }) => html(<h1>Hello</h1>),
     }),
   ],
 }));
@@ -73,7 +73,7 @@ Every config key a consumer needs, in one `deno.json`:
   },
   "unstable": ["bundle", "no-legacy-abort"],
   "imports": {
-    "dashi": "jsr:@cookingpot/dashi@^0.10.0"
+    "dashi": "jsr:@cookingpot/dashi@^0.11.0"
   }
 }
 ```
@@ -108,17 +108,16 @@ wait (5000 if omitted), and a timeout fails the include.
 
 ```tsx
 import {
-  type Ctx,
   patch,
+  type ReadArgs,
   RouteFragment,
-  type SealHtml,
-  type SealPatches,
   serve,
+  type WriteArgs,
 } from "dashi";
 
 const todos: string[] = [];
 
-function Home(_ctx: Ctx, html: SealHtml) {
+function Home({ html }: ReadArgs) {
   return html(
     <html>
       <h1>Todos</h1>
@@ -142,11 +141,11 @@ function TodoList({ error }: { error?: string }) {
   );
 }
 
-function list(_ctx: Ctx, html: SealHtml) {
+function list({ html }: ReadArgs) {
   return html(<TodoList />);
 }
 
-async function create(ctx: Ctx, patches: SealPatches) {
+async function create({ ctx, patches }: WriteArgs) {
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
     return patches([
@@ -180,11 +179,11 @@ etc.). The form can sit anywhere on the page.
 **Layouts** are shared UI only. They wrap the route on document render,
 outermost first, after the route has rendered, and do not run on fragment
 renders. Never use them for gating or state-setting — that belongs on middleware
-or individual route handlers. A layout is `(ctx, children) => ...`. Attach
+or individual route handlers. A layout is `({ ctx, children }) => ...`. Attach
 `layouts: [RootLayout]` on the table or a `group()`.
 
-**Middleware** is a `(ctx, next) => Response` factory attached on `group()`. It
-runs for document hits and fragment hits.
+**Middleware** is a `({ ctx, next }) => Response` factory attached on `group()`.
+It runs for document hits and fragment hits.
 
 **Prefixed `group()`** joins a path onto child routes. Import `group` from
 `dashi` in a feature `mod.ts` and drop the `Group` into the root callback:
@@ -194,7 +193,9 @@ runs for document hits and fragment hits.
 import { group } from "dashi";
 
 export const posts = group("/posts", ({ route }) => ({
-  routes: [route("/:id", { GET: (ctx, html) => html(<p>{ctx.params.id}</p>) })],
+  routes: [
+    route("/:id", { GET: ({ ctx, html }) => html(<p>{ctx.params.id}</p>) }),
+  ],
 }));
 ```
 

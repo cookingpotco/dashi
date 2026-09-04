@@ -1,10 +1,7 @@
-import { type Ctx, RouteFragment, type SealHtml } from "dashi";
+import { type ReadArgs, RouteFragment } from "dashi";
 import type { AppState } from "./state.ts";
 
-export function DupSrc(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
-) {
+export function DupSrc({ html }: ReadArgs<Record<string, never>, AppState>) {
   return html(
     <div id="dup-src">
       <div id="dup-a">

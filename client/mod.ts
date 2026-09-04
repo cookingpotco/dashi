@@ -1,7 +1,7 @@
 import { type Element, jsx, jsxTemplate } from "../jsx-runtime/mod.ts";
 import { Logger } from "../logging/mod.ts";
 import { cacheControl, CacheStrategy } from "../caching/mod.ts";
-import { type Ctx, DASHI_PREFIX, type SealHtml } from "../shared/mod.ts";
+import { DASHI_PREFIX, type ReadArgs } from "../shared/mod.ts";
 import { getRenderStore, inRender } from "../ssr/mod.ts";
 
 /** Reserved URL prefix for compiled client modules. */
@@ -242,8 +242,7 @@ export async function compileClient(): Promise<void> {
 
 /** GET handler for `/_dashi/client/:file*`. Serves the in-memory bundle. */
 export function getCompiledFile(
-  ctx: Ctx<{ file: string }, Record<string, unknown>>,
-  _html: SealHtml,
+  { ctx }: ReadArgs<{ file: string }, Record<string, unknown>>,
 ): Response {
   const file = compiledFiles.get(`${CLIENT_PREFIX}/${ctx.params.file}`);
   if (!file) {

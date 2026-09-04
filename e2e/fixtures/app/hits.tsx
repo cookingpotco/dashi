@@ -1,8 +1,8 @@
-import { type Ctx, type SealHtml } from "dashi";
+import { type ReadArgs } from "dashi";
 
 let count = 0;
 
-export function list(_ctx: Ctx, html: SealHtml) {
+export function list({ html }: ReadArgs) {
   count += 1;
   return html(<span id="refresh-stamp">{count}</span>);
 }

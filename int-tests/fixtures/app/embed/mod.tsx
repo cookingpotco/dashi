@@ -1,13 +1,12 @@
 import {
-  type Ctx,
   group,
+  type MiddlewareArgs,
+  type ReadArgs,
   RouteFragment,
-  type SealHtml,
-  type WrapperCtx,
 } from "dashi";
 import type { AppState } from "../state.ts";
 
-function embedOnly(ctx: WrapperCtx<AppState>, next: () => Promise<Response>) {
+function embedOnly({ ctx, next }: MiddlewareArgs<AppState>) {
   ctx.state.embedOnly = "yes";
   return next();
 }
@@ -17,7 +16,7 @@ export const embed = group<AppState>(({ route }) => ({
   routes: [route("/embed", { GET: Embed })],
 }));
 
-function Embed(_ctx: Ctx<Record<string, never>, AppState>, html: SealHtml) {
+function Embed({ html }: ReadArgs<Record<string, never>, AppState>) {
   return html(
     <div>
       <section id="eager">

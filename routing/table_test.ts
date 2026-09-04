@@ -37,7 +37,7 @@ function typechecks() {
     // @ts-expect-error OPTIONS is not a declared handler; the router answers it
     route("/", { OPTIONS: noop });
     route("/posts/:id", {
-      GET: (ctx) => {
+      GET: ({ ctx }) => {
         ctx.params.id;
         // @ts-expect-error only declared params exist
         ctx.params.slug;
@@ -79,7 +79,7 @@ function typechecks() {
   group("/users/:id", ({ route }) => ({
     routes: [
       route("/update/:field", {
-        POST: (ctx) => {
+        POST: ({ ctx }) => {
           ctx.params.id;
           ctx.params.field;
           // @ts-expect-error only declared params exist
@@ -93,7 +93,7 @@ function typechecks() {
   group<AppState>("/users/:id", ({ route }) => ({
     routes: [
       route("/update/:field", {
-        GET: (ctx) => {
+        GET: ({ ctx }) => {
           ctx.params.field;
           ctx.state.user;
           return new Response();
@@ -108,7 +108,7 @@ function typechecks() {
       group("/posts/:postId", ({ route }) => ({
         routes: [
           route("/edit", {
-            GET: (ctx) => {
+            GET: ({ ctx }) => {
               ctx.params.postId;
               return new Response();
             },
@@ -311,8 +311,8 @@ Deno.test("compile rejects duplicate and invalid paths", () => {
 Deno.test("compile inherits wraps outermost-first and preserves declaration order", () => {
   const rootLayout = () => "" as Element;
   const nestedLayout = () => "" as Element;
-  const rootMw: Middleware = (_ctx, next) => next();
-  const nestedMw: Middleware = (_ctx, next) => next();
+  const rootMw: Middleware = ({ next }) => next();
+  const nestedMw: Middleware = ({ next }) => next();
   const home = () => new Response();
   const nested = () => new Response();
   const secret = () => new Response();

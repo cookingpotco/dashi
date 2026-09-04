@@ -1,6 +1,6 @@
-import { type Ctx, RouteFragment, type SealHtml } from "dashi";
+import { type ReadArgs, RouteFragment } from "dashi";
 
-export function Fail(_ctx: Ctx, html: SealHtml) {
+export function Fail({ html }: ReadArgs) {
   return html(
     <RouteFragment
       src="/fail-frag"

@@ -1,6 +1,6 @@
-import { type Ctx, RouteFragment, type SealHtml } from "dashi";
+import { type ReadArgs, RouteFragment } from "dashi";
 
-export function PatchesPage(_ctx: Ctx, html: SealHtml) {
+export function PatchesPage({ html }: ReadArgs) {
   return html(
     <div>
       <p id="page-marker">outside</p>

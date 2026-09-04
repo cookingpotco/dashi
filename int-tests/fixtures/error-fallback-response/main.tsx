@@ -1,7 +1,7 @@
-import { type Ctx, type SealHtml, serve, type WrapperCtx } from "dashi";
+import { type LayoutArgs, type ReadArgs, serve } from "dashi";
 import type { Element } from "dashi/jsx-runtime";
 
-function rootLayout(ctx: WrapperCtx, children: Element): Element {
+function rootLayout({ ctx, children }: LayoutArgs): Element {
   if (ctx.url.pathname === "/root-layout-throws") {
     throw new Error("root-layout");
   }
@@ -13,11 +13,11 @@ function rootLayout(ctx: WrapperCtx, children: Element): Element {
   );
 }
 
-function home(_ctx: Ctx, html: SealHtml) {
+function home({ html }: ReadArgs) {
   return html(<p id="home">home</p>);
 }
 
-function okPage(_ctx: Ctx, html: SealHtml) {
+function okPage({ html }: ReadArgs) {
   return html(<p id="ok-page">ok</p>);
 }
 

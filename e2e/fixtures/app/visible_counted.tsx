@@ -1,8 +1,8 @@
-import { type Ctx, type SealHtml } from "dashi";
+import { type ReadArgs } from "dashi";
 
 let hits = 0;
 
-export function VisibleCounted(_ctx: Ctx, html: SealHtml) {
+export function VisibleCounted({ html }: ReadArgs) {
   hits += 1;
   return html(<p id="visible-counted">visible-counted</p>);
 }

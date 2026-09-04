@@ -1,6 +1,6 @@
-import { type Ctx, RouteFragment, type SealHtml } from "dashi";
+import { type ReadArgs, RouteFragment } from "dashi";
 
-export function Embed(_ctx: Ctx, html: SealHtml) {
+export function Embed({ html }: ReadArgs) {
   return html(
     <div>
       <RouteFragment src="/eager" />

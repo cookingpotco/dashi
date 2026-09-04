@@ -1,5 +1,5 @@
-import { type Ctx, type SealHtml } from "dashi";
+import { type ReadArgs } from "dashi";
 
-export function Home(_ctx: Ctx, html: SealHtml) {
+export function Home({ html }: ReadArgs) {
   return html(<h1>ok</h1>);
 }

@@ -1,10 +1,7 @@
-import type { Ctx, SealHtml } from "dashi";
+import type { ReadArgs } from "dashi";
 import type { AppState } from "./state.ts";
 
-export function Peer(
-  ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
-) {
+export function Peer({ ctx, html }: ReadArgs<Record<string, never>, AppState>) {
   return html(
     <aside
       id="peer"

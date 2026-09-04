@@ -117,7 +117,7 @@ async function realPath(path: string): Promise<string | null> {
  * @example
  * ```ts
  * route("/assets/:path*", {
- *   GET: (ctx) =>
+ *   GET: ({ ctx }) =>
  *     staticFile(ctx, `${import.meta.dirname}/static`, ctx.params.path),
  * })
  * ```

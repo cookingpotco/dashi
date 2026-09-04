@@ -1,6 +1,6 @@
-import { type Ctx, type SealHtml } from "dashi";
+import { type ReadArgs } from "dashi";
 
-export function Secret(_ctx: Ctx, html: SealHtml) {
+export function Secret({ html }: ReadArgs) {
   return html(
     <html>
       <h2>{"<3"}</h2>

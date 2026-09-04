@@ -1,6 +1,6 @@
-import { type Ctx, type SealHtml } from "dashi";
+import { type ReadArgs } from "dashi";
 
-export async function Fragment(_ctx: Ctx, html: SealHtml) {
+export async function Fragment({ html }: ReadArgs) {
   const res = await fetch(new URL("https://bored-api.appbrewery.com/random"));
 
   const json = await res.json();

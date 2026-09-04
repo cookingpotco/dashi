@@ -190,7 +190,7 @@ async function lastResort(
     return new Response(DEFAULT_FATAL_BODY, { status: 500 });
   }
   try {
-    return await compiled.fatal(bindFatalHtml(req));
+    return await compiled.fatal({ html: bindFatalHtml(req) });
   } catch (thrown) {
     Logger.error(["routing"], "fatal recovering from", thrown);
     return new Response(DEFAULT_FATAL_BODY, { status: 500 });
@@ -212,7 +212,11 @@ async function recover(
       if (!boundary?.error) {
         return await lastResort(ctx.req, true);
       }
-      return await boundary.error(ctx, thrown, bindHtml(ctx, boundary, 500));
+      return await boundary.error({
+        ctx,
+        thrown,
+        html: bindHtml(ctx, boundary, 500),
+      });
     } catch (nextThrown) {
       Logger.error(["ssr"], "render recovering from", nextThrown);
       return await lastResort(ctx.req, true);
@@ -228,7 +232,11 @@ async function recover(
       continue;
     }
     try {
-      return await current.error(ctx, thrown, bindHtml(ctx, current, 500));
+      return await current.error({
+        ctx,
+        thrown,
+        html: bindHtml(ctx, current, 500),
+      });
     } catch (nextThrown) {
       if (nextThrown instanceof LayoutWalkError) {
         return await recover(nextThrown.cause, nextThrown.parent, ctx);
@@ -260,7 +268,10 @@ async function runHandler(
         headers: { Allow: advertisedMethods(matched.handlers).join(", ") },
       });
     }
-    return await handler(ctx, bindHtml(ctx, matched.boundary, 200));
+    return await handler({
+      ctx,
+      html: bindHtml(ctx, matched.boundary, 200),
+    });
   }
   if (
     method === "POST" || method === "PUT" || method === "PATCH" ||
@@ -273,7 +284,7 @@ async function runHandler(
         headers: { Allow: advertisedMethods(matched.handlers).join(", ") },
       });
     }
-    return await handler(ctx, bindPatches(ctx));
+    return await handler({ ctx, patches: bindPatches(ctx) });
   }
   return new Response("Method Not Allowed", {
     status: 405,
@@ -346,7 +357,7 @@ async function executeNotFound(
     return new Response(DEFAULT_NOT_FOUND_BODY, { status: 404 });
   }
   try {
-    return await notFound(ctx, bindHtml(ctx, boundary, 404));
+    return await notFound({ ctx, html: bindHtml(ctx, boundary, 404) });
   } catch (thrown) {
     return await recover(thrown, boundary, ctx);
   }
@@ -371,7 +382,7 @@ async function runPipeline(
       index = i;
       const mw = middleware[i];
       if (mw) {
-        const res = await mw(ctx, () => dispatch(i + 1));
+        const res = await mw({ ctx, next: () => dispatch(i + 1) });
         return new Response(res.body, res);
       }
       const res = await runTerminal();

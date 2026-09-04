@@ -7,29 +7,30 @@ type State = {
 function typechecks() {
   serve<State>(({ route }) => ({
     layouts: [
-      (ctx, children) => {
+      ({ children }) => children,
+      ({ ctx, children }) => {
         // @ts-expect-error layouts cannot assign to state
         ctx.state.token = "x";
         return children;
       },
     ],
     middleware: [
-      (ctx, next) => {
+      ({ ctx, next }) => {
         ctx.state.token = "mw";
         return next();
       },
     ],
-    error: (ctx, _thrown) => {
+    error: ({ ctx }) => {
       ctx.state.token = "err";
       return new Response("err");
     },
-    notFound: (ctx) => {
+    notFound: ({ ctx }) => {
       ctx.state.token = "miss";
       return new Response("miss");
     },
     routes: [
       route("/", {
-        GET: (ctx) => {
+        GET: ({ ctx }) => {
           ctx.state.token = "ok";
           return new Response("ok");
         },

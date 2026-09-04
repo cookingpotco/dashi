@@ -1,8 +1,8 @@
-import { type Ctx, type SealHtml } from "dashi";
+import { type ReadArgs, type WriteArgs } from "dashi";
 
 const entries: string[] = [];
 
-export function list(_ctx: Ctx, html: SealHtml) {
+export function list({ html }: ReadArgs) {
   return html(
     <div>
       <h2>Guestbook</h2>
@@ -17,7 +17,7 @@ export function list(_ctx: Ctx, html: SealHtml) {
   );
 }
 
-export async function add(ctx: Ctx) {
+export async function add({ ctx }: WriteArgs) {
   const data = await ctx.req.formData();
   const body = data.get("body");
   if (typeof body === "string") {

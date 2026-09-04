@@ -38,12 +38,73 @@ export type WrapperCtx<
  * state-setting — that belongs on middleware or individual route
  * handlers.
  */
-/** @internal */
 export type LayoutCtx<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = Omit<WrapperCtx<State>, "state"> & {
   readonly state: Readonly<Partial<State>>;
 };
+
+/**
+ * GET / HEAD bag. A read may return a raw `Response` and never call
+ * `html`.
+ */
+export interface ReadArgs<
+  Params extends Record<string, string> = Record<string, never>,
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> {
+  ctx: Ctx<Params, State>;
+  html: SealHtml;
+}
+
+/**
+ * POST / PUT / PATCH / DELETE bag. A write may return a raw `Response`
+ * and never call `patches`.
+ */
+export interface WriteArgs<
+  Params extends Record<string, string> = Record<string, never>,
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> {
+  ctx: Ctx<Params, State>;
+  patches: SealPatches;
+}
+
+/**
+ * `notFound` bag. Same fields as `ReadArgs`; params are a wide string
+ * record so one wrap can cover `/` and `/posts/:id`.
+ */
+export type NotFoundArgs<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> = ReadArgs<Record<string, string>, State>;
+
+/** Group `error` bag. `thrown` is the raw value. */
+export interface ErrorArgs<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> {
+  ctx: WrapperCtx<State>;
+  thrown: unknown;
+  html: SealHtml;
+}
+
+/** Last-resort 500 bag. No `ctx`, no `thrown`. */
+export interface FatalArgs {
+  html: SealHtml;
+}
+
+/** Layout bag. `ctx.state` is readonly. */
+export interface LayoutArgs<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> {
+  ctx: LayoutCtx<State>;
+  children: Element;
+}
+
+/** Middleware bag. Mutate `ctx.state` in place. */
+export interface MiddlewareArgs<
+  State extends Record<string, unknown> = Record<PropertyKey, never>,
+> {
+  ctx: WrapperCtx<State>;
+  next: () => Promise<Response>;
+}
 
 /**
  * Seal-time framework options for `html()` and `patches()`. Other
@@ -80,7 +141,7 @@ export type SealPatches = (
  *
  * @internal
  */
-export type Fatal = (html: SealHtml) => Response | Promise<Response>;
+export type Fatal = (args: FatalArgs) => Response | Promise<Response>;
 
 /**
  * Route function. Always returns a `Response`. Call `html()` to seal
@@ -98,8 +159,7 @@ export type Handler<
   Params extends Record<string, string> = Record<string, never>,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
-  ctx: Ctx<Params, State>,
-  html: SealHtml,
+  args: ReadArgs<Params, State>,
 ) => Response | Promise<Response>;
 
 /**
@@ -112,9 +172,7 @@ export type Handler<
 export type ErrorHandler<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
-  ctx: WrapperCtx<State>,
-  thrown: unknown,
-  html: SealHtml,
+  args: ErrorArgs<State>,
 ) => Response | Promise<Response>;
 
 /**
@@ -144,8 +202,7 @@ export type WriteHandler<
   Params extends Record<string, string> = Record<string, never>,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
-  ctx: Ctx<Params, State>,
-  patches: SealPatches,
+  args: WriteArgs<Params, State>,
 ) => Response | Promise<Response>;
 
 type HandlerMethod = Exclude<Method, "HEAD" | "OPTIONS">;
@@ -185,8 +242,7 @@ export type MethodHandlers<
 export type Layout<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
-  ctx: LayoutCtx<State>,
-  children: Element,
+  args: LayoutArgs<State>,
 ) => Element | Promise<Element>;
 
 /**
@@ -197,8 +253,7 @@ export type Layout<
 export type Middleware<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
-  ctx: WrapperCtx<State>,
-  next: () => Promise<Response>,
+  args: MiddlewareArgs<State>,
 ) => Response | Promise<Response>;
 
 /**

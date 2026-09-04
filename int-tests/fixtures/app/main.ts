@@ -1,4 +1,4 @@
-import { CacheStrategy, type Ctx, serve, staticFile } from "dashi";
+import { CacheStrategy, type ReadArgs, serve, staticFile } from "dashi";
 import type { AppState } from "./state.ts";
 import { Home } from "./home.tsx";
 import { RootLayout } from "./root_layout.tsx";
@@ -80,9 +80,9 @@ import {
 } from "./errors.tsx";
 
 const staticDir = `${import.meta.dirname}/static`;
-const files = (ctx: Ctx<{ path: string }, AppState>) =>
+const files = ({ ctx }: ReadArgs<{ path: string }, AppState>) =>
   staticFile(ctx, staticDir, ctx.params.path);
-const hour = (ctx: Ctx<{ path: string }, AppState>) =>
+const hour = ({ ctx }: ReadArgs<{ path: string }, AppState>) =>
   staticFile(ctx, staticDir, ctx.params.path, {
     strategy: CacheStrategy.Public,
     maxAge: 3600,
@@ -90,17 +90,17 @@ const hour = (ctx: Ctx<{ path: string }, AppState>) =>
     staleWhileRevalidate: 120,
     varyHeaders: ["Accept-Language"],
   });
-const priv = (ctx: Ctx<{ path: string }, AppState>) =>
+const priv = ({ ctx }: ReadArgs<{ path: string }, AppState>) =>
   staticFile(ctx, staticDir, ctx.params.path, {
     strategy: CacheStrategy.Private,
     maxAge: 60,
   });
-const immutableCookie = (ctx: Ctx<{ path: string }, AppState>) =>
+const immutableCookie = ({ ctx }: ReadArgs<{ path: string }, AppState>) =>
   staticFile(ctx, staticDir, ctx.params.path, {
     strategy: CacheStrategy.Immutable,
     varyHeaders: ["Cookie"],
   });
-const missingDir = (ctx: Ctx<{ path: string }, AppState>) =>
+const missingDir = ({ ctx }: ReadArgs<{ path: string }, AppState>) =>
   staticFile(
     ctx,
     `${import.meta.dirname}/no-such-static`,

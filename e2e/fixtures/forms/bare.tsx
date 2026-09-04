@@ -1,6 +1,6 @@
-import { type Ctx, type SealHtml } from "dashi";
+import { type ReadArgs, type WriteArgs } from "dashi";
 
-export function Bare(_ctx: Ctx, html: SealHtml) {
+export function Bare({ html }: ReadArgs) {
   return html(
     <div>
       <h1 id="heading">bare</h1>
@@ -11,6 +11,6 @@ export function Bare(_ctx: Ctx, html: SealHtml) {
   );
 }
 
-export function post(ctx: Ctx) {
+export function post({ ctx }: WriteArgs) {
   return Response.redirect(new URL("/search", ctx.url), 303);
 }

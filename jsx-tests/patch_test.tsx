@@ -41,7 +41,7 @@ function typechecks() {
       GET: () => [patch.remove("/x")],
     });
     route("/x", {
-      POST: (_ctx, patches) => patches([patch.remove("/x")]),
+      POST: ({ patches }) => patches([patch.remove("/x")]),
     });
     route("/x", {
       // @ts-expect-error writes cannot return markup

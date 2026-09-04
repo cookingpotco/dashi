@@ -1,11 +1,16 @@
-import { type Ctx, RouteFragment, type SealHtml, type WrapperCtx } from "dashi";
+import {
+  type ErrorArgs,
+  type FatalArgs,
+  type LayoutArgs,
+  type MiddlewareArgs,
+  type NotFoundArgs,
+  type ReadArgs,
+  RouteFragment,
+} from "dashi";
 import type { Element } from "dashi/jsx-runtime";
 import type { AppState } from "./state.ts";
 
-export function NotFound(
-  ctx: Ctx<Record<string, string>, AppState>,
-  html: SealHtml,
-) {
+export function NotFound({ ctx, html }: NotFoundArgs<AppState>) {
   if (ctx.url.pathname === "/not-found-throws") {
     throw new Error("not-found-throws");
   }
@@ -15,25 +20,15 @@ export function NotFound(
   return html(<p id="not-found">custom-404</p>);
 }
 
-export function ApiNotFound(
-  _ctx: Ctx<Record<string, string>, AppState>,
-  html: SealHtml,
-) {
+export function ApiNotFound({ html }: NotFoundArgs<AppState>) {
   return html(<p id="api-not-found">api-404</p>);
 }
 
-export function ApiV2NotFound(
-  _ctx: Ctx<Record<string, string>, AppState>,
-  html: SealHtml,
-) {
+export function ApiV2NotFound({ html }: NotFoundArgs<AppState>) {
   return html(<p id="api-v2-not-found">api-v2-404</p>);
 }
 
-export function RootError(
-  _ctx: WrapperCtx<AppState>,
-  thrown: unknown,
-  html: SealHtml,
-) {
+export function RootError({ thrown, html }: ErrorArgs<AppState>) {
   if (thrown instanceof Error && thrown.message === "error-handler-boom") {
     throw thrown;
   }
@@ -43,7 +38,7 @@ export function RootError(
   return html(<p id="root-error">root-error</p>);
 }
 
-export function fatal(html: SealHtml) {
+export function fatal({ html }: FatalArgs) {
   return html(
     <html>
       <body>
@@ -65,25 +60,15 @@ export function throwServiceUnavailable(): never {
   throw new Error("service-unavailable");
 }
 
-export function okPage(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
-) {
+export function okPage({ html }: ReadArgs<Record<string, never>, AppState>) {
   return html(<p id="ok-page">ok</p>);
 }
 
-export function nestedError(
-  _ctx: WrapperCtx<AppState>,
-  _thrown: unknown,
-  html: SealHtml,
-) {
+export function nestedError({ html }: ErrorArgs<AppState>) {
   return html(<p id="nested-error">nested-error</p>);
 }
 
-export function nestedErrorLayout(
-  _ctx: WrapperCtx<AppState>,
-  children: Element,
-): Element {
+export function nestedErrorLayout({ children }: LayoutArgs<AppState>): Element {
   return (
     <div id="nested-error-wrap">
       <h2>NestedError</h2>
@@ -92,10 +77,7 @@ export function nestedErrorLayout(
   );
 }
 
-export function noErrorLayout(
-  _ctx: WrapperCtx<AppState>,
-  children: Element,
-): Element {
+export function noErrorLayout({ children }: LayoutArgs<AppState>): Element {
   return <div id="no-error-wrap">{children}</div>;
 }
 
@@ -111,11 +93,7 @@ export function jsonError(): Response {
   return Response.json({ error: "json-500" }, { status: 500 });
 }
 
-export function compactError(
-  _ctx: WrapperCtx<AppState>,
-  _thrown: unknown,
-  html: SealHtml,
-) {
+export function compactError({ html }: ErrorArgs<AppState>) {
   return html(<p id="frag-error">frag-error-ui</p>);
 }
 
@@ -124,8 +102,7 @@ export function responseError(): Response {
 }
 
 export function nestedMw(
-  _ctx: WrapperCtx<AppState>,
-  next: () => Promise<Response>,
+  { next }: MiddlewareArgs<AppState>,
 ): Promise<Response> {
   return next().then((res) => {
     res.headers.set("x-nested-mw", "1");
@@ -138,8 +115,7 @@ export function throwingMw(): Response {
 }
 
 export function embedFragThrow(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
+  { html }: ReadArgs<Record<string, never>, AppState>,
 ) {
   return html(
     <div id="embed-throw">
@@ -149,8 +125,7 @@ export function embedFragThrow(
 }
 
 export function embedFragError(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
+  { html }: ReadArgs<Record<string, never>, AppState>,
 ) {
   return html(
     <div id="embed-error">
@@ -160,8 +135,7 @@ export function embedFragError(
 }
 
 export function embedFragErrorResponse(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
+  { html }: ReadArgs<Record<string, never>, AppState>,
 ) {
   return html(
     <div id="embed-error-res">
@@ -171,8 +145,7 @@ export function embedFragErrorResponse(
 }
 
 export function embedFragErrorThrows(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
+  { html }: ReadArgs<Record<string, never>, AppState>,
 ) {
   return html(
     <div id="embed-error-throws">
@@ -182,8 +155,7 @@ export function embedFragErrorThrows(
 }
 
 export function embedFragMiss(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
+  { html }: ReadArgs<Record<string, never>, AppState>,
 ) {
   return html(
     <div id="embed-miss">
@@ -192,11 +164,7 @@ export function embedFragMiss(
   );
 }
 
-export function messageError(
-  _ctx: WrapperCtx<AppState>,
-  thrown: unknown,
-  html: SealHtml,
-) {
+export function messageError({ thrown, html }: ErrorArgs<AppState>) {
   return html(
     <p id="fragment-fault">
       {thrown instanceof Error ? thrown.message : String(thrown)}
@@ -205,93 +173,64 @@ export function messageError(
 }
 
 export function SelfInclude(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
+  { html }: ReadArgs<Record<string, never>, AppState>,
 ) {
   return html(<RouteFragment src="/self-include" />);
 }
 
-export function CycleA(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
-) {
+export function CycleA({ html }: ReadArgs<Record<string, never>, AppState>) {
   return html(<RouteFragment src="/cycle-b" />);
 }
 
-export function CycleB(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
-) {
+export function CycleB({ html }: ReadArgs<Record<string, never>, AppState>) {
   return html(<RouteFragment src="/cycle-a" />);
 }
 
 export function EmbedCycle(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
+  { html }: ReadArgs<Record<string, never>, AppState>,
 ) {
   return html(<RouteFragment src="/cycle-a" />);
 }
 
 export function CycleQuery(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
+  { html }: ReadArgs<Record<string, never>, AppState>,
 ) {
   return html(<RouteFragment src="/cycle-query?y=2" />);
 }
 
 export function EmbedCycleQuery(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
+  { html }: ReadArgs<Record<string, never>, AppState>,
 ) {
   return html(<RouteFragment src="/cycle-query?x=1" />);
 }
 
 export function DepthEmbed(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
+  { html }: ReadArgs<Record<string, never>, AppState>,
 ) {
   return html(<RouteFragment src="/d1" />);
 }
 
-export function Depth1(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
-) {
+export function Depth1({ html }: ReadArgs<Record<string, never>, AppState>) {
   return html(<RouteFragment src="/d2" />);
 }
 
-export function Depth2(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
-) {
+export function Depth2({ html }: ReadArgs<Record<string, never>, AppState>) {
   return html(<RouteFragment src="/d3" />);
 }
 
-export function Depth3(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
-) {
+export function Depth3({ html }: ReadArgs<Record<string, never>, AppState>) {
   return html(<RouteFragment src="/d4" />);
 }
 
-export function Depth4(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
-) {
+export function Depth4({ html }: ReadArgs<Record<string, never>, AppState>) {
   return html(<RouteFragment src="/d5" />);
 }
 
-export function Depth5(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
-) {
+export function Depth5({ html }: ReadArgs<Record<string, never>, AppState>) {
   return html(<RouteFragment src="/d6" />);
 }
 
-export function Depth6(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
-) {
+export function Depth6({ html }: ReadArgs<Record<string, never>, AppState>) {
   return html(<p id="depth-leaf">depth-leaf</p>);
 }
 
@@ -310,16 +249,14 @@ function delay(ms: number, signal: AbortSignal): Promise<void> {
 }
 
 export async function Slow(
-  ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
+  { ctx, html }: ReadArgs<Record<string, never>, AppState>,
 ) {
   await delay(1000, ctx.req.signal);
   return html(<p id="slow">slow-body</p>);
 }
 
 export async function SlowShort(
-  ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
+  { ctx, html }: ReadArgs<Record<string, never>, AppState>,
 ) {
   await delay(150, ctx.req.signal);
   return html(
@@ -331,17 +268,13 @@ export async function SlowShort(
 }
 
 export async function WaitOut(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
+  { html }: ReadArgs<Record<string, never>, AppState>,
 ) {
   await new Promise((resolve) => setTimeout(resolve, 200));
   return html(<p id="wait-out">wait-out-body</p>);
 }
 
-export function EmbedSlow(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
-) {
+export function EmbedSlow({ html }: ReadArgs<Record<string, never>, AppState>) {
   return html(
     <div id="embed-slow">
       <RouteFragment src="/slow" timeout={50} />
@@ -351,8 +284,7 @@ export function EmbedSlow(
 }
 
 export function EmbedSlowEmpty(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
+  { html }: ReadArgs<Record<string, never>, AppState>,
 ) {
   return html(
     <div id="embed-slow-empty">
@@ -363,8 +295,7 @@ export function EmbedSlowEmpty(
 }
 
 export function EmbedSlowHeld(
-  _ctx: Ctx<Record<string, never>, AppState>,
-  html: SealHtml,
+  { html }: ReadArgs<Record<string, never>, AppState>,
 ) {
   return html(
     <div id="embed-slow-held">

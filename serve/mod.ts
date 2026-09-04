@@ -6,7 +6,7 @@ import {
   handle,
   init,
 } from "../routing/mod.ts";
-import type { SealHtml } from "../shared/mod.ts";
+import type { FatalArgs } from "../shared/mod.ts";
 import { bindUrls, grantedNetworkInterfaces } from "./bind_urls.ts";
 
 /**
@@ -39,7 +39,7 @@ import { bindUrls, grantedNetworkInterfaces } from "./bind_urls.ts";
  * import { serve } from "dashi";
  *
  * serve(({ route }) => ({
- *   routes: [route("/", { GET: (_ctx, html) => html(<h1>Hi</h1>) })],
+ *   routes: [route("/", { GET: ({ html }) => html(<h1>Hi</h1>) })],
  * }));
  * ```
  */
@@ -54,7 +54,7 @@ export async function serve<
      * sent as-is. Omitted: `new Response("Something Went Wrong", {
      * status: 500 })`.
      */
-    fatal?: (html: SealHtml) => Response | Promise<Response>;
+    fatal?: (args: FatalArgs) => Response | Promise<Response>;
     /**
      * Max eager include chain length. Omitted is 5. A longer chain
      * fails the request.

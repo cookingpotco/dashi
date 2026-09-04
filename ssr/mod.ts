@@ -138,7 +138,7 @@ export async function walkLayouts(
     try {
       let wrapped = rendered;
       for (let i = current.layouts.length - 1; i >= 0; i--) {
-        wrapped = await current.layouts[i]!(ctx, wrapped);
+        wrapped = await current.layouts[i]!({ ctx, children: wrapped });
       }
       rendered = wrapped;
     } catch (thrown) {

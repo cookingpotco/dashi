@@ -1,4 +1,4 @@
-import { type Ctx, RouteFragment, type SealHtml } from "dashi";
+import { type ReadArgs, RouteFragment } from "dashi";
 
 function fetchData() {
   return new Promise<{ hello: number }>((resolve) =>
@@ -10,7 +10,7 @@ const TestComponent = ({ text }: { text: string }) => {
   return <footer>Test Footer {text} 2</footer>;
 };
 
-export async function Home(_ctx: Ctx, html: SealHtml) {
+export async function Home({ html }: ReadArgs) {
   const { hello } = await fetchData();
 
   return html(

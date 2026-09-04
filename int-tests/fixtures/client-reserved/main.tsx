@@ -1,11 +1,11 @@
-import { client, type Ctx, type SealHtml, serve } from "dashi";
+import { client, type ReadArgs, serve } from "dashi";
 
 const Probe = client.element(
   "probe-el",
   new URL("./probe_client.ts", import.meta.url),
 );
 
-function home(_ctx: Ctx, html: SealHtml) {
+function home({ html }: ReadArgs) {
   return html(
     <html>
       <Probe>probe</Probe>
@@ -13,11 +13,11 @@ function home(_ctx: Ctx, html: SealHtml) {
   );
 }
 
-function param(ctx: Ctx<{ id: string }>) {
+function param({ ctx }: ReadArgs<{ id: string }>) {
   return new Response(`param:${ctx.params.id}`);
 }
 
-function caught(ctx: Ctx<{ path: string }>) {
+function caught({ ctx }: ReadArgs<{ path: string }>) {
   return new Response(`caught:${ctx.params.path}`);
 }
 

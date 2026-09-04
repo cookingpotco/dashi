@@ -17,7 +17,9 @@ Adding a published export is fine. Removing or renaming one is a breaking
 
 `CacheStrategy`, `CacheConfig`, `SealHtml`, `SealPatches`, `SealOptions`,
 `client`, `patch`, `Patch`, `RouteFragment`, `NavigationRoot`, `group`,
-`Group`, `serve`, `staticFile`, `ParamsOf`, `Ctx`, `WrapperCtx`.
+`Group`, `serve`, `staticFile`, `ParamsOf`, `Ctx`, `WrapperCtx`,
+`LayoutCtx`, `ReadArgs`, `WriteArgs`, `NotFoundArgs`, `ErrorArgs`,
+`FatalArgs`, `LayoutArgs`, `MiddlewareArgs`.
 
 Writes seal with `patches()`, or return a non-HTML `Response` (redirect,
 JSON, 204, etc.).
