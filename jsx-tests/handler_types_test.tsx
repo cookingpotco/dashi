@@ -18,15 +18,15 @@ function typechecks() {
         POST: () => new Response("ok"),
       }),
       route("/bad-write", {
-        // @ts-expect-error write bag has patches, not html
+        // @ts-expect-error write args have patches, not html
         POST: ({ html }) => html(<p>nope</p>),
       }),
       route("/bad-read", {
-        // @ts-expect-error read bag has html, not patches
+        // @ts-expect-error read args have html, not patches
         GET: ({ patches }) => patches([]),
       }),
       route("/positional", {
-        // @ts-expect-error positional (ctx, html) is not the bag
+        // @ts-expect-error positional (ctx, html) is not ReadArgs
         GET: (_ctx, html) => html(<p>nope</p>),
       }),
     ],

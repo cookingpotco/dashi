@@ -45,7 +45,7 @@ export type LayoutCtx<
 };
 
 /**
- * GET / HEAD bag. A read may return a raw `Response` and never call
+ * GET / HEAD args. A read may return a raw `Response` and never call
  * `html`.
  */
 export interface ReadArgs<
@@ -59,7 +59,7 @@ export interface ReadArgs<
 }
 
 /**
- * POST / PUT / PATCH / DELETE bag. A write may return a raw `Response`
+ * POST / PUT / PATCH / DELETE args. A write may return a raw `Response`
  * and never call `patches`.
  */
 export interface WriteArgs<
@@ -73,14 +73,14 @@ export interface WriteArgs<
 }
 
 /**
- * `notFound` bag. Same fields as `ReadArgs`; params are a wide string
+ * `notFound` args. Same fields as `ReadArgs`; params are a wide string
  * record so one wrap can cover `/` and `/posts/:id`.
  */
 export type NotFoundArgs<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = ReadArgs<Record<string, string>, State>;
 
-/** Group `error` bag. `thrown` is the raw value. */
+/** Group `error` args. `thrown` is the raw value. */
 export interface ErrorArgs<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
@@ -92,13 +92,13 @@ export interface ErrorArgs<
   html: SealHtml;
 }
 
-/** Last-resort 500 bag. No `ctx`, no `thrown`. */
+/** Last-resort 500 args. No `ctx`, no `thrown`. */
 export interface FatalArgs {
   /** Bound HTML sealer. Default status 500. No layouts. */
   html: SealHtml;
 }
 
-/** Layout bag. `ctx.state` is readonly. */
+/** Layout args. `ctx.state` is readonly. */
 export interface LayoutArgs<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
@@ -108,7 +108,7 @@ export interface LayoutArgs<
   children: Element;
 }
 
-/** Middleware bag. Mutate `ctx.state` in place. */
+/** Middleware args. Mutate `ctx.state` in place. */
 export interface MiddlewareArgs<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
