@@ -77,6 +77,8 @@ export type Patches = (
 
 /**
  * Last-resort 500. No layouts, no `ctx`, no `thrown`. Omitted: text 500.
+ *
+ * @internal
  */
 export type Fatal = (html: Html) => Response | Promise<Response>;
 
