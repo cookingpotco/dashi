@@ -1,4 +1,4 @@
-import { type Ctx, patch, RouteFragment } from "dashi";
+import { type Ctx, type Html, patch, type Patches, RouteFragment } from "dashi";
 import { EntriesForm } from "./entries_form.tsx";
 import { recordWrite } from "./writes.ts";
 
@@ -25,6 +25,11 @@ function EntriesPage() {
         <input id="drop-title" name="title" />
         <button id="drop-submit" type="submit">Drop</button>
       </form>
+      <form id="reject-form" method="POST" action="/reject-write">
+        <input id="reject-title" name="title" />
+        <button id="reject-submit" type="submit">Reject</button>
+      </form>
+      <p id="reject-status"></p>
       <form id="page-search" method="GET" action="/search">
         <input id="page-search-q" name="q" />
         <button id="page-search-submit" type="submit">Find</button>
@@ -33,23 +38,23 @@ function EntriesPage() {
   );
 }
 
-export function list() {
-  return <EntriesPage />;
+export function list(_ctx: Ctx, html: Html) {
+  return html(<EntriesPage />);
 }
 
-export async function write(ctx: Ctx) {
+export async function write(ctx: Ctx, patches: Patches) {
   const data = await ctx.req.formData();
   if (data.get("intent") === "validate") {
     const title = data.get("title");
     if (typeof title !== "string" || title.trim() === "") {
-      return [
+      return patches([
         patch.replace(
           "/entries-form",
           <EntriesForm error="title is required" />,
         ),
-      ];
+      ]);
     }
-    return [patch.replace("/entries-form", <EntriesForm />)];
+    return patches([patch.replace("/entries-form", <EntriesForm />)]);
   }
   recordWrite();
   return Response.redirect(new URL("/search", ctx.url), 303);

@@ -86,9 +86,8 @@ cannot see project rules.
   fixtures may use a file next to the table when the page is only handlers.
   `group()` is only a prefixed subtree or a pathless wrap. Flag application code
   that calls a handler, including as a JSX child: it skips the target's
-  middleware and error boundary, applies its cache policy to the caller's
-  response, and leaves it reading the caller's `ctx`. Shared markup is a
-  component in a non-page module; another route's rendered output is
+  middleware and error boundary and leaves it reading the caller's `ctx`. Shared
+  markup is a component in a non-page module; another route's rendered output is
   `<RouteFragment src>`. Flag a `*_route.tsx`, a one-path page in `examples/` as
   a file next to the table, a one-path page declared as `group("/path")` +
   `route("/")`, or `group()` inlined in a `serve()` bag instead of an imported
@@ -106,9 +105,10 @@ cannot see project rules.
   `client/registry_client.ts` is the browser bus. One document-level submit
   listener in `forms/` owns interception. There is no per-element submit
   listener and no nearest-host targeting. GET navigates the page; a write goes
-  through the registry. An applied patch-list write resets the submitting form.
-  Client features assume the client runtime. Flag a per-element submit listener
-  or a GET form that swaps a fragment.
+  through the registry. A 2xx patch-list write resets the submitting form; 4xx
+  applies patches and keeps field values. Client features assume the client
+  runtime. Flag a per-element submit listener or a GET form that swaps a
+  fragment.
 - A closed set of cases is a `const enum` (plain `enum` only when it must exist
   at runtime). Flag a string-literal union used as a discriminant.
 - Document updates are `patch.replace`, `patch.append`, `patch.prepend`,
@@ -117,11 +117,11 @@ cannot see project rules.
   with that `src`; `#${string}` updates `document.getElementById`. `refresh`
   accepts only a route. Use `replace` when the write has the markup; use
   `refresh` when fragments should re-fetch themselves asynchronously. Write
-  handlers return that list or a Response, not markup or a 2xx `text/html`
-  document. `dashi-patch` is the wire format, not a user-writable element. Flag
-  a third address space, a `fragment` alias, an omitted target, leftover
-  `action` / `route-action` names, a user-written `<dashi-patch>`, or a write
-  that returns JSX.
+  handlers seal that list with `patches()` or return a Response, not markup.
+  `dashi-patch` is the wire format, not a user-writable element. Flag a third
+  address space, a `fragment` alias, an omitted target, leftover `action` /
+  `route-action` names, a user-written `<dashi-patch>`, or a write that returns
+  JSX or a patch array.
 - An object shape is an `interface`. `type` is for unions, aliases, mapped
   types. Flag an object shape written as a `type`.
 - Flag a helper that is a short, obvious check or a few straightforward lines

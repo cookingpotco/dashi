@@ -1,7 +1,7 @@
-import { RouteFragment } from "dashi";
+import { type Ctx, type Html, RouteFragment } from "dashi";
 
-export function VisibleBelow() {
-  return (
+export function VisibleBelow(_ctx: Ctx, html: Html) {
+  return html(
     <div>
       <div style="height: 3000px"></div>
       <RouteFragment
@@ -9,6 +9,6 @@ export function VisibleBelow() {
         lazy="visible"
         fallback={<span id="visible-fallback">Loading visible...</span>}
       />
-    </div>
+    </div>,
   );
 }

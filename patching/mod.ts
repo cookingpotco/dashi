@@ -77,7 +77,7 @@ export type Patch =
  *
  * @example
  * ```ts
- * return [patch.replace("/todos", <TodoList />)];
+ * return patches([patch.replace("/todos", <TodoList />)]);
  * ```
  */
 function replace(target: Target, body: Element): Patch {
@@ -92,7 +92,7 @@ function replace(target: Target, body: Element): Patch {
  *
  * @example
  * ```ts
- * return [patch.append("#todos", <li>milk</li>)];
+ * return patches([patch.append("#todos", <li>milk</li>)]);
  * ```
  */
 function append(target: Target, body: Element): Patch {
@@ -107,7 +107,7 @@ function append(target: Target, body: Element): Patch {
  *
  * @example
  * ```ts
- * return [patch.prepend("/todos", <li>bread</li>)];
+ * return patches([patch.prepend("/todos", <li>bread</li>)]);
  * ```
  */
 function prepend(target: Target, body: Element): Patch {
@@ -122,7 +122,7 @@ function prepend(target: Target, body: Element): Patch {
  *
  * @example
  * ```ts
- * return [patch.before("/slot", <p>before</p>)];
+ * return patches([patch.before("/slot", <p>before</p>)]);
  * ```
  */
 function before(target: Target, body: Element): Patch {
@@ -137,7 +137,7 @@ function before(target: Target, body: Element): Patch {
  *
  * @example
  * ```ts
- * return [patch.after("/slot", <p>after</p>)];
+ * return patches([patch.after("/slot", <p>after</p>)]);
  * ```
  */
 function after(target: Target, body: Element): Patch {
@@ -151,7 +151,7 @@ function after(target: Target, body: Element): Patch {
  *
  * @example
  * ```ts
- * return [patch.remove("#notice")];
+ * return patches([patch.remove("#notice")]);
  * ```
  */
 function remove(target: Target): Patch {
@@ -165,7 +165,7 @@ function remove(target: Target): Patch {
  *
  * @example
  * ```ts
- * return [patch.refresh("/hits")];
+ * return patches([patch.refresh("/hits")]);
  * ```
  */
 function refresh(target: `/${string}`): Patch {
@@ -173,9 +173,9 @@ function refresh(target: `/${string}`): Patch {
 }
 
 /**
- * Targeted updates from a write handler. Return them as a non-empty
- * list. GET cannot return these; a GET or lazy fetch still replaces
- * the host that asked.
+ * Targeted updates from a write handler. Seal them with `patches()`.
+ * GET cannot return these; a GET or lazy fetch still replaces the host
+ * that asked.
  *
  * `replace`, `append`, `prepend`, `before`, `after`, `remove`, and
  * `refresh` each take a required target. `/${string}` updates every

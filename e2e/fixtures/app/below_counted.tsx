@@ -1,8 +1,10 @@
+import { type Ctx, type Html } from "dashi";
+
 let hits = 0;
 
-export function BelowCounted() {
+export function BelowCounted(_ctx: Ctx, html: Html) {
   hits += 1;
-  return <p id="below-counted">below-counted</p>;
+  return html(<p id="below-counted">below-counted</p>);
 }
 
 export function belowHitsHandler() {

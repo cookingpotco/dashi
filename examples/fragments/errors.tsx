@@ -1,16 +1,18 @@
-import { type WrapperCtx } from "dashi";
-import type { Element } from "dashi/jsx-runtime";
+import { type Html, type WrapperCtx } from "dashi";
 
 export function ErrorPage(
   _ctx: WrapperCtx,
   thrown: unknown,
-): Element {
+  html: Html,
+) {
   const message = thrown instanceof Error ? thrown.message : "Unknown error";
-  return <p id="error">{message}</p>;
+  return html(<p id="error">{message}</p>);
 }
 
-export const fatal = (
-  <html>
-    <body>Something went wrong</body>
-  </html>
-);
+export function fatal(html: Html) {
+  return html(
+    <html>
+      <body>Something went wrong</body>
+    </html>,
+  );
+}

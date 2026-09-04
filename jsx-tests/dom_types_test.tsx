@@ -1,4 +1,4 @@
-import { cached, CacheStrategy } from "dashi";
+import { type CacheConfig, CacheStrategy } from "dashi";
 
 function typechecks() {
   const fn = () => {};
@@ -37,10 +37,12 @@ function typechecks() {
   // @ts-expect-error dashi-patch is not a JSX intrinsic
   <dashi-patch kind="remove" target="/x" />;
 
-  // @ts-expect-error cached() is not a JSX child
-  <div>{cached(<span>x</span>, { strategy: CacheStrategy.NoStore })}</div>;
+  const _public: CacheConfig = {
+    strategy: CacheStrategy.Public,
+    maxAge: 60,
+  };
   // @ts-expect-error Private requires maxAge
-  cached(<span>x</span>, { strategy: CacheStrategy.Private });
+  const _private: CacheConfig = { strategy: CacheStrategy.Private };
 }
 
 Deno.test("DOM attribute types typecheck", () => {

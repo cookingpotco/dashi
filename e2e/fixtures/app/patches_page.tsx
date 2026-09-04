@@ -1,7 +1,7 @@
-import { RouteFragment } from "dashi";
+import { type Ctx, type Html, RouteFragment } from "dashi";
 
-export function PatchesPage() {
-  return (
+export function PatchesPage(_ctx: Ctx, html: Html) {
+  return html(
     <div>
       <p id="page-marker">outside</p>
       <div id="status">idle</div>
@@ -13,6 +13,6 @@ export function PatchesPage() {
       <RouteFragment src="/notice" />
       <RouteFragment src="/slot" />
       <RouteFragment src="/inserts" />
-    </div>
+    </div>,
   );
 }

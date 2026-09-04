@@ -1,13 +1,6 @@
 // Keep node:async_hooks ALS: Deno AsyncContext is not public yet.
 import { AsyncLocalStorage } from "node:async_hooks";
-import {
-  type CacheConfig,
-  type CachedElement,
-  isCachedElement,
-} from "../caching/mod.ts";
-import { isStatusElement, type StatusElement } from "../status/mod.ts";
 import { type Element, jsx } from "../jsx-runtime/mod.ts";
-import { Logger } from "../logging/mod.ts";
 import type { Ctx, GroupBoundary } from "../shared/mod.ts";
 
 interface FragmentFault {
@@ -113,166 +106,46 @@ export function appendModulePreloads(
   }
 }
 
-export const enum RenderKind {
-  Page = "page",
-  Recovered = "recovered",
-  Response = "response",
-  Exhausted = "exhausted",
-}
-
-export type RenderResult =
-  | { kind: RenderKind.Page; page: Element; cache?: CacheConfig }
-  | { kind: RenderKind.Recovered; page: Element; cache?: CacheConfig }
-  | { kind: RenderKind.Response; response: Response }
-  | { kind: RenderKind.Exhausted };
-
-function unwrapRenderPage(
-  value: Element | CachedElement | StatusElement,
-): { page: Element; cache?: CacheConfig } {
-  if (isStatusElement(value)) {
-    return { page: value.page, cache: value.cache };
+/**
+ * Layout walk failed. `cause` is the thrown value. `parent` is the
+ * enclosing group: a group's `error` does not catch that group's own
+ * layouts.
+ */
+/** @internal */
+export class LayoutWalkError extends Error {
+  readonly parent?: GroupBoundary<Record<string, unknown>>;
+  constructor(
+    thrown: unknown,
+    parent?: GroupBoundary<Record<string, unknown>>,
+  ) {
+    super("layout walk failed", { cause: thrown });
+    this.parent = parent;
   }
-  if (isCachedElement(value)) {
-    return { page: value.page, cache: value.cache };
-  }
-  return { page: value };
 }
 
 /**
- * Wraps `page` in each group's layouts (innermost first) and recovers
- * through `error` when something throws. Fragments skip layouts. A
- * group's `error` does not catch that group's own layouts; recovery
- * starts at the parent. Document recovery walks the chain and wraps
- * error JSX in remaining layouts. Fragment recovery only tries the
- * current boundary's `error`.
- *
- * Pass `{ thrown }` to recover a handler throw from `boundary` without
- * wrapping a page.
+ * Wraps `page` in each group's layouts, innermost first. A group's
+ * `error` does not catch that group's own layouts; the throw carries
+ * the parent boundary.
  */
-export async function renderWithRecovery<
-  State extends Record<string, unknown> = Record<string, unknown>,
->(
-  page: Element | CachedElement | StatusElement | { thrown: unknown },
-  options: {
-    ctx: Ctx<Record<string, string>, State>;
-    boundary?: GroupBoundary<State>;
-  },
-): Promise<RenderResult> {
-  // Element is a String object at runtime, so `typeof` is `"object"`.
-  if (
-    typeof page === "object" && "thrown" in page &&
-    !isCachedElement(page) && !isStatusElement(page)
-  ) {
-    return await recover(page.thrown, options.boundary, options.ctx);
-  }
-  const unwrapped = unwrapRenderPage(page);
-  const cache = unwrapped.cache;
-  const rendered = unwrapped.page;
-  const wrapped = await wrapBoundaries(rendered, options.ctx, options.boundary);
-  if (wrapped.ok) {
-    return {
-      kind: RenderKind.Page,
-      page: wrapped.page,
-      cache,
-    };
-  }
-  return await recover(wrapped.thrown, wrapped.parent, options.ctx);
-}
-
-async function wrapBoundaries<
-  State extends Record<string, unknown>,
->(
+export async function walkLayouts(
   page: Element,
-  ctx: Ctx<Record<string, string>, State>,
-  boundary: GroupBoundary<State> | undefined,
-): Promise<
-  | { ok: true; page: Element }
-  | { ok: false; thrown: unknown; parent?: GroupBoundary<State> }
-> {
-  if (ctx.isFragment) {
-    return { ok: true, page };
-  }
+  ctx: Ctx<Record<string, string>, Record<string, unknown>>,
+  boundary: GroupBoundary<Record<string, unknown>> | undefined,
+): Promise<Element> {
   let rendered = page;
   for (let current = boundary; current; current = current.parent) {
     try {
       let wrapped = rendered;
       for (let i = current.layouts.length - 1; i >= 0; i--) {
-        const out = await current.layouts[i]!(ctx, wrapped);
-        wrapped = unwrapRenderPage(out).page;
+        wrapped = await current.layouts[i]!(ctx, wrapped);
       }
       rendered = wrapped;
     } catch (thrown) {
-      return { ok: false, thrown, parent: current.parent };
+      throw new LayoutWalkError(thrown, current.parent);
     }
   }
-  return { ok: true, page: rendered };
-}
-
-async function recover<
-  State extends Record<string, unknown>,
->(
-  thrown: unknown,
-  boundary: GroupBoundary<State> | undefined,
-  ctx: Ctx<Record<string, string>, State>,
-): Promise<RenderResult> {
-  Logger.error(["ssr"], "render recovering from", thrown);
-
-  if (ctx.isFragment) {
-    try {
-      if (!boundary?.error) {
-        return { kind: RenderKind.Exhausted };
-      }
-      const errorResult = await boundary.error(ctx, thrown);
-      if (errorResult instanceof Response) {
-        return { kind: RenderKind.Response, response: errorResult };
-      }
-      const recovered = unwrapRenderPage(errorResult);
-      return {
-        kind: RenderKind.Recovered,
-        page: recovered.page,
-        cache: recovered.cache,
-      };
-    } catch (nextThrown) {
-      Logger.error(["ssr"], "render recovering from", nextThrown);
-      return { kind: RenderKind.Exhausted };
-    }
-  }
-
-  for (
-    let current = boundary;
-    current;
-    current = current.parent
-  ) {
-    if (!current.error) {
-      continue;
-    }
-    let errorResult: Element | CachedElement | Response;
-    try {
-      errorResult = await current.error(ctx, thrown);
-    } catch (nextThrown) {
-      thrown = nextThrown;
-      Logger.error(["ssr"], "render recovering from", thrown);
-      continue;
-    }
-    if (errorResult instanceof Response) {
-      return { kind: RenderKind.Response, response: errorResult };
-    }
-
-    const recovered = unwrapRenderPage(errorResult);
-    const cache = recovered.cache;
-    const page = recovered.page;
-    const wrapped = await wrapBoundaries(page, ctx, current);
-    if (wrapped.ok) {
-      return {
-        kind: RenderKind.Recovered,
-        page: wrapped.page,
-        cache,
-      };
-    }
-    return await recover(wrapped.thrown, wrapped.parent, ctx);
-  }
-
-  return { kind: RenderKind.Exhausted };
+  return rendered;
 }
 
 export function getFragmentSlot(src: string) {

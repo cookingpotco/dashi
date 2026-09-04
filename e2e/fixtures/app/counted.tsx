@@ -1,8 +1,10 @@
+import { type Ctx, type Html } from "dashi";
+
 let hits = 0;
 
-export function Counted() {
+export function Counted(_ctx: Ctx, html: Html) {
   hits += 1;
-  return <p id="counted">counted</p>;
+  return html(<p id="counted">counted</p>);
 }
 
 export function countedHitCount(): number {

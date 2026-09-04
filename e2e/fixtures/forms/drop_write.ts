@@ -3,8 +3,7 @@ export function dropWriteHandler() {
     new ReadableStream({
       start(controller) {
         // After the Response leaves the handler. A sync stream error becomes
-        // a rendered 500; a 2xx text/html write is rejected before the body
-        // is streamed.
+        // a rendered 500.
         queueMicrotask(() => {
           controller.enqueue(new TextEncoder().encode("x"));
           controller.error(new Error("drop-write"));

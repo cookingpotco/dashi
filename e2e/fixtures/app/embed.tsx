@@ -1,7 +1,7 @@
-import { RouteFragment } from "dashi";
+import { type Ctx, type Html, RouteFragment } from "dashi";
 
-export function Embed() {
-  return (
+export function Embed(_ctx: Ctx, html: Html) {
+  return html(
     <div>
       <RouteFragment src="/eager" />
       <RouteFragment
@@ -9,6 +9,6 @@ export function Embed() {
         lazy
         fallback={<span id="lazy-fallback">Loading...</span>}
       />
-    </div>
+    </div>,
   );
 }

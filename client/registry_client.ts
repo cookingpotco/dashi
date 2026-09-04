@@ -73,7 +73,7 @@ export async function submitWrite(intent: SubmitIntent): Promise<boolean> {
       }
       await Promise.all(pending);
       if (patches(html)) {
-        return true;
+        return res.ok;
       }
     }
     location.assign(res.url);

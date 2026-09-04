@@ -1,4 +1,4 @@
-import { RouteFragment } from "dashi";
+import { type Ctx, type Html, RouteFragment } from "dashi";
 
 function fetchData() {
   return new Promise<{ hello: number }>((resolve) =>
@@ -10,10 +10,10 @@ const TestComponent = ({ text }: { text: string }) => {
   return <footer>Test Footer {text} 2</footer>;
 };
 
-export async function Home() {
+export async function Home(_ctx: Ctx, html: Html) {
   const { hello } = await fetchData();
 
-  return (
+  return html(
     <main>
       <h1>
         Random number: {hello.toFixed(2)}
@@ -33,6 +33,6 @@ export async function Home() {
         lazy
         fallback={<span id={`123`}>Loading...</span>}
       />
-    </main>
+    </main>,
   );
 }

@@ -7,7 +7,7 @@ type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends
   (<T>() => T extends B ? 1 : 2) ? true : false;
 type Expect<T extends true> = T;
 
-const noop = () => "" as Element;
+const noop = () => new Response();
 const get = { GET: noop };
 
 function typechecks() {
@@ -41,7 +41,7 @@ function typechecks() {
         ctx.params.id;
         // @ts-expect-error only declared params exist
         ctx.params.slug;
-        return "" as Element;
+        return new Response();
       },
     });
 
@@ -96,7 +96,7 @@ function typechecks() {
         GET: (ctx) => {
           ctx.params.field;
           ctx.state.user;
-          return "" as Element;
+          return new Response();
         },
       }),
     ],
@@ -110,7 +110,7 @@ function typechecks() {
           route("/edit", {
             GET: (ctx) => {
               ctx.params.postId;
-              return "" as Element;
+              return new Response();
             },
           }),
         ],
@@ -161,13 +161,13 @@ Deno.test("ParamsOf infers params from path literals", () => {
 });
 
 Deno.test("match ranks routes and extracts params", () => {
-  const postsNew = () => "" as Element;
-  const postsId = () => "" as Element;
-  const postsRest = () => "" as Element;
-  const optional = () => "" as Element;
-  const files = () => "" as Element;
-  const firstTie = () => "" as Element;
-  const secondTie = () => "" as Element;
+  const postsNew = () => new Response();
+  const postsId = () => new Response();
+  const postsRest = () => new Response();
+  const optional = () => new Response();
+  const files = () => new Response();
+  const firstTie = () => new Response();
+  const secondTie = () => new Response();
 
   const compiled = compile(group(({ route }) => ({
     routes: [
@@ -313,11 +313,11 @@ Deno.test("compile inherits wraps outermost-first and preserves declaration orde
   const nestedLayout = () => "" as Element;
   const rootMw: Middleware = (_ctx, next) => next();
   const nestedMw: Middleware = (_ctx, next) => next();
-  const home = () => "" as Element;
-  const nested = () => "" as Element;
-  const secret = () => "" as Element;
-  const postsNew = () => "" as Element;
-  const postsId = () => "" as Element;
+  const home = () => new Response();
+  const nested = () => new Response();
+  const secret = () => new Response();
+  const postsNew = () => new Response();
+  const postsId = () => new Response();
 
   const compiled = compile(group(({ route }) => ({
     layouts: [rootLayout],
@@ -376,9 +376,9 @@ Deno.test("compile inherits wraps outermost-first and preserves declaration orde
 });
 
 Deno.test("compile keeps per-group error on the boundary chain", () => {
-  const rootError = () => "" as Element;
-  const nestedError = () => "" as Element;
-  const page = () => "" as Element;
+  const rootError = () => new Response();
+  const nestedError = () => new Response();
+  const page = () => new Response();
 
   const compiled = compile(group(() => ({
     error: rootError,
@@ -397,7 +397,7 @@ Deno.test("compile keeps per-group error on the boundary chain", () => {
 });
 
 Deno.test("GET+POST share one path; empty map throws", () => {
-  const list = () => "" as Element;
+  const list = () => new Response();
   const add = () => new Response();
   const compiled = compile(group(({ route }) => ({
     routes: [
@@ -416,7 +416,7 @@ Deno.test("GET+POST share one path; empty map throws", () => {
 });
 
 Deno.test("compile matches joined paths from a prefixed group", () => {
-  const index = () => "" as Element;
+  const index = () => new Response();
   const field = () => new Response();
   const compiled = compile(group(() => ({
     routes: [

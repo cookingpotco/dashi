@@ -1,11 +1,11 @@
-import { type Ctx } from "dashi";
+import { type Ctx, type Html } from "dashi";
 import { recordWrite } from "./writes.ts";
 
-export function SlowWrite() {
-  return (
+export function SlowWrite(_ctx: Ctx, html: Html) {
+  return html(
     <form id="slow-form" method="POST" action="/slow-write">
       <button id="slow-submit" type="submit">Slow</button>
-    </form>
+    </form>,
   );
 }
 

@@ -1,7 +1,6 @@
-import type { CachedElement } from "../caching/mod.ts";
+import type { CacheConfig } from "../caching/mod.ts";
 import type { Patch } from "../patching/mod.ts";
 import type { Element } from "../jsx-runtime/mod.ts";
-import type { StatusElement } from "../status/mod.ts";
 
 /**
  * Per-invocation request context. Mutate `state` in place; do not
@@ -47,10 +46,45 @@ export type LayoutCtx<
 };
 
 /**
- * Route function. A returned `Response` is sent as-is: no layouts,
- * DOCTYPE, or fragment splice. `cached()` attaches a cache policy to an
- * Element return. `status()` sets the document HTTP status on the JSX
- * path; layouts still wrap.
+ * Seal-time framework options for `html()` and `patches()`. Other
+ * headers: mutate the returned `Response`. A raw `Cache-Control`
+ * header is not a twin of `cache`.
+ */
+export interface SealOptions {
+  /** Document or patch HTTP status. Omitted uses the call site default. */
+  status?: number;
+  /** Cache policy. Omitted is no-store, plus `Vary: x-fragment`. */
+  cache?: CacheConfig;
+}
+
+/**
+ * Bound HTML sealer. Walks layouts on a document hit, then seals bytes
+ * once. Fragments skip layouts. Default status depends on the call
+ * site (GET 200, `notFound` 404, `error` / `fatal` 500).
+ */
+export type Html = (
+  page: Element,
+  opts?: SealOptions,
+) => Response | Promise<Response>;
+
+/**
+ * Bound patch sealer. Never walks layouts. Default status 200.
+ */
+export type Patches = (
+  list: readonly Patch[],
+  opts?: SealOptions,
+) => Response | Promise<Response>;
+
+/**
+ * Last-resort 500. No layouts, no `ctx`, no `thrown`. Omitted: text 500.
+ */
+export type Fatal = (html: Html) => Response | Promise<Response>;
+
+/**
+ * Route function. Always returns a `Response`. Call `html()` to seal
+ * document or fragment markup (layouts, DOCTYPE, fragment splice,
+ * default cache headers). A raw `Response` is sent as-is: no layouts,
+ * DOCTYPE, or fragment splice.
  *
  * Only the router calls a handler. A direct call skips the target's
  * middleware and error boundary and leaves it reading the caller's
@@ -63,17 +97,14 @@ export type Handler<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
   ctx: Ctx<Params, State>,
-) =>
-  | Element
-  | CachedElement
-  | StatusElement
-  | Response
-  | Promise<Element | CachedElement | StatusElement | Response>;
+  html: Html,
+) => Response | Promise<Response>;
 
 /**
- * Group error UI. `thrown` is the raw value. A returned `Response` is
- * sent as-is; `Element` is wrapped in remaining parent layouts (skipped
- * on fragment hits). `cached()` attaches a cache policy.
+ * Group error UI. `thrown` is the raw value. Call `html()` to seal
+ * markup (remaining layouts from this boundary; fragments: this
+ * group's `error` only). A raw `Response` is sent as-is. Default
+ * status 500.
  */
 /** @internal */
 export type ErrorHandler<
@@ -81,11 +112,8 @@ export type ErrorHandler<
 > = (
   ctx: WrapperCtx<State>,
   thrown: unknown,
-) =>
-  | Element
-  | CachedElement
-  | Response
-  | Promise<Element | CachedElement | Response>;
+  html: Html,
+) => Response | Promise<Response>;
 
 /**
  * Methods the router advertises. GET also answers HEAD; every matched
@@ -106,8 +134,8 @@ export const METHODS = [
 export type Method = typeof METHODS[number];
 
 /**
- * POST/PUT/PATCH/DELETE. Return patches (no layouts, no DOCTYPE) or
- * a Response. A 2xx `text/html` Response is rejected.
+ * POST/PUT/PATCH/DELETE. Call `patches()` to seal a patch list, or
+ * return a raw `Response`. Patches never walk layouts.
  */
 /** @internal */
 export type WriteHandler<
@@ -115,10 +143,8 @@ export type WriteHandler<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
   ctx: Ctx<Params, State>,
-) =>
-  | Response
-  | Patch[]
-  | Promise<Response | Patch[]>;
+  patches: Patches,
+) => Response | Promise<Response>;
 
 type HandlerMethod = Exclude<Method, "HEAD" | "OPTIONS">;
 
@@ -136,8 +162,8 @@ type RequireAtLeastOne<T> = {
 
 /**
  * Per-method handlers on a route. At least one method is required. GET
- * returns a page or fragment body. Writes return a list of patches, or
- * a Response.
+ * seals a page or fragment with `html()`. Writes seal patches with
+ * `patches()`, or return a Response.
  *
  * @internal
  */

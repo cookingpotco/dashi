@@ -397,6 +397,32 @@ Deno.test("forms fixture", async (t) => {
       );
 
       await t.step(
+        "4xx patches apply and keep field values",
+        async () => {
+          await prepareHosted(page, app.origin, "/entries");
+          await typeField(page, "#reject-title", "keep-me");
+          await clickId(page, "reject-submit");
+          await waitForText(page, "reject-status", "rejected");
+          const result = await page.evaluate(() => {
+            const title = document.getElementById("reject-title");
+            return {
+              survived: Reflect.get(globalThis, "__dashiDoc") === true,
+              heading: document.getElementById("heading")?.textContent ?? null,
+              status: document.getElementById("reject-status")?.textContent ??
+                null,
+              title: title instanceof HTMLInputElement ? title.value : null,
+              url: location.pathname,
+            };
+          });
+          assertEquals(result.survived, true);
+          assertEquals(result.heading, "entries");
+          assertEquals(result.status, "rejected");
+          assertEquals(result.title, "keep-me");
+          assertEquals(result.url, "/entries");
+        },
+      );
+
+      await t.step(
         "a non-HTML write response does a real GET load of the final URL",
         async () => {
           await prepareHosted(page, app.origin, "/entries");

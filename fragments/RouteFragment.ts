@@ -141,7 +141,10 @@ function requestEagerFragment(src: string, timeoutMs: number): string {
         recoverMiss: false,
         timeoutMs,
       });
-      return out?.html ?? null;
+      if (!out) {
+        return null;
+      }
+      return await out.text();
     } catch (thrown) {
       Logger.error(["fragments"], "eager fragment failed", thrown);
       return null;
