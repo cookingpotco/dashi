@@ -12,12 +12,14 @@ import { dropWriteHandler } from "../drop_write.ts";
 import { FragPage } from "../frag_page/mod.tsx";
 import { list as listFrag, update as updateFrag } from "../frag.tsx";
 import { leave, list as listFragLeave } from "../frag_leave.tsx";
+import { rejectWrite } from "../reject_write.tsx";
 
 export const chrome = group(({ route }) => ({
   layouts: [RootLayout],
   error: ErrorPage,
   routes: [
     route("/entries", { GET: listEntries, POST: write }),
+    route("/reject-write", { POST: rejectWrite }),
     route("/entries-form", { GET: listEntriesForm }),
     route("/search", { GET: Search }),
     route("/slow-write", { GET: SlowWrite, POST: postSlow }),

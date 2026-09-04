@@ -1,4 +1,4 @@
-import { group } from "dashi";
+import { type Ctx, group, type SealHtml } from "dashi";
 import { NestedLayout } from "./nested_layout.tsx";
 
 export const nested = group("/nested", ({ route }) => ({
@@ -6,10 +6,10 @@ export const nested = group("/nested", ({ route }) => ({
   routes: [route("/", { GET: Nested })],
 }));
 
-function Nested() {
-  return (
+function Nested(_ctx: Ctx, html: SealHtml) {
+  return html(
     <div>
       <code>nested</code>
-    </div>
+    </div>,
   );
 }

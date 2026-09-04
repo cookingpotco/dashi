@@ -1,9 +1,9 @@
-import { type Ctx } from "dashi";
+import { type Ctx, type SealHtml } from "dashi";
 
 const entries: string[] = [];
 
-export function list() {
-  return (
+export function list(_ctx: Ctx, html: SealHtml) {
+  return html(
     <div>
       <h2>Guestbook</h2>
       <ul>
@@ -13,7 +13,7 @@ export function list() {
         <input name="body" />
         <button type="submit">Add</button>
       </form>
-    </div>
+    </div>,
   );
 }
 

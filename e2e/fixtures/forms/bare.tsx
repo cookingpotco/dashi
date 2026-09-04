@@ -1,13 +1,13 @@
-import { type Ctx } from "dashi";
+import { type Ctx, type SealHtml } from "dashi";
 
-export function Bare() {
-  return (
+export function Bare(_ctx: Ctx, html: SealHtml) {
+  return html(
     <div>
       <h1 id="heading">bare</h1>
       <form id="bare-form" method="POST" action="/bare">
         <button id="bare-submit" type="submit">Go</button>
       </form>
-    </div>
+    </div>,
   );
 }
 

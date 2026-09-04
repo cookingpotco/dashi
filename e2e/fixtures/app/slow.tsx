@@ -1,4 +1,6 @@
-export async function Slow() {
+import { type Ctx, type SealHtml } from "dashi";
+
+export async function Slow(_ctx: Ctx, html: SealHtml) {
   await new Promise((resolve) => setTimeout(resolve, 2000));
-  return <p id="slow-body">slow-body</p>;
+  return html(<p id="slow-body">slow-body</p>);
 }

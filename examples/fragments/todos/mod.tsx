@@ -1,4 +1,4 @@
-import { type Ctx, group, patch } from "dashi";
+import { type Ctx, group, patch, type SealHtml, type SealPatches } from "dashi";
 import { todos as items } from "../todos.ts";
 
 export const todos = group("/todos", ({ route }) => ({
@@ -23,26 +23,28 @@ function TodoList({ error }: { error?: string }) {
   );
 }
 
-function list() {
-  return <TodoList />;
+function list(_ctx: Ctx, html: SealHtml) {
+  return html(<TodoList />);
 }
 
-function count() {
-  return <span id="todo-count">{items.length}</span>;
+function count(_ctx: Ctx, html: SealHtml) {
+  return html(<span id="todo-count">{items.length}</span>);
 }
 
-async function create(ctx: Ctx) {
+async function create(ctx: Ctx, patches: SealPatches) {
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
-    return [patch.replace("/todos", <TodoList error="title is required" />)];
+    return patches([
+      patch.replace("/todos", <TodoList error="title is required" />),
+    ]);
   }
   items.push(title);
-  return [
+  return patches([
     patch.append("#todos", <li>{title}</li>),
     patch.replace(
       "/todos/count",
       <span id="todo-count">{items.length}</span>,
     ),
     patch.refresh("/time"),
-  ];
+  ]);
 }

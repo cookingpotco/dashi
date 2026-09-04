@@ -1,8 +1,10 @@
+import { type Ctx, type SealHtml } from "dashi";
+
 let hits = 0;
 
-export function Counted() {
+export function Counted(_ctx: Ctx, html: SealHtml) {
   hits += 1;
-  return <p id="counted">counted</p>;
+  return html(<p id="counted">counted</p>);
 }
 
 export function countedHitCount(): number {

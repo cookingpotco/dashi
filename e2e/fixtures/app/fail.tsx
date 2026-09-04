@@ -1,11 +1,11 @@
-import { RouteFragment } from "dashi";
+import { type Ctx, RouteFragment, type SealHtml } from "dashi";
 
-export function Fail() {
-  return (
+export function Fail(_ctx: Ctx, html: SealHtml) {
+  return html(
     <RouteFragment
       src="/fail-frag"
       lazy
       fallback={<span id="fail-fallback">Loading fail...</span>}
-    />
+    />,
   );
 }

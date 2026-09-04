@@ -381,20 +381,39 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
-    name: "write handler 2xx text/html Response is rejected",
+    name: "write handler raw 2xx text/html Response is sent as-is",
     request: {
       method: "POST",
       path: "/write-html",
     },
-    status: 500,
+    status: 200,
+    headers: { "content-type": "text/html" },
+    bodyExact: "<p>nope</p>",
     html: {
+      bodyExcludes: ["<!DOCTYPE html>", "Website Title"],
+    },
+  },
+  {
+    name: "write patches() status 422 is HTML patches without doctype",
+    request: {
+      method: "POST",
+      path: "/patches-unprocessable",
+    },
+    status: 422,
+    headers: { "content-type": "text/html" },
+    html: {
+      bodyExcludes: ["<!DOCTYPE html>"],
       select: [
-        { selector: "html > body > #root-error", text: "root-error" },
+        {
+          selector: 'dashi-patch[kind="replace"]',
+          text: "invalid",
+          attr: { target: "#status" },
+        },
       ],
     },
   },
   {
-    name: "handler status(404) document wraps in layouts",
+    name: "handler html() status 404 document wraps in layouts",
     request: { path: "/status-not-found" },
     status: 404,
     headers: { "content-type": "text/html", "x-mw": "ok" },
@@ -409,7 +428,7 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
-    name: "handler status(401) document wraps in layouts",
+    name: "handler html() status 401 document wraps in layouts",
     request: { path: "/status-unauthorized" },
     status: 401,
     headers: { "content-type": "text/html", "x-mw": "ok" },
@@ -422,7 +441,7 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
-    name: "handler status(404, cached()) sets Cache-Control",
+    name: "handler html() status 404 with cache opts sets Cache-Control",
     request: { path: "/status-cached" },
     status: 404,
     headers: {
@@ -456,7 +475,7 @@ const appCases: IntegrationTestCase[] = [
     bodyExact: "raw-404",
   },
   {
-    name: "fragment status(403) is a 403 partial",
+    name: "fragment html() status 403 is a 403 partial",
     request: {
       path: "/status-forbidden",
       headers: { "x-fragment": "1" },
@@ -486,6 +505,19 @@ const appCases: IntegrationTestCase[] = [
         { selector: "#nested-error-wrap", exists: false },
         { selector: "#api-wrap", exists: false },
         { selector: "#api-not-found", exists: false },
+      ],
+    },
+  },
+  {
+    name: "notFound html() status 410 wraps in layouts",
+    request: { path: "/not-found-gone" },
+    status: 410,
+    headers: { "content-type": "text/html", "x-mw": "ok" },
+    html: {
+      bodyIncludes: ["<!DOCTYPE html>"],
+      select: [
+        { selector: "html > body > h1", text: "Website Title" },
+        { selector: "html > body > #gone", text: "gone" },
       ],
     },
   },
@@ -923,17 +955,17 @@ const appCases: IntegrationTestCase[] = [
   },
   {
     name: "plain Element under a layout is no-store",
-    request: { path: "/cache-from-layout" },
+    request: { path: "/cache-default" },
     status: 200,
     headers: {
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
     },
     html: {
-      select: [{ selector: "#cache-from-layout", text: "from-handler" }],
+      select: [{ selector: "#cache-default", text: "from-handler" }],
     },
   },
   {
-    name: "handler cached() applies under a layout wrapper",
+    name: "handler html() cache opts apply under a layout wrapper",
     request: { path: "/cache-override" },
     status: 200,
     headers: { "cache-control": "public, max-age=60" },
@@ -1013,7 +1045,7 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
-    name: "notFound cached() sets Cache-Control",
+    name: "notFound html() cache opts set Cache-Control",
     request: { path: "/cache-boundary/nope" },
     status: 404,
     headers: {
@@ -1134,6 +1166,20 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     stillServes: true,
   },
   {
+    name: "error html() status 503 wraps in layouts",
+    request: { path: "/throw-503" },
+    status: 503,
+    headers: { "content-type": "text/html", "x-mw": "ok" },
+    html: {
+      bodyIncludes: ["<!DOCTYPE html>"],
+      select: [
+        { selector: "html > body > h1", text: "Website Title" },
+        { selector: "html > body > #error-503", text: "unavailable" },
+      ],
+    },
+    stillServes: true,
+  },
+  {
     name: "error handler Element is no-store",
     request: { path: "/throw" },
     status: 500,
@@ -1143,7 +1189,7 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     stillServes: true,
   },
   {
-    name: "error cached() sets Cache-Control",
+    name: "error html() cache opts set Cache-Control",
     request: { path: "/cache-boundary/throw" },
     status: 500,
     headers: {

@@ -1,12 +1,15 @@
-import { cached, CacheStrategy } from "dashi";
+import { CacheStrategy, type Ctx, type SealHtml } from "dashi";
+import type { AppState } from "./state.ts";
 
-export function CachePrivateCookie() {
-  return cached(
-    <p id="cache-private-cookie">cached-private-cookie</p>,
-    {
+export function CachePrivateCookie(
+  _ctx: Ctx<Record<string, never>, AppState>,
+  html: SealHtml,
+) {
+  return html(<p id="cache-private-cookie">cached-private-cookie</p>, {
+    cache: {
       strategy: CacheStrategy.Private,
       maxAge: 60,
       varyHeaders: ["Cookie"],
     },
-  );
+  });
 }

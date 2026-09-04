@@ -1,5 +1,9 @@
-import { RouteFragment } from "dashi";
+import { type Ctx, RouteFragment, type SealHtml } from "dashi";
+import type { AppState } from "./state.ts";
 
-export function LazyNest() {
-  return <RouteFragment src="/nest-inner" />;
+export function LazyNest(
+  _ctx: Ctx<Record<string, never>, AppState>,
+  html: SealHtml,
+) {
+  return html(<RouteFragment src="/nest-inner" />);
 }

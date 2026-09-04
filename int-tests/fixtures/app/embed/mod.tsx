@@ -1,4 +1,10 @@
-import { group, RouteFragment, type WrapperCtx } from "dashi";
+import {
+  type Ctx,
+  group,
+  RouteFragment,
+  type SealHtml,
+  type WrapperCtx,
+} from "dashi";
 import type { AppState } from "../state.ts";
 
 function embedOnly(ctx: WrapperCtx<AppState>, next: () => Promise<Response>) {
@@ -11,8 +17,8 @@ export const embed = group<AppState>(({ route }) => ({
   routes: [route("/embed", { GET: Embed })],
 }));
 
-function Embed() {
-  return (
+function Embed(_ctx: Ctx<Record<string, never>, AppState>, html: SealHtml) {
+  return html(
     <div>
       <section id="eager">
         <RouteFragment src="/fragment" />
@@ -25,6 +31,6 @@ function Embed() {
           fallback={<span id="fallback">Loading...</span>}
         />
       </section>
-    </div>
+    </div>,
   );
 }

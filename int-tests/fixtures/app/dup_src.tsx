@@ -1,7 +1,11 @@
-import { RouteFragment } from "dashi";
+import { type Ctx, RouteFragment, type SealHtml } from "dashi";
+import type { AppState } from "./state.ts";
 
-export function DupSrc() {
-  return (
+export function DupSrc(
+  _ctx: Ctx<Record<string, never>, AppState>,
+  html: SealHtml,
+) {
+  return html(
     <div id="dup-src">
       <div id="dup-a">
         <RouteFragment src="/nest-inner" />
@@ -15,6 +19,6 @@ export function DupSrc() {
       <div id="dup-d">
         <RouteFragment src="/nest-inner?" />
       </div>
-    </div>
+    </div>,
   );
 }

@@ -1,8 +1,16 @@
-import { NavigationRoot } from "dashi";
-import type { Element } from "dashi/jsx-runtime";
+import {
+  type Ctx,
+  NavigationRoot,
+  type SealHtml,
+  type WrapperCtx,
+} from "dashi";
+import type { AppState } from "./state.ts";
 
-export function NotFound(): Element {
-  return (
+export function NotFound(
+  _ctx: Ctx<Record<string, string>, AppState>,
+  html: SealHtml,
+) {
+  return html(
     <html>
       <head>
         <title>not found</title>
@@ -11,16 +19,22 @@ export function NotFound(): Element {
       <NavigationRoot>
         <p id="heading">not found</p>
       </NavigationRoot>
-    </html>
+    </html>,
   );
 }
 
-export function ErrorPage(): Element {
-  return <p id="heading">error</p>;
+export function ErrorPage(
+  _ctx: WrapperCtx<AppState>,
+  _thrown: unknown,
+  html: SealHtml,
+) {
+  return html(<p id="heading">error</p>);
 }
 
-export const fatal = (
-  <html>
-    <body>Something went wrong</body>
-  </html>
-);
+export function fatal(html: SealHtml) {
+  return html(
+    <html>
+      <body>Something went wrong</body>
+    </html>,
+  );
+}

@@ -1,4 +1,4 @@
-import { serve, type WrapperCtx } from "dashi";
+import { type Ctx, type SealHtml, serve, type WrapperCtx } from "dashi";
 import type { Element } from "dashi/jsx-runtime";
 
 async function logger(_ctx: WrapperCtx, next: () => Promise<Response>) {
@@ -19,16 +19,16 @@ function rootLayout(ctx: WrapperCtx, children: Element): Element {
   );
 }
 
-function home(): Element {
-  return <p id="home">home</p>;
+function home(_ctx: Ctx, html: SealHtml) {
+  return html(<p id="home">home</p>);
 }
 
-function boom(): Element {
+function boom(): never {
   throw new Error("handler-boom");
 }
 
-function okPage(): Element {
-  return <p id="ok-page">ok</p>;
+function okPage(_ctx: Ctx, html: SealHtml) {
+  return html(<p id="ok-page">ok</p>);
 }
 
 export function start() {

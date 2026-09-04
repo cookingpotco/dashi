@@ -1,5 +1,4 @@
 import { compileClient } from "../client/mod.ts";
-import type { Element } from "../jsx-runtime/mod.ts";
 import { Logger } from "../logging/mod.ts";
 import {
   type GroupCallback,
@@ -7,6 +6,7 @@ import {
   handle,
   init,
 } from "../routing/mod.ts";
+import type { SealHtml } from "../shared/mod.ts";
 import { bindUrls, grantedNetworkInterfaces } from "./bind_urls.ts";
 
 /**
@@ -39,7 +39,7 @@ import { bindUrls, grantedNetworkInterfaces } from "./bind_urls.ts";
  * import { serve } from "dashi";
  *
  * serve(({ route }) => ({
- *   routes: [route("/", { GET: () => <h1>Hi</h1> })],
+ *   routes: [route("/", { GET: (_ctx, html) => html(<h1>Hi</h1>) })],
  * }));
  * ```
  */
@@ -49,12 +49,12 @@ export async function serve<
   build: (cb: GroupCallback<"", State>) => GroupFields<State>,
   options?: Omit<Deno.ServeTcpOptions & Deno.ServeInit, "handler"> & {
     /**
-     * Last-resort 500 value: no layouts, no `ctx`, no `thrown`.
-     * `Element` becomes 500 HTML with DOCTYPE; `Response` is sent
-     * as-is. Omitted: `new Response("Something Went Wrong", {
+     * Last-resort 500: no layouts, no `ctx`, no `thrown`. Call
+     * `html()` to seal 500 HTML with DOCTYPE; a raw `Response` is
+     * sent as-is. Omitted: `new Response("Something Went Wrong", {
      * status: 500 })`.
      */
-    fatal?: Element | Response;
+    fatal?: (html: SealHtml) => Response | Promise<Response>;
     /**
      * Max eager include chain length. Omitted is 5. A longer chain
      * fails the request.

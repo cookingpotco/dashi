@@ -1,5 +1,3 @@
-import type { Element } from "../jsx-runtime/mod.ts";
-
 /** Predefined strategies translated later to Cache-Control headers - for CDN and browser use */
 export const enum CacheStrategy {
   /** `public, max-age=31536000, immutable` */
@@ -53,39 +51,6 @@ export type CacheConfig =
   | PublicCacheConfig
   | PrivateCacheConfig
   | NoStoreCacheConfig;
-
-/** @internal */
-const cachedBrand: unique symbol = Symbol("dashi.cached");
-
-/** Markup with a cache policy attached by `cached()`. */
-export interface CachedElement {
-  /** @internal */
-  readonly [cachedBrand]: true;
-  /** Rendered page body. */
-  readonly page: Element;
-  /** How this resource should be cached. */
-  readonly cache: CacheConfig;
-}
-
-/**
- * Attach a cache policy to a handler, `notFound`, or error return.
- * Without one, the response is no-store.
- *
- * @param page Markup to cache.
- * @param cache How this resource should be cached.
- *
- * @example
- * ```ts
- * return cached(<div>page</div>, { strategy: CacheStrategy.Public, maxAge: 60 });
- * ```
- */
-export function cached(page: Element, cache: CacheConfig): CachedElement {
-  return { [cachedBrand]: true, page, cache };
-}
-
-export function isCachedElement(value: unknown): value is CachedElement {
-  return typeof value === "object" && value !== null && cachedBrand in value;
-}
 
 /** Cache-Control value for a `CacheConfig`. */
 export function cacheControl(cache: CacheConfig): string {

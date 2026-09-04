@@ -4,7 +4,7 @@ import { Home } from "./home.tsx";
 import { RootLayout } from "./root_layout.tsx";
 import { root } from "./root_middleware.ts";
 import { Echo } from "./echo.tsx";
-import { post as postPatches } from "./patches.tsx";
+import { post as postPatches, postUnprocessable } from "./patches.tsx";
 import { postHtml } from "./write_html.ts";
 import { NestEmbed } from "./nest_embed.tsx";
 import { NestInner } from "./nest_inner.tsx";
@@ -33,9 +33,9 @@ import { CacheEmbed } from "./cache_embed.tsx";
 import { CachePublicCookie } from "./cache_public_cookie.tsx";
 import { CachePublicStar } from "./cache_public_star.tsx";
 import { CachePrivateCookie } from "./cache_private_cookie.tsx";
-import { cachePublicLayout } from "./cache_public_layout/mod.tsx";
-import { cachePublicCookieLayout } from "./cache_public_cookie_layout/mod.tsx";
-import { cachePrivateLayout } from "./cache_private_layout/mod.tsx";
+import { cacheWrap } from "./cache_wrap/mod.tsx";
+import { cacheCookieWrap } from "./cache_cookie_wrap/mod.tsx";
+import { cacheOverrideWrap } from "./cache_override_wrap/mod.tsx";
 import { cacheBoundary } from "./cache_boundary/mod.tsx";
 import { cacheSession } from "./cache_session/mod.ts";
 import { cachePublicThenThrow } from "./cache_public_then_throw/mod.ts";
@@ -76,6 +76,7 @@ import {
   Slow,
   throwErrorHandlerBoom,
   throwHandler,
+  throwServiceUnavailable,
 } from "./errors.tsx";
 
 const staticDir = `${import.meta.dirname}/static`;
@@ -121,9 +122,9 @@ export function start() {
       route("/cache-private", { GET: CachePrivate }),
       route("/cache-private-cookie", { GET: CachePrivateCookie }),
       route("/cache-embed", { GET: CacheEmbed }),
-      cachePublicLayout,
-      cachePublicCookieLayout,
-      cachePrivateLayout,
+      cacheWrap,
+      cacheCookieWrap,
+      cacheOverrideWrap,
       cacheBoundary,
       cacheSession,
       cachePublicThenThrow,
@@ -142,6 +143,7 @@ export function start() {
       fragment,
       route("/peer", { GET: Peer }),
       route("/patches", { POST: postPatches }),
+      route("/patches-unprocessable", { POST: postUnprocessable }),
       route("/write-html", { POST: postHtml }),
       route("/posts/new", { GET: PostsNew }),
       route("/posts/:id", { GET: Post }),
@@ -164,6 +166,7 @@ export function start() {
       route("/static-missing-dir/:path*", { GET: missingDir }),
       gated,
       route("/throw", { GET: throwHandler }),
+      route("/throw-503", { GET: throwServiceUnavailable }),
       route("/root-layout-throws", { GET: okPage }),
       route("/root-error-throws", { GET: throwErrorHandlerBoom }),
       throwNoError,

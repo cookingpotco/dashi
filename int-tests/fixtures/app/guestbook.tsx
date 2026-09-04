@@ -1,10 +1,13 @@
-import type { Ctx } from "dashi";
+import type { Ctx, SealHtml } from "dashi";
 import type { AppState } from "./state.ts";
 
 const entries: string[] = [];
 
-export function list() {
-  return (
+export function list(
+  _ctx: Ctx<Record<string, never>, AppState>,
+  html: SealHtml,
+) {
+  return html(
     <div>
       <ul id="entries">
         {entries.map((entry) => <li>{entry}</li>)}
@@ -13,7 +16,7 @@ export function list() {
         <input name="body" />
         <button type="submit">Add</button>
       </form>
-    </div>
+    </div>,
   );
 }
 

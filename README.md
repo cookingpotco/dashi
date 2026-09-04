@@ -27,7 +27,7 @@ import { serve } from "dashi";
 serve(({ route }) => ({
   routes: [
     route("/", {
-      GET: () => <h1>Hello</h1>,
+      GET: (_ctx, html) => html(<h1>Hello</h1>),
     }),
   ],
 }));
@@ -38,15 +38,15 @@ serve(({ route }) => ({
 - **Route fragments.** Compose one route into another with
   `<RouteFragment src>`. Eager during SSR, `lazy` after connect, or
   `lazy="visible"` on first intersection, with `fallback` and `timeout`.
-- **Patches.** In response to form submissions or manual API calls, handlers can
-  return patches like `patch.replace` that target a specific fragment or element
-  on the page.
+- **Patches.** In response to form submissions or manual API calls, handlers
+  seal a patch list with `patches()` — `patch.replace` and friends target a
+  specific fragment or element on the page.
 - **Explicit route table.** Typed params from the path literal, and per-method
   handlers, in one `serve()` callback.
-- **Web standards.** Handlers read `ctx.req` as a `Request` and return JSX or a
-  `Response`. Client code uses native custom elements and plain DOM access.
-- **Per-route cache control.** Wrap a handler, `notFound`, or error return in
-  `cached()`.
+- **Web standards.** Handlers read `ctx.req` as a `Request` and return a
+  `Response`. HTML goes through `html()` or `patches()`. Client code uses native
+  custom elements and plain DOM access.
+- **Per-route cache control.** Pass `{ cache }` to `html()` or `patches()`.
 
 ## By design
 
@@ -73,7 +73,7 @@ Every config key a consumer needs, in one `deno.json`:
   },
   "unstable": ["bundle", "no-legacy-abort"],
   "imports": {
-    "dashi": "jsr:@cookingpot/dashi@^0.8.0"
+    "dashi": "jsr:@cookingpot/dashi@^0.10.0"
   }
 }
 ```
@@ -107,16 +107,23 @@ wait (5000 if omitted), and a timeout fails the include.
 ```
 
 ```tsx
-import { type Ctx, patch, RouteFragment, serve } from "dashi";
+import {
+  type Ctx,
+  patch,
+  RouteFragment,
+  type SealHtml,
+  type SealPatches,
+  serve,
+} from "dashi";
 
 const todos: string[] = [];
 
-function Home() {
-  return (
+function Home(_ctx: Ctx, html: SealHtml) {
+  return html(
     <html>
       <h1>Todos</h1>
       <RouteFragment src="/todos" lazy fallback={<p>Loading...</p>} />
-    </html>
+    </html>,
   );
 }
 
@@ -135,17 +142,19 @@ function TodoList({ error }: { error?: string }) {
   );
 }
 
-function list() {
-  return <TodoList />;
+function list(_ctx: Ctx, html: SealHtml) {
+  return html(<TodoList />);
 }
 
-async function create(ctx: Ctx) {
+async function create(ctx: Ctx, patches: SealPatches) {
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
-    return [patch.replace("/todos", <TodoList error="title is required" />)];
+    return patches([
+      patch.replace("/todos", <TodoList error="title is required" />),
+    ], { status: 422 });
   }
   todos.push(title);
-  return [patch.replace("/todos", <TodoList />)];
+  return patches([patch.replace("/todos", <TodoList />)]);
 }
 
 serve(({ route }) => ({
@@ -162,9 +171,9 @@ target: `/${string}` updates every `<RouteFragment>` rendering that `src`;
 `#${string}` updates that element. `refresh` accepts only a route. `before` /
 `after` sit beside the target; replacing the node itself is `before` or `after`
 then `remove`. Use `replace` when the write has the markup; use `refresh` when
-fragments should re-fetch themselves asynchronously. A write handler returns
-that list or a `Response` — not a document. The form can sit anywhere on the
-page.
+fragments should re-fetch themselves asynchronously. A write handler seals that
+list with `patches()`, or returns a non-HTML `Response` (redirect, JSON, 204,
+etc.). The form can sit anywhere on the page.
 
 ## Other features
 
@@ -185,7 +194,7 @@ runs for document hits and fragment hits.
 import { group } from "dashi";
 
 export const posts = group("/posts", ({ route }) => ({
-  routes: [route("/:id", { GET: (ctx) => <p>{ctx.params.id}</p> })],
+  routes: [route("/:id", { GET: (ctx, html) => html(<p>{ctx.params.id}</p>) })],
 }));
 ```
 

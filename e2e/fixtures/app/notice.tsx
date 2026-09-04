@@ -1,16 +1,16 @@
-import { patch } from "dashi";
+import { type Ctx, patch, type SealHtml, type SealPatches } from "dashi";
 
-export function list() {
-  return (
+export function list(_ctx: Ctx, html: SealHtml) {
+  return html(
     <div id="notice">
       <p>Notice</p>
       <form id="dismiss-form" method="POST" action="/notice">
         <button type="submit">Dismiss</button>
       </form>
-    </div>
+    </div>,
   );
 }
 
-export function dismiss() {
-  return [patch.remove("/notice")];
+export function dismiss(_ctx: Ctx, patches: SealPatches) {
+  return patches([patch.remove("/notice")]);
 }

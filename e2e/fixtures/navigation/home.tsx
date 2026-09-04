@@ -1,11 +1,14 @@
-import { type Ctx } from "dashi";
+import { type Ctx, type SealHtml } from "dashi";
 import type { AppState } from "./state.ts";
 import { GoAbout } from "./chrome/mod.tsx";
 
-export function Home(ctx: Ctx<Record<string, never>, AppState>) {
+export function Home(
+  ctx: Ctx<Record<string, never>, AppState>,
+  html: SealHtml,
+) {
   ctx.state.title = "home";
   ctx.state.stylesheet = "/home.css";
-  return (
+  return html(
     <div>
       <h1 id="heading">home</h1>
       <p>
@@ -21,6 +24,6 @@ export function Home(ctx: Ctx<Record<string, never>, AppState>) {
         <a id="to-cross" href="https://example.invalid/">Cross</a>
         <GoAbout id="go-about">Go about</GoAbout>
       </p>
-    </div>
+    </div>,
   );
 }

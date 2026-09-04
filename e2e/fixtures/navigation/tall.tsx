@@ -1,5 +1,11 @@
-export function Tall() {
-  return (
+import { type Ctx, type SealHtml } from "dashi";
+import type { AppState } from "./state.ts";
+
+export function Tall(
+  _ctx: Ctx<Record<string, never>, AppState>,
+  html: SealHtml,
+) {
+  return html(
     <div>
       <h1 id="heading">tall</h1>
       <a id="to-widget" href="/widget">Widget</a>
@@ -8,6 +14,6 @@ export function Tall() {
       <div style="height: 3000px"></div>
       <p id="marker">marker</p>
       <div style="height: 3000px"></div>
-    </div>
+    </div>,
   );
 }

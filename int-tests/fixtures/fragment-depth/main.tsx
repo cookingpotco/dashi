@@ -1,40 +1,45 @@
-import { RouteFragment, serve, type WrapperCtx } from "dashi";
-import type { Element } from "dashi/jsx-runtime";
+import {
+  type Ctx,
+  RouteFragment,
+  type SealHtml,
+  serve,
+  type WrapperCtx,
+} from "dashi";
 
-function faultError(_ctx: WrapperCtx, thrown: unknown): Element {
-  return (
+function faultError(_ctx: WrapperCtx, thrown: unknown, html: SealHtml) {
+  return html(
     <p id="fault">
       {thrown instanceof Error ? thrown.message : String(thrown)}
-    </p>
+    </p>,
   );
 }
 
-function two(): Element {
-  return <RouteFragment src="/outer" />;
+function two(_ctx: Ctx, html: SealHtml) {
+  return html(<RouteFragment src="/outer" />);
 }
 
-function three(): Element {
-  return <RouteFragment src="/a" />;
+function three(_ctx: Ctx, html: SealHtml) {
+  return html(<RouteFragment src="/a" />);
 }
 
-function outer(): Element {
-  return <RouteFragment src="/inner" />;
+function outer(_ctx: Ctx, html: SealHtml) {
+  return html(<RouteFragment src="/inner" />);
 }
 
-function inner(): Element {
-  return <p id="inner">inner</p>;
+function inner(_ctx: Ctx, html: SealHtml) {
+  return html(<p id="inner">inner</p>);
 }
 
-function a(): Element {
-  return <RouteFragment src="/b" />;
+function a(_ctx: Ctx, html: SealHtml) {
+  return html(<RouteFragment src="/b" />);
 }
 
-function b(): Element {
-  return <RouteFragment src="/c" />;
+function b(_ctx: Ctx, html: SealHtml) {
+  return html(<RouteFragment src="/c" />);
 }
 
-function c(): Element {
-  return <p id="c">c</p>;
+function c(_ctx: Ctx, html: SealHtml) {
+  return html(<p id="c">c</p>);
 }
 
 export function start() {

@@ -2,22 +2,24 @@ import {
   applyVaryHeaders,
   type CacheConfig,
   cacheControl,
-  type CachedElement,
   CacheStrategy,
   mergeVary,
 } from "../caching/mod.ts";
-import { isStatusElement, type StatusElement } from "../status/mod.ts";
 import { clientImportMap, getCompiledFile } from "../client/mod.ts";
-import { type Patch, renderPatches } from "../patching/mod.ts";
+import { renderPatches } from "../patching/mod.ts";
 import type { Element } from "../jsx-runtime/mod.ts";
 import { Logger } from "../logging/mod.ts";
 import {
   type Ctx,
   DASHI_PREFIX,
+  type Fatal,
   type GroupBoundary,
   type Method,
   METHODS,
   REQUEST_HEADERS,
+  type SealHtml,
+  type SealOptions,
+  type SealPatches,
 } from "../shared/mod.ts";
 import {
   compile,
@@ -34,12 +36,11 @@ import {
   appendModulePreloads,
   getRenderStore,
   injectModuleScripts,
-  RenderKind,
-  type RenderResult,
-  renderWithRecovery,
+  LayoutWalkError,
   replaceFragmentSlots,
   runWithNestedRenderStore,
   runWithRenderStore,
+  walkLayouts,
 } from "../ssr/mod.ts";
 
 const DEFAULT_NOT_FOUND_BODY = "Not found";
@@ -60,19 +61,7 @@ let compiled: CompiledTable<Record<string, unknown>> = {
   fragmentDepthLimit: DEFAULT_FRAGMENT_DEPTH_LIMIT,
 };
 
-interface Executed {
-  response: Response;
-  html: string | null;
-}
-
 type RequestCtx = Ctx<Record<string, string>, Record<string, unknown>>;
-
-function isMethod(
-  method: string,
-): method is Exclude<Method, "HEAD" | "OPTIONS"> {
-  return method !== "HEAD" && method !== "OPTIONS" &&
-    (METHODS as readonly string[]).includes(method);
-}
 
 function advertisedMethods(
   handlers: { readonly [M in Exclude<Method, "HEAD" | "OPTIONS">]?: unknown },
@@ -117,32 +106,16 @@ async function withoutContent(res: Response): Promise<Response> {
   });
 }
 
-function lastResort(options: {
-  isPartial: boolean;
-  fatal: Element | Response | undefined;
-}): Element | Response {
-  if (options.isPartial) {
-    return new Response("", { status: 500 });
-  }
-  if (options.fatal === undefined) {
-    return new Response(DEFAULT_FATAL_BODY, { status: 500 });
-  }
-  return options.fatal;
-}
-
-async function htmlResponse(
-  out: Element | Response,
+async function seal(
+  page: Element,
   options: {
     status: number;
     isPartial: boolean;
     req: Request;
     cache?: CacheConfig;
   },
-): Promise<Executed> {
-  if (out instanceof Response) {
-    return { response: out, html: null };
-  }
-  const unspliced = String(out);
+): Promise<Response> {
+  const unspliced = String(page);
   let html = unspliced;
   const store = getRenderStore();
   // Nested eager SSR uses a synthetic request; splicing here would await
@@ -165,52 +138,113 @@ async function htmlResponse(
   if (options.isPartial && store.pageReq === options.req) {
     appendModulePreloads(res.headers, store.clientEntries, clientImportMap());
   }
-  return { response: res, html: unspliced };
+  return res;
 }
 
-async function respond(
-  result: RenderResult,
-  options: { pageStatus: number; ctx: RequestCtx },
-): Promise<Executed> {
-  const { ctx } = options;
-  switch (result.kind) {
-    case RenderKind.Page:
-      return await htmlResponse(result.page, {
-        status: options.pageStatus,
-        isPartial: ctx.isFragment,
-        req: ctx.req,
-        cache: result.cache,
-      });
-    case RenderKind.Recovered:
-      return await htmlResponse(result.page, {
-        status: 500,
-        isPartial: ctx.isFragment,
-        req: ctx.req,
-        cache: result.cache,
-      });
-    case RenderKind.Response:
-      return { response: result.response, html: null };
-    case RenderKind.Exhausted:
-      return await htmlResponse(
-        lastResort({
-          isPartial: ctx.isFragment,
-          fatal: compiled.fatal,
-        }),
-        { status: 500, isPartial: ctx.isFragment, req: ctx.req },
-      );
+function bindHtml(
+  ctx: RequestCtx,
+  boundary: GroupBoundary<Record<string, unknown>> | undefined,
+  defaultStatus: number,
+): SealHtml {
+  return async (page, opts?: SealOptions) => {
+    const walked = ctx.isFragment
+      ? page
+      : await walkLayouts(page, ctx, boundary);
+    return await seal(walked, {
+      status: opts?.status ?? defaultStatus,
+      cache: opts?.cache,
+      isPartial: ctx.isFragment,
+      req: ctx.req,
+    });
+  };
+}
+
+function bindPatches(ctx: RequestCtx): SealPatches {
+  return async (list, opts?: SealOptions) =>
+    await seal(renderPatches(list), {
+      status: opts?.status ?? 200,
+      cache: opts?.cache,
+      isPartial: true,
+      req: ctx.req,
+    });
+}
+
+function bindFatalHtml(req: Request): SealHtml {
+  return async (page, opts?: SealOptions) =>
+    await seal(page, {
+      status: opts?.status ?? 500,
+      cache: opts?.cache,
+      isPartial: false,
+      req,
+    });
+}
+
+async function lastResort(
+  req: Request,
+  isPartial: boolean,
+): Promise<Response> {
+  if (isPartial) {
+    return new Response("", { status: 500 });
   }
+  if (compiled.fatal === undefined) {
+    return new Response(DEFAULT_FATAL_BODY, { status: 500 });
+  }
+  try {
+    return await compiled.fatal(bindFatalHtml(req));
+  } catch (thrown) {
+    Logger.error(["routing"], "fatal recovering from", thrown);
+    return new Response(DEFAULT_FATAL_BODY, { status: 500 });
+  }
+}
+
+async function recover(
+  thrown: unknown,
+  boundary: GroupBoundary<Record<string, unknown>> | undefined,
+  ctx: RequestCtx,
+): Promise<Response> {
+  if (thrown instanceof LayoutWalkError) {
+    return await recover(thrown.cause, thrown.parent, ctx);
+  }
+  Logger.error(["ssr"], "render recovering from", thrown);
+
+  if (ctx.isFragment) {
+    try {
+      if (!boundary?.error) {
+        return await lastResort(ctx.req, true);
+      }
+      return await boundary.error(ctx, thrown, bindHtml(ctx, boundary, 500));
+    } catch (nextThrown) {
+      Logger.error(["ssr"], "render recovering from", nextThrown);
+      return await lastResort(ctx.req, true);
+    }
+  }
+
+  for (
+    let current = boundary;
+    current;
+    current = current.parent
+  ) {
+    if (!current.error) {
+      continue;
+    }
+    try {
+      return await current.error(ctx, thrown, bindHtml(ctx, current, 500));
+    } catch (nextThrown) {
+      if (nextThrown instanceof LayoutWalkError) {
+        return await recover(nextThrown.cause, nextThrown.parent, ctx);
+      }
+      thrown = nextThrown;
+      Logger.error(["ssr"], "render recovering from", thrown);
+    }
+  }
+
+  return await lastResort(ctx.req, ctx.isFragment);
 }
 
 async function runHandler(
   ctx: RequestCtx,
   matched: MatchedRoute<Record<string, unknown>>,
-): Promise<
-  | Element
-  | CachedElement
-  | StatusElement
-  | Response
-  | Patch[]
-> {
+): Promise<Response> {
   const method = ctx.req.method;
   if (method === "OPTIONS") {
     return new Response(null, {
@@ -218,19 +252,33 @@ async function runHandler(
       headers: { Allow: advertisedMethods(matched.handlers).join(", ") },
     });
   }
-  let handler;
-  if (method === "HEAD") {
-    handler = matched.handlers.GET;
-  } else if (isMethod(method)) {
-    handler = matched.handlers[method];
+  if (method === "GET" || method === "HEAD") {
+    const handler = matched.handlers.GET;
+    if (!handler) {
+      return new Response("Method Not Allowed", {
+        status: 405,
+        headers: { Allow: advertisedMethods(matched.handlers).join(", ") },
+      });
+    }
+    return await handler(ctx, bindHtml(ctx, matched.boundary, 200));
   }
-  if (!handler) {
-    return new Response("Method Not Allowed", {
-      status: 405,
-      headers: { Allow: advertisedMethods(matched.handlers).join(", ") },
-    });
+  if (
+    method === "POST" || method === "PUT" || method === "PATCH" ||
+    method === "DELETE"
+  ) {
+    const handler = matched.handlers[method];
+    if (!handler) {
+      return new Response("Method Not Allowed", {
+        status: 405,
+        headers: { Allow: advertisedMethods(matched.handlers).join(", ") },
+      });
+    }
+    return await handler(ctx, bindPatches(ctx));
   }
-  return await handler(ctx);
+  return new Response("Method Not Allowed", {
+    status: 405,
+    headers: { Allow: advertisedMethods(matched.handlers).join(", ") },
+  });
 }
 
 function raceTimeout<T>(
@@ -262,62 +310,26 @@ async function executeMatched(
   matched: MatchedRoute<Record<string, unknown>>,
   timeoutMs?: number,
   abortTimeout?: () => void,
-): Promise<Executed> {
+): Promise<Response> {
   try {
     const handlerPromise = runHandler(ctx, matched);
-    const out = timeoutMs === undefined
-      ? await handlerPromise
-      : await raceTimeout(
-        handlerPromise,
-        timeoutMs,
-        `Route timed out: ${ctx.url.pathname}`,
-        () => abortTimeout?.(),
-      );
-    if (out instanceof Response) {
-      if (ctx.req.method !== "GET" && ctx.req.method !== "HEAD") {
-        const type = out.headers.get("content-type");
-        if (
-          out.status >= 200 && out.status < 300 &&
-          type !== null && type.toLowerCase().startsWith("text/html")
-        ) {
-          throw new Error(
-            `Write handlers must not return a 2xx text/html Response: ${ctx.url.pathname}`,
-          );
-        }
-      }
-      return { response: out, html: null };
-    }
-    if (Array.isArray(out)) {
-      return await htmlResponse(renderPatches(out), {
-        status: 200,
-        isPartial: true,
-        req: ctx.req,
-      });
-    }
-    if (ctx.req.method !== "GET" && ctx.req.method !== "HEAD") {
-      throw new Error(
-        `Write handlers return patches or a Response: ${ctx.url.pathname}`,
-      );
-    }
-    const pageStatus = isStatusElement(out) ? out.code : 200;
-    return await respond(
-      await renderWithRecovery(out, { ctx, boundary: matched.boundary }),
-      { pageStatus, ctx },
+    return timeoutMs === undefined ? await handlerPromise : await raceTimeout(
+      handlerPromise,
+      timeoutMs,
+      `Route timed out: ${ctx.url.pathname}`,
+      () => abortTimeout?.(),
     );
   } catch (thrown) {
-    return await respond(
-      await renderWithRecovery({ thrown }, { ctx, boundary: matched.boundary }),
-      { pageStatus: 200, ctx },
-    );
+    return await recover(thrown, matched.boundary, ctx);
   }
 }
 
 async function executeNotFound(
   ctx: RequestCtx,
   boundary: GroupBoundary<Record<string, unknown>>,
-): Promise<Executed> {
+): Promise<Response> {
   if (ctx.isFragment) {
-    return { response: new Response("", { status: 404 }), html: null };
+    return new Response("", { status: 404 });
   }
   let notFound;
   for (
@@ -331,40 +343,26 @@ async function executeNotFound(
     }
   }
   if (!notFound) {
-    return {
-      response: new Response(DEFAULT_NOT_FOUND_BODY, { status: 404 }),
-      html: null,
-    };
+    return new Response(DEFAULT_NOT_FOUND_BODY, { status: 404 });
   }
   try {
-    const out = await notFound(ctx);
-    if (out instanceof Response) {
-      return { response: out, html: null };
-    }
-    return await respond(
-      await renderWithRecovery(out, { ctx, boundary }),
-      { pageStatus: 404, ctx },
-    );
+    return await notFound(ctx, bindHtml(ctx, boundary, 404));
   } catch (thrown) {
-    return await respond(
-      await renderWithRecovery({ thrown }, { ctx, boundary }),
-      { pageStatus: 404, ctx },
-    );
+    return await recover(thrown, boundary, ctx);
   }
 }
 
 async function runPipeline(
   ctx: RequestCtx,
   middleware: MatchedRoute<Record<string, unknown>>["middleware"],
-  runTerminal: () => Promise<Executed>,
-): Promise<Executed> {
+  runTerminal: () => Promise<Response>,
+): Promise<Response> {
   return await runWithNestedRenderStore(ctx.state, async () => {
     if (ctx.isFragment) {
       const store = getRenderStore();
       store.includeChain = [...store.includeChain, ctx.url.pathname];
       store.includeSignal = ctx.req.signal;
     }
-    let html: string | null = null;
     let index = -1;
     const dispatch = async (i: number): Promise<Response> => {
       if (i <= index) {
@@ -376,12 +374,10 @@ async function runPipeline(
         const res = await mw(ctx, () => dispatch(i + 1));
         return new Response(res.body, res);
       }
-      const executed = await runTerminal();
-      html = executed.html;
-      return new Response(executed.response.body, executed.response);
+      const res = await runTerminal();
+      return new Response(res.body, res);
     };
-    const response = await dispatch(0);
-    return { response, html };
+    return await dispatch(0);
   });
 }
 
@@ -393,7 +389,7 @@ export async function runRoute(
     recoverMiss: boolean;
     timeoutMs?: number;
   },
-): Promise<Executed | null> {
+): Promise<Response | null> {
   const url = new URL(req.url);
   let request = req;
   let abortTimeout: (() => void) | undefined;
@@ -474,7 +470,7 @@ export function init<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(
   build: (cb: GroupCallback<"", State>) => GroupFields<State>,
-  fatal?: Element | Response,
+  fatal?: Fatal,
   fragmentDepthLimit?: number,
 ) {
   // handle() has no State parameter. The table is only invoked with a ctx
@@ -530,16 +526,10 @@ export async function handle(
           state: {},
           recoverMiss: true,
         });
-        return out!.response;
+        return out!;
       } catch (thrown) {
         Logger.error(["routing"], "handle recovering from", thrown);
-        return (await htmlResponse(
-          lastResort({
-            isPartial: isFragment,
-            fatal: compiled.fatal,
-          }),
-          { status: 500, isPartial: isFragment, req },
-        )).response;
+        return await lastResort(req, isFragment);
       }
     },
   );

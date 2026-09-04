@@ -49,11 +49,10 @@ table when the page is only handlers. No `*_route.tsx`.
 in a module that is not a page.
 
 Application code never calls a handler. The router is what invokes one: a
-direct call skips the target's middleware and error boundary, applies its
-cache policy to the caller's response, and leaves it reading the caller's
-`ctx`. Share markup as a component, including between two methods of one
-route, and use `<RouteFragment src>` to include another route's rendered
-output.
+direct call skips the target's middleware and error boundary and leaves
+it reading the caller's `ctx`. Share markup as a component, including
+between two methods of one route, and use `<RouteFragment src>` to
+include another route's rendered output.
 
 ## Discriminants
 
@@ -113,6 +112,6 @@ in client code.
 imported by file. `client/mod.ts` is the compiler; `client/registry_client.ts`
 is the browser bus. One document-level submit listener in `forms/` owns
 interception. There is no per-element submit listener and no nearest-host
-targeting. GET navigates the page; a write goes through the registry. An applied
-patch-list write resets the submitting form. Client features assume the
-client runtime.
+targeting. GET navigates the page; a write goes through the registry. A 2xx
+patch-list write resets the submitting form; 4xx applies patches and
+keeps field values. Client features assume the client runtime.

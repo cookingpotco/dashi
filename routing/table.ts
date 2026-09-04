@@ -1,6 +1,6 @@
-import type { Element } from "../jsx-runtime/mod.ts";
 import {
   type ErrorHandler,
+  type Fatal,
   type GroupBoundary,
   type Handler,
   type Layout,
@@ -111,9 +111,10 @@ export interface GroupFields<
    */
   error?: ErrorHandler<State>;
   /**
-   * Document miss handler under this group's prefix. `Element` becomes
-   * a 404 document with this group's layout chain; `Response` is sent
-   * as-is. Omitted: walk to the parent. Root remains the default.
+   * Document miss handler under this group's prefix. Call `html()` to
+   * seal a 404 document with this group's layout chain; a raw
+   * `Response` is sent as-is. Omitted: walk to the parent. Root
+   * remains the default.
    */
   notFound?: Handler<Record<string, string>, State>;
   routes: Array<Route<State> | Group<State>>;
@@ -184,7 +185,7 @@ export interface CompiledTable<
   rootBoundary: GroupBoundary<State>;
   rootMiddleware: Middleware<State>[];
   prefixCaptures: PrefixCapture<State>[];
-  fatal?: Element | Response;
+  fatal?: Fatal;
   fragmentDepthLimit: number;
 }
 
@@ -366,7 +367,7 @@ export function compile<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 >(
   table: Group<State>,
-  fatal?: Element | Response,
+  fatal?: Fatal,
   fragmentDepthLimit = DEFAULT_FRAGMENT_DEPTH_LIMIT,
 ): CompiledTable<State> {
   const rootBoundary: GroupBoundary<State> = {
@@ -683,8 +684,8 @@ function createGroupCallback<
  * export const menu = group("/menu", ({ route }) => ({
  *   layouts: [MenuLayout],
  *   routes: [
- *     route("/", { GET: () => <h1>Menu</h1> }),
- *     route("/specials", { GET: () => <p>Today</p> }),
+ *     route("/", { GET: (_ctx, html) => html(<h1>Menu</h1>) }),
+ *     route("/specials", { GET: (_ctx, html) => html(<p>Today</p>) }),
  *   ],
  * }));
  * ```

@@ -1,8 +1,14 @@
-export async function Slow() {
+import { type Ctx, type SealHtml } from "dashi";
+import type { AppState } from "./state.ts";
+
+export async function Slow(
+  _ctx: Ctx<Record<string, never>, AppState>,
+  html: SealHtml,
+) {
   await new Promise((resolve) => setTimeout(resolve, 2000));
-  return (
+  return html(
     <div>
       <h1 id="heading">slow</h1>
-    </div>
+    </div>,
   );
 }

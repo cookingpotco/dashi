@@ -1,7 +1,11 @@
-import { patch } from "dashi";
+import { type Ctx, patch, type SealPatches } from "dashi";
+import type { AppState } from "./state.ts";
 
-export function post() {
-  return [
+export function post(
+  _ctx: Ctx<Record<string, never>, AppState>,
+  patches: SealPatches,
+) {
+  return patches([
     patch.append("#todos", <li>milk</li>),
     patch.replace("/todo-count", <span>3</span>),
     patch.replace("#status", <p>Saved</p>),
@@ -9,5 +13,14 @@ export function post() {
     patch.prepend("/todos", <li>bread</li>),
     patch.before("/slot", <p>before</p>),
     patch.after("/slot", <p>after</p>),
-  ];
+  ]);
+}
+
+export function postUnprocessable(
+  _ctx: Ctx<Record<string, never>, AppState>,
+  patches: SealPatches,
+) {
+  return patches([
+    patch.replace("#status", <p>invalid</p>),
+  ], { status: 422 });
 }

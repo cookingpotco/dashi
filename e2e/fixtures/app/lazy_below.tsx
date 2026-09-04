@@ -1,7 +1,7 @@
-import { RouteFragment } from "dashi";
+import { type Ctx, RouteFragment, type SealHtml } from "dashi";
 
-export function LazyBelow() {
-  return (
+export function LazyBelow(_ctx: Ctx, html: SealHtml) {
+  return html(
     <div>
       <div style="height: 3000px"></div>
       <RouteFragment
@@ -9,6 +9,6 @@ export function LazyBelow() {
         lazy
         fallback={<span id="below-fallback">Loading below...</span>}
       />
-    </div>
+    </div>,
   );
 }
