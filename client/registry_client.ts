@@ -42,7 +42,9 @@ export function navigate(url: string | URL): Promise<void> {
   return Promise.resolve();
 }
 
-export async function submitWrite(intent: SubmitIntent): Promise<boolean> {
+export async function submitWrite(
+  intent: SubmitIntent,
+): Promise<{ applied: boolean; ok: boolean }> {
   try {
     const res = await fetch(intent.url, {
       method: intent.method,
@@ -51,15 +53,15 @@ export async function submitWrite(intent: SubmitIntent): Promise<boolean> {
     });
     if (new URL(res.url, location.href).origin !== location.origin) {
       location.assign(res.url);
-      return false;
+      return { applied: false, ok: false };
     }
     if (res.redirected) {
       if (page !== null) {
         await page.commitDocument(res, res.url);
-        return false;
+        return { applied: false, ok: false };
       }
       location.assign(res.url);
-      return false;
+      return { applied: false, ok: false };
     }
     if (patches !== null) {
       const html = await res.text();
@@ -73,12 +75,12 @@ export async function submitWrite(intent: SubmitIntent): Promise<boolean> {
       }
       await Promise.all(pending);
       if (patches(html)) {
-        return true;
+        return { applied: true, ok: res.ok };
       }
     }
     location.assign(res.url);
-    return false;
+    return { applied: false, ok: false };
   } catch {
-    return false;
+    return { applied: false, ok: false };
   }
 }

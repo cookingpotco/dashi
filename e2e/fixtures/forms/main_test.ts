@@ -365,6 +365,42 @@ Deno.test("forms fixture", async (t) => {
       );
 
       await t.step(
+        "a 400 patch write applies and keeps the submitting fields",
+        async () => {
+          await prepareHosted(page, app.origin, "/entries");
+          await typeField(page, "#keep-title", "keep-me");
+          await clickId(page, "keep-submit");
+          await waitForText(page, "keep-status", "title is required");
+          await page.evaluate(async () => {
+            const form = document.getElementById("keep-form");
+            const start = Date.now();
+            while (form?.hasAttribute("aria-busy")) {
+              if (Date.now() - start > 5000) {
+                throw new Error("keep-form still busy");
+              }
+              await new Promise((resolve) => setTimeout(resolve, 25));
+            }
+          });
+          const result = await page.evaluate(() => {
+            const title = document.getElementById("keep-title");
+            return {
+              survived: Reflect.get(globalThis, "__dashiDoc") === true,
+              heading: document.getElementById("heading")?.textContent ?? null,
+              status: document.getElementById("keep-status")?.textContent ??
+                null,
+              title: title instanceof HTMLInputElement ? title.value : null,
+              url: location.pathname,
+            };
+          });
+          assertEquals(result.survived, true);
+          assertEquals(result.heading, "entries");
+          assertEquals(result.status, "title is required");
+          assertEquals(result.title, "keep-me");
+          assertEquals(result.url, "/entries");
+        },
+      );
+
+      await t.step(
         "a write that never applies leaves the submitting fields alone",
         async () => {
           await prepareHosted(page, app.origin, "/entries");

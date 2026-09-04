@@ -314,6 +314,28 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
+    name: "POST status(400, patches) is 400 with patch HTML",
+    request: {
+      method: "POST",
+      path: "/status-patches",
+    },
+    status: 400,
+    headers: {
+      "content-type": "text/html",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+    },
+    html: {
+      bodyExcludes: ["<!DOCTYPE html>", "{{fragment:"],
+      select: [
+        {
+          selector: 'dashi-patch[kind="replace"][target="#status"]',
+          text: "title required",
+          attr: { target: "#status" },
+        },
+      ],
+    },
+  },
+  {
     name:
       "POST patches without fragment header are sibling dashi-patch elements",
     request: {

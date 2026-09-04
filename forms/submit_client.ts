@@ -62,8 +62,8 @@ function onSubmit(event: Event): void {
     ? formData
     : urlEncoded(formData);
   form.setAttribute("aria-busy", "true");
-  void submitWrite({ method, url: action, body }).then((applied) => {
-    if (applied) {
+  void submitWrite({ method, url: action, body }).then((result) => {
+    if (result.applied && result.ok) {
       form.reset();
     }
   }).finally(() => {

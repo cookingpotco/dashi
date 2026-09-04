@@ -105,7 +105,7 @@ wait (5000 if omitted), and a timeout fails the include.
 ```
 
 ```tsx
-import { type Ctx, patch, RouteFragment, serve } from "dashi";
+import { type Ctx, patch, RouteFragment, serve, status } from "dashi";
 
 const todos: string[] = [];
 
@@ -140,7 +140,9 @@ function list() {
 async function create(ctx: Ctx) {
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
-    return [patch.replace("/todos", <TodoList error="title is required" />)];
+    return status(400, [
+      patch.replace("/todos", <TodoList error="title is required" />),
+    ]);
   }
   todos.push(title);
   return [patch.replace("/todos", <TodoList />)];
@@ -161,8 +163,9 @@ target: `/${string}` updates every `<RouteFragment>` rendering that `src`;
 `after` sit beside the target; replacing the node itself is `before` or `after`
 then `remove`. Use `replace` when the write has the markup; use `refresh` when
 fragments should re-fetch themselves asynchronously. A write handler returns
-that list or a `Response` — not a document. The form can sit anywhere on the
-page.
+that list or a `Response` — not a document. A bare list is HTTP 200; validation
+that still applies patches uses `status(400, [patch…])`. The form can sit
+anywhere on the page.
 
 ## Other features
 

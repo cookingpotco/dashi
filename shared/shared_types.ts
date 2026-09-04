@@ -1,7 +1,7 @@
 import type { CachedElement } from "../caching/mod.ts";
 import type { Patch } from "../patching/mod.ts";
 import type { Element } from "../jsx-runtime/mod.ts";
-import type { StatusElement } from "../status/mod.ts";
+import type { StatusElement, StatusPatches } from "../status/mod.ts";
 
 /**
  * Per-invocation request context. Mutate `state` in place; do not
@@ -107,7 +107,8 @@ export type Method = typeof METHODS[number];
 
 /**
  * POST/PUT/PATCH/DELETE. Return patches (no layouts, no DOCTYPE) or
- * a Response. A 2xx `text/html` Response is rejected.
+ * a Response. `status(code, patches)` sets the HTTP status; a bare
+ * list is 200. A 2xx `text/html` Response is rejected.
  */
 /** @internal */
 export type WriteHandler<
@@ -118,7 +119,8 @@ export type WriteHandler<
 ) =>
   | Response
   | Patch[]
-  | Promise<Response | Patch[]>;
+  | StatusPatches
+  | Promise<Response | Patch[] | StatusPatches>;
 
 type HandlerMethod = Exclude<Method, "HEAD" | "OPTIONS">;
 
@@ -136,8 +138,8 @@ type RequireAtLeastOne<T> = {
 
 /**
  * Per-method handlers on a route. At least one method is required. GET
- * returns a page or fragment body. Writes return a list of patches, or
- * a Response.
+ * returns a page or fragment body. Writes return a list of patches,
+ * `status(code, patches)`, or a Response.
  *
  * @internal
  */

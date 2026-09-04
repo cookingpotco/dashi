@@ -6,7 +6,12 @@ import {
   CacheStrategy,
   mergeVary,
 } from "../caching/mod.ts";
-import { isStatusElement, type StatusElement } from "../status/mod.ts";
+import {
+  isStatusElement,
+  isStatusPatches,
+  type StatusElement,
+  type StatusPatches,
+} from "../status/mod.ts";
 import { clientImportMap, getCompiledFile } from "../client/mod.ts";
 import { type Patch, renderPatches } from "../patching/mod.ts";
 import type { Element } from "../jsx-runtime/mod.ts";
@@ -208,6 +213,7 @@ async function runHandler(
   | Element
   | CachedElement
   | StatusElement
+  | StatusPatches
   | Response
   | Patch[]
 > {
@@ -290,6 +296,13 @@ async function executeMatched(
     if (Array.isArray(out)) {
       return await htmlResponse(renderPatches(out), {
         status: 200,
+        isPartial: true,
+        req: ctx.req,
+      });
+    }
+    if (isStatusPatches(out)) {
+      return await htmlResponse(renderPatches(out.patches), {
+        status: out.code,
         isPartial: true,
         req: ctx.req,
       });
