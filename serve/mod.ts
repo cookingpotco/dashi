@@ -1,11 +1,13 @@
 import { compileClient } from "../client/mod.ts";
 import type { Element } from "../jsx-runtime/mod.ts";
+import { Logger } from "../logging/mod.ts";
 import {
   type GroupCallback,
   type GroupFields,
   handle,
   init,
 } from "../routing/mod.ts";
+import { bindUrls, grantedNetworkInterfaces } from "./bind_urls.ts";
 
 /**
  * Starts the HTTP server.
@@ -23,7 +25,9 @@ import {
  *
  * Compiles the client graph, then returns the `Deno.HttpServer` that
  * `Deno.serve` returns. Callers that only boot a process may omit
- * `await`.
+ * `await`. On listen, logs one `Listening on` line with localhost and,
+ * when bound on all interfaces, each non-loopback IPv4 LAN URL. A
+ * caller `onListen` runs after that line.
  *
  * @param build Root table. Pathless. `route()` and `group()` values go
  * in `routes`.
@@ -58,8 +62,24 @@ export async function serve<
     fragmentDepthLimit?: number;
   },
 ): Promise<Deno.HttpServer> {
-  const { fatal, fragmentDepthLimit, ...serveOptions } = options ?? {};
+  const {
+    fatal,
+    fragmentDepthLimit,
+    onListen,
+    ...serveOptions
+  } = options ?? {};
   init(build, fatal, fragmentDepthLimit);
   await compileClient();
-  return Deno.serve({ ...serveOptions, handler: handle });
+  return Deno.serve({
+    ...serveOptions,
+    onListen(addr) {
+      const interfaces = addr.hostname === "0.0.0.0" || addr.hostname === "::"
+        ? grantedNetworkInterfaces()
+        : [];
+      const urls = bindUrls(addr.hostname, addr.port, interfaces);
+      Logger.info(["serve"], `Listening on ${urls.join(", ")}`);
+      onListen?.(addr);
+    },
+    handler: handle,
+  });
 }
