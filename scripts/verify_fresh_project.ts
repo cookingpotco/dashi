@@ -104,7 +104,7 @@ function consumerConfig(
       jsx: "precompile",
       jsxImportSource: "dashi",
     },
-    unstable: ["bundle"],
+    unstable: ["bundle", "no-legacy-abort"],
     imports: {
       dashi: `jsr:${name}@${version}`,
     },

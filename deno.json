@@ -13,7 +13,7 @@
     "./e2e",
     "./jsx-tests"
   ],
-  "unstable": ["bundle"],
+  "unstable": ["bundle", "no-legacy-abort"],
   "lock": {
     "frozen": true
   },
