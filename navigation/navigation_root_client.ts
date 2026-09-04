@@ -284,6 +284,14 @@ async function commitDocument(
   }
   focusAfterSwap(host);
   announceTitle();
+  const push = navigation !== null && navigation.options.push;
+  host.dispatchEvent(
+    new CustomEvent("dashi:navigated", {
+      bubbles: true,
+      composed: true,
+      detail: { url: renderedUrl.href, push },
+    }),
+  );
   return true;
 }
 
