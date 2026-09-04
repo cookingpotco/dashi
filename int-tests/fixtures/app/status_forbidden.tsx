@@ -1,5 +1,5 @@
-import { status } from "dashi";
+import type { Ctx, Html } from "dashi";
 
-export function statusForbidden() {
-  return status(403, <p id="status-forbidden">handler-403</p>);
+export function statusForbidden(_ctx: Ctx, html: Html) {
+  return html(<p id="status-forbidden">handler-403</p>, { status: 403 });
 }

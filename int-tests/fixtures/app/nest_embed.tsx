@@ -1,5 +1,5 @@
-import { RouteFragment } from "dashi";
+import { type Ctx, type Html, RouteFragment } from "dashi";
 
-export function NestEmbed() {
-  return <RouteFragment src="/nest-outer" />;
+export function NestEmbed(_ctx: Ctx, html: Html) {
+  return html(<RouteFragment src="/nest-outer" />);
 }

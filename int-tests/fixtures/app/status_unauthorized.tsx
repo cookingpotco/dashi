@@ -1,5 +1,5 @@
-import { status } from "dashi";
+import type { Ctx, Html } from "dashi";
 
-export function statusUnauthorized() {
-  return status(401, <p id="status-unauthorized">handler-401</p>);
+export function statusUnauthorized(_ctx: Ctx, html: Html) {
+  return html(<p id="status-unauthorized">handler-401</p>, { status: 401 });
 }

@@ -15,12 +15,13 @@ const LISTEN_RE = /Listening on https?:\/\/(?:\[[^\]]+\]|[\w.]+):(\d+)/;
 const UNUSED_LINK_RE = /Linked package '[^']+' was not used[^\n]*/;
 const BOOT_TIMEOUT_MS = 30_000;
 
-const MAIN_TSX = `import { type Ctx, patch, RouteFragment, serve } from "dashi";
+const MAIN_TSX =
+  `import { type Ctx, type Html, type Patches, patch, RouteFragment, serve } from "dashi";
 
 const todos: string[] = [];
 
-function Home() {
-  return (
+function Home(_ctx: Ctx, html: Html) {
+  return html(
     <html>
       <h1>Todos</h1>
       <RouteFragment
@@ -47,19 +48,19 @@ function TodoList({ error }: { error?: string }) {
   );
 }
 
-function list() {
-  return <TodoList />;
+function list(_ctx: Ctx, html: Html) {
+  return html(<TodoList />);
 }
 
-async function create(ctx: Ctx) {
+async function create(ctx: Ctx, patches: Patches) {
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
-    return [
+    return patches([
       patch.replace("/todos", <TodoList error="title is required" />),
-    ];
+    ]);
   }
   todos.push(title);
-  return [patch.replace("/todos", <TodoList />)];
+  return patches([patch.replace("/todos", <TodoList />)]);
 }
 
 serve(({ route }) => ({

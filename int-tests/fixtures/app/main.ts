@@ -4,7 +4,7 @@ import { Home } from "./home.tsx";
 import { RootLayout } from "./root_layout.tsx";
 import { root } from "./root_middleware.ts";
 import { Echo } from "./echo.tsx";
-import { post as postPatches } from "./patches.tsx";
+import { post as postPatches, postUnprocessable } from "./patches.tsx";
 import { postHtml } from "./write_html.ts";
 import { NestEmbed } from "./nest_embed.tsx";
 import { NestInner } from "./nest_inner.tsx";
@@ -76,6 +76,7 @@ import {
   Slow,
   throwErrorHandlerBoom,
   throwHandler,
+  throwServiceUnavailable,
 } from "./errors.tsx";
 
 const staticDir = `${import.meta.dirname}/static`;
@@ -142,6 +143,7 @@ export function start() {
       fragment,
       route("/peer", { GET: Peer }),
       route("/patches", { POST: postPatches }),
+      route("/patches-unprocessable", { POST: postUnprocessable }),
       route("/write-html", { POST: postHtml }),
       route("/posts/new", { GET: PostsNew }),
       route("/posts/:id", { GET: Post }),
@@ -164,6 +166,7 @@ export function start() {
       route("/static-missing-dir/:path*", { GET: missingDir }),
       gated,
       route("/throw", { GET: throwHandler }),
+      route("/throw-503", { GET: throwServiceUnavailable }),
       route("/root-layout-throws", { GET: okPage }),
       route("/root-error-throws", { GET: throwErrorHandlerBoom }),
       throwNoError,

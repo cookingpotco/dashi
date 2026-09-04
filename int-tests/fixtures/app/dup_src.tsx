@@ -1,7 +1,7 @@
-import { RouteFragment } from "dashi";
+import { type Ctx, type Html, RouteFragment } from "dashi";
 
-export function DupSrc() {
-  return (
+export function DupSrc(_ctx: Ctx, html: Html) {
+  return html(
     <div id="dup-src">
       <div id="dup-a">
         <RouteFragment src="/nest-inner" />
@@ -15,6 +15,6 @@ export function DupSrc() {
       <div id="dup-d">
         <RouteFragment src="/nest-inner?" />
       </div>
-    </div>
+    </div>,
   );
 }

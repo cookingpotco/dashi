@@ -1,4 +1,11 @@
-import { type Ctx, group, patch, type WrapperCtx } from "dashi";
+import {
+  type Ctx,
+  group,
+  type Html,
+  patch,
+  type Patches,
+  type WrapperCtx,
+} from "dashi";
 import type { AppState } from "../state.ts";
 
 function fragOnly(ctx: WrapperCtx<AppState>, next: () => Promise<Response>) {
@@ -13,8 +20,9 @@ export const fragment = group<AppState>(({ route }) => ({
 
 function Fragment(
   ctx: Ctx<Record<string, never>, AppState>,
+  html: Html,
 ) {
-  return (
+  return html(
     <aside
       id="frag"
       data-pre={ctx.state.pre}
@@ -23,15 +31,15 @@ function Fragment(
       data-frag={ctx.isFragment ? "1" : "0"}
     >
       eager-fragment-body
-    </aside>
+    </aside>,
   );
 }
 
-function post() {
-  return [
+function post(_ctx: Ctx, patches: Patches) {
+  return patches([
     patch.replace(
       "/fragment",
       <aside id="frag">posted-fragment-body</aside>,
     ),
-  ];
+  ]);
 }

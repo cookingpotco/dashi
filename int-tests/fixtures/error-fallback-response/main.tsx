@@ -1,4 +1,4 @@
-import { serve, type WrapperCtx } from "dashi";
+import { type Ctx, type Html, serve, type WrapperCtx } from "dashi";
 import type { Element } from "dashi/jsx-runtime";
 
 function rootLayout(ctx: WrapperCtx, children: Element): Element {
@@ -13,12 +13,12 @@ function rootLayout(ctx: WrapperCtx, children: Element): Element {
   );
 }
 
-function home(): Element {
-  return <p id="home">home</p>;
+function home(_ctx: Ctx, html: Html) {
+  return html(<p id="home">home</p>);
 }
 
-function okPage(): Element {
-  return <p id="ok-page">ok</p>;
+function okPage(_ctx: Ctx, html: Html) {
+  return html(<p id="ok-page">ok</p>);
 }
 
 export function start() {
@@ -29,10 +29,11 @@ export function start() {
       route("/root-layout-throws", { GET: okPage }),
     ],
   }), {
-    fatal: new Response("fallback-response", {
-      status: 500,
-      headers: { "x-fallback": "1" },
-    }),
+    fatal: () =>
+      new Response("fallback-response", {
+        status: 500,
+        headers: { "x-fallback": "1" },
+      }),
     hostname: "127.0.0.1",
     port: 0,
   });

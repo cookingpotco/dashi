@@ -1,4 +1,4 @@
-import { client, serve } from "dashi";
+import { client, type Ctx, type Html, serve } from "dashi";
 
 const Local = client.element(
   "local-el",
@@ -14,12 +14,12 @@ const JsrFragment = client.module(
   ),
 );
 
-function home() {
-  return (
+function home(_ctx: Ctx, html: Html) {
+  return html(
     <html>
       <Local>local</Local>
       <JsrFragment />
-    </html>
+    </html>,
   );
 }
 

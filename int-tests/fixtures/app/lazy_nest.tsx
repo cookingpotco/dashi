@@ -1,5 +1,5 @@
-import { RouteFragment } from "dashi";
+import { type Ctx, type Html, RouteFragment } from "dashi";
 
-export function LazyNest() {
-  return <RouteFragment src="/nest-inner" />;
+export function LazyNest(_ctx: Ctx, html: Html) {
+  return html(<RouteFragment src="/nest-inner" />);
 }

@@ -1,8 +1,7 @@
-import { cached, CacheStrategy } from "dashi";
+import { CacheStrategy, type Ctx, type Html } from "dashi";
 
-export function CacheNoStore() {
-  return cached(
-    <p id="cache-nostore">cached-nostore</p>,
-    { strategy: CacheStrategy.NoStore },
-  );
+export function CacheNoStore(_ctx: Ctx, html: Html) {
+  return html(<p id="cache-nostore">cached-nostore</p>, {
+    cache: { strategy: CacheStrategy.NoStore },
+  });
 }

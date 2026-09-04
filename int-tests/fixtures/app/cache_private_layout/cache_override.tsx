@@ -1,8 +1,7 @@
-import { cached, CacheStrategy } from "dashi";
+import { CacheStrategy, type Ctx, type Html } from "dashi";
 
-export function CacheOverride() {
-  return cached(
-    <p id="cache-override">route-wins</p>,
-    { strategy: CacheStrategy.Public, maxAge: 60 },
-  );
+export function CacheOverride(_ctx: Ctx, html: Html) {
+  return html(<p id="cache-override">route-wins</p>, {
+    cache: { strategy: CacheStrategy.Public, maxAge: 60 },
+  });
 }
