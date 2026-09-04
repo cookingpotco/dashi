@@ -438,6 +438,72 @@ Deno.test("navigation fixture", async (t) => {
       );
 
       await t.step(
+        "a successful soft navigation dispatches dashi:navigated",
+        async () => {
+          await prepare(page, app.origin, "/");
+          await page.evaluate(() => {
+            const seen: { url: string; push: boolean }[] = [];
+            Reflect.set(globalThis, "__dashiNavigated", seen);
+            document.addEventListener("dashi:navigated", (event) => {
+              if (!(event instanceof CustomEvent)) {
+                return;
+              }
+              seen.push(event.detail);
+            });
+          });
+          await clickId(page, "to-about");
+          await waitForHeading(page, "about");
+          const afterClick = await page.evaluate(() =>
+            Reflect.get(globalThis, "__dashiNavigated")
+          );
+          assertEquals(afterClick, [{
+            url: `${app.origin}/about`,
+            push: true,
+          }]);
+          await page.evaluate(() => history.back());
+          await waitForHeading(page, "home");
+          const afterBack = await page.evaluate(() =>
+            Reflect.get(globalThis, "__dashiNavigated")
+          );
+          assertEquals(afterBack, [
+            { url: `${app.origin}/about`, push: true },
+            { url: `${app.origin}/`, push: false },
+          ]);
+        },
+      );
+
+      await t.step(
+        "a hard fallback does not dispatch dashi:navigated",
+        async () => {
+          await prepare(page, app.origin, "/");
+          await page.evaluate(() => {
+            sessionStorage.setItem("__dashiNavigated", "[]");
+            document.addEventListener("dashi:navigated", (event) => {
+              if (!(event instanceof CustomEvent)) {
+                return;
+              }
+              const seen = JSON.parse(
+                sessionStorage.getItem("__dashiNavigated") ?? "[]",
+              );
+              seen.push(event.detail);
+              sessionStorage.setItem(
+                "__dashiNavigated",
+                JSON.stringify(seen),
+              );
+            });
+          });
+          await Promise.all([
+            page.waitForNavigation(),
+            clickId(page, "to-json"),
+          ]);
+          const seen = await page.evaluate(() =>
+            JSON.parse(sessionStorage.getItem("__dashiNavigated") ?? "[]")
+          );
+          assertEquals(seen, []);
+        },
+      );
+
+      await t.step(
         "an assertive live region announces the new title",
         async () => {
           await prepare(page, app.origin, "/");
