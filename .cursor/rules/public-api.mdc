@@ -15,9 +15,12 @@ Adding a published export is fine. Removing or renaming one is a breaking
 
 ## `dashi`
 
-`CacheStrategy`, `CacheConfig`, `Html`, `Patches`, `SealOptions`,
+`CacheStrategy`, `CacheConfig`, `SealHtml`, `SealPatches`, `SealOptions`,
 `client`, `patch`, `Patch`, `RouteFragment`, `NavigationRoot`, `group`,
 `Group`, `serve`, `staticFile`, `ParamsOf`, `Ctx`, `WrapperCtx`.
+
+Writes seal with `patches()`, or return a non-HTML `Response` (redirect,
+JSON, 204, etc.).
 
 ## `dashi/jsx-runtime`
 

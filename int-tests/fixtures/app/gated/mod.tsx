@@ -1,4 +1,4 @@
-import { type Ctx, group, type Html, type WrapperCtx } from "dashi";
+import { type Ctx, group, type SealHtml, type WrapperCtx } from "dashi";
 import type { AppState } from "../state.ts";
 
 function requireSession(
@@ -16,6 +16,6 @@ export const gated = group<AppState>(({ route }) => ({
   routes: [route("/gated", { GET: Gated })],
 }));
 
-function Gated(_ctx: Ctx<Record<string, never>, AppState>, html: Html) {
+function Gated(_ctx: Ctx<Record<string, never>, AppState>, html: SealHtml) {
   return html(<p id="gated">welcome</p>);
 }

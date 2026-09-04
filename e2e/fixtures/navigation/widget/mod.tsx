@@ -1,4 +1,4 @@
-import { client, type Ctx, type Html } from "dashi";
+import { client, type Ctx, type SealHtml } from "dashi";
 import type { AppState } from "../state.ts";
 
 const Widget = client.element(
@@ -8,7 +8,7 @@ const Widget = client.element(
 
 export function WidgetPage(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(
     <div>

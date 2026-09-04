@@ -1,6 +1,6 @@
-import { type Ctx, type Html, patch, type Patches } from "dashi";
+import { type Ctx, patch, type SealHtml, type SealPatches } from "dashi";
 
-export function form(_ctx: Ctx, html: Html) {
+export function form(_ctx: Ctx, html: SealHtml) {
   return html(
     <form id="inserts-form" method="POST" action="/inserts">
       <button type="submit">Insert</button>
@@ -8,7 +8,7 @@ export function form(_ctx: Ctx, html: Html) {
   );
 }
 
-export function apply(_ctx: Ctx, patches: Patches) {
+export function apply(_ctx: Ctx, patches: SealPatches) {
   return patches([
     patch.prepend("/slot", <span id="prepended">pre</span>),
     patch.before("/slot", <span id="before-slot">before</span>),

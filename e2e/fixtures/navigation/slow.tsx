@@ -1,9 +1,9 @@
-import { type Ctx, type Html } from "dashi";
+import { type Ctx, type SealHtml } from "dashi";
 import type { AppState } from "./state.ts";
 
 export async function Slow(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   await new Promise((resolve) => setTimeout(resolve, 2000));
   return html(

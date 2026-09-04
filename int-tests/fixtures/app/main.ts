@@ -33,9 +33,9 @@ import { CacheEmbed } from "./cache_embed.tsx";
 import { CachePublicCookie } from "./cache_public_cookie.tsx";
 import { CachePublicStar } from "./cache_public_star.tsx";
 import { CachePrivateCookie } from "./cache_private_cookie.tsx";
-import { cachePublicLayout } from "./cache_public_layout/mod.tsx";
-import { cachePublicCookieLayout } from "./cache_public_cookie_layout/mod.tsx";
-import { cachePrivateLayout } from "./cache_private_layout/mod.tsx";
+import { cacheWrap } from "./cache_wrap/mod.tsx";
+import { cacheCookieWrap } from "./cache_cookie_wrap/mod.tsx";
+import { cacheOverrideWrap } from "./cache_override_wrap/mod.tsx";
 import { cacheBoundary } from "./cache_boundary/mod.tsx";
 import { cacheSession } from "./cache_session/mod.ts";
 import { cachePublicThenThrow } from "./cache_public_then_throw/mod.ts";
@@ -122,9 +122,9 @@ export function start() {
       route("/cache-private", { GET: CachePrivate }),
       route("/cache-private-cookie", { GET: CachePrivateCookie }),
       route("/cache-embed", { GET: CacheEmbed }),
-      cachePublicLayout,
-      cachePublicCookieLayout,
-      cachePrivateLayout,
+      cacheWrap,
+      cacheCookieWrap,
+      cacheOverrideWrap,
       cacheBoundary,
       cacheSession,
       cachePublicThenThrow,

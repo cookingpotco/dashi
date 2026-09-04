@@ -1,4 +1,4 @@
-import { type Ctx, type Html } from "dashi";
+import { type Ctx, type SealHtml } from "dashi";
 
 function fetchData() {
   return new Promise<{ hello: number }>((resolve) =>
@@ -10,7 +10,7 @@ const TestComponent = ({ text }: { text: string }) => {
   return <footer>Test Footer {text} 2</footer>;
 };
 
-export async function Home(_ctx: Ctx, html: Html) {
+export async function Home(_ctx: Ctx, html: SealHtml) {
   const { hello } = await fetchData();
 
   return html(

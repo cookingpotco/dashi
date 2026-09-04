@@ -1,4 +1,10 @@
-import { client, type Ctx, type Html, patch, type Patches } from "dashi";
+import {
+  client,
+  type Ctx,
+  patch,
+  type SealHtml,
+  type SealPatches,
+} from "dashi";
 
 const TodoErrorMark = client.element(
   "todo-error-el",
@@ -23,11 +29,11 @@ function TodoList({ error }: { error?: string }) {
   );
 }
 
-export function list(_ctx: Ctx, html: Html) {
+export function list(_ctx: Ctx, html: SealHtml) {
   return html(<TodoList />);
 }
 
-export async function create(ctx: Ctx, patches: Patches) {
+export async function create(ctx: Ctx, patches: SealPatches) {
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
     return patches([

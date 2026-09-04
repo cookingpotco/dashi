@@ -1,7 +1,7 @@
-import { type Ctx, type Html } from "dashi";
+import { type Ctx, type SealHtml } from "dashi";
 import { recordWrite } from "./writes.ts";
 
-export function SlowWrite(_ctx: Ctx, html: Html) {
+export function SlowWrite(_ctx: Ctx, html: SealHtml) {
   return html(
     <form id="slow-form" method="POST" action="/slow-write">
       <button id="slow-submit" type="submit">Slow</button>

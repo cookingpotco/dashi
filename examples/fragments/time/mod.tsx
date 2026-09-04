@@ -1,6 +1,6 @@
-import { type Ctx, type Html } from "dashi";
+import { type Ctx, type SealHtml } from "dashi";
 
-export function list(_ctx: Ctx, html: Html) {
+export function list(_ctx: Ctx, html: SealHtml) {
   return html(
     <span id="current-time">
       Current time: {new Date().toISOString()}

@@ -62,7 +62,7 @@ export interface SealOptions {
  * once. Fragments skip layouts. Default status depends on the call
  * site (GET 200, `notFound` 404, `error` / `fatal` 500).
  */
-export type Html = (
+export type SealHtml = (
   page: Element,
   opts?: SealOptions,
 ) => Response | Promise<Response>;
@@ -70,7 +70,7 @@ export type Html = (
 /**
  * Bound patch sealer. Never walks layouts. Default status 200.
  */
-export type Patches = (
+export type SealPatches = (
   list: readonly Patch[],
   opts?: SealOptions,
 ) => Response | Promise<Response>;
@@ -80,7 +80,7 @@ export type Patches = (
  *
  * @internal
  */
-export type Fatal = (html: Html) => Response | Promise<Response>;
+export type Fatal = (html: SealHtml) => Response | Promise<Response>;
 
 /**
  * Route function. Always returns a `Response`. Call `html()` to seal
@@ -99,7 +99,7 @@ export type Handler<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
   ctx: Ctx<Params, State>,
-  html: Html,
+  html: SealHtml,
 ) => Response | Promise<Response>;
 
 /**
@@ -114,7 +114,7 @@ export type ErrorHandler<
 > = (
   ctx: WrapperCtx<State>,
   thrown: unknown,
-  html: Html,
+  html: SealHtml,
 ) => Response | Promise<Response>;
 
 /**
@@ -145,7 +145,7 @@ export type WriteHandler<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
   ctx: Ctx<Params, State>,
-  patches: Patches,
+  patches: SealPatches,
 ) => Response | Promise<Response>;
 
 type HandlerMethod = Exclude<Method, "HEAD" | "OPTIONS">;

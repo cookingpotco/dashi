@@ -1,9 +1,9 @@
 import {
   type Ctx,
   group,
-  type Html,
   patch,
-  type Patches,
+  type SealHtml,
+  type SealPatches,
   type WrapperCtx,
 } from "dashi";
 import type { AppState } from "../state.ts";
@@ -20,7 +20,7 @@ export const fragment = group<AppState>(({ route }) => ({
 
 function Fragment(
   ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(
     <aside
@@ -35,7 +35,10 @@ function Fragment(
   );
 }
 
-function post(_ctx: Ctx<Record<string, never>, AppState>, patches: Patches) {
+function post(
+  _ctx: Ctx<Record<string, never>, AppState>,
+  patches: SealPatches,
+) {
   return patches([
     patch.replace(
       "/fragment",

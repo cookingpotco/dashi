@@ -1,8 +1,8 @@
 import {
   type Ctx,
   group,
-  type Html,
   RouteFragment,
+  type SealHtml,
   type WrapperCtx,
 } from "dashi";
 import type { AppState } from "../state.ts";
@@ -17,7 +17,7 @@ export const embed = group<AppState>(({ route }) => ({
   routes: [route("/embed", { GET: Embed })],
 }));
 
-function Embed(_ctx: Ctx<Record<string, never>, AppState>, html: Html) {
+function Embed(_ctx: Ctx<Record<string, never>, AppState>, html: SealHtml) {
   return html(
     <div>
       <section id="eager">

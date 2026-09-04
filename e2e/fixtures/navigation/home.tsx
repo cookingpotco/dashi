@@ -1,8 +1,11 @@
-import { type Ctx, type Html } from "dashi";
+import { type Ctx, type SealHtml } from "dashi";
 import type { AppState } from "./state.ts";
 import { GoAbout } from "./chrome/mod.tsx";
 
-export function Home(ctx: Ctx<Record<string, never>, AppState>, html: Html) {
+export function Home(
+  ctx: Ctx<Record<string, never>, AppState>,
+  html: SealHtml,
+) {
   ctx.state.title = "home";
   ctx.state.stylesheet = "/home.css";
   return html(

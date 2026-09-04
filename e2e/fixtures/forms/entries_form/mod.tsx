@@ -1,6 +1,6 @@
-import { type Ctx, type Html } from "dashi";
+import { type Ctx, type SealHtml } from "dashi";
 import { EntriesForm } from "../entries_form.tsx";
 
-export function list(_ctx: Ctx, html: Html) {
+export function list(_ctx: Ctx, html: SealHtml) {
   return html(<EntriesForm />);
 }

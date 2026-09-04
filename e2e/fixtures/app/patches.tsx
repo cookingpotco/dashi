@@ -1,6 +1,6 @@
-import { type Ctx, type Html, patch, type Patches } from "dashi";
+import { type Ctx, patch, type SealHtml, type SealPatches } from "dashi";
 
-export function form(_ctx: Ctx, html: Html) {
+export function form(_ctx: Ctx, html: SealHtml) {
   return html(
     <form id="patches-form" method="POST" action="/patches">
       <input name="title" />
@@ -9,7 +9,7 @@ export function form(_ctx: Ctx, html: Html) {
   );
 }
 
-export async function apply(ctx: Ctx, patches: Patches) {
+export async function apply(ctx: Ctx, patches: SealPatches) {
   const title = (await ctx.req.formData()).get("title");
   const text = typeof title === "string" && title !== "" ? title : "item";
   return patches([

@@ -1,11 +1,11 @@
-import type { Ctx, Html } from "dashi";
+import type { Ctx, SealHtml } from "dashi";
 import type { AppState } from "./state.ts";
 
 const entries: string[] = [];
 
 export function list(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(
     <div>

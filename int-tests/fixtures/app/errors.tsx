@@ -1,10 +1,10 @@
-import { type Ctx, type Html, RouteFragment, type WrapperCtx } from "dashi";
+import { type Ctx, RouteFragment, type SealHtml, type WrapperCtx } from "dashi";
 import type { Element } from "dashi/jsx-runtime";
 import type { AppState } from "./state.ts";
 
 export function NotFound(
   ctx: Ctx<Record<string, string>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   if (ctx.url.pathname === "/not-found-throws") {
     throw new Error("not-found-throws");
@@ -17,14 +17,14 @@ export function NotFound(
 
 export function ApiNotFound(
   _ctx: Ctx<Record<string, string>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(<p id="api-not-found">api-404</p>);
 }
 
 export function ApiV2NotFound(
   _ctx: Ctx<Record<string, string>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(<p id="api-v2-not-found">api-v2-404</p>);
 }
@@ -32,7 +32,7 @@ export function ApiV2NotFound(
 export function RootError(
   _ctx: WrapperCtx<AppState>,
   thrown: unknown,
-  html: Html,
+  html: SealHtml,
 ) {
   if (thrown instanceof Error && thrown.message === "error-handler-boom") {
     throw thrown;
@@ -43,7 +43,7 @@ export function RootError(
   return html(<p id="root-error">root-error</p>);
 }
 
-export function fatal(html: Html) {
+export function fatal(html: SealHtml) {
   return html(
     <html>
       <body>
@@ -67,7 +67,7 @@ export function throwServiceUnavailable(): never {
 
 export function okPage(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(<p id="ok-page">ok</p>);
 }
@@ -75,7 +75,7 @@ export function okPage(
 export function nestedError(
   _ctx: WrapperCtx<AppState>,
   _thrown: unknown,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(<p id="nested-error">nested-error</p>);
 }
@@ -114,7 +114,7 @@ export function jsonError(): Response {
 export function compactError(
   _ctx: WrapperCtx<AppState>,
   _thrown: unknown,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(<p id="frag-error">frag-error-ui</p>);
 }
@@ -139,7 +139,7 @@ export function throwingMw(): Response {
 
 export function embedFragThrow(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(
     <div id="embed-throw">
@@ -150,7 +150,7 @@ export function embedFragThrow(
 
 export function embedFragError(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(
     <div id="embed-error">
@@ -161,7 +161,7 @@ export function embedFragError(
 
 export function embedFragErrorResponse(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(
     <div id="embed-error-res">
@@ -172,7 +172,7 @@ export function embedFragErrorResponse(
 
 export function embedFragErrorThrows(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(
     <div id="embed-error-throws">
@@ -183,7 +183,7 @@ export function embedFragErrorThrows(
 
 export function embedFragMiss(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(
     <div id="embed-miss">
@@ -195,7 +195,7 @@ export function embedFragMiss(
 export function messageError(
   _ctx: WrapperCtx<AppState>,
   thrown: unknown,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(
     <p id="fragment-fault">
@@ -206,91 +206,91 @@ export function messageError(
 
 export function SelfInclude(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(<RouteFragment src="/self-include" />);
 }
 
 export function CycleA(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(<RouteFragment src="/cycle-b" />);
 }
 
 export function CycleB(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(<RouteFragment src="/cycle-a" />);
 }
 
 export function EmbedCycle(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(<RouteFragment src="/cycle-a" />);
 }
 
 export function CycleQuery(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(<RouteFragment src="/cycle-query?y=2" />);
 }
 
 export function EmbedCycleQuery(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(<RouteFragment src="/cycle-query?x=1" />);
 }
 
 export function DepthEmbed(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(<RouteFragment src="/d1" />);
 }
 
 export function Depth1(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(<RouteFragment src="/d2" />);
 }
 
 export function Depth2(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(<RouteFragment src="/d3" />);
 }
 
 export function Depth3(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(<RouteFragment src="/d4" />);
 }
 
 export function Depth4(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(<RouteFragment src="/d5" />);
 }
 
 export function Depth5(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(<RouteFragment src="/d6" />);
 }
 
 export function Depth6(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(<p id="depth-leaf">depth-leaf</p>);
 }
@@ -311,7 +311,7 @@ function delay(ms: number, signal: AbortSignal): Promise<void> {
 
 export async function Slow(
   ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   await delay(1000, ctx.req.signal);
   return html(<p id="slow">slow-body</p>);
@@ -319,7 +319,7 @@ export async function Slow(
 
 export async function SlowShort(
   ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   await delay(150, ctx.req.signal);
   return html(
@@ -332,7 +332,7 @@ export async function SlowShort(
 
 export async function WaitOut(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   await new Promise((resolve) => setTimeout(resolve, 200));
   return html(<p id="wait-out">wait-out-body</p>);
@@ -340,7 +340,7 @@ export async function WaitOut(
 
 export function EmbedSlow(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(
     <div id="embed-slow">
@@ -352,7 +352,7 @@ export function EmbedSlow(
 
 export function EmbedSlowEmpty(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(
     <div id="embed-slow-empty">
@@ -364,7 +364,7 @@ export function EmbedSlowEmpty(
 
 export function EmbedSlowHeld(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(
     <div id="embed-slow-held">

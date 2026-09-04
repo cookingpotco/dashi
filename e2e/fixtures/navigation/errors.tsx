@@ -1,9 +1,14 @@
-import { type Ctx, type Html, NavigationRoot, type WrapperCtx } from "dashi";
+import {
+  type Ctx,
+  NavigationRoot,
+  type SealHtml,
+  type WrapperCtx,
+} from "dashi";
 import type { AppState } from "./state.ts";
 
 export function NotFound(
   _ctx: Ctx<Record<string, string>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(
     <html>
@@ -21,12 +26,12 @@ export function NotFound(
 export function ErrorPage(
   _ctx: WrapperCtx<AppState>,
   _thrown: unknown,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(<p id="heading">error</p>);
 }
 
-export function fatal(html: Html) {
+export function fatal(html: SealHtml) {
   return html(
     <html>
       <body>Something went wrong</body>

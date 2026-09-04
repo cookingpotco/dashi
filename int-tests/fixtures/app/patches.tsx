@@ -1,9 +1,9 @@
-import { type Ctx, patch, type Patches } from "dashi";
+import { type Ctx, patch, type SealPatches } from "dashi";
 import type { AppState } from "./state.ts";
 
 export function post(
   _ctx: Ctx<Record<string, never>, AppState>,
-  patches: Patches,
+  patches: SealPatches,
 ) {
   return patches([
     patch.append("#todos", <li>milk</li>),
@@ -18,7 +18,7 @@ export function post(
 
 export function postUnprocessable(
   _ctx: Ctx<Record<string, never>, AppState>,
-  patches: Patches,
+  patches: SealPatches,
 ) {
   return patches([
     patch.replace("#status", <p>invalid</p>),

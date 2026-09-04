@@ -1,4 +1,4 @@
-import { type Ctx, type Html, patch, type Patches } from "dashi";
+import { type Ctx, patch, type SealHtml, type SealPatches } from "dashi";
 
 function Frag({ item }: { item?: string }) {
   return (
@@ -16,11 +16,11 @@ function Frag({ item }: { item?: string }) {
   );
 }
 
-export function list(_ctx: Ctx, html: Html) {
+export function list(_ctx: Ctx, html: SealHtml) {
   return html(<Frag />);
 }
 
-export async function update(ctx: Ctx, patches: Patches) {
+export async function update(ctx: Ctx, patches: SealPatches) {
   const title = (await ctx.req.formData()).get("title");
   const text = typeof title === "string" && title !== "" ? title : "item";
   return patches([patch.replace("/frag", <Frag item={text} />)]);

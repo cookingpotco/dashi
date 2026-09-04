@@ -1,9 +1,9 @@
-import { type Ctx, type Html, RouteFragment } from "dashi";
+import { type Ctx, RouteFragment, type SealHtml } from "dashi";
 import type { AppState } from "./state.ts";
 
 export function DistinctQuery(
   _ctx: Ctx<Record<string, never>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(
     <div id="distinct-query">

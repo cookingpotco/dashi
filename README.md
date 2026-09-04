@@ -109,16 +109,16 @@ wait (5000 if omitted), and a timeout fails the include.
 ```tsx
 import {
   type Ctx,
-  type Html,
   patch,
-  type Patches,
   RouteFragment,
+  type SealHtml,
+  type SealPatches,
   serve,
 } from "dashi";
 
 const todos: string[] = [];
 
-function Home(_ctx: Ctx, html: Html) {
+function Home(_ctx: Ctx, html: SealHtml) {
   return html(
     <html>
       <h1>Todos</h1>
@@ -142,16 +142,16 @@ function TodoList({ error }: { error?: string }) {
   );
 }
 
-function list(_ctx: Ctx, html: Html) {
+function list(_ctx: Ctx, html: SealHtml) {
   return html(<TodoList />);
 }
 
-async function create(ctx: Ctx, patches: Patches) {
+async function create(ctx: Ctx, patches: SealPatches) {
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
     return patches([
       patch.replace("/todos", <TodoList error="title is required" />),
-    ]);
+    ], { status: 422 });
   }
   todos.push(title);
   return patches([patch.replace("/todos", <TodoList />)]);
@@ -172,8 +172,8 @@ target: `/${string}` updates every `<RouteFragment>` rendering that `src`;
 `after` sit beside the target; replacing the node itself is `before` or `after`
 then `remove`. Use `replace` when the write has the markup; use `refresh` when
 fragments should re-fetch themselves asynchronously. A write handler seals that
-list with `patches()`, or returns a `Response` — not a document. The form can
-sit anywhere on the page.
+list with `patches()`, or returns a non-HTML `Response` (redirect, JSON, 204,
+etc.). The form can sit anywhere on the page.
 
 ## Other features
 

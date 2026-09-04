@@ -1,6 +1,6 @@
-import { type Ctx, type Html, type WrapperCtx } from "dashi";
+import { type Ctx, type SealHtml, type WrapperCtx } from "dashi";
 
-export function NotFound(_ctx: Ctx<Record<string, string>>, html: Html) {
+export function NotFound(_ctx: Ctx<Record<string, string>>, html: SealHtml) {
   return html(
     <p id="not-found">
       Page not found
@@ -11,7 +11,7 @@ export function NotFound(_ctx: Ctx<Record<string, string>>, html: Html) {
 export function ErrorPage(
   _ctx: WrapperCtx,
   thrown: unknown,
-  html: Html,
+  html: SealHtml,
 ) {
   const message = thrown instanceof Error ? thrown.message : "Unknown error";
   return html(
@@ -21,7 +21,7 @@ export function ErrorPage(
   );
 }
 
-export function fatal(html: Html) {
+export function fatal(html: SealHtml) {
   return html(
     <html>
       <body>Something went wrong</body>

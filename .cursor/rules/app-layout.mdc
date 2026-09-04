@@ -61,14 +61,14 @@ callback. Do not export `route()`.
 
 ```tsx
 // home/mod.tsx
-export function Home(_ctx: Ctx, html: Html) {
+export function Home(_ctx: Ctx, html: SealHtml) {
   return html(<h1>Hello</h1>);
 }
 ```
 
 ```tsx
 // guestbook/mod.tsx
-export function list(_ctx: Ctx, html: Html) {
+export function list(_ctx: Ctx, html: SealHtml) {
   return html(<h1>Guestbook</h1>);
 }
 
@@ -135,7 +135,7 @@ the same rule.
 
 ## Imports
 
-App code imports from `dashi` (`Html`, `Patches`, `Ctx`, `serve`, …).
+App code imports from `dashi` (`SealHtml`, `SealPatches`, `Ctx`, `serve`, …).
 JSX types (`Element`, `HTMLAttributes`, `DashiNode`, `JSX`) import from
 `dashi/jsx-runtime`. Browser APIs import from `dashi/client`. CORS
 imports from `dashi/cors`. The published export list lives in the

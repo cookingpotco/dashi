@@ -1,8 +1,8 @@
-import { type Ctx, type Html } from "dashi";
+import { type Ctx, type SealHtml } from "dashi";
 
 const entries: string[] = [];
 
-export function list(_ctx: Ctx, html: Html) {
+export function list(_ctx: Ctx, html: SealHtml) {
   return html(
     <div>
       <h2>Guestbook</h2>

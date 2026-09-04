@@ -14,12 +14,12 @@ import {
   DASHI_PREFIX,
   type Fatal,
   type GroupBoundary,
-  type Html,
   type Method,
   METHODS,
-  type Patches,
   REQUEST_HEADERS,
+  type SealHtml,
   type SealOptions,
+  type SealPatches,
 } from "../shared/mod.ts";
 import {
   compile,
@@ -145,7 +145,7 @@ function bindHtml(
   ctx: RequestCtx,
   boundary: GroupBoundary<Record<string, unknown>> | undefined,
   defaultStatus: number,
-): Html {
+): SealHtml {
   return async (page, opts?: SealOptions) => {
     const walked = ctx.isFragment
       ? page
@@ -159,7 +159,7 @@ function bindHtml(
   };
 }
 
-function bindPatches(ctx: RequestCtx): Patches {
+function bindPatches(ctx: RequestCtx): SealPatches {
   return async (list, opts?: SealOptions) =>
     await seal(renderPatches(list), {
       status: opts?.status ?? 200,
@@ -169,7 +169,7 @@ function bindPatches(ctx: RequestCtx): Patches {
     });
 }
 
-function bindFatalHtml(req: Request): Html {
+function bindFatalHtml(req: Request): SealHtml {
   return async (page, opts?: SealOptions) =>
     await seal(page, {
       status: opts?.status ?? 500,

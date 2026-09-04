@@ -1,11 +1,11 @@
-import { client, type Ctx, type Html, serve } from "dashi";
+import { client, type Ctx, type SealHtml, serve } from "dashi";
 
 const Probe = client.element(
   "probe-el",
   new URL("./probe_client.ts", import.meta.url),
 );
 
-function home(_ctx: Ctx, html: Html) {
+function home(_ctx: Ctx, html: SealHtml) {
   return html(
     <html>
       <Probe>probe</Probe>

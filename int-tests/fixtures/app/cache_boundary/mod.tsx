@@ -2,7 +2,7 @@ import {
   CacheStrategy,
   type Ctx,
   group,
-  type Html,
+  type SealHtml,
   type WrapperCtx,
 } from "dashi";
 import type { AppState } from "../state.ts";
@@ -18,7 +18,7 @@ export const cacheBoundary = group<AppState>(
 
 function CacheNotFound(
   _ctx: Ctx<Record<string, string>, AppState>,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(<p id="cache-not-found">cached-not-found</p>, {
     cache: { strategy: CacheStrategy.Public, maxAge: 90 },
@@ -28,7 +28,7 @@ function CacheNotFound(
 function CacheError(
   _ctx: WrapperCtx<AppState>,
   _thrown: unknown,
-  html: Html,
+  html: SealHtml,
 ) {
   return html(<p id="cache-error">cached-error</p>, {
     cache: { strategy: CacheStrategy.Public, maxAge: 45 },

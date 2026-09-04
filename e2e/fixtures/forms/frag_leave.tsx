@@ -1,6 +1,6 @@
-import { type Ctx, type Html } from "dashi";
+import { type Ctx, type SealHtml } from "dashi";
 
-export function list(_ctx: Ctx, html: Html) {
+export function list(_ctx: Ctx, html: SealHtml) {
   return html(
     <form id="frag-leave" method="POST" action="/frag-leave">
       <button id="frag-leave-submit" type="submit">Leave</button>

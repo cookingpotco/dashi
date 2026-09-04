@@ -6,7 +6,7 @@ import {
   handle,
   init,
 } from "../routing/mod.ts";
-import type { Html } from "../shared/mod.ts";
+import type { SealHtml } from "../shared/mod.ts";
 import { bindUrls, grantedNetworkInterfaces } from "./bind_urls.ts";
 
 /**
@@ -54,7 +54,7 @@ export async function serve<
      * sent as-is. Omitted: `new Response("Something Went Wrong", {
      * status: 500 })`.
      */
-    fatal?: (html: Html) => Response | Promise<Response>;
+    fatal?: (html: SealHtml) => Response | Promise<Response>;
     /**
      * Max eager include chain length. Omitted is 5. A longer chain
      * fails the request.

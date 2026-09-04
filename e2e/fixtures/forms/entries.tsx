@@ -1,4 +1,10 @@
-import { type Ctx, type Html, patch, type Patches, RouteFragment } from "dashi";
+import {
+  type Ctx,
+  patch,
+  RouteFragment,
+  type SealHtml,
+  type SealPatches,
+} from "dashi";
 import { EntriesForm } from "./entries_form.tsx";
 import { recordWrite } from "./writes.ts";
 
@@ -38,11 +44,11 @@ function EntriesPage() {
   );
 }
 
-export function list(_ctx: Ctx, html: Html) {
+export function list(_ctx: Ctx, html: SealHtml) {
   return html(<EntriesPage />);
 }
 
-export async function write(ctx: Ctx, patches: Patches) {
+export async function write(ctx: Ctx, patches: SealPatches) {
   const data = await ctx.req.formData();
   if (data.get("intent") === "validate") {
     const title = data.get("title");

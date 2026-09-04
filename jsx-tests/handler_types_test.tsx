@@ -1,4 +1,4 @@
-import { type Ctx, type Html, type Patches, serve } from "dashi";
+import { type Ctx, type SealHtml, type SealPatches, serve } from "dashi";
 import type { Element } from "dashi/jsx-runtime";
 
 function typechecks() {
@@ -10,12 +10,12 @@ function typechecks() {
     error: (_ctx, _thrown, html) => html(<p>err</p>),
     routes: [
       route("/", {
-        GET: (_ctx, html: Html) => html(<p>ok</p>),
-        POST: (_ctx, patches: Patches) => patches([]),
+        GET: (_ctx, html: SealHtml) => html(<p>ok</p>),
+        POST: (_ctx, patches: SealPatches) => patches([]),
       }),
       route("/bad-write", {
-        // @ts-expect-error write second arg is Patches, not Html
-        POST: (_ctx: Ctx, html: Html) => html(<p>nope</p>),
+        // @ts-expect-error write second arg is SealPatches, not SealHtml
+        POST: (_ctx: Ctx, html: SealHtml) => html(<p>nope</p>),
       }),
     ],
   }), { fatal: (html) => html(<p>crash</p>) });

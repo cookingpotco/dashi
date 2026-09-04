@@ -1,6 +1,6 @@
-import { type Ctx, type Html } from "dashi";
+import { type Ctx, type SealHtml } from "dashi";
 
-export function Bare(_ctx: Ctx, html: Html) {
+export function Bare(_ctx: Ctx, html: SealHtml) {
   return html(
     <div>
       <h1 id="heading">bare</h1>

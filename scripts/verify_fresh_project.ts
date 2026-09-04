@@ -16,11 +16,11 @@ const UNUSED_LINK_RE = /Linked package '[^']+' was not used[^\n]*/;
 const BOOT_TIMEOUT_MS = 30_000;
 
 const MAIN_TSX =
-  `import { type Ctx, type Html, type Patches, patch, RouteFragment, serve } from "dashi";
+  `import { type Ctx, type SealHtml, type SealPatches, patch, RouteFragment, serve } from "dashi";
 
 const todos: string[] = [];
 
-function Home(_ctx: Ctx, html: Html) {
+function Home(_ctx: Ctx, html: SealHtml) {
   return html(
     <html>
       <h1>Todos</h1>
@@ -48,16 +48,16 @@ function TodoList({ error }: { error?: string }) {
   );
 }
 
-function list(_ctx: Ctx, html: Html) {
+function list(_ctx: Ctx, html: SealHtml) {
   return html(<TodoList />);
 }
 
-async function create(ctx: Ctx, patches: Patches) {
+async function create(ctx: Ctx, patches: SealPatches) {
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
     return patches([
       patch.replace("/todos", <TodoList error="title is required" />),
-    ]);
+    ], { status: 422 });
   }
   todos.push(title);
   return patches([patch.replace("/todos", <TodoList />)]);

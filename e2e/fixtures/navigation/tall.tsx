@@ -1,7 +1,10 @@
-import { type Ctx, type Html } from "dashi";
+import { type Ctx, type SealHtml } from "dashi";
 import type { AppState } from "./state.ts";
 
-export function Tall(_ctx: Ctx<Record<string, never>, AppState>, html: Html) {
+export function Tall(
+  _ctx: Ctx<Record<string, never>, AppState>,
+  html: SealHtml,
+) {
   return html(
     <div>
       <h1 id="heading">tall</h1>

@@ -1,11 +1,11 @@
-import { client, type Ctx, type Html, RouteFragment } from "dashi";
+import { client, type Ctx, RouteFragment, type SealHtml } from "dashi";
 
 const EagerMark = client.element(
   "eager-el",
   new URL("./eager_client.ts", import.meta.url),
 );
 
-export function EagerFrag(_ctx: Ctx, html: Html) {
+export function EagerFrag(_ctx: Ctx, html: SealHtml) {
   return html(
     <div>
       <EagerMark />
