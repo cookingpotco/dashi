@@ -71,14 +71,16 @@ Every config key a consumer needs, in one `deno.json`:
     "jsxImportSource": "dashi",
     "lib": ["dom", "deno.ns", "deno.unstable"]
   },
-  "unstable": ["bundle"],
+  "unstable": ["bundle", "no-legacy-abort"],
   "imports": {
     "dashi": "jsr:@cookingpot/dashi@^0.8.0"
   }
 }
 ```
 
-`unstable: ["bundle"]` is required until runtime `Deno.bundle` becomes stable.
+`unstable: ["bundle", "no-legacy-abort"]` is required until runtime
+`Deno.bundle` is stable and `request.signal` aborts only on client cancel.
+`serve()` cannot set CLI flags; put both in the `unstable` array.
 
 `lib` is that exact list. `dom` types client modules. `deno.ns` and
 `deno.unstable` are what `Deno.bundle` needs. A shorter array drops those.

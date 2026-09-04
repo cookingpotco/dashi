@@ -167,6 +167,20 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
+    name: "successful eager include is not treated as abort",
+    request: { path: "/embed" },
+    status: 200,
+    html: {
+      select: [
+        {
+          selector: "route-fragment:not([lazy]) #frag",
+          text: "eager-fragment-body",
+        },
+        { selector: "#peer", text: "peer-body" },
+      ],
+    },
+  },
+  {
     name: "eager fragment substitutes; lazy keeps fallback",
     request: { path: "/embed" },
     status: 200,
