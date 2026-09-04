@@ -17,7 +17,10 @@ const NavigationRootElement = client.element(
  * of the live head is replaced, and new stylesheets load before the
  * swap. History, back/forward, and scroll restoration are included.
  * `hardNavigation` on an `<a>` or a form opts that control out. From
- * client TypeScript, `import { navigate } from "dashi/client"`.
+ * client TypeScript, `import { navigate } from "dashi/client"`. After
+ * a successful swap, this element dispatches `dashi:navigated`
+ * (`bubbles`, `composed`) with `{ url, push }`. Listen on `document`
+ * or the host.
  *
  * Without this element, GET navigation is a real load. Writes still
  * apply patches when that runtime loaded.

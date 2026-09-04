@@ -218,7 +218,18 @@ restoration are included. Opt a link or form out with `hardNavigation`. From
 client TypeScript, `import { navigate } from "dashi/client"` and call
 `navigate(url)` for the same swap. Persistent elements left outside the host
 survive. The incoming document's `<head>` is merged so title, meta, and
-stylesheets update without unloading CSS already on the page.
+stylesheets update without unloading CSS already on the page. After a successful
+swap, the host dispatches `dashi:navigated` (`bubbles`, `composed`) with
+`{ url, push }`. Listen on `document` or the host.
+
+```ts
+document.addEventListener("dashi:navigated", (event) => {
+  if (!(event instanceof CustomEvent)) {
+    return;
+  }
+  const { url, push } = event.detail;
+});
+```
 
 **Static files** from a directory: `staticFile(ctx, dir, relative)` in a route
 handler. Pass `${import.meta.dirname}/static` so the folder travels with the
