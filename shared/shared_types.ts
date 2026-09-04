@@ -52,7 +52,9 @@ export interface ReadArgs<
   Params extends Record<string, string> = Record<string, never>,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
+  /** Per-invocation request context. */
   ctx: Ctx<Params, State>;
+  /** Bound HTML sealer. */
   html: SealHtml;
 }
 
@@ -64,7 +66,9 @@ export interface WriteArgs<
   Params extends Record<string, string> = Record<string, never>,
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
+  /** Per-invocation request context. */
   ctx: Ctx<Params, State>;
+  /** Bound patch sealer. */
   patches: SealPatches;
 }
 
@@ -80,13 +84,17 @@ export type NotFoundArgs<
 export interface ErrorArgs<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
+  /** Per-invocation request context. */
   ctx: WrapperCtx<State>;
+  /** Raw thrown value. */
   thrown: unknown;
+  /** Bound HTML sealer. Default status 500. */
   html: SealHtml;
 }
 
 /** Last-resort 500 bag. No `ctx`, no `thrown`. */
 export interface FatalArgs {
+  /** Bound HTML sealer. Default status 500. No layouts. */
   html: SealHtml;
 }
 
@@ -94,7 +102,9 @@ export interface FatalArgs {
 export interface LayoutArgs<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
+  /** Per-invocation request context. `state` is readonly. */
   ctx: LayoutCtx<State>;
+  /** Wrapped route output. */
   children: Element;
 }
 
@@ -102,7 +112,9 @@ export interface LayoutArgs<
 export interface MiddlewareArgs<
   State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
+  /** Per-invocation request context. Mutate `state` in place. */
   ctx: WrapperCtx<State>;
+  /** Next middleware or the matched handler. */
   next: () => Promise<Response>;
 }
 
