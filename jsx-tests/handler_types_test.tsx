@@ -2,11 +2,6 @@ import { type Ctx, type Html, type Patches, serve } from "dashi";
 import type { Element } from "dashi/jsx-runtime";
 
 function typechecks() {
-  // @ts-expect-error cached is not an export
-  const _cached: typeof import("dashi")["cached"] = undefined;
-  // @ts-expect-error status is not an export
-  const _status: typeof import("dashi")["status"] = undefined;
-
   serve(({ route }) => ({
     layouts: [
       (_ctx, children): Element => children,

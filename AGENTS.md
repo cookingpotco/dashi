@@ -50,7 +50,10 @@ route handler is a narrower entry point; if the user hits it over HTTP, the case
 belongs in `int-tests/`.
 
 **Don't test what never happens.** A situation the product never produces is not
-coverage.
+coverage. Do not test that an API is absent: a missing export, a type that
+should not exist, or a failed import of a name that is not on `dashi` is not a
+case. `@ts-expect-error` is for a call that exists and is illegal (wrong sealer,
+layout returning `Response`), not for a name that is not there.
 
 **One flow per test.** Cover as much of that flow as will hold. Several asserts
 on one input are right; running the same input again for each detail of the
