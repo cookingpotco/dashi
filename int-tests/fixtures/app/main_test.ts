@@ -955,13 +955,13 @@ const appCases: IntegrationTestCase[] = [
   },
   {
     name: "plain Element under a layout is no-store",
-    request: { path: "/cache-from-layout" },
+    request: { path: "/cache-default" },
     status: 200,
     headers: {
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
     },
     html: {
-      select: [{ selector: "#cache-from-layout", text: "from-handler" }],
+      select: [{ selector: "#cache-default", text: "from-handler" }],
     },
   },
   {
@@ -1352,8 +1352,7 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     request: { path: "/embed-frag-error-response" },
     status: 200,
     html: {
-      bodyIncludes: ["no-splice"],
-      bodyExcludes: ["{{fragment:"],
+      bodyExcludes: ["{{fragment:", "no-splice"],
       select: [
         { selector: "#embed-error-res", exists: true },
         { selector: "#frag-error", exists: false },

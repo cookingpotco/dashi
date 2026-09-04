@@ -144,6 +144,10 @@ function requestEagerFragment(src: string, timeoutMs: number): string {
       if (!out) {
         return null;
       }
+      const type = out.headers.get("content-type");
+      if (type === null || !type.toLowerCase().startsWith("text/html")) {
+        return null;
+      }
       return await out.text();
     } catch (thrown) {
       Logger.error(["fragments"], "eager fragment failed", thrown);
