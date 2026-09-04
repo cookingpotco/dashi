@@ -23,7 +23,7 @@ function home(_ctx: Ctx, html: Html) {
   return html(<p id="home">home</p>);
 }
 
-function boom() {
+function boom(): never {
   throw new Error("handler-boom");
 }
 

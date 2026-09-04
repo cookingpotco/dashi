@@ -53,15 +53,15 @@ export function fatal(html: Html) {
   );
 }
 
-export function throwHandler() {
+export function throwHandler(): never {
   throw new Error("handler-boom");
 }
 
-export function throwErrorHandlerBoom() {
+export function throwErrorHandlerBoom(): never {
   throw new Error("error-handler-boom");
 }
 
-export function throwServiceUnavailable() {
+export function throwServiceUnavailable(): never {
   throw new Error("service-unavailable");
 }
 
@@ -99,11 +99,11 @@ export function noErrorLayout(
   return <div id="no-error-wrap">{children}</div>;
 }
 
-export function throwingLayout() {
+export function throwingLayout(): never {
   throw new Error("nested-layout");
 }
 
-export function throwingError() {
+export function throwingError(): never {
   throw new Error("error-fn-boom");
 }
 

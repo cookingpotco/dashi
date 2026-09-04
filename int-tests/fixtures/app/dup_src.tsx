@@ -1,6 +1,7 @@
 import { type Ctx, type Html, RouteFragment } from "dashi";
+import type { AppState } from "./state.ts";
 
-export function DupSrc(_ctx: Ctx, html: Html) {
+export function DupSrc(_ctx: Ctx<Record<string, never>, AppState>, html: Html) {
   return html(
     <div id="dup-src">
       <div id="dup-a">

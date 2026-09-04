@@ -17,7 +17,7 @@ export const embed = group<AppState>(({ route }) => ({
   routes: [route("/embed", { GET: Embed })],
 }));
 
-function Embed(_ctx: Ctx, html: Html) {
+function Embed(_ctx: Ctx<Record<string, never>, AppState>, html: Html) {
   return html(
     <div>
       <section id="eager">

@@ -35,7 +35,7 @@ function Fragment(
   );
 }
 
-function post(_ctx: Ctx, patches: Patches) {
+function post(_ctx: Ctx<Record<string, never>, AppState>, patches: Patches) {
   return patches([
     patch.replace(
       "/fragment",

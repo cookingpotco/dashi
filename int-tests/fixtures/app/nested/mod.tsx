@@ -7,7 +7,7 @@ export const nested = group<AppState>(({ route }) => ({
   routes: [route("/nested", { GET: Nested })],
 }));
 
-function Nested(_ctx: Ctx, html: Html) {
+function Nested(_ctx: Ctx<Record<string, never>, AppState>, html: Html) {
   return html(
     <div>
       <code>nested</code>

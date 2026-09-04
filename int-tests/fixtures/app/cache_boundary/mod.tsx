@@ -16,7 +16,10 @@ export const cacheBoundary = group<AppState>(
   }),
 );
 
-function CacheNotFound(_ctx: Ctx, html: Html) {
+function CacheNotFound(
+  _ctx: Ctx<Record<string, string>, AppState>,
+  html: Html,
+) {
   return html(<p id="cache-not-found">cached-not-found</p>, {
     cache: { strategy: CacheStrategy.Public, maxAge: 90 },
   });

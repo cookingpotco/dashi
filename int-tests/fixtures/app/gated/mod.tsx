@@ -16,6 +16,6 @@ export const gated = group<AppState>(({ route }) => ({
   routes: [route("/gated", { GET: Gated })],
 }));
 
-function Gated(_ctx: Ctx, html: Html) {
+function Gated(_ctx: Ctx<Record<string, never>, AppState>, html: Html) {
   return html(<p id="gated">welcome</p>);
 }

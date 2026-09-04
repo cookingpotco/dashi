@@ -1,6 +1,10 @@
 import { CacheStrategy, type Ctx, type Html } from "dashi";
+import type { AppState } from "./state.ts";
 
-export function CachePublic(_ctx: Ctx, html: Html) {
+export function CachePublic(
+  _ctx: Ctx<Record<string, never>, AppState>,
+  html: Html,
+) {
   return html(<p id="cache-public">cached-public</p>, {
     cache: {
       strategy: CacheStrategy.Public,
