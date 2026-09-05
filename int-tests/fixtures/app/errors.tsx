@@ -60,7 +60,7 @@ export function throwServiceUnavailable(): never {
   throw new Error("service-unavailable");
 }
 
-export function okPage({ html }: ReadArgs<Record<string, never>, AppState>) {
+export function okPage({ html }: ReadArgs<{ state: AppState }>) {
   return html(<p id="ok-page">ok</p>);
 }
 
@@ -115,7 +115,7 @@ export function throwingMw(): Response {
 }
 
 export function embedFragThrow(
-  { html }: ReadArgs<Record<string, never>, AppState>,
+  { html }: ReadArgs<{ state: AppState }>,
 ) {
   return html(
     <div id="embed-throw">
@@ -125,7 +125,7 @@ export function embedFragThrow(
 }
 
 export function embedFragError(
-  { html }: ReadArgs<Record<string, never>, AppState>,
+  { html }: ReadArgs<{ state: AppState }>,
 ) {
   return html(
     <div id="embed-error">
@@ -135,7 +135,7 @@ export function embedFragError(
 }
 
 export function embedFragErrorResponse(
-  { html }: ReadArgs<Record<string, never>, AppState>,
+  { html }: ReadArgs<{ state: AppState }>,
 ) {
   return html(
     <div id="embed-error-res">
@@ -145,7 +145,7 @@ export function embedFragErrorResponse(
 }
 
 export function embedFragErrorThrows(
-  { html }: ReadArgs<Record<string, never>, AppState>,
+  { html }: ReadArgs<{ state: AppState }>,
 ) {
   return html(
     <div id="embed-error-throws">
@@ -155,7 +155,7 @@ export function embedFragErrorThrows(
 }
 
 export function embedFragMiss(
-  { html }: ReadArgs<Record<string, never>, AppState>,
+  { html }: ReadArgs<{ state: AppState }>,
 ) {
   return html(
     <div id="embed-miss">
@@ -173,64 +173,64 @@ export function messageError({ thrown, html }: ErrorArgs<AppState>) {
 }
 
 export function SelfInclude(
-  { html }: ReadArgs<Record<string, never>, AppState>,
+  { html }: ReadArgs<{ state: AppState }>,
 ) {
   return html(<RouteFragment src="/self-include" />);
 }
 
-export function CycleA({ html }: ReadArgs<Record<string, never>, AppState>) {
+export function CycleA({ html }: ReadArgs<{ state: AppState }>) {
   return html(<RouteFragment src="/cycle-b" />);
 }
 
-export function CycleB({ html }: ReadArgs<Record<string, never>, AppState>) {
+export function CycleB({ html }: ReadArgs<{ state: AppState }>) {
   return html(<RouteFragment src="/cycle-a" />);
 }
 
 export function EmbedCycle(
-  { html }: ReadArgs<Record<string, never>, AppState>,
+  { html }: ReadArgs<{ state: AppState }>,
 ) {
   return html(<RouteFragment src="/cycle-a" />);
 }
 
 export function CycleQuery(
-  { html }: ReadArgs<Record<string, never>, AppState>,
+  { html }: ReadArgs<{ state: AppState }>,
 ) {
   return html(<RouteFragment src="/cycle-query?y=2" />);
 }
 
 export function EmbedCycleQuery(
-  { html }: ReadArgs<Record<string, never>, AppState>,
+  { html }: ReadArgs<{ state: AppState }>,
 ) {
   return html(<RouteFragment src="/cycle-query?x=1" />);
 }
 
 export function DepthEmbed(
-  { html }: ReadArgs<Record<string, never>, AppState>,
+  { html }: ReadArgs<{ state: AppState }>,
 ) {
   return html(<RouteFragment src="/d1" />);
 }
 
-export function Depth1({ html }: ReadArgs<Record<string, never>, AppState>) {
+export function Depth1({ html }: ReadArgs<{ state: AppState }>) {
   return html(<RouteFragment src="/d2" />);
 }
 
-export function Depth2({ html }: ReadArgs<Record<string, never>, AppState>) {
+export function Depth2({ html }: ReadArgs<{ state: AppState }>) {
   return html(<RouteFragment src="/d3" />);
 }
 
-export function Depth3({ html }: ReadArgs<Record<string, never>, AppState>) {
+export function Depth3({ html }: ReadArgs<{ state: AppState }>) {
   return html(<RouteFragment src="/d4" />);
 }
 
-export function Depth4({ html }: ReadArgs<Record<string, never>, AppState>) {
+export function Depth4({ html }: ReadArgs<{ state: AppState }>) {
   return html(<RouteFragment src="/d5" />);
 }
 
-export function Depth5({ html }: ReadArgs<Record<string, never>, AppState>) {
+export function Depth5({ html }: ReadArgs<{ state: AppState }>) {
   return html(<RouteFragment src="/d6" />);
 }
 
-export function Depth6({ html }: ReadArgs<Record<string, never>, AppState>) {
+export function Depth6({ html }: ReadArgs<{ state: AppState }>) {
   return html(<p id="depth-leaf">depth-leaf</p>);
 }
 
@@ -249,14 +249,14 @@ function delay(ms: number, signal: AbortSignal): Promise<void> {
 }
 
 export async function Slow(
-  { ctx, html }: ReadArgs<Record<string, never>, AppState>,
+  { ctx, html }: ReadArgs<{ state: AppState }>,
 ) {
   await delay(1000, ctx.req.signal);
   return html(<p id="slow">slow-body</p>);
 }
 
 export async function SlowShort(
-  { ctx, html }: ReadArgs<Record<string, never>, AppState>,
+  { ctx, html }: ReadArgs<{ state: AppState }>,
 ) {
   await delay(150, ctx.req.signal);
   return html(
@@ -268,13 +268,13 @@ export async function SlowShort(
 }
 
 export async function WaitOut(
-  { html }: ReadArgs<Record<string, never>, AppState>,
+  { html }: ReadArgs<{ state: AppState }>,
 ) {
   await new Promise((resolve) => setTimeout(resolve, 200));
   return html(<p id="wait-out">wait-out-body</p>);
 }
 
-export function EmbedSlow({ html }: ReadArgs<Record<string, never>, AppState>) {
+export function EmbedSlow({ html }: ReadArgs<{ state: AppState }>) {
   return html(
     <div id="embed-slow">
       <RouteFragment src="/slow" timeout={50} />
@@ -284,7 +284,7 @@ export function EmbedSlow({ html }: ReadArgs<Record<string, never>, AppState>) {
 }
 
 export function EmbedSlowEmpty(
-  { html }: ReadArgs<Record<string, never>, AppState>,
+  { html }: ReadArgs<{ state: AppState }>,
 ) {
   return html(
     <div id="embed-slow-empty">
@@ -295,7 +295,7 @@ export function EmbedSlowEmpty(
 }
 
 export function EmbedSlowHeld(
-  { html }: ReadArgs<Record<string, never>, AppState>,
+  { html }: ReadArgs<{ state: AppState }>,
 ) {
   return html(
     <div id="embed-slow-held">

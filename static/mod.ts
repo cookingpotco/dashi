@@ -123,7 +123,7 @@ async function realPath(path: string): Promise<string | null> {
  * ```
  */
 export async function staticFile(
-  ctx: Ctx<Record<string, string>, Record<string, unknown>>,
+  ctx: Ctx<Record<string, unknown>, Record<string, string>>,
   dir: string,
   relative: string,
   cache: CacheConfig = {

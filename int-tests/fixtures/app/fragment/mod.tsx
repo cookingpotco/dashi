@@ -17,7 +17,7 @@ export const fragment = group<AppState>(({ route }) => ({
   routes: [route("/fragment", { GET: Fragment, POST: post })],
 }));
 
-function Fragment({ ctx, html }: ReadArgs<Record<string, never>, AppState>) {
+function Fragment({ ctx, html }: ReadArgs<{ state: AppState }>) {
   return html(
     <aside
       id="frag"
@@ -31,7 +31,7 @@ function Fragment({ ctx, html }: ReadArgs<Record<string, never>, AppState>) {
   );
 }
 
-function post({ patches }: WriteArgs<Record<string, never>, AppState>) {
+function post({ patches }: WriteArgs<{ state: AppState }>) {
   return patches([
     patch.replace(
       "/fragment",

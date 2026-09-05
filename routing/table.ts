@@ -49,18 +49,18 @@ type ConcreteSegment =
 
 /** @internal */
 export interface Route<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 > {
   kind: NodeKind.Route;
   path: string;
-  handlers: MethodHandlers<Record<string, string>, State>;
+  handlers: MethodHandlers<State, Record<string, string>>;
 }
 
 interface FlattenedRoute<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 > {
   path: string;
-  handlers: MethodHandlers<Record<string, string>, State>;
+  handlers: MethodHandlers<State, Record<string, string>>;
   boundary?: GroupBoundary<State>;
   middleware: Middleware<State>[];
 }
@@ -71,7 +71,7 @@ interface FlattenedRoute<
  * at compile.
  */
 export interface Group<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 > {
   /** Marks this as a group. */
   kind: NodeKind.Group;
@@ -84,14 +84,14 @@ export interface Group<
   /** Catches handler throws and inner group failures. */
   error?: ErrorHandler<State>;
   /** Document miss handler under this group's prefix. */
-  notFound?: Handler<Record<string, string>, State>;
+  notFound?: Handler<State, Record<string, string>>;
   /** Child routes and nested groups. */
   routes: Array<Route<State> | Group<State>>;
 }
 
 /** @internal */
 export interface GroupFields<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 > {
   /**
    * Shared UI that wraps the route on document render, outermost first.
@@ -116,7 +116,7 @@ export interface GroupFields<
    * `Response` is sent as-is. Omitted: walk to the parent. Root
    * remains the default.
    */
-  notFound?: Handler<Record<string, string>, State>;
+  notFound?: Handler<State, Record<string, string>>;
   routes: Array<Route<State> | Group<State>>;
 }
 
@@ -141,7 +141,7 @@ type PrefixArg<Prefix extends string> = string extends Prefix ? Prefix
 /** @internal */
 export interface GroupCallback<
   Prefix extends string = "",
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 > {
   /**
    * Declares a path with per-method handlers. Two `route()` calls for
@@ -150,16 +150,16 @@ export interface GroupCallback<
    */
   route<Path extends string>(
     path: ValidChildPath<Prefix, Path>,
-    handlers: MethodHandlers<ChildParams<Prefix, Path>, State>,
+    handlers: MethodHandlers<State, ChildParams<Prefix, Path>>,
   ): Route<State>;
 }
 
 /** @internal */
 export interface CompiledRoute<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 > {
   segments: ConcreteSegment[];
-  handlers: MethodHandlers<Record<string, string>, State>;
+  handlers: MethodHandlers<State, Record<string, string>>;
   boundary?: GroupBoundary<State>;
   middleware: Middleware<State>[];
   declarationIndex: number;
@@ -168,9 +168,9 @@ export interface CompiledRoute<
 
 /** @internal */
 export interface MatchedRoute<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 > {
-  handlers: MethodHandlers<Record<string, string>, State>;
+  handlers: MethodHandlers<State, Record<string, string>>;
   params: Record<string, string>;
   middleware: Middleware<State>[];
   boundary?: GroupBoundary<State>;
@@ -178,7 +178,7 @@ export interface MatchedRoute<
 
 /** @internal */
 export interface CompiledTable<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 > {
   staticByPath: Map<string, CompiledRoute<State>>;
   dynamic: CompiledRoute<State>[];
@@ -190,7 +190,7 @@ export interface CompiledTable<
 }
 
 interface PrefixCapture<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 > {
   segments: ConcreteSegment[];
   boundary: GroupBoundary<State>;
@@ -203,7 +203,7 @@ interface PrefixCapture<
  */
 /** @internal */
 export interface MissMatch<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 > {
   boundary: GroupBoundary<State>;
   middleware: Middleware<State>[];
@@ -364,7 +364,7 @@ function staticPathname(segments: ConcreteSegment[]): string | null {
 export const DEFAULT_FRAGMENT_DEPTH_LIMIT = 5;
 
 export function compile<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 >(
   table: Group<State>,
   fatal?: Fatal,
@@ -487,7 +487,7 @@ function matchPattern(
 }
 
 function matched<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 >(
   compiledRoute: CompiledRoute<State>,
   params: Record<string, string>,
@@ -501,7 +501,7 @@ function matched<
 }
 
 export function match<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 >(
   compiled: CompiledTable<State>,
   pathname: string,
@@ -544,7 +544,7 @@ function matchPrefix(
 }
 
 export function matchMiss<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 >(
   compiled: CompiledTable<State>,
   pathname: string,
@@ -626,7 +626,7 @@ function declareRoute<
 >(
   prefix: string | null,
   path: string,
-  handlers: MethodHandlers<Record<string, string>, State>,
+  handlers: MethodHandlers<State, Record<string, string>>,
 ): Route<State> {
   if (
     !METHODS.some((method) =>
@@ -646,7 +646,7 @@ function declareRoute<
 
 function createGroupCallback<
   Prefix extends string,
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 >(prefix: string | null): GroupCallback<Prefix, State> {
   return {
     route: (path, handlers) =>
@@ -691,7 +691,7 @@ function createGroupCallback<
  * ```
  */
 export function group<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
   const Prefix extends string = string,
 >(
   prefix: PrefixArg<Prefix>,
@@ -699,12 +699,12 @@ export function group<
 ): Group<State>;
 /** Pathless group: a layout/middleware shell with no extra prefix. */
 export function group<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 >(
   build: (cb: GroupCallback<"", State>) => GroupFields<State>,
 ): Group<State>;
 export function group<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 >(
   prefixOrBuild:
     | string
@@ -738,7 +738,7 @@ export function group<
 }
 
 function append<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 >(
   nodes: Array<Route<State> | Group<State>>,
   parent: GroupBoundary<State>,

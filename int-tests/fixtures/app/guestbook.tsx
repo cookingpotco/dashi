@@ -3,7 +3,7 @@ import type { AppState } from "./state.ts";
 
 const entries: string[] = [];
 
-export function list({ html }: ReadArgs<Record<string, never>, AppState>) {
+export function list({ html }: ReadArgs<{ state: AppState }>) {
   return html(
     <div>
       <ul id="entries">
@@ -17,7 +17,7 @@ export function list({ html }: ReadArgs<Record<string, never>, AppState>) {
   );
 }
 
-export async function add({ ctx }: WriteArgs<Record<string, never>, AppState>) {
+export async function add({ ctx }: WriteArgs<{ state: AppState }>) {
   const data = await ctx.req.formData();
   const body = data.get("body");
   if (typeof body === "string") {

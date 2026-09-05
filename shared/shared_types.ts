@@ -7,8 +7,8 @@ import type { Element } from "../jsx-runtime/mod.ts";
  * replace the object. Layouts do not run when `isFragment` is true.
  */
 export interface Ctx<
+  State extends Record<string, unknown> = Record<string, unknown>,
   Params extends Record<string, string> = Record<string, never>,
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
 > {
   /** Incoming request. */
   readonly req: Request;
@@ -28,8 +28,8 @@ export interface Ctx<
  * as the handler's ctx at runtime; precise keys stay on the handler.
  */
 export type WrapperCtx<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
-> = Ctx<Record<string, string>, State>;
+  State extends Record<string, unknown> = Record<string, unknown>,
+> = Ctx<State, Record<string, string>>;
 
 /**
  * `Ctx` as seen by a layout. Same object as the handler's ctx at
@@ -39,35 +39,61 @@ export type WrapperCtx<
  * handlers.
  */
 export type LayoutCtx<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 > = Omit<WrapperCtx<State>, "state"> & {
   readonly state: Readonly<Partial<State>>;
 };
 
 /**
  * GET / HEAD args. A read may return a raw `Response` and never call
- * `html`.
+ * `html`. Pass `{ state }` and/or `{ params }`. Omit the argument when
+ * the handler uses neither.
  */
 export interface ReadArgs<
-  Params extends Record<string, string> = Record<string, never>,
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  T extends
+    & {
+      state?: Record<string, unknown>;
+      params?: Record<string, string>;
+    }
+    & { [K in Exclude<keyof T, "state" | "params">]: never } = Record<
+      never,
+      never
+    >,
 > {
   /** Per-invocation request context. */
-  ctx: Ctx<Params, State>;
+  ctx: Ctx<
+    T extends { state: infer S extends Record<string, unknown> } ? S
+      : Record<string, unknown>,
+    T extends { params: infer P extends Record<string, string> } ? P
+      : Record<string, never>
+  >;
   /** Bound HTML sealer. */
   html: SealHtml;
 }
 
 /**
  * POST / PUT / PATCH / DELETE args. A write may return a raw `Response`
- * and never call `patches`.
+ * and never call `patches`. Pass `{ state }` and/or `{ params }`, same
+ * as `ReadArgs`.
  */
 export interface WriteArgs<
-  Params extends Record<string, string> = Record<string, never>,
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  T extends
+    & {
+      state?: Record<string, unknown>;
+      params?: Record<string, string>;
+    }
+    & { [K in Exclude<keyof T, "state" | "params">]: never } = Record<
+      never,
+      never
+    >,
 > {
   /** Per-invocation request context. */
-  ctx: Ctx<Params, State>;
+  ctx: Ctx<
+    T extends { state: infer S extends Record<string, unknown> } ? S
+      : Record<string, unknown>,
+    T extends { params: infer P extends Record<string, string> } ? P
+      : Record<string, never>
+  >;
   /** Bound patch sealer. */
   patches: SealPatches;
 }
@@ -77,12 +103,12 @@ export interface WriteArgs<
  * record so one wrap can cover `/` and `/posts/:id`.
  */
 export type NotFoundArgs<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
-> = ReadArgs<Record<string, string>, State>;
+  State extends Record<string, unknown> = Record<string, unknown>,
+> = ReadArgs<{ state: State; params: Record<string, string> }>;
 
 /** Group `error` args. `thrown` is the raw value. */
 export interface ErrorArgs<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 > {
   /** Per-invocation request context. */
   ctx: WrapperCtx<State>;
@@ -100,7 +126,7 @@ export interface FatalArgs {
 
 /** Layout args. `ctx.state` is readonly. */
 export interface LayoutArgs<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 > {
   /** Per-invocation request context. `state` is readonly. */
   ctx: LayoutCtx<State>;
@@ -110,7 +136,7 @@ export interface LayoutArgs<
 
 /** Middleware args. Mutate `ctx.state` in place. */
 export interface MiddlewareArgs<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 > {
   /** Per-invocation request context. Mutate `state` in place. */
   ctx: WrapperCtx<State>;
@@ -168,10 +194,10 @@ export type Fatal = (args: FatalArgs) => Response | Promise<Response>;
  */
 /** @internal */
 export type Handler<
+  State extends Record<string, unknown> = Record<string, unknown>,
   Params extends Record<string, string> = Record<string, never>,
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
-  args: ReadArgs<Params, State>,
+  args: ReadArgs<{ state: State; params: Params }>,
 ) => Response | Promise<Response>;
 
 /**
@@ -182,7 +208,7 @@ export type Handler<
  */
 /** @internal */
 export type ErrorHandler<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 > = (
   args: ErrorArgs<State>,
 ) => Response | Promise<Response>;
@@ -211,20 +237,20 @@ export type Method = typeof METHODS[number];
  */
 /** @internal */
 export type WriteHandler<
+  State extends Record<string, unknown> = Record<string, unknown>,
   Params extends Record<string, string> = Record<string, never>,
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
 > = (
-  args: WriteArgs<Params, State>,
+  args: WriteArgs<{ state: State; params: Params }>,
 ) => Response | Promise<Response>;
 
 type HandlerMethod = Exclude<Method, "HEAD" | "OPTIONS">;
 
 type MethodHandlerMap<
-  Params extends Record<string, string>,
   State extends Record<string, unknown>,
+  Params extends Record<string, string>,
 > = {
-  [M in HandlerMethod]?: M extends "GET" ? Handler<Params, State>
-    : WriteHandler<Params, State>;
+  [M in HandlerMethod]?: M extends "GET" ? Handler<State, Params>
+    : WriteHandler<State, Params>;
 };
 
 type RequireAtLeastOne<T> = {
@@ -239,9 +265,9 @@ type RequireAtLeastOne<T> = {
  * @internal
  */
 export type MethodHandlers<
+  State extends Record<string, unknown> = Record<string, unknown>,
   Params extends Record<string, string> = Record<string, never>,
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
-> = RequireAtLeastOne<MethodHandlerMap<Params, State>>;
+> = RequireAtLeastOne<MethodHandlerMap<State, Params>>;
 
 /**
  * Shared UI that wraps the route on document render, outermost first.
@@ -252,7 +278,7 @@ export type MethodHandlers<
  */
 /** @internal */
 export type Layout<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 > = (
   args: LayoutArgs<State>,
 ) => Element | Promise<Element>;
@@ -263,7 +289,7 @@ export type Layout<
  */
 /** @internal */
 export type Middleware<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 > = (
   args: MiddlewareArgs<State>,
 ) => Response | Promise<Response>;
@@ -277,10 +303,10 @@ export type Middleware<
  */
 /** @internal */
 export interface GroupBoundary<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 > {
   layouts: Layout<State>[];
   error?: ErrorHandler<State>;
-  notFound?: Handler<Record<string, string>, State>;
+  notFound?: Handler<State, Record<string, string>>;
   parent?: GroupBoundary<State>;
 }

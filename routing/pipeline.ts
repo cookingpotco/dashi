@@ -61,7 +61,7 @@ let compiled: CompiledTable<Record<string, unknown>> = {
   fragmentDepthLimit: DEFAULT_FRAGMENT_DEPTH_LIMIT,
 };
 
-type RequestCtx = Ctx<Record<string, string>, Record<string, unknown>>;
+type RequestCtx = Ctx<Record<string, unknown>, Record<string, string>>;
 
 function advertisedMethods(
   handlers: { readonly [M in Exclude<Method, "HEAD" | "OPTIONS">]?: unknown },
@@ -478,7 +478,7 @@ function assertReservedClient(
 }
 
 export function init<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 >(
   build: (cb: GroupCallback<"", State>) => GroupFields<State>,
   fatal?: Fatal,

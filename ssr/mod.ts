@@ -130,7 +130,7 @@ export class LayoutWalkError extends Error {
  */
 export async function walkLayouts(
   page: Element,
-  ctx: Ctx<Record<string, string>, Record<string, unknown>>,
+  ctx: Ctx<Record<string, unknown>, Record<string, string>>,
   boundary: GroupBoundary<Record<string, unknown>> | undefined,
 ): Promise<Element> {
   let rendered = page;

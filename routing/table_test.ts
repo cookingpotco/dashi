@@ -25,9 +25,12 @@ function typechecks() {
   type AppState = { user: User };
   type _stateUser = Expect<
     Equal<
-      Ctx<Record<string, never>, AppState>["state"]["user"],
+      Ctx<AppState>["state"]["user"],
       User | undefined
     >
+  >;
+  type _ctxParams = Expect<
+    Equal<Ctx<AppState, { id: string }>["params"]["id"], string>
   >;
 
   group(({ route }) => {
