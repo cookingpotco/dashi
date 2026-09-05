@@ -73,7 +73,7 @@ Every config key a consumer needs, in one `deno.json`:
   },
   "unstable": ["bundle", "no-legacy-abort"],
   "imports": {
-    "dashi": "jsr:@cookingpot/dashi@^0.11.0"
+    "dashi": "jsr:@cookingpot/dashi@^0.12.0"
   }
 }
 ```
