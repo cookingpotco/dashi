@@ -251,7 +251,7 @@ export function getCompiledFile(
   return new Response(file.bytes, {
     status: 200,
     headers: {
-      "Content-Type": "text/javascript",
+      "Content-Type": "text/javascript; charset=utf-8",
       "Content-Length": String(file.bytes.byteLength),
       "Cache-Control": cacheControl({ strategy: CacheStrategy.Immutable }),
       ETag: file.etag,

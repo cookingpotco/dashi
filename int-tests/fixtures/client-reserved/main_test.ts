@@ -61,7 +61,10 @@ Deno.test("reserved client path over HTTP", async (t) => {
       const js = await app.fetch({ path: src });
       const body = await js.text();
       assertEquals(js.status, 200);
-      assertEquals(js.headers.get("content-type"), "text/javascript");
+      assertEquals(
+        js.headers.get("content-type"),
+        "text/javascript; charset=utf-8",
+      );
       assertStringIncludes(body, "probe-el");
     } catch (error) {
       const dump = formatIntegrationFailure(app, { path: "/" }, res, html);

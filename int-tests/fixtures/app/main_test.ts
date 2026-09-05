@@ -45,7 +45,7 @@ const appCases: IntegrationTestCase[] = [
     name: "nested page wraps in both layouts",
     request: { path: "/nested" },
     status: 200,
-    headers: { "content-type": "text/html", "x-mw": "ok" },
+    headers: { "content-type": "text/html; charset=utf-8", "x-mw": "ok" },
     html: {
       bodyIncludes: ["<!DOCTYPE html>"],
       select: [
@@ -216,7 +216,7 @@ const appCases: IntegrationTestCase[] = [
     name: "fragment as document includes layouts and doctype",
     request: { path: "/fragment" },
     status: 200,
-    headers: { "content-type": "text/html" },
+    headers: { "content-type": "text/html; charset=utf-8" },
     html: {
       bodyIncludes: ["<!DOCTYPE html>"],
       select: [
@@ -240,7 +240,7 @@ const appCases: IntegrationTestCase[] = [
       headers: { "x-fragment": "1" },
     },
     status: 200,
-    headers: { "content-type": "text/html" },
+    headers: { "content-type": "text/html; charset=utf-8" },
     html: {
       bodyExcludes: ["<!DOCTYPE html>", "<script"],
       select: [
@@ -265,7 +265,7 @@ const appCases: IntegrationTestCase[] = [
       headers: { "x-fragment": "1" },
     },
     status: 200,
-    headers: { "content-type": "text/html" },
+    headers: { "content-type": "text/html; charset=utf-8" },
     html: {
       bodyExcludes: ["<!DOCTYPE html>", "<script"],
       select: [
@@ -283,7 +283,7 @@ const appCases: IntegrationTestCase[] = [
     },
     status: 200,
     headers: {
-      "content-type": "text/html",
+      "content-type": "text/html; charset=utf-8",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
     },
     html: {
@@ -336,7 +336,7 @@ const appCases: IntegrationTestCase[] = [
     },
     status: 200,
     headers: {
-      "content-type": "text/html",
+      "content-type": "text/html; charset=utf-8",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
     },
     html: {
@@ -400,7 +400,7 @@ const appCases: IntegrationTestCase[] = [
       path: "/patches-unprocessable",
     },
     status: 422,
-    headers: { "content-type": "text/html" },
+    headers: { "content-type": "text/html; charset=utf-8" },
     html: {
       bodyExcludes: ["<!DOCTYPE html>"],
       select: [
@@ -416,7 +416,7 @@ const appCases: IntegrationTestCase[] = [
     name: "handler html() status 404 document wraps in layouts",
     request: { path: "/status-not-found" },
     status: 404,
-    headers: { "content-type": "text/html", "x-mw": "ok" },
+    headers: { "content-type": "text/html; charset=utf-8", "x-mw": "ok" },
     html: {
       bodyIncludes: ["<!DOCTYPE html>"],
       select: [
@@ -431,7 +431,7 @@ const appCases: IntegrationTestCase[] = [
     name: "handler html() status 401 document wraps in layouts",
     request: { path: "/status-unauthorized" },
     status: 401,
-    headers: { "content-type": "text/html", "x-mw": "ok" },
+    headers: { "content-type": "text/html; charset=utf-8", "x-mw": "ok" },
     html: {
       bodyIncludes: ["<!DOCTYPE html>"],
       select: [
@@ -445,7 +445,7 @@ const appCases: IntegrationTestCase[] = [
     request: { path: "/status-cached" },
     status: 404,
     headers: {
-      "content-type": "text/html",
+      "content-type": "text/html; charset=utf-8",
       "cache-control": "public, max-age=30",
     },
     html: {
@@ -459,7 +459,7 @@ const appCases: IntegrationTestCase[] = [
     name: "handler Element document is 200",
     request: { path: "/status-ok" },
     status: 200,
-    headers: { "content-type": "text/html", "x-mw": "ok" },
+    headers: { "content-type": "text/html; charset=utf-8", "x-mw": "ok" },
     html: {
       bodyIncludes: ["<!DOCTYPE html>"],
       select: [
@@ -481,7 +481,7 @@ const appCases: IntegrationTestCase[] = [
       headers: { "x-fragment": "1" },
     },
     status: 403,
-    headers: { "content-type": "text/html" },
+    headers: { "content-type": "text/html; charset=utf-8" },
     html: {
       bodyExcludes: ["<!DOCTYPE html>"],
       select: [
@@ -494,7 +494,7 @@ const appCases: IntegrationTestCase[] = [
     name: "unmatched path is 404",
     request: { path: "/no-such-page" },
     status: 404,
-    headers: { "content-type": "text/html", "x-mw": "ok" },
+    headers: { "content-type": "text/html; charset=utf-8", "x-mw": "ok" },
     html: {
       bodyIncludes: ["<!DOCTYPE html>"],
       bodyExcludes: ["NestedError", "api-404"],
@@ -512,7 +512,7 @@ const appCases: IntegrationTestCase[] = [
     name: "notFound html() status 410 wraps in layouts",
     request: { path: "/not-found-gone" },
     status: 410,
-    headers: { "content-type": "text/html", "x-mw": "ok" },
+    headers: { "content-type": "text/html; charset=utf-8", "x-mw": "ok" },
     html: {
       bodyIncludes: ["<!DOCTYPE html>"],
       select: [
@@ -525,7 +525,7 @@ const appCases: IntegrationTestCase[] = [
     name: "prefixed group miss uses that group's notFound",
     request: { path: "/api/nope" },
     status: 404,
-    headers: { "content-type": "text/html", "x-mw": "ok", "x-api": "1" },
+    headers: { "content-type": "text/html; charset=utf-8", "x-mw": "ok", "x-api": "1" },
     html: {
       bodyIncludes: ["<!DOCTYPE html>"],
       bodyExcludes: ["custom-404", "api-v2-404"],
@@ -545,7 +545,7 @@ const appCases: IntegrationTestCase[] = [
     name: "innermost prefixed group miss uses that group's notFound",
     request: { path: "/api/v2/nope" },
     status: 404,
-    headers: { "content-type": "text/html", "x-mw": "ok", "x-api": "1" },
+    headers: { "content-type": "text/html; charset=utf-8", "x-mw": "ok", "x-api": "1" },
     html: {
       bodyExcludes: ["custom-404"],
       select: [
@@ -562,7 +562,7 @@ const appCases: IntegrationTestCase[] = [
     name: "api prefix does not capture /apix",
     request: { path: "/apix" },
     status: 404,
-    headers: { "content-type": "text/html", "x-mw": "ok" },
+    headers: { "content-type": "text/html; charset=utf-8", "x-mw": "ok" },
     html: {
       bodyExcludes: ["api-404"],
       select: [
@@ -576,7 +576,7 @@ const appCases: IntegrationTestCase[] = [
     request: { path: "/nope" },
     status: 404,
     headers: {
-      "content-type": "text/html",
+      "content-type": "text/html; charset=utf-8",
       "x-mw": "ok",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
     },
@@ -592,7 +592,7 @@ const appCases: IntegrationTestCase[] = [
     name: "static /posts/new beats /posts/:id",
     request: { path: "/posts/new" },
     status: 200,
-    headers: { "content-type": "text/html", "x-mw": "ok" },
+    headers: { "content-type": "text/html; charset=utf-8", "x-mw": "ok" },
     html: {
       select: [
         { selector: "html > body > h1", text: "Website Title" },
@@ -605,7 +605,7 @@ const appCases: IntegrationTestCase[] = [
     name: "param route renders params.id",
     request: { path: "/posts/abc" },
     status: 200,
-    headers: { "content-type": "text/html", "x-mw": "ok" },
+    headers: { "content-type": "text/html; charset=utf-8", "x-mw": "ok" },
     html: {
       select: [
         { selector: "html > body > h1", text: "Website Title" },
@@ -633,7 +633,7 @@ const appCases: IntegrationTestCase[] = [
     name: "OPTIONS miss is HTML 404",
     request: { method: "OPTIONS", path: "/no-such-page" },
     status: 404,
-    headers: { "content-type": "text/html", "x-mw": "ok" },
+    headers: { "content-type": "text/html; charset=utf-8", "x-mw": "ok" },
     html: {
       bodyIncludes: ["<!DOCTYPE html>"],
       select: [
@@ -660,7 +660,7 @@ const appCases: IntegrationTestCase[] = [
     name: "HEAD unmatched path is 404 with empty body",
     request: { method: "HEAD", path: "/no-such-page" },
     status: 404,
-    headers: { "content-type": "text/html", "x-mw": "ok" },
+    headers: { "content-type": "text/html; charset=utf-8", "x-mw": "ok" },
     bodyExact: "",
   },
   {
@@ -719,6 +719,17 @@ const appCases: IntegrationTestCase[] = [
       "x-mw": "ok",
     },
     bodyExact: "export {};\n",
+  },
+  {
+    name: "html is served from the static directory",
+    request: { path: "/static/page.html" },
+    status: 200,
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      "content-length": "10",
+      "x-mw": "ok",
+    },
+    bodyExact: "<p>ok</p>\n",
   },
   {
     name: "unknown extension is octet-stream",
@@ -788,7 +799,7 @@ const appCases: IntegrationTestCase[] = [
     name: "favicon.ico is HTML 404",
     request: { path: "/favicon.ico" },
     status: 404,
-    headers: { "content-type": "text/html", "x-mw": "ok" },
+    headers: { "content-type": "text/html; charset=utf-8", "x-mw": "ok" },
     html: {
       select: [
         { selector: "html > body > h1", text: "Website Title" },
@@ -1104,7 +1115,7 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     name: "notFound throws walks to root error",
     request: { path: "/not-found-throws" },
     status: 500,
-    headers: { "content-type": "text/html", "x-mw": "ok" },
+    headers: { "content-type": "text/html; charset=utf-8", "x-mw": "ok" },
     html: {
       select: [
         { selector: "html > body > h1", text: "Website Title" },
@@ -1140,7 +1151,7 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     name: "handler throws with no group error uses parent error",
     request: { path: "/throw-no-error" },
     status: 500,
-    headers: { "content-type": "text/html", "x-mw": "ok" },
+    headers: { "content-type": "text/html; charset=utf-8", "x-mw": "ok" },
     html: {
       bodyExcludes: ["no-error-wrap"],
       select: [
@@ -1155,7 +1166,7 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     name: "handler throws with JSX error",
     request: { path: "/throw" },
     status: 500,
-    headers: { "content-type": "text/html", "x-mw": "ok" },
+    headers: { "content-type": "text/html; charset=utf-8", "x-mw": "ok" },
     html: {
       select: [
         { selector: "html > body > h1", text: "Website Title" },
@@ -1169,7 +1180,7 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     name: "error html() status 503 wraps in layouts",
     request: { path: "/throw-503" },
     status: 503,
-    headers: { "content-type": "text/html", "x-mw": "ok" },
+    headers: { "content-type": "text/html; charset=utf-8", "x-mw": "ok" },
     html: {
       bodyIncludes: ["<!DOCTYPE html>"],
       select: [
@@ -1228,7 +1239,7 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     request: { path: "/nested-error" },
     status: 500,
     headers: {
-      "content-type": "text/html",
+      "content-type": "text/html; charset=utf-8",
       "x-mw": "ok",
       "x-nested-mw": "1",
     },
@@ -1252,7 +1263,7 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     name: "nested layout throws uses root error without nested chrome",
     request: { path: "/nested-layout-throws" },
     status: 500,
-    headers: { "content-type": "text/html", "x-mw": "ok" },
+    headers: { "content-type": "text/html; charset=utf-8", "x-mw": "ok" },
     html: {
       bodyExcludes: ["NestedError"],
       select: [
@@ -1381,7 +1392,7 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
       headers: { "x-fragment": "1" },
     },
     status: 500,
-    headers: { "content-type": "text/html" },
+    headers: { "content-type": "text/html; charset=utf-8" },
     html: {
       bodyExcludes: ["<!DOCTYPE html>"],
       select: [
@@ -1575,7 +1586,10 @@ Deno.test("main fixture app over HTTP", async (t) => {
       const js = await app.fetch({ path: src });
       const body = await js.text();
       assertEquals(js.status, 200);
-      assertEquals(js.headers.get("content-type"), "text/javascript");
+      assertEquals(
+        js.headers.get("content-type"),
+        "text/javascript; charset=utf-8",
+      );
       assertStringIncludes(body, "customElements.define");
       assertStringIncludes(body, "route-fragment");
     } catch (error) {

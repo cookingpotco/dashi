@@ -32,14 +32,20 @@ Deno.test("mixed file and JSR client entries compile over HTTP", async () => {
     const localJs = await app.fetch({ path: localSrc });
     const localBody = await localJs.text();
     assertEquals(localJs.status, 200);
-    assertEquals(localJs.headers.get("content-type"), "text/javascript");
+    assertEquals(
+      localJs.headers.get("content-type"),
+      "text/javascript; charset=utf-8",
+    );
     assertStringIncludes(localBody, "local-el");
     assertFalse(localBody.includes("route-fragment"));
 
     const jsrJs = await app.fetch({ path: jsrSrc });
     const jsrBody = await jsrJs.text();
     assertEquals(jsrJs.status, 200);
-    assertEquals(jsrJs.headers.get("content-type"), "text/javascript");
+    assertEquals(
+      jsrJs.headers.get("content-type"),
+      "text/javascript; charset=utf-8",
+    );
     assertStringIncludes(jsrBody, "route-fragment");
     assertFalse(jsrBody.includes("local-el"));
   } catch (error) {

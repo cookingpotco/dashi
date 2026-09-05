@@ -129,7 +129,7 @@ async function seal(
   const body = options.isPartial ? html : `<!DOCTYPE html>${html}`;
   const bytes = new TextEncoder().encode(body);
   const res = new Response(bytes, { status: options.status });
-  res.headers.set("Content-Type", "text/html");
+  res.headers.set("Content-Type", "text/html; charset=utf-8");
   res.headers.set("Content-Length", String(bytes.byteLength));
   const cache = options.cache ?? { strategy: CacheStrategy.NoStore };
   res.headers.set("Cache-Control", cacheControl(cache));
