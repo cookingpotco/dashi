@@ -2,7 +2,7 @@ import { type ReadArgs } from "dashi";
 import type { AppState } from "./state.ts";
 
 export async function Slow(
-  { html }: ReadArgs<AppState>,
+  { html }: ReadArgs<{ state: AppState }>,
 ) {
   await new Promise((resolve) => setTimeout(resolve, 2000));
   return html(

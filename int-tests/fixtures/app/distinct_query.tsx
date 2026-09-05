@@ -2,7 +2,7 @@ import { type ReadArgs, RouteFragment } from "dashi";
 import type { AppState } from "./state.ts";
 
 export function DistinctQuery(
-  { html }: ReadArgs<AppState>,
+  { html }: ReadArgs<{ state: AppState }>,
 ) {
   return html(
     <div id="distinct-query">

@@ -7,7 +7,7 @@ const Widget = client.element(
 );
 
 export function WidgetPage(
-  { html }: ReadArgs<AppState>,
+  { html }: ReadArgs<{ state: AppState }>,
 ) {
   return html(
     <div>

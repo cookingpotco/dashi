@@ -1,7 +1,7 @@
 import { patch, type WriteArgs } from "dashi";
 import type { AppState } from "./state.ts";
 
-export function post({ patches }: WriteArgs<AppState>) {
+export function post({ patches }: WriteArgs<{ state: AppState }>) {
   return patches([
     patch.append("#todos", <li>milk</li>),
     patch.replace("/todo-count", <span>3</span>),
@@ -14,7 +14,7 @@ export function post({ patches }: WriteArgs<AppState>) {
 }
 
 export function postUnprocessable(
-  { patches }: WriteArgs<AppState>,
+  { patches }: WriteArgs<{ state: AppState }>,
 ) {
   return patches([
     patch.replace("#status", <p>invalid</p>),

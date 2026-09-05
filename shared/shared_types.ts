@@ -46,29 +46,54 @@ export type LayoutCtx<
 
 /**
  * GET / HEAD args. A read may return a raw `Response` and never call
- * `html`. `State` is first so a handler that only needs app state
- * writes `ReadArgs<AppState>`. Omit both when the handler uses neither.
+ * `html`. Pass `{ state }` and/or `{ params }`. Omit the argument when
+ * the handler uses neither.
  */
 export interface ReadArgs<
-  State extends Record<string, unknown> = Record<string, unknown>,
-  Params extends Record<string, string> = Record<string, never>,
+  T extends
+    & {
+      state?: Record<string, unknown>;
+      params?: Record<string, string>;
+    }
+    & { [K in Exclude<keyof T, "state" | "params">]: never } = Record<
+      never,
+      never
+    >,
 > {
   /** Per-invocation request context. */
-  ctx: Ctx<State, Params>;
+  ctx: Ctx<
+    T extends { state: infer S extends Record<string, unknown> } ? S
+      : Record<string, unknown>,
+    T extends { params: infer P extends Record<string, string> } ? P
+      : Record<string, never>
+  >;
   /** Bound HTML sealer. */
   html: SealHtml;
 }
 
 /**
  * POST / PUT / PATCH / DELETE args. A write may return a raw `Response`
- * and never call `patches`. `State` is first, same as `ReadArgs`.
+ * and never call `patches`. Pass `{ state }` and/or `{ params }`, same
+ * as `ReadArgs`.
  */
 export interface WriteArgs<
-  State extends Record<string, unknown> = Record<string, unknown>,
-  Params extends Record<string, string> = Record<string, never>,
+  T extends
+    & {
+      state?: Record<string, unknown>;
+      params?: Record<string, string>;
+    }
+    & { [K in Exclude<keyof T, "state" | "params">]: never } = Record<
+      never,
+      never
+    >,
 > {
   /** Per-invocation request context. */
-  ctx: Ctx<State, Params>;
+  ctx: Ctx<
+    T extends { state: infer S extends Record<string, unknown> } ? S
+      : Record<string, unknown>,
+    T extends { params: infer P extends Record<string, string> } ? P
+      : Record<string, never>
+  >;
   /** Bound patch sealer. */
   patches: SealPatches;
 }
@@ -79,7 +104,7 @@ export interface WriteArgs<
  */
 export type NotFoundArgs<
   State extends Record<string, unknown> = Record<string, unknown>,
-> = ReadArgs<State, Record<string, string>>;
+> = ReadArgs<{ state: State; params: Record<string, string> }>;
 
 /** Group `error` args. `thrown` is the raw value. */
 export interface ErrorArgs<
@@ -172,7 +197,7 @@ export type Handler<
   State extends Record<string, unknown> = Record<string, unknown>,
   Params extends Record<string, string> = Record<string, never>,
 > = (
-  args: ReadArgs<State, Params>,
+  args: ReadArgs<{ state: State; params: Params }>,
 ) => Response | Promise<Response>;
 
 /**
@@ -215,7 +240,7 @@ export type WriteHandler<
   State extends Record<string, unknown> = Record<string, unknown>,
   Params extends Record<string, string> = Record<string, never>,
 > = (
-  args: WriteArgs<State, Params>,
+  args: WriteArgs<{ state: State; params: Params }>,
 ) => Response | Promise<Response>;
 
 type HandlerMethod = Exclude<Method, "HEAD" | "OPTIONS">;

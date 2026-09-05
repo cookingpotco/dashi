@@ -71,12 +71,25 @@ function typechecks() {
   type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends
     (<T>() => T extends B ? 1 : 2) ? true : false;
   type Expect<T extends true> = T;
-  type _singleArgIsState = Expect<
-    Equal<ReadArgs<{ id: string }>["ctx"]["state"]["id"], string | undefined>
+  type _stateOnly = Expect<
+    Equal<
+      ReadArgs<{ state: AppState }>["ctx"]["state"]["token"],
+      string | undefined
+    >
   >;
-  type _singleArgKeepsEmptyParams = Expect<
-    Equal<ReadArgs<{ id: string }>["ctx"]["params"], Record<string, never>>
+  type _paramsOnly = Expect<
+    Equal<ReadArgs<{ params: { id: string } }>["ctx"]["params"]["id"], string>
   >;
+  type _paramsOnlyWideState = Expect<
+    Equal<
+      ReadArgs<{ params: { id: string } }>["ctx"]["state"],
+      Partial<Record<string, unknown>>
+    >
+  >;
+  // @ts-expect-error bag accepts only state and params
+  type _notABag = ReadArgs<{ id: string }>;
+  // @ts-expect-error raw state is not a bag
+  type _rawState = ReadArgs<AppState>;
 
   function noState({ html }: ReadArgs) {
     return html(<p>ok</p>);
@@ -90,16 +103,22 @@ function typechecks() {
   function mw({ next }: MiddlewareArgs) {
     return next();
   }
-  function withState({ ctx, html }: ReadArgs<AppState>) {
+  function withState({ ctx, html }: ReadArgs<{ state: AppState }>) {
     ctx.state.token;
     return html(<p>ok</p>);
   }
-  function withBoth({ ctx, html }: ReadArgs<AppState, { id: string }>) {
+  function withBoth(
+    { ctx, html }: ReadArgs<{ state: AppState; params: { id: string } }>,
+  ) {
     ctx.params.id;
     ctx.state.token;
     return html(<p>ok</p>);
   }
-  function other({ html }: ReadArgs<Other>) {
+  function withParams({ ctx }: ReadArgs<{ params: { id: string } }>) {
+    ctx.params.id;
+    return new Response();
+  }
+  function other({ html }: ReadArgs<{ state: Other }>) {
     return html(<p>nope</p>);
   }
 
@@ -110,6 +129,7 @@ function typechecks() {
       route("/", { GET: noState, POST: noStateWrite }),
       route("/s", { GET: withState }),
       route("/:id", { GET: withBoth }),
+      route("/p/:id", { GET: withParams }),
       // @ts-expect-error wrong state
       route("/o", { GET: other }),
     ],

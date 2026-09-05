@@ -80,9 +80,12 @@ import {
 } from "./errors.tsx";
 
 const staticDir = `${import.meta.dirname}/static`;
-const files = ({ ctx }: ReadArgs<AppState, { path: string }>) =>
-  staticFile(ctx, staticDir, ctx.params.path);
-const hour = ({ ctx }: ReadArgs<AppState, { path: string }>) =>
+const files = (
+  { ctx }: ReadArgs<{ state: AppState; params: { path: string } }>,
+) => staticFile(ctx, staticDir, ctx.params.path);
+const hour = (
+  { ctx }: ReadArgs<{ state: AppState; params: { path: string } }>,
+) =>
   staticFile(ctx, staticDir, ctx.params.path, {
     strategy: CacheStrategy.Public,
     maxAge: 3600,
@@ -90,17 +93,23 @@ const hour = ({ ctx }: ReadArgs<AppState, { path: string }>) =>
     staleWhileRevalidate: 120,
     varyHeaders: ["Accept-Language"],
   });
-const priv = ({ ctx }: ReadArgs<AppState, { path: string }>) =>
+const priv = (
+  { ctx }: ReadArgs<{ state: AppState; params: { path: string } }>,
+) =>
   staticFile(ctx, staticDir, ctx.params.path, {
     strategy: CacheStrategy.Private,
     maxAge: 60,
   });
-const immutableCookie = ({ ctx }: ReadArgs<AppState, { path: string }>) =>
+const immutableCookie = (
+  { ctx }: ReadArgs<{ state: AppState; params: { path: string } }>,
+) =>
   staticFile(ctx, staticDir, ctx.params.path, {
     strategy: CacheStrategy.Immutable,
     varyHeaders: ["Cookie"],
   });
-const missingDir = ({ ctx }: ReadArgs<AppState, { path: string }>) =>
+const missingDir = (
+  { ctx }: ReadArgs<{ state: AppState; params: { path: string } }>,
+) =>
   staticFile(
     ctx,
     `${import.meta.dirname}/no-such-static`,

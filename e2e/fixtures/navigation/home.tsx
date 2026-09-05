@@ -2,7 +2,7 @@ import { type ReadArgs } from "dashi";
 import type { AppState } from "./state.ts";
 import { GoAbout } from "./chrome/mod.tsx";
 
-export function Home({ ctx, html }: ReadArgs<AppState>) {
+export function Home({ ctx, html }: ReadArgs<{ state: AppState }>) {
   ctx.state.title = "home";
   ctx.state.stylesheet = "/home.css";
   return html(

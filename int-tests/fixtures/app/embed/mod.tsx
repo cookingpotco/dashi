@@ -16,7 +16,7 @@ export const embed = group<AppState>(({ route }) => ({
   routes: [route("/embed", { GET: Embed })],
 }));
 
-function Embed({ html }: ReadArgs<AppState>) {
+function Embed({ html }: ReadArgs<{ state: AppState }>) {
   return html(
     <div>
       <section id="eager">

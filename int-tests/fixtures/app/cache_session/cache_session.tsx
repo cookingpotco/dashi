@@ -2,7 +2,7 @@ import { CacheStrategy, type ReadArgs } from "dashi";
 import type { AppState } from "../state.ts";
 
 export function CacheSession(
-  { ctx, html }: ReadArgs<AppState>,
+  { ctx, html }: ReadArgs<{ state: AppState }>,
 ) {
   if (ctx.state.token) {
     return html(<p id="cache-session">signed-in</p>);

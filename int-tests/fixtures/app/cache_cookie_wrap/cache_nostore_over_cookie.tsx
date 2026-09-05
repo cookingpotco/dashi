@@ -2,7 +2,7 @@ import { CacheStrategy, type ReadArgs } from "dashi";
 import type { AppState } from "../state.ts";
 
 export function CacheNoStoreOverCookie(
-  { html }: ReadArgs<AppState>,
+  { html }: ReadArgs<{ state: AppState }>,
 ) {
   return html(
     <p id="cache-nostore-over-cookie">cached-nostore-over-cookie</p>,

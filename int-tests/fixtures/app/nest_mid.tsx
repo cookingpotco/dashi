@@ -1,7 +1,7 @@
 import { type ReadArgs, RouteFragment } from "dashi";
 import type { AppState } from "./state.ts";
 
-export function NestMid({ html }: ReadArgs<AppState>) {
+export function NestMid({ html }: ReadArgs<{ state: AppState }>) {
   return html(
     <div id="nest-mid">
       <RouteFragment src="/nest-inner" />

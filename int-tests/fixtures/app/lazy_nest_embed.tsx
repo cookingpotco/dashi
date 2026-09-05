@@ -2,7 +2,7 @@ import { type ReadArgs, RouteFragment } from "dashi";
 import type { AppState } from "./state.ts";
 
 export function LazyNestEmbed(
-  { html }: ReadArgs<AppState>,
+  { html }: ReadArgs<{ state: AppState }>,
 ) {
   return html(
     <RouteFragment
