@@ -2,7 +2,7 @@ import { CacheStrategy, type ReadArgs } from "dashi";
 import type { AppState } from "./state.ts";
 
 export function CachePublic(
-  { html }: ReadArgs<Record<string, never>, AppState>,
+  { html }: ReadArgs<AppState>,
 ) {
   return html(<p id="cache-public">cached-public</p>, {
     cache: {

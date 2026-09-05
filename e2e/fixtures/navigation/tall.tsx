@@ -1,7 +1,7 @@
 import { type ReadArgs } from "dashi";
 import type { AppState } from "./state.ts";
 
-export function Tall({ html }: ReadArgs<Record<string, never>, AppState>) {
+export function Tall({ html }: ReadArgs<AppState>) {
   return html(
     <div>
       <h1 id="heading">tall</h1>

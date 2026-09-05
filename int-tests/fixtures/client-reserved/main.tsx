@@ -13,11 +13,11 @@ function home({ html }: ReadArgs) {
   );
 }
 
-function param({ ctx }: ReadArgs<{ id: string }>) {
+function param({ ctx }: ReadArgs<Record<string, unknown>, { id: string }>) {
   return new Response(`param:${ctx.params.id}`);
 }
 
-function caught({ ctx }: ReadArgs<{ path: string }>) {
+function caught({ ctx }: ReadArgs<Record<string, unknown>, { path: string }>) {
   return new Response(`caught:${ctx.params.path}`);
 }
 

@@ -2,7 +2,7 @@ import type { ReadArgs } from "dashi";
 import type { AppState } from "./state.ts";
 
 export async function Echo(
-  { ctx, html }: ReadArgs<Record<string, never>, AppState>,
+  { ctx, html }: ReadArgs<AppState>,
 ) {
   const id = ctx.url.searchParams.get("id") ?? "";
   await new Promise((resolve) => setTimeout(resolve, 50));

@@ -242,7 +242,7 @@ export async function compileClient(): Promise<void> {
 
 /** GET handler for `/_dashi/client/:file*`. Serves the in-memory bundle. */
 export function getCompiledFile(
-  { ctx }: ReadArgs<{ file: string }, Record<string, unknown>>,
+  { ctx }: ReadArgs<Record<string, unknown>, { file: string }>,
 ): Response {
   const file = compiledFiles.get(`${CLIENT_PREFIX}/${ctx.params.file}`);
   if (!file) {

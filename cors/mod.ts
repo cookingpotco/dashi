@@ -84,7 +84,7 @@ function assignCorsHeaders(
  * ```
  */
 export function cors<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 >(options: CorsOptions = {}): Middleware<State> {
   const origin = options.origin ?? "*";
   const allowMethods = (options.allowMethods ?? METHODS).join(", ");

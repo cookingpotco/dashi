@@ -1,4 +1,10 @@
-import { serve } from "dashi";
+import {
+  type LayoutArgs,
+  type MiddlewareArgs,
+  type ReadArgs,
+  serve,
+  type WriteArgs,
+} from "dashi";
 import type { Element } from "dashi/jsx-runtime";
 
 function typechecks() {
@@ -57,6 +63,55 @@ function typechecks() {
     ],
     routes: [
       route("/", { GET: ({ html }) => html(<p>x</p>) }),
+    ],
+  }));
+
+  type AppState = { token: string };
+  type Other = { n: number };
+  type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends
+    (<T>() => T extends B ? 1 : 2) ? true : false;
+  type Expect<T extends true> = T;
+  type _singleArgIsState = Expect<
+    Equal<ReadArgs<{ id: string }>["ctx"]["state"]["id"], string | undefined>
+  >;
+  type _singleArgKeepsEmptyParams = Expect<
+    Equal<ReadArgs<{ id: string }>["ctx"]["params"], Record<string, never>>
+  >;
+
+  function noState({ html }: ReadArgs) {
+    return html(<p>ok</p>);
+  }
+  function noStateWrite({ patches }: WriteArgs) {
+    return patches([]);
+  }
+  function layout({ children }: LayoutArgs) {
+    return children;
+  }
+  function mw({ next }: MiddlewareArgs) {
+    return next();
+  }
+  function withState({ ctx, html }: ReadArgs<AppState>) {
+    ctx.state.token;
+    return html(<p>ok</p>);
+  }
+  function withBoth({ ctx, html }: ReadArgs<AppState, { id: string }>) {
+    ctx.params.id;
+    ctx.state.token;
+    return html(<p>ok</p>);
+  }
+  function other({ html }: ReadArgs<Other>) {
+    return html(<p>nope</p>);
+  }
+
+  serve<AppState>(({ route }) => ({
+    layouts: [layout],
+    middleware: [mw],
+    routes: [
+      route("/", { GET: noState, POST: noStateWrite }),
+      route("/s", { GET: withState }),
+      route("/:id", { GET: withBoth }),
+      // @ts-expect-error wrong state
+      route("/o", { GET: other }),
     ],
   }));
 }

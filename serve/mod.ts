@@ -44,7 +44,7 @@ import { bindUrls, grantedNetworkInterfaces } from "./bind_urls.ts";
  * ```
  */
 export async function serve<
-  State extends Record<string, unknown> = Record<PropertyKey, never>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 >(
   build: (cb: GroupCallback<"", State>) => GroupFields<State>,
   options?: Omit<Deno.ServeTcpOptions & Deno.ServeInit, "handler"> & {

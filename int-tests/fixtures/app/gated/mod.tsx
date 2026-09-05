@@ -13,6 +13,6 @@ export const gated = group<AppState>(({ route }) => ({
   routes: [route("/gated", { GET: Gated })],
 }));
 
-function Gated({ html }: ReadArgs<Record<string, never>, AppState>) {
+function Gated({ html }: ReadArgs<AppState>) {
   return html(<p id="gated">welcome</p>);
 }

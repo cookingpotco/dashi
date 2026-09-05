@@ -2,7 +2,7 @@ import { type ReadArgs } from "dashi";
 import type { AppState } from "./state.ts";
 
 export function About(
-  { ctx, html }: ReadArgs<Record<string, never>, AppState>,
+  { ctx, html }: ReadArgs<AppState>,
 ) {
   ctx.state.title = "about";
   ctx.state.stylesheet = "/about.css";

@@ -6,6 +6,6 @@ const Probe = client.element(
   new URL("./probe_client.ts", import.meta.url),
 );
 
-export function ProbePage({ html }: ReadArgs<Record<string, never>, AppState>) {
+export function ProbePage({ html }: ReadArgs<AppState>) {
   return html(<Probe id="probe">probe-body</Probe>);
 }
