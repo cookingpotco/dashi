@@ -525,7 +525,11 @@ const appCases: IntegrationTestCase[] = [
     name: "prefixed group miss uses that group's notFound",
     request: { path: "/api/nope" },
     status: 404,
-    headers: { "content-type": "text/html; charset=utf-8", "x-mw": "ok", "x-api": "1" },
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      "x-mw": "ok",
+      "x-api": "1",
+    },
     html: {
       bodyIncludes: ["<!DOCTYPE html>"],
       bodyExcludes: ["custom-404", "api-v2-404"],
@@ -545,7 +549,11 @@ const appCases: IntegrationTestCase[] = [
     name: "innermost prefixed group miss uses that group's notFound",
     request: { path: "/api/v2/nope" },
     status: 404,
-    headers: { "content-type": "text/html; charset=utf-8", "x-mw": "ok", "x-api": "1" },
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      "x-mw": "ok",
+      "x-api": "1",
+    },
     html: {
       bodyExcludes: ["custom-404"],
       select: [
