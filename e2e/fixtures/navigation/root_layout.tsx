@@ -11,7 +11,10 @@ export function RootLayout({ ctx, children }: LayoutArgs<AppState>): Element {
           ? <link rel="stylesheet" href={ctx.state.stylesheet} />
           : null}
       </head>
-      <header id="persistent">persistent</header>
+      <header>
+        <span id="persistent">persistent</span>
+        <a id="chrome-about" href="/about">About</a>
+      </header>
       <NavigationRoot>
         {children}
       </NavigationRoot>

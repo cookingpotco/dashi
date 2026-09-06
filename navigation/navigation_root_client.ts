@@ -223,6 +223,15 @@ function announceTitle(): void {
 }
 
 function focusAfterSwap(host: NavigationRoot): void {
+  const active = document.activeElement;
+  if (
+    active instanceof HTMLElement &&
+    active !== document.body &&
+    active !== document.documentElement &&
+    !host.contains(active)
+  ) {
+    return;
+  }
   const autofocus = host.querySelector("[autofocus]");
   if (autofocus instanceof HTMLElement) {
     autofocus.focus({ preventScroll: true });
@@ -231,7 +240,7 @@ function focusAfterSwap(host: NavigationRoot): void {
   if (!host.hasAttribute("tabindex")) {
     host.tabIndex = -1;
   }
-  host.focus({ preventScroll: true });
+  host.focus({ preventScroll: true, focusVisible: false });
 }
 
 function restoreScroll(
