@@ -414,6 +414,27 @@ Deno.test("navigation fixture", async (t) => {
       );
 
       await t.step(
+        "soft nav from chrome outside the host leaves focus on the link",
+        async () => {
+          await prepare(page, app.origin, "/");
+          await page.evaluate(() => {
+            const el = document.getElementById("chrome-about");
+            if (!(el instanceof HTMLElement)) {
+              throw new Error("missing #chrome-about");
+            }
+            el.focus();
+            el.click();
+          });
+          await waitForHeading(page, "about");
+          const focused = await page.evaluate(() => ({
+            id: document.activeElement?.id ?? null,
+            tag: document.activeElement?.localName ?? null,
+          }));
+          assertEquals(focused, { id: "chrome-about", tag: "a" });
+        },
+      );
+
+      await t.step(
         "focus moves to the host, or to autofocus when present",
         async () => {
           await prepare(page, app.origin, "/");
