@@ -113,29 +113,3 @@ jobs:
           path: e2e/results/
           if-no-files-found: ignore
           retention-days: 7
-
-  jsr-publish:
-    name: Publish 0.12.2
-    needs: check
-    if: github.event_name == 'pull_request' && github.head_ref == 'cursor/publish-dashi-0-12-2-1b9e'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version-file: .tool-versions
-
-      - uses: actions/cache@v5
-        with:
-          path: ${{ env.DENO_DIR }}
-          key: deno-${{ runner.os }}-${{ hashFiles('deno.lock') }}
-          restore-keys: |
-            deno-${{ runner.os }}-
-
-      - name: Publish
-        run: deno publish
