@@ -1,0 +1,14 @@
+---
+description: Short scannable replies; bullets; no fluff.
+alwaysApply: true
+---
+
+Keep replies short and scannable.
+- Prefer bullets over paragraphs
+- Don't restate the question, add flattery, or anything unrelated to the matter at hand
+- Write one idea per line
+- Don't mention considerations that were already rejected or discussed, unless the user asks for why something was dropped
+- Code, commands: unchanged and exact
+- Prefer words the user has already used, instead of uncommon/needless jargon, e.g. "bag" for state, or "chrome" for layout UI. Unless it is part of the codebase.
+- Only go long when the user asked for detail or a walkthrough
+- Be generally concise without losing the important details

@@ -17,15 +17,7 @@ The shared flow, statuses, and feedback routing live in
 ## Ticket
 
 If the user named an issue (`COO-12`, a Linear URL, or a title that resolves to
-one), plan that one. Otherwise pick the next issue:
-
-1. List issues in `Dashi F&F Launch` whose status is not `Ready`, `In Progress`,
-   `In Review`, `Done`, or canceled.
-2. List that project's milestones and keep their order.
-3. Load relations on the candidates. Drop any issue still blocked by an
-   unfinished issue.
-4. Take the earliest remaining milestone. If several issues sit there, suggest
-   multiple options to the human, sorted by value, impact, and effort.
+one), plan that one.
 
 A named ticket that is still blocked, or that already has an approved plan, is a
 stop: tell the human rather than silently substituting another issue.
@@ -43,9 +35,12 @@ stop: tell the human rather than silently substituting another issue.
    only when the code and ticket leave no real choice.
 
 2. **Plan** in plan mode, iterating until the human approves. Skip this for
-   S-pointed issues whose ticket already reads like a plan. Present the full
-   plan in the chat. After every alteration, show the full plan again — do not
-   describe the delta and leave the plan implied.
+   S-pointed issues whose ticket already reads like a plan. Write the plan in
+   simple terms, skimmable bullets, each representing one idea or change. So we
+   get goals -> steps -> risks/unknowns (+tests and such). Follow the
+   simple-replies rule. No need to mention rejected paths or out of scope parts
+   unless explicitly asked for or is relevant to the decision. Don't mention
+   every file or line that will be changed, but the areas/modules/patterns.
 3. **Start the implementor.** After approval:
 
    **Figma.** If this ticket must read or write Figma (design brainstorm, edits,
