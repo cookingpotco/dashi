@@ -3,6 +3,7 @@ import { type Element, jsx, jsxTemplate } from "../jsx-runtime/mod.ts";
 type Target = `/${string}` | `#${string}`;
 
 const enum PatchKind {
+  Update = "update",
   Replace = "replace",
   Append = "append",
   Prepend = "prepend",
@@ -10,6 +11,13 @@ const enum PatchKind {
   After = "after",
   Remove = "remove",
   Refresh = "refresh",
+}
+
+/** @internal */
+interface UpdatePatch {
+  readonly kind: PatchKind.Update;
+  readonly target: Target;
+  readonly body: Element;
 }
 
 /** @internal */
@@ -61,6 +69,7 @@ interface RefreshPatch {
 
 /** One targeted update for a `/${string}` host or a `#${string}` node. */
 export type Patch =
+  | UpdatePatch
   | ReplacePatch
   | AppendPatch
   | PrependPatch
@@ -77,7 +86,22 @@ export type Patch =
  *
  * @example
  * ```ts
- * return patches([patch.replace("/todos", <TodoList />)]);
+ * return patches([patch.update("/todos", <TodoList />)]);
+ * ```
+ */
+function update(target: Target, body: Element): Patch {
+  return { kind: PatchKind.Update, target, body };
+}
+
+/**
+ * Replace the target element with `body`.
+ *
+ * @param target Route src (`/${string}`) or an element id (`#${string}`).
+ * @param body Markup that replaces the target node.
+ *
+ * @example
+ * ```ts
+ * return patches([patch.replace("#status", <p id="status">Saved</p>)]);
  * ```
  */
 function replace(target: Target, body: Element): Patch {
@@ -177,16 +201,18 @@ function refresh(target: `/${string}`): Patch {
  * GET cannot return these; a GET or lazy fetch still replaces the host
  * that asked.
  *
- * `replace`, `append`, `prepend`, `before`, `after`, `remove`, and
- * `refresh` each take a required target. `/${string}` updates every
+ * `update`, `replace`, `append`, `prepend`, `before`, `after`, `remove`,
+ * and `refresh` each take a required target. `/${string}` updates every
  * `<RouteFragment>` rendering that `src`. `#${string}` updates the
- * node from `document.getElementById`. `refresh` accepts only a
- * route. `replace` / `append` / `prepend` mutate children; `before`
- * / `after` insert siblings; `remove` drops the node; `refresh`
- * re-GETs. Use `replace` when the write has the markup; use
- * `refresh` when fragments should re-fetch themselves asynchronously.
+ * node from `document.getElementById`. `refresh` accepts only a route.
+ * `update` / `append` / `prepend` mutate children; `replace` swaps the
+ * node; `before` / `after` insert siblings; `remove` drops the node;
+ * `refresh` re-GETs. Use `update` or `replace` when the write has the
+ * markup; use `refresh` when fragments should re-fetch themselves
+ * asynchronously.
  */
 export const patch = {
+  update,
   replace,
   append,
   prepend,
@@ -198,6 +224,7 @@ export const patch = {
 
 function serializePatch(item: Patch): Element {
   switch (item.kind) {
+    case PatchKind.Update:
     case PatchKind.Replace:
     case PatchKind.Append:
     case PatchKind.Prepend:

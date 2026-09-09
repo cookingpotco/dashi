@@ -33,7 +33,7 @@ function Fragment({ ctx, html }: ReadArgs<{ state: AppState }>) {
 
 function post({ patches }: WriteArgs<{ state: AppState }>) {
   return patches([
-    patch.replace(
+    patch.update(
       "/fragment",
       <aside id="frag">posted-fragment-body</aside>,
     ),

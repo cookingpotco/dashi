@@ -550,6 +550,56 @@ Deno.test("app fixture", async (t) => {
           });
         },
       );
+
+      await t.step("patch replace swaps the target element", async () => {
+        await page.goto(`${app.origin}/patches-page`);
+        await page.evaluate(() => customElements.whenDefined("route-fragment"));
+        const submit = await page.$("#element-replace-form button");
+        if (submit === null) {
+          throw new Error("element replace form is missing");
+        }
+        await submit.click();
+        await page.evaluate(async () => {
+          const start = Date.now();
+          while (
+            document.getElementById("element-replace")?.localName !== "p"
+          ) {
+            if (Date.now() - start > 10000) {
+              throw new Error("element replace did not apply");
+            }
+            await new Promise((resolve) => setTimeout(resolve, 25));
+          }
+        });
+        const result = await page.evaluate(() => {
+          const node = document.getElementById("element-replace");
+          return {
+            tag: node?.localName ?? null,
+            text: node?.textContent ?? null,
+          };
+        });
+        assertEquals(result, { tag: "p", text: "replaced" });
+      });
+
+      await t.step("patch update on a void host throws", async () => {
+        await page.goto(`${app.origin}/patches-page`);
+        await page.evaluate(() => customElements.whenDefined("route-fragment"));
+        const submit = await page.$("#void-update-form button");
+        if (submit === null) {
+          throw new Error("void update form is missing");
+        }
+        await submit.click();
+        await page.evaluate(async () => {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        });
+        const result = await page.evaluate(() => {
+          const node = document.getElementById("void-target");
+          return {
+            tag: node?.localName ?? null,
+            value: node instanceof HTMLInputElement ? node.value : null,
+          };
+        });
+        assertEquals(result, { tag: "input", value: "x" });
+      });
     },
   );
 });

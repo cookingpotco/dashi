@@ -23,5 +23,5 @@ export function list({ html }: ReadArgs) {
 export async function update({ ctx, patches }: WriteArgs) {
   const title = (await ctx.req.formData()).get("title");
   const text = typeof title === "string" && title !== "" ? title : "item";
-  return patches([patch.replace("/frag", <Frag item={text} />)]);
+  return patches([patch.update("/frag", <Frag item={text} />)]);
 }

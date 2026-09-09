@@ -48,13 +48,13 @@ export async function write({ ctx, patches }: WriteArgs) {
     const title = data.get("title");
     if (typeof title !== "string" || title.trim() === "") {
       return patches([
-        patch.replace(
+        patch.update(
           "/entries-form",
           <EntriesForm error="title is required" />,
         ),
       ]);
     }
-    return patches([patch.replace("/entries-form", <EntriesForm />)]);
+    return patches([patch.update("/entries-form", <EntriesForm />)]);
   }
   recordWrite();
   return Response.redirect(new URL("/search", ctx.url), 303);

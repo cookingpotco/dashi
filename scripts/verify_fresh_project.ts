@@ -56,11 +56,11 @@ async function create({ ctx, patches }: WriteArgs) {
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
     return patches([
-      patch.replace("/todos", <TodoList error="title is required" />),
+      patch.update("/todos", <TodoList error="title is required" />),
     ], { status: 422 });
   }
   todos.push(title);
-  return patches([patch.replace("/todos", <TodoList />)]);
+  return patches([patch.update("/todos", <TodoList />)]);
 }
 
 serve(({ route }) => ({
