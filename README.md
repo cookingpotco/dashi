@@ -39,8 +39,8 @@ serve(({ route }) => ({
   `<RouteFragment src>`. Eager during SSR, `lazy` after connect, or
   `lazy="visible"` on first intersection, with `fallback` and `timeout`.
 - **Patches.** In response to form submissions or manual API calls, handlers
-  seal a patch list with `patches()` — `patch.replace` and friends target a
-  specific fragment or element on the page.
+  seal a patch list with `patches()` — `patch.update`, `patch.replace`, and
+  friends target a specific fragment or element on the page.
 - **Explicit route table.** Typed params from the path literal, and per-method
   handlers, in one `serve()` callback.
 - **Web standards.** Handlers read `ctx.req` as a `Request` and return a
@@ -149,11 +149,11 @@ async function create({ ctx, patches }: WriteArgs) {
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
     return patches([
-      patch.replace("/todos", <TodoList error="title is required" />),
+      patch.update("/todos", <TodoList error="title is required" />),
     ], { status: 422 });
   }
   todos.push(title);
-  return patches([patch.replace("/todos", <TodoList />)]);
+  return patches([patch.update("/todos", <TodoList />)]);
 }
 
 serve(({ route }) => ({
@@ -164,15 +164,15 @@ serve(({ route }) => ({
 }));
 ```
 
-A GET or lazy fetch replaces the host that asked with markup. `patch.replace` /
-`append` / `prepend` / `before` / `after` / `remove` / `refresh` take a required
-target: `/${string}` updates every `<RouteFragment>` rendering that `src`;
-`#${string}` updates that element. `refresh` accepts only a route. `before` /
-`after` sit beside the target; replacing the node itself is `before` or `after`
-then `remove`. Use `replace` when the write has the markup; use `refresh` when
-fragments should re-fetch themselves asynchronously. A write handler seals that
-list with `patches()`, or returns a non-HTML `Response` (redirect, JSON, 204,
-etc.). The form can sit anywhere on the page.
+A GET or lazy fetch replaces the host that asked with markup. `patch.update` /
+`replace` / `append` / `prepend` / `before` / `after` / `remove` / `refresh`
+take a required target: `/${string}` updates every `<RouteFragment>` rendering
+that `src`; `#${string}` updates that element. `refresh` accepts only a route.
+`update` replaces children; `replace` swaps the element itself. `before` /
+`after` sit beside the target. Use `update` or `replace` when the write has the
+markup; use `refresh` when fragments should re-fetch themselves asynchronously.
+A write handler seals that list with `patches()`, or returns a non-HTML
+`Response` (redirect, JSON, 204, etc.). The form can sit anywhere on the page.
 
 ## Other features
 

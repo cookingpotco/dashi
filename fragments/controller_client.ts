@@ -2,6 +2,7 @@ import { registerPatches } from "../client/registry_client.ts";
 import "../forms/submit_client.ts";
 
 const enum SwapKind {
+  Update = "update",
   Replace = "replace",
   Append = "append",
   Prepend = "prepend",
@@ -9,6 +10,27 @@ const enum SwapKind {
   After = "after",
   Remove = "remove",
   Refresh = "refresh",
+}
+
+const VOID_ELEMENTS = new Set([
+  "area",
+  "base",
+  "br",
+  "col",
+  "embed",
+  "hr",
+  "img",
+  "input",
+  "link",
+  "meta",
+  "param",
+  "source",
+  "track",
+  "wbr",
+]);
+
+function cannotTakeChildren(host: Element): boolean {
+  return VOID_ELEMENTS.has(host.localName);
 }
 
 function resolveHosts(target: string): Iterable<Element> {
@@ -32,9 +54,23 @@ function applyPatch(item: Element) {
     }
     return;
   }
+  if (kind === SwapKind.Update) {
+    for (const host of hosts) {
+      if (cannotTakeChildren(host)) {
+        throw new Error(
+          `patch update cannot replace children of <${host.localName}>; void elements cannot take children`,
+        );
+      }
+      host.innerHTML = item.innerHTML;
+    }
+    return;
+  }
   if (kind === SwapKind.Replace) {
     for (const host of hosts) {
-      host.innerHTML = item.innerHTML;
+      const clone = item.cloneNode(true);
+      if (clone instanceof Element) {
+        host.replaceWith(...clone.childNodes);
+      }
     }
     return;
   }

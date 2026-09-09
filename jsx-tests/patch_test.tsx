@@ -6,8 +6,9 @@ Deno.test("patch list serializes to sibling dashi-patch elements", () => {
   assertEquals(
     String(renderPatches([
       patch.append("#todos", <li>milk</li>),
-      patch.replace("/todo-count", <span>3</span>),
-      patch.replace("#status", <p>Saved</p>),
+      patch.update("/todo-count", <span>3</span>),
+      patch.update("#status", <p>Saved</p>),
+      patch.replace("#element", <p id="element">new</p>),
       patch.remove("#notice"),
       patch.refresh("/hits"),
       patch.prepend("/todos", <li>bread</li>),
@@ -15,8 +16,9 @@ Deno.test("patch list serializes to sibling dashi-patch elements", () => {
       patch.after("/slot", <p>after</p>),
     ])),
     '<dashi-patch kind="append" target="#todos"><li>milk</li></dashi-patch>' +
-      '<dashi-patch kind="replace" target="/todo-count"><span>3</span></dashi-patch>' +
-      '<dashi-patch kind="replace" target="#status"><p>Saved</p></dashi-patch>' +
+      '<dashi-patch kind="update" target="/todo-count"><span>3</span></dashi-patch>' +
+      '<dashi-patch kind="update" target="#status"><p>Saved</p></dashi-patch>' +
+      '<dashi-patch kind="replace" target="#element"><p id="element">new</p></dashi-patch>' +
       '<dashi-patch kind="remove" target="#notice"></dashi-patch>' +
       '<dashi-patch kind="refresh" target="/hits"></dashi-patch>' +
       '<dashi-patch kind="prepend" target="/todos"><li>bread</li></dashi-patch>' +

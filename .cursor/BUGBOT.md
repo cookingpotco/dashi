@@ -111,17 +111,18 @@ cannot see project rules.
   fragment.
 - A closed set of cases is a `const enum` (plain `enum` only when it must exist
   at runtime). Flag a string-literal union used as a discriminant.
-- Document updates are `patch.replace`, `patch.append`, `patch.prepend`,
-  `patch.before`, `patch.after`, `patch.remove`, and `patch.refresh` on one
-  primitive. The target is required: `/${string}` updates every `route-fragment`
-  with that `src`; `#${string}` updates `document.getElementById`. `refresh`
-  accepts only a route. Use `replace` when the write has the markup; use
-  `refresh` when fragments should re-fetch themselves asynchronously. Write
-  handlers seal that list with `patches()` or return a Response, not markup.
-  `dashi-patch` is the wire format, not a user-writable element. Flag a third
-  address space, a `fragment` alias, an omitted target, leftover `action` /
-  `route-action` names, a user-written `<dashi-patch>`, or a write that returns
-  JSX or a patch array.
+- Document updates are `patch.update`, `patch.replace`, `patch.append`,
+  `patch.prepend`, `patch.before`, `patch.after`, `patch.remove`, and
+  `patch.refresh` on one primitive. The target is required: `/${string}` updates
+  every `route-fragment` with that `src`; `#${string}` updates
+  `document.getElementById`. `refresh` accepts only a route. `update` replaces
+  children; `replace` swaps the element. Use `update` or `replace` when the
+  write has the markup; use `refresh` when fragments should re-fetch themselves
+  asynchronously. Write handlers seal that list with `patches()` or return a
+  Response, not markup. `dashi-patch` is the wire format, not a user-writable
+  element. Flag a third address space, a `fragment` alias, an omitted target,
+  leftover `action` / `route-action` names, a user-written `<dashi-patch>`, or a
+  write that returns JSX or a patch array.
 - An object shape is an `interface`. `type` is for unions, aliases, mapped
   types. Flag an object shape written as a `type`.
 - Flag a helper that is a short, obvious check or a few straightforward lines

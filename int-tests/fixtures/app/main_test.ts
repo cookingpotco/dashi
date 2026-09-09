@@ -295,12 +295,12 @@ const appCases: IntegrationTestCase[] = [
           attr: { target: "#todos" },
         },
         {
-          selector: 'dashi-patch[kind="replace"][target="/todo-count"]',
+          selector: 'dashi-patch[kind="update"][target="/todo-count"]',
           text: "3",
           attr: { target: "/todo-count" },
         },
         {
-          selector: 'dashi-patch[kind="replace"][target="#status"]',
+          selector: 'dashi-patch[kind="update"][target="#status"]',
           text: "Saved",
           attr: { target: "#status" },
         },
@@ -348,12 +348,12 @@ const appCases: IntegrationTestCase[] = [
           attr: { target: "#todos" },
         },
         {
-          selector: 'dashi-patch[kind="replace"][target="/todo-count"]',
+          selector: 'dashi-patch[kind="update"][target="/todo-count"]',
           text: "3",
           attr: { target: "/todo-count" },
         },
         {
-          selector: 'dashi-patch[kind="replace"][target="#status"]',
+          selector: 'dashi-patch[kind="update"][target="#status"]',
           text: "Saved",
           attr: { target: "#status" },
         },
@@ -405,7 +405,7 @@ const appCases: IntegrationTestCase[] = [
       bodyExcludes: ["<!DOCTYPE html>"],
       select: [
         {
-          selector: 'dashi-patch[kind="replace"]',
+          selector: 'dashi-patch[kind="update"]',
           text: "invalid",
           attr: { target: "#status" },
         },

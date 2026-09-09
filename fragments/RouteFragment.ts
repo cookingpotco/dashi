@@ -23,11 +23,11 @@ interface BaseRouteFragmentProps extends HTMLAttributes {
    * connect when `lazy` is set.
    *
    * A GET or lazy fetch replaces this host with markup. A write handler
-   * returns `patch.replace`, `patch.append`, `patch.prepend`,
+   * returns `patch.update`, `patch.replace`, `patch.append`, `patch.prepend`,
    * `patch.before`, `patch.after`, `patch.remove`, or `patch.refresh`
    * to update every host rendering those routes, or a `#id` in the live
-   * document. Use `replace` when the write has the markup; use `refresh`
-   * when fragments should re-fetch themselves asynchronously.
+   * document. Use `update` or `replace` when the write has the markup; use
+   * `refresh` when fragments should re-fetch themselves asynchronously.
    */
   src: `/${string}`;
 }

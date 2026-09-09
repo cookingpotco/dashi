@@ -35,13 +35,13 @@ async function create({ ctx, patches }: WriteArgs) {
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
     return patches([
-      patch.replace("/todos", <TodoList error="title is required" />),
+      patch.update("/todos", <TodoList error="title is required" />),
     ]);
   }
   items.push(title);
   return patches([
     patch.append("#todos", <li>{title}</li>),
-    patch.replace(
+    patch.update(
       "/todos/count",
       <span id="todo-count">{items.length}</span>,
     ),

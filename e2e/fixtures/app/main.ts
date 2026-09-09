@@ -29,6 +29,12 @@ import { list as hits } from "./hits.tsx";
 import { dismiss as dismissNotice, list as notice } from "./notice.tsx";
 import { list as slot } from "./slot.tsx";
 import { apply as applyInserts, form as insertsForm } from "./inserts.tsx";
+import {
+  apply as applyElementReplace,
+  applyVoidUpdate,
+  form as elementReplaceForm,
+  voidForm,
+} from "./element_replace.tsx";
 
 export function start() {
   return serve(({ route }) => ({
@@ -65,6 +71,11 @@ export function start() {
       route("/notice", { GET: notice, POST: dismissNotice }),
       route("/slot", { GET: slot }),
       route("/inserts", { GET: insertsForm, POST: applyInserts }),
+      route("/element-replace", {
+        GET: elementReplaceForm,
+        POST: applyElementReplace,
+      }),
+      route("/void-update", { GET: voidForm, POST: applyVoidUpdate }),
     ],
   }), { fatal, hostname: "127.0.0.1", port: 0 });
 }

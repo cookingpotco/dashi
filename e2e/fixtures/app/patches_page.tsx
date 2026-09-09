@@ -5,6 +5,8 @@ export function PatchesPage({ html }: ReadArgs) {
     <div>
       <p id="page-marker">outside</p>
       <div id="status">idle</div>
+      <span id="element-replace">idle</span>
+      <input id="void-target" type="hidden" value="x" />
       <RouteFragment src="/todos" />
       <RouteFragment src="/todo-count" />
       <RouteFragment src="/todo-count" />
@@ -13,6 +15,8 @@ export function PatchesPage({ html }: ReadArgs) {
       <RouteFragment src="/notice" />
       <RouteFragment src="/slot" />
       <RouteFragment src="/inserts" />
+      <RouteFragment src="/element-replace" />
+      <RouteFragment src="/void-update" />
     </div>,
   );
 }
