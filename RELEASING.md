@@ -3,17 +3,6 @@
 Bump `version` in `deno.json` and the README JSR pin to the same version on
 `main`. That is the release.
 
-## Breaking changes
-
-When shipping a breaking API change, note it here before bumping:
-
-- **`patch.replace` → `patch.update` (children).** The old `patch.replace`
-  replaced a target's children (`innerHTML`). That behavior is now
-  `patch.update`. Call sites that meant children replacement must rename.
-- **New `patch.replace` (element).** `patch.replace` now swaps the target node
-  itself (`replaceWith`), matching Turbo. Re-emit `id` on the replacement node
-  when the new element should keep the same `#${string}` target.
-
 CI boots the README consumer against this checkout. After that run succeeds on
 `main`, the Publish workflow publishes with `deno publish`, then boots a fresh
 project from the registry. A version already on the registry is skipped, so

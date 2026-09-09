@@ -58,7 +58,7 @@ function applyPatch(item: Element) {
     for (const host of hosts) {
       if (cannotTakeChildren(host)) {
         throw new Error(
-          `patch update cannot replace children of <${host.localName}>`,
+          `patch update cannot replace children of <${host.localName}>; void elements cannot take children`,
         );
       }
       host.innerHTML = item.innerHTML;
