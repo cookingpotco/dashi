@@ -354,7 +354,9 @@ Deno.test("app fixture", async (t) => {
             await addValid.click();
             await page.evaluate(async (expected) => {
               const start = Date.now();
-              while (document.querySelectorAll("#todos li").length !== expected) {
+              while (
+                document.querySelectorAll("#todos li").length !== expected
+              ) {
                 if (Date.now() - start > 10000) {
                   throw new Error("todo row did not appear");
                 }
