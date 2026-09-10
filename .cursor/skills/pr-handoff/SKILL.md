@@ -2,9 +2,9 @@
 name: pr-handoff
 description: >-
   Hands a pull request back for review: merge from base, local checks, CI,
-  leftover sweep, the summary comment, and marking the PR ready. Use when
-  finishing a ticket, after review follow-up, before `gh pr ready`, or when
-  completing the definition of done.
+  dashi-pr-review pre-ready review, leftover sweep, the summary comment, and
+  marking the PR ready. Use when finishing a ticket, after review follow-up,
+  before `gh pr ready`, or when completing the definition of done.
 ---
 
 # PR handoff
@@ -55,9 +55,25 @@ marker and do not leave it pointing at work that has already landed.
 
 Commit and push to the same branch. Do not force-push or rebase.
 
-Wait until CI is green on that push before the comment or `gh pr ready`.
-`gh pr checks --watch`. A red check means you are not done. Stay in this run
-through Ready; nothing resumes you when checks finish.
+Wait until CI is green on that push before pre-ready review, the handoff
+comment, or `gh pr ready`. `gh pr checks --watch`. A red check means you are not
+done. Stay in this run through Ready; nothing resumes you when checks finish.
+
+## Pre-ready review
+
+After local checks pass and CI is green on the push you will hand over, and
+**before** **Comment** and **Ready**:
+
+1. Launch the `dashi-pr-review` subagent on this branch's diff.
+2. Wait for it to finish. Do not background past this step
+   (`is_background:
+   false`).
+3. Fix **Blockers** and **Should fix** items (one review→fix round; a second
+   round only if the first fix introduced new blockers).
+4. Push if needed, re-run local checks, and wait for CI green again.
+
+If the environment cannot spawn the subagent or its configured model, say so in
+the handoff comment and list what a human should verify manually.
 
 ## Comment
 
@@ -75,6 +91,8 @@ cannot be missed.
 - After follow-up: what you changed and to what end. Not a point-by-point
   response. Specific answers belong in the threads; `pr-followup` covers those.
   **Plan deviations** again if this round added any.
+- Include a **Pre-ready review** line: `dashi-pr-review` ran; list findings
+  fixed or state none.
 
 ## Ready
 
