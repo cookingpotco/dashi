@@ -1,5 +1,5 @@
 import { group, patch, type ReadArgs, type WriteArgs } from "dashi";
-import { CurrentTime } from "../time/mod.tsx";
+import { CurrentTimeText } from "../time/mod.tsx";
 import { todos as items } from "../todos.ts";
 
 export const todos = group("/todos", ({ route }) => ({
@@ -46,10 +46,7 @@ async function create({ ctx, patches }: WriteArgs) {
   items.push(title);
   return patches([
     patch.append("#todos", <li>{title}</li>),
-    patch.update(
-      "#todo-count",
-      <span id="todo-count">{items.length}</span>,
-    ),
-    patch.update("#current-time", <CurrentTime />),
+    patch.update("#todo-count", <span>{items.length}</span>),
+    patch.update("#current-time", <CurrentTimeText />),
   ]);
 }

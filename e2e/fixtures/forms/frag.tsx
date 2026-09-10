@@ -2,7 +2,7 @@ import { patch, type ReadArgs, type WriteArgs } from "dashi";
 
 function Frag({ item }: { item?: string }) {
   return (
-    <div id="frag">
+    <div>
       <p id="frag-item">{item ?? "empty"}</p>
       <form id="frag-write" method="POST" action="/frag">
         <input id="frag-write-title" name="title" />
@@ -17,7 +17,11 @@ function Frag({ item }: { item?: string }) {
 }
 
 export function list({ html }: ReadArgs) {
-  return html(<Frag />);
+  return html(
+    <div id="frag">
+      <Frag />
+    </div>,
+  );
 }
 
 export async function update({ ctx, patches }: WriteArgs) {

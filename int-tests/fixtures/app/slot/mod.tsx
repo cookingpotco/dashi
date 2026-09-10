@@ -32,6 +32,6 @@ function Slot({ ctx, html }: ReadArgs<{ state: AppState }>) {
 
 function post({ patches }: WriteArgs<{ state: AppState }>) {
   return patches([
-    patch.update("#frag", <aside id="frag">posted-slot-body</aside>),
+    patch.update("#frag", <>posted-slot-body</>),
   ]);
 }
