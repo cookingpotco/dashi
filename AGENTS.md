@@ -21,6 +21,10 @@ Follow the `pr-handoff` skill every time you hand the PR back, including after
 review follow-up. If that skill is not already available, read
 `.cursor/skills/pr-handoff/SKILL.md` and follow it.
 
+Before `gh pr ready`, run the `dashi-pr-review` subagent (see **Pre-ready
+review** in the `pr-handoff` skill): wait for it, fix blockers and should-fix
+items in one round, then hand off.
+
 Done means the PR is not a draft: CI is green on that push, the GitHub
 conversation comment is posted, and `gh pr ready` has taken (`isDraft` is
 false). Stay in this run until that is true. Nothing resumes you when checks
