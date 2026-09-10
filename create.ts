@@ -2,9 +2,8 @@ import pkg from "./deno.json" with { type: "json" };
 
 const USAGE = "Usage: deno create jsr:@cookingpot/dashi -- [dir] [--force]";
 
-const CREATE_DIR = `${import.meta.dirname}/create`;
-const TEMPLATE_DIR = `${CREATE_DIR}/template`;
-const OVERLAY_DIR = `${CREATE_DIR}/overlay`;
+const TEMPLATE_DIR = new URL("./create/template/", import.meta.url);
+const OVERLAY_DIR = new URL("./create/overlay/", import.meta.url);
 
 interface ParsedArgs {
   dir: string | undefined;
@@ -84,15 +83,15 @@ async function isNonEmptyDir(path: string): Promise<boolean> {
   }
 }
 
-async function copyDir(src: string, dest: string): Promise<void> {
+async function copyDir(src: URL, dest: string): Promise<void> {
   await Deno.mkdir(dest, { recursive: true });
   for await (const entry of Deno.readDir(src)) {
-    const srcPath = `${src}/${entry.name}`;
+    const srcPath = new URL(`${entry.name}/`, src);
     const destPath = `${dest}/${entry.name}`;
     if (entry.isDirectory) {
       await copyDir(srcPath, destPath);
     } else if (entry.isFile) {
-      await Deno.copyFile(srcPath, destPath);
+      await Deno.copyFile(new URL(entry.name, src), destPath);
     }
   }
 }
@@ -117,12 +116,12 @@ async function substituteAppName(
 }
 
 async function applyOverlay(targetDir: string): Promise<void> {
-  const agents = await Deno.readTextFile(`${OVERLAY_DIR}/AGENTS.md`);
+  const agents = await Deno.readTextFile(new URL("AGENTS.md", OVERLAY_DIR));
   await Deno.writeTextFile(`${targetDir}/AGENTS.md`, agents);
 
   await Deno.writeTextFile(`${targetDir}/CLAUDE.md`, "@AGENTS.md\n");
 
-  const ruleBody = await Deno.readTextFile(`${OVERLAY_DIR}/app-layout.md`);
+  const ruleBody = await Deno.readTextFile(new URL("app-layout.md", OVERLAY_DIR));
   await Deno.mkdir(`${targetDir}/.cursor/rules`, { recursive: true });
   await Deno.writeTextFile(
     `${targetDir}/.cursor/rules/app-layout.mdc`,
