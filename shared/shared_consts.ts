@@ -1,5 +1,5 @@
 export const REQUEST_HEADERS = {
-  FRAGMENT: "x-fragment",
+  SLOT: "x-slot",
 } as const;
 
 /** Reserved URL prefix for framework-served paths. */

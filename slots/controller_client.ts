@@ -38,7 +38,7 @@ function resolveHosts(target: string): Iterable<Element> {
     const node = document.getElementById(target.slice(1));
     return node === null ? [] : [node];
   }
-  return document.querySelectorAll(`route-fragment[src="${target}"]`);
+  return document.querySelectorAll(`route-slot[src="${target}"]`);
 }
 
 function applyPatch(item: Element) {

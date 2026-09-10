@@ -51,7 +51,7 @@ in a module that is not a page.
 Application code never calls a handler. The router is what invokes one: a
 direct call skips the target's middleware and error boundary and leaves
 it reading the caller's `ctx`. Share markup as a component, including
-between two methods of one route, and use `<RouteFragment src>` to
+between two methods of one route, and use `<RouteSlot src>` to
 include another route's rendered output.
 
 Pipeline callbacks take one object: `{ ctx, html }`, `{ ctx, patches }`,
@@ -100,9 +100,9 @@ table route. Public URLs are flat `/_dashi/client/<name>-<hash>.js`.
 Relative imports in compiled files are rewritten to the matching
 bundler path. The import map is bundler path → flat hashed URL.
 Documents get one `<script type="importmap">` for that graph;
-a module script is added only when a host rendered. A lazy fragment
-(`lazy` after connect, `lazy="visible"` on first intersection)
-`import()`s its `Link` modulepreloads before swap.
+a module script is added only when a host rendered. A route slot
+(`fetchWhen="connected"` after connect, `fetchWhen="visible"` on first
+intersection) `import()`s its `Link` modulepreloads before swap.
 `DASHI_MINIFY_CLIENT=1` minifies the bundle; `deno task dev` sets it to `0`.
 `staticFile` is app-mounted disk files. `/_dashi/*` is reserved.
 Client code names the DOM the way the HTML spec does. Prefer IDL properties

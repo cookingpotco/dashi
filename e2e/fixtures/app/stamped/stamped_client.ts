@@ -1,10 +1,10 @@
 import { stamp } from "../stamp.ts";
 
 customElements.define(
-  "eager-el",
+  "stamped-el",
   class extends HTMLElement {
     connectedCallback() {
-      stamp(this, "eager-ran");
+      stamp(this, "stamped-ran");
     }
   },
 );

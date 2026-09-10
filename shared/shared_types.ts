@@ -4,7 +4,7 @@ import type { Element } from "../jsx-runtime/mod.ts";
 
 /**
  * Per-invocation request context. Mutate `state` in place; do not
- * replace the object. Layouts do not run when `isFragment` is true.
+ * replace the object.
  */
 export interface Ctx<
   State extends Record<string, unknown> = Record<string, unknown>,
@@ -16,8 +16,6 @@ export interface Ctx<
   readonly url: URL;
   /** Path params from the matched route. */
   readonly params: Params;
-  /** True when this hit is a fragment include or lazy fetch. */
-  readonly isFragment: boolean;
   /** Per-request state. Mutate fields in place; do not replace the object. */
   readonly state: Partial<State>;
 }
@@ -152,13 +150,13 @@ export interface MiddlewareArgs<
 export interface SealOptions {
   /** Document or patch HTTP status. Omitted uses the call site default. */
   status?: number;
-  /** Cache policy. Omitted is no-store, plus `Vary: x-fragment`. */
+  /** Cache policy. Omitted is no-store, plus `Vary: x-slot`. */
   cache?: CacheConfig;
 }
 
 /**
  * Bound HTML sealer. Walks layouts on a document hit, then seals bytes
- * once. Fragments skip layouts. Default status depends on the call
+ * once. Slot hits skip layouts. Default status depends on the call
  * site (GET 200, `notFound` 404, `error` / `fatal` 500).
  */
 export type SealHtml = (
@@ -183,14 +181,13 @@ export type Fatal = (args: FatalArgs) => Response | Promise<Response>;
 
 /**
  * Route function. Always returns a `Response`. Call `html()` to seal
- * document or fragment markup (layouts, DOCTYPE, fragment splice,
- * default cache headers). A raw `Response` is sent as-is: no layouts,
- * DOCTYPE, or fragment splice.
+ * document or slot markup (layouts, DOCTYPE, default cache headers).
+ * A raw `Response` is sent as-is: no layouts or DOCTYPE.
  *
  * Only the router calls a handler. A direct call skips the target's
  * middleware and error boundary and leaves it reading the caller's
- * `ctx`. Share markup as a component; include another route's rendered
- * output with `<RouteFragment src>`.
+ * `ctx`. Share markup as a component; client-fetch a route with
+ * `<RouteSlot src>`.
  */
 /** @internal */
 export type Handler<
@@ -202,7 +199,7 @@ export type Handler<
 
 /**
  * Group error UI. `thrown` is the raw value. Call `html()` to seal
- * markup (remaining layouts from this boundary; fragments: this
+ * markup (remaining layouts from this boundary; slot hits: this
  * group's `error` only). A raw `Response` is sent as-is. Default
  * status 500.
  */
@@ -259,7 +256,7 @@ type RequireAtLeastOne<T> = {
 
 /**
  * Per-method handlers on a route. At least one method is required. GET
- * seals a page or fragment with `html()`. Writes seal patches with
+ * seals a page or slot body with `html()`. Writes seal patches with
  * `patches()`, or return a Response.
  *
  * @internal
@@ -271,8 +268,8 @@ export type MethodHandlers<
 
 /**
  * Shared UI that wraps the route on document render, outermost first.
- * Runs after the route has rendered. Does not run on fragment renders
- * (eager `<RouteFragment>` or a lazy fetch). Never use a layout for
+ * Runs after the route has rendered. Does not run on slot renders.
+ * Never use a layout for
  * gating or state-setting — that belongs on middleware or individual
  * route handlers.
  */
@@ -284,7 +281,7 @@ export type Layout<
 ) => Element | Promise<Element>;
 
 /**
- * Request pipeline, outermost first. Runs for document hits and fragment
+ * Request pipeline, outermost first. Runs for document hits and slot
  * hits.
  */
 /** @internal */

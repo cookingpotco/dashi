@@ -1,11 +1,5 @@
-import { type ReadArgs, RouteFragment } from "dashi";
+import { type ReadArgs, RouteSlot } from "dashi";
 
 export function Empty({ html }: ReadArgs) {
-  return html(
-    <RouteFragment
-      src="/empty-fail"
-      lazy
-      fallback={<span id="empty-fallback">Loading empty...</span>}
-    />,
-  );
+  return html(<RouteSlot src="/empty-fail" />);
 }

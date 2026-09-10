@@ -40,7 +40,7 @@ interpolated HTML, and its request path runs concurrently under `Deno.serve`.
   already visible in rendered HTML, or when the right coverage is an HTTP case
   in `int-tests/` or a browser case in `e2e/`. Do not ask for a one-off harness;
   ask for a case there.
-- **An `int-tests/` case of client behaviour** (custom element upgrade, fragment
+- **An `int-tests/` case of client behaviour** (custom element upgrade, slot
   swap, form intercept, History API). That is `e2e/`. HTTP cases stay on the
   response; they cannot see whether the element upgraded.
 - **`@astral/astral` as a framework runtime dependency.** It is a test
@@ -88,8 +88,8 @@ cannot see project rules.
   that calls a handler, including as a JSX child: it skips the target's
   middleware and error boundary and leaves it reading the caller's `ctx`. Shared
   markup is a component in a non-page module; another route's rendered output is
-  `<RouteFragment src>`. Flag a `*_route.tsx`, a one-path page in `examples/` as
-  a file next to the table, a one-path page declared as `group("/path")` +
+  `<RouteSlot src>`. Flag a `*_route.tsx`, a one-path page in `examples/` as a
+  file next to the table, a one-path page declared as `group("/path")` +
   `route("/")`, or `group()` inlined in a `serve()` bag instead of an imported
   `Group`.
 - Client JS attaches only via `client.module` / `client.element` at module
@@ -98,8 +98,8 @@ cannot see project rules.
   files are `/_dashi/client/` via a reserved table route (flat
   `/_dashi/client/<name>-<hash>.js`). Relative imports are rewritten to the
   bundler path; the import map is bundler path → that public URL. Documents get
-  one import map; a module script is added only when a host rendered. A lazy
-  fragment `import()`s its `Link` modulepreloads before swap. `staticFile` is
+  one import map; a module script is added only when a host rendered. A route
+  slot `import()`s its `Link` modulepreloads before swap. `staticFile` is
   app-mounted disk files. Flag a second include, bundle, or inject path.
   `/_dashi/*` is reserved. `client/mod.ts` is the compiler;
   `client/registry_client.ts` is the browser bus. One document-level submit
@@ -107,20 +107,19 @@ cannot see project rules.
   listener and no nearest-host targeting. GET navigates the page; a write goes
   through the registry. A 2xx patch-list write resets the submitting form; 4xx
   applies patches and keeps field values. Client features assume the client
-  runtime. Flag a per-element submit listener or a GET form that swaps a
-  fragment.
+  runtime. Flag a per-element submit listener or a GET form that swaps a slot.
 - A closed set of cases is a `const enum` (plain `enum` only when it must exist
   at runtime). Flag a string-literal union used as a discriminant.
 - Document updates are `patch.update`, `patch.replace`, `patch.append`,
   `patch.prepend`, `patch.before`, `patch.after`, `patch.remove`, and
-  `patch.refresh` on one primitive. The target is required: `/${string}` updates
-  every `route-fragment` with that `src`; `#${string}` updates
-  `document.getElementById`. `refresh` accepts only a route. `update` replaces
-  children; `replace` swaps the element. Use `update` or `replace` when the
-  write has the markup; use `refresh` when fragments should re-fetch themselves
-  asynchronously. Write handlers seal that list with `patches()` or return a
-  Response, not markup. `dashi-patch` is the wire format, not a user-writable
-  element. Flag a third address space, a `fragment` alias, an omitted target,
+  `patch.refresh` on one primitive. The target is required: `#${string}` updates
+  `document.getElementById`; `refresh` accepts only a route and re-GETs every
+  `route-slot` with that `src`. `update` replaces children; `replace` swaps the
+  element. Use `update` or `replace` when the write has the markup; use
+  `refresh` when slots should re-fetch themselves asynchronously. Write handlers
+  seal that list with `patches()` or return a Response, not markup.
+  `dashi-patch` is the wire format, not a user-writable element. Flag a third
+  address space, a route target on non-refresh patches, an omitted target,
   leftover `action` / `route-action` names, a user-written `<dashi-patch>`, or a
   write that returns JSX or a patch array.
 - An object shape is an `interface`. `type` is for unions, aliases, mapped

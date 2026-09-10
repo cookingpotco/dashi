@@ -18,7 +18,7 @@
 
 dashi is a server-first web framework for Deno that compiles JSX to HTML strings
 on the server. No VDOM, no hydration, no client framework. Pages update by
-swapping server-rendered fragments, in the spirit of
+swapping server-rendered route slots, in the spirit of
 [Hotwire](https://hotwired.dev/) and [htmx](https://htmx.org/).
 
 ```tsx
@@ -35,12 +35,12 @@ serve(({ route }) => ({
 
 ## Features
 
-- **Route fragments.** Compose one route into another with
-  `<RouteFragment src>`. Eager during SSR, `lazy` after connect, or
-  `lazy="visible"` on first intersection, with `fallback` and `timeout`.
+- **Route slots.** Client-fetch an explicit route with `<RouteSlot src>`.
+  `fetchWhen="visible"` waits for first intersection (`fallback` required); omit
+  `fetchWhen` to fetch when connected.
 - **Patches.** In response to form submissions or manual API calls, handlers
   seal a patch list with `patches()` — `patch.update`, `patch.replace`, and
-  friends target a specific fragment or element on the page.
+  friends target `#id` holes; `patch.refresh` re-GETs every matching slot.
 - **Explicit route table.** Typed params from the path literal, and per-method
   handlers, in one `serve()` callback.
 - **Web standards.** Handlers read `ctx.req` as a `Request` and return a
@@ -73,7 +73,7 @@ Every config key a consumer needs, in one `deno.json`:
   },
   "unstable": ["bundle", "no-legacy-abort"],
   "imports": {
-    "dashi": "jsr:@cookingpot/dashi@^0.13.0"
+    "dashi": "jsr:@cookingpot/dashi@^0.14.0"
   }
 }
 ```
@@ -94,26 +94,24 @@ deno run -A --watch main.tsx
 Open http://localhost:8000. Running without permission flags dies on
 `Deno.env.get("DASHI_LOG")` at import, before serving.
 
-## Fragments
+## Route slots
 
-A lazy fragment shows `fallback` during SSR. `lazy` fetches after the host
-connects; `lazy="visible"` waits for the first viewport intersection (`fallback`
-is required). Omit `lazy` to include during SSR. `timeout` is milliseconds to
-wait (5000 if omitted), and a timeout fails the include.
+Same-request UI is a component import. A `<RouteSlot src>` GETs that route later
+and swaps the slot. `fetchWhen="visible"` waits for the first viewport
+intersection (`fallback` is required). Omit `fetchWhen` to fetch when connected;
+`fallback` is optional on connected slots.
 
 ```tsx
-<RouteFragment src="/todos" lazy fallback={<p>Loading...</p>} />
-<RouteFragment src="/demo" lazy="visible" fallback={<p>Loading...</p>} />
+<RouteSlot src="/todos" />
+<RouteSlot
+  src="/demo"
+  fetchWhen="visible"
+  fallback={<p>Loading...</p>}
+/>
 ```
 
 ```tsx
-import {
-  patch,
-  type ReadArgs,
-  RouteFragment,
-  serve,
-  type WriteArgs,
-} from "dashi";
+import { patch, type ReadArgs, RouteSlot, serve, type WriteArgs } from "dashi";
 
 const todos: string[] = [];
 
@@ -121,15 +119,15 @@ function Home({ html }: ReadArgs) {
   return html(
     <html>
       <h1>Todos</h1>
-      <RouteFragment src="/todos" lazy fallback={<p>Loading...</p>} />
+      <RouteSlot src="/todos" />
     </html>,
   );
 }
 
 function TodoList({ error }: { error?: string }) {
   return (
-    <div>
-      <ul>
+    <div id="todos-root">
+      <ul id="todos">
         {todos.map((todo) => <li>{todo}</li>)}
       </ul>
       {error ? <p>{error}</p> : null}
@@ -149,11 +147,11 @@ async function create({ ctx, patches }: WriteArgs) {
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
     return patches([
-      patch.update("/todos", <TodoList error="title is required" />),
+      patch.update("#todos-root", <TodoList error="title is required" />),
     ], { status: 422 });
   }
   todos.push(title);
-  return patches([patch.update("/todos", <TodoList />)]);
+  return patches([patch.update("#todos-root", <TodoList />)]);
 }
 
 serve(({ route }) => ({
@@ -164,26 +162,25 @@ serve(({ route }) => ({
 }));
 ```
 
-A GET or lazy fetch replaces the host that asked with markup. `patch.update` /
-`replace` / `append` / `prepend` / `before` / `after` / `remove` / `refresh`
-take a required target: `/${string}` updates every `<RouteFragment>` rendering
-that `src`; `#${string}` updates that element. `refresh` accepts only a route.
+A slot GET replaces the host that asked with markup. `patch.update` / `replace`
+/ `append` / `prepend` / `before` / `after` / `remove` each take a `#${string}`
+id. `refresh` accepts only a route and re-GETs every `<route-slot src="…">`.
 `update` replaces children; `replace` swaps the element itself. `before` /
 `after` sit beside the target. Use `update` or `replace` when the write has the
-markup; use `refresh` when fragments should re-fetch themselves asynchronously.
-A write handler seals that list with `patches()`, or returns a non-HTML
-`Response` (redirect, JSON, 204, etc.). The form can sit anywhere on the page.
+markup; use `refresh` when slots should re-fetch themselves asynchronously. A
+write handler seals that list with `patches()`, or returns a non-HTML `Response`
+(redirect, JSON, 204, etc.). The form can sit anywhere on the page.
 
 ## Other features
 
 **Layouts** are shared UI only. They wrap the route on document render,
-outermost first, after the route has rendered, and do not run on fragment
-renders. Never use them for gating or state-setting — that belongs on middleware
-or individual route handlers. A layout is `({ ctx, children }) => ...`. Attach
+outermost first, after the route has rendered, and do not run on slot renders.
+Never use them for gating or state-setting — that belongs on middleware or
+individual route handlers. A layout is `({ ctx, children }) => ...`. Attach
 `layouts: [RootLayout]` on the table or a `group()`.
 
 **Middleware** is a `({ ctx, next }) => Response` factory attached on `group()`.
-It runs for document hits and fragment hits.
+It runs for document hits and slot hits.
 
 **Prefixed `group()`** joins a path onto child routes. Import `group` from
 `dashi` in a feature `mod.ts` and drop the `Group` into the root callback:
@@ -263,7 +260,7 @@ export const api = group("/api", ({ route }) => ({
 
 ## Not yet
 
-- WebSocket / SSE push into fragments, and SSR streaming.
+- WebSocket / SSE push into slots, and SSR streaming.
 - Deno-only. JSR's npm compatibility means an install under Node succeeds, and
   then `Deno.serve` is not there.
 
@@ -273,7 +270,7 @@ Minimal working examples, not best practice:
 
 - [`examples/hello-world`](examples/hello-world): routes, layouts, middleware, a
   form
-- [`examples/fragments`](examples/fragments): eager and lazy fragments, actions
+- [`examples/slots`](examples/slots): route slots, patches, component imports
 
 ## Development
 

@@ -16,10 +16,10 @@ import { bindUrls, grantedNetworkInterfaces } from "./bind_urls.ts";
  * pathless; `notFound` here is the default 404. `routes` holds `route()`
  * entries and `group()` values. Layouts are shared UI only. They wrap
  * the route on document render, outermost first, after the route has
- * rendered, and do not run on fragment renders. Never use them for
+ * rendered, and do not run on slot renders. Never use them for
  * gating or state-setting — that belongs on middleware or individual
  * route handlers. Middleware is the request pipeline, outermost first,
- * and runs for document hits and fragment hits. `error` catches
+ * and runs for document hits and slot hits. `error` catches
  * handler throws and inner group failures. `fatal` is the last-resort
  * 500 value when the error walk is exhausted.
  *
@@ -31,8 +31,8 @@ import { bindUrls, grantedNetworkInterfaces } from "./bind_urls.ts";
  *
  * @param build Root table. Pathless. `route()` and `group()` values go
  * in `routes`.
- * @param options Forwarded to `Deno.serve`, plus `fatal` and
- * `fragmentDepthLimit`. `handler` is always the router.
+ * @param options Forwarded to `Deno.serve`, plus `fatal`.
+ * `handler` is always the router.
  *
  * @example
  * ```ts
@@ -55,20 +55,14 @@ export async function serve<
      * status: 500 })`.
      */
     fatal?: (args: FatalArgs) => Response | Promise<Response>;
-    /**
-     * Max eager include chain length. Omitted is 5. A longer chain
-     * fails the request.
-     */
-    fragmentDepthLimit?: number;
   },
 ): Promise<Deno.HttpServer> {
   const {
     fatal,
-    fragmentDepthLimit,
     onListen,
     ...serveOptions
   } = options ?? {};
-  init(build, fatal, fragmentDepthLimit);
+  init(build, fatal);
   await compileClient();
   return Deno.serve({
     ...serveOptions,

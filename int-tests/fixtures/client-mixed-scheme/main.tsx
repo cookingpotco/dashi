@@ -6,19 +6,17 @@ const Local = client.element(
 );
 
 // Same specifier a JSR consumer gets from
-// `new URL("./route_fragment_client.ts", import.meta.url)` on a
+// `new URL("./route_slot_client.ts", import.meta.url)` on a
 // published host.
-const JsrFragment = client.module(
-  new URL(
-    "https://jsr.io/@cookingpot/dashi/0.6.0/fragments/route_fragment_client.ts",
-  ),
+const JsrSlot = client.module(
+  new URL(import.meta.resolve("dashi-jsr-slot")),
 );
 
 function home({ html }: ReadArgs) {
   return html(
     <html>
       <Local>local</Local>
-      <JsrFragment />
+      <JsrSlot />
     </html>,
   );
 }

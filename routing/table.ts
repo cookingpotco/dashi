@@ -95,14 +95,14 @@ export interface GroupFields<
 > {
   /**
    * Shared UI that wraps the route on document render, outermost first.
-   * Runs after the route has rendered. Does not run on fragment
+   * Runs after the route has rendered. Does not run on slot
    * renders. Never use a layout for gating or state-setting — that
    * belongs on middleware or individual route handlers.
    */
   layouts?: Layout<State>[];
   /**
    * Request pipeline, outermost first. Runs for document hits and
-   * fragment hits.
+   * slot hits.
    */
   middleware?: Middleware<State>[];
   /**
@@ -186,7 +186,6 @@ export interface CompiledTable<
   rootMiddleware: Middleware<State>[];
   prefixCaptures: PrefixCapture<State>[];
   fatal?: Fatal;
-  fragmentDepthLimit: number;
 }
 
 interface PrefixCapture<
@@ -361,14 +360,11 @@ function staticPathname(segments: ConcreteSegment[]): string | null {
   return pathname === "" ? "/" : pathname;
 }
 
-export const DEFAULT_FRAGMENT_DEPTH_LIMIT = 5;
-
 export function compile<
   State extends Record<string, unknown> = Record<string, unknown>,
 >(
   table: Group<State>,
   fatal?: Fatal,
-  fragmentDepthLimit = DEFAULT_FRAGMENT_DEPTH_LIMIT,
 ): CompiledTable<State> {
   const rootBoundary: GroupBoundary<State> = {
     layouts: table.layouts,
@@ -438,7 +434,6 @@ export function compile<
     rootMiddleware: table.middleware,
     prefixCaptures,
     fatal,
-    fragmentDepthLimit,
   };
 }
 
@@ -670,10 +665,10 @@ function createGroupCallback<
  *
  * Layouts are shared UI only. They wrap the route on document render,
  * outermost first, after the route has rendered, and do not run on
- * fragment renders. Never use them for gating or state-setting — that
+ * slot renders. Never use them for gating or state-setting — that
  * belongs on middleware or individual route handlers. Middleware is
  * the request pipeline, outermost first, and runs for document hits
- * and fragment hits. `error` catches handler throws and inner group
+ * and slot hits. `error` catches handler throws and inner group
  * failures; it does not catch this group's own layouts.
  *
  * @param prefix Path joined onto child routes. Omit for a pathless shell.

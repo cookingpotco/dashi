@@ -14,7 +14,7 @@ export async function apply({ ctx, patches }: WriteArgs) {
   const text = typeof title === "string" && title !== "" ? title : "item";
   return patches([
     patch.append("#todos", <li id="appended-todo">{text}</li>),
-    patch.update("/todo-count", <span id="todo-count">1</span>),
+    patch.update("#todo-count", <span id="todo-count">1</span>),
     patch.update("#status", <p>Saved</p>),
     patch.refresh("/hits"),
   ]);

@@ -1,9 +1,4 @@
-import {
-  group,
-  type MiddlewareArgs,
-  type ReadArgs,
-  RouteFragment,
-} from "dashi";
+import { group, type MiddlewareArgs, type ReadArgs, RouteSlot } from "dashi";
 import type { AppState } from "../state.ts";
 
 function embedOnly({ ctx, next }: MiddlewareArgs<AppState>) {
@@ -19,14 +14,14 @@ export const embed = group<AppState>(({ route }) => ({
 function Embed({ html }: ReadArgs<{ state: AppState }>) {
   return html(
     <div>
-      <section id="eager">
-        <RouteFragment src="/fragment" />
-        <RouteFragment src="/peer" />
+      <section id="connect">
+        <RouteSlot src="/slot" />
+        <RouteSlot src="/peer" />
       </section>
-      <section id="lazy">
-        <RouteFragment
-          src="/fragment"
-          lazy
+      <section id="visible">
+        <RouteSlot
+          src="/slot"
+          fetchWhen="visible"
           fallback={<span id="fallback">Loading...</span>}
         />
       </section>

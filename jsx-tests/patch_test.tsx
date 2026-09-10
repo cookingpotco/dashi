@@ -6,33 +6,33 @@ Deno.test("patch list serializes to sibling dashi-patch elements", () => {
   assertEquals(
     String(renderPatches([
       patch.append("#todos", <li>milk</li>),
-      patch.update("/todo-count", <span>3</span>),
+      patch.update("#todo-count", <span>3</span>),
       patch.update("#status", <p>Saved</p>),
       patch.replace("#element", <p id="element">new</p>),
       patch.remove("#notice"),
       patch.refresh("/hits"),
-      patch.prepend("/todos", <li>bread</li>),
-      patch.before("/slot", <p>before</p>),
-      patch.after("/slot", <p>after</p>),
+      patch.prepend("#todos", <li>bread</li>),
+      patch.before("#slot", <p>before</p>),
+      patch.after("#slot", <p>after</p>),
     ])),
     '<dashi-patch kind="append" target="#todos"><li>milk</li></dashi-patch>' +
-      '<dashi-patch kind="update" target="/todo-count"><span>3</span></dashi-patch>' +
+      '<dashi-patch kind="update" target="#todo-count"><span>3</span></dashi-patch>' +
       '<dashi-patch kind="update" target="#status"><p>Saved</p></dashi-patch>' +
       '<dashi-patch kind="replace" target="#element"><p id="element">new</p></dashi-patch>' +
       '<dashi-patch kind="remove" target="#notice"></dashi-patch>' +
       '<dashi-patch kind="refresh" target="/hits"></dashi-patch>' +
-      '<dashi-patch kind="prepend" target="/todos"><li>bread</li></dashi-patch>' +
-      '<dashi-patch kind="before" target="/slot"><p>before</p></dashi-patch>' +
-      '<dashi-patch kind="after" target="/slot"><p>after</p></dashi-patch>',
+      '<dashi-patch kind="prepend" target="#todos"><li>bread</li></dashi-patch>' +
+      '<dashi-patch kind="before" target="#slot"><p>before</p></dashi-patch>' +
+      '<dashi-patch kind="after" target="#slot"><p>after</p></dashi-patch>',
   );
 });
 
 Deno.test("patch target attribute is escaped", () => {
   assertEquals(
     String(renderPatches([
-      patch.remove("/a&b"),
+      patch.remove("#a&b"),
     ])),
-    '<dashi-patch kind="remove" target="/a&amp;b"></dashi-patch>',
+    '<dashi-patch kind="remove" target="#a&amp;b"></dashi-patch>',
   );
 });
 
@@ -40,10 +40,10 @@ function typechecks() {
   group(({ route }) => {
     route("/x", {
       // @ts-expect-error GET cannot return patches
-      GET: () => [patch.remove("/x")],
+      GET: () => [patch.remove("#x")],
     });
     route("/x", {
-      POST: ({ patches }) => patches([patch.remove("/x")]),
+      POST: ({ patches }) => patches([patch.remove("#x")]),
     });
     route("/x", {
       // @ts-expect-error writes cannot return markup
@@ -53,6 +53,10 @@ function typechecks() {
   });
   // @ts-expect-error refresh rejects an id target
   patch.refresh("#status");
+  // @ts-expect-error update rejects a route target
+  patch.update("/todos", <div />);
+  // @ts-expect-error remove rejects a route target
+  patch.remove("/x");
 }
 
 Deno.test("GET cannot return patches", () => {

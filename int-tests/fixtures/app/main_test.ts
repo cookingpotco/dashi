@@ -74,147 +74,89 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
-    name: "nested eager fragment substitutes",
+    name: "nested slot hosts another slot on the document",
     request: { path: "/nested-embed" },
     status: 200,
     html: {
-      bodyExcludes: ["{{fragment:"],
       select: [
         {
-          selector: "#nest-outer #nest-mid #nested-frag",
-          text: "nested-fragment-body",
+          selector: 'route-slot[src="/lazy-nest"]',
+          exists: true,
+          attr: { src: "/lazy-nest" },
         },
+        { selector: "#nested-slot", exists: false },
       ],
     },
   },
   {
-    name: "eager inside lazy keeps fallback on the document",
+    name: "visible slot keeps fallback on the document",
     request: { path: "/lazy-nest-embed" },
     status: 200,
     html: {
-      bodyExcludes: ["nested-fragment-body", "{{fragment:"],
+      bodyExcludes: ["nested-slot-body"],
       select: [
         {
-          selector: "route-fragment[lazy] #lazy-nest-fallback",
+          selector: 'route-slot[fetchwhen="visible"] #lazy-nest-fallback',
           text: "Loading nest...",
         },
-        { selector: "#nested-frag", exists: false },
+        { selector: "#nested-slot", exists: false },
       ],
     },
   },
   {
-    name: "eager inside lazy is filled on x-fragment GET",
+    name: "nested slot chain fills inner route on x-slot GET",
     request: {
-      path: "/lazy-nest",
-      headers: { "x-fragment": "1" },
+      path: "/nest-inner",
+      headers: { "x-slot": "1" },
     },
     status: 200,
     html: {
-      bodyExcludes: ["<!DOCTYPE html>", "{{fragment:"],
+      bodyExcludes: ["<!DOCTYPE html>"],
       select: [
-        { selector: "#nested-frag", text: "nested-fragment-body" },
+        { selector: "#nested-slot", text: "nested-slot-body" },
       ],
     },
   },
   {
-    name: "same src twice reuses and is not a cycle",
-    request: { path: "/dup-src" },
-    status: 200,
-    html: {
-      bodyExcludes: ["{{fragment:", "Fragment cycle:"],
-      select: [
-        {
-          selector: "#dup-a route-fragment",
-          text: "nested-fragment-body",
-          attr: { src: "/nest-inner" },
-        },
-        {
-          selector: "#dup-b route-fragment",
-          text: "nested-fragment-body",
-          attr: { src: "/nest-inner" },
-        },
-        {
-          selector: "#dup-c route-fragment",
-          text: "nested-fragment-body",
-          attr: { src: "/nest-inner" },
-        },
-        {
-          selector: "#dup-d route-fragment",
-          text: "nested-fragment-body",
-          attr: { src: "/nest-inner" },
-        },
-      ],
-    },
-  },
-  {
-    name: "path with a different query is a distinct fragment host",
-    request: { path: "/distinct-query" },
-    status: 200,
-    html: {
-      bodyExcludes: ["{{fragment:", "Fragment cycle:"],
-      select: [
-        {
-          selector: "#q-none route-fragment",
-          text: "query-frag-none",
-          attr: { src: "/query-frag" },
-        },
-        {
-          selector: "#q-one route-fragment",
-          text: "query-frag-1",
-          attr: { src: "/query-frag?q=1" },
-        },
-      ],
-    },
-  },
-  {
-    name: "successful eager include is not treated as abort",
+    name: "connect slots render hosts on the document",
     request: { path: "/embed" },
     status: 200,
     html: {
       select: [
         {
-          selector: "route-fragment:not([lazy]) #frag",
-          text: "eager-fragment-body",
+          selector: 'route-slot[src="/slot"]',
+          exists: true,
+          attr: { src: "/slot" },
         },
-        { selector: "#peer", text: "peer-body" },
+        {
+          selector: 'route-slot[src="/peer"]',
+          exists: true,
+          attr: { src: "/peer" },
+        },
+        { selector: "#frag", exists: false },
+        { selector: "#peer", exists: false },
       ],
     },
   },
   {
-    name: "eager fragment substitutes; lazy keeps fallback",
+    name: "visible slot keeps fallback; connect slots stay empty",
     request: { path: "/embed" },
     status: 200,
     html: {
-      bodyExcludes: ["{{fragment:"],
       select: [
         {
-          selector: "route-fragment:not([lazy]) #frag",
-          text: "eager-fragment-body",
-          attr: {
-            "data-pre": "from-mw",
-            "data-embed-only": "yes",
-            "data-frag-only": "yes",
-            "data-frag": "1",
-          },
+          selector: 'route-slot[fetchwhen="visible"] #fallback',
+          text: "Loading...",
         },
-        {
-          selector: "#peer",
-          text: "peer-body",
-          attr: {
-            "data-embed-only": "yes",
-            "data-frag-only": "",
-          },
-        },
-        { selector: "route-fragment[lazy] #fallback", text: "Loading..." },
-        { selector: "route-fragment[lazy] #frag", exists: false },
+        { selector: 'route-slot[fetchwhen="visible"] #frag', exists: false },
         { selector: 'script[type="importmap"]', exists: true },
         { selector: 'script[type="module"]', exists: true },
       ],
     },
   },
   {
-    name: "fragment as document includes layouts and doctype",
-    request: { path: "/fragment" },
+    name: "slot as document includes layouts and doctype",
+    request: { path: "/slot" },
     status: 200,
     headers: { "content-type": "text/html; charset=utf-8" },
     html: {
@@ -223,21 +165,20 @@ const appCases: IntegrationTestCase[] = [
         { selector: "html > body > h1", text: "Website Title" },
         {
           selector: "html > body > #frag",
-          text: "eager-fragment-body",
+          text: "slot-body",
           attr: {
             "data-embed-only": "",
             "data-frag-only": "yes",
-            "data-frag": "0",
           },
         },
       ],
     },
   },
   {
-    name: "fragment as fragment omits layouts and doctype",
+    name: "slot as slot omits layouts and doctype",
     request: {
-      path: "/fragment",
-      headers: { "x-fragment": "1" },
+      path: "/slot",
+      headers: { "x-slot": "1" },
     },
     status: 200,
     headers: { "content-type": "text/html; charset=utf-8" },
@@ -246,11 +187,10 @@ const appCases: IntegrationTestCase[] = [
       select: [
         {
           selector: "#frag",
-          text: "eager-fragment-body",
+          text: "slot-body",
           attr: {
             "data-embed-only": "",
             "data-frag-only": "yes",
-            "data-frag": "1",
           },
         },
         { selector: "h1", exists: false },
@@ -258,28 +198,28 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
-    name: "POST x-fragment omits layouts and doctype",
+    name: "POST x-slot omits layouts and doctype",
     request: {
       method: "POST",
-      path: "/fragment",
-      headers: { "x-fragment": "1" },
+      path: "/slot",
+      headers: { "x-slot": "1" },
     },
     status: 200,
     headers: { "content-type": "text/html; charset=utf-8" },
     html: {
       bodyExcludes: ["<!DOCTYPE html>", "<script"],
       select: [
-        { selector: "#frag", text: "posted-fragment-body" },
+        { selector: "#frag", text: "posted-slot-body" },
         { selector: "h1", exists: false },
       ],
     },
   },
   {
-    name: "POST x-fragment patches are sibling dashi-patch elements",
+    name: "POST x-slot patches are sibling dashi-patch elements",
     request: {
       method: "POST",
       path: "/patches",
-      headers: { "x-fragment": "1" },
+      headers: { "x-slot": "1" },
     },
     status: 200,
     headers: {
@@ -287,7 +227,7 @@ const appCases: IntegrationTestCase[] = [
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
     },
     html: {
-      bodyExcludes: ["<!DOCTYPE html>", "{{fragment:"],
+      bodyExcludes: ["<!DOCTYPE html>"],
       select: [
         {
           selector: 'dashi-patch[kind="append"]',
@@ -295,9 +235,9 @@ const appCases: IntegrationTestCase[] = [
           attr: { target: "#todos" },
         },
         {
-          selector: 'dashi-patch[kind="update"][target="/todo-count"]',
+          selector: 'dashi-patch[kind="update"][target="#todo-count"]',
           text: "3",
-          attr: { target: "/todo-count" },
+          attr: { target: "#todo-count" },
         },
         {
           selector: 'dashi-patch[kind="update"][target="#status"]',
@@ -312,24 +252,23 @@ const appCases: IntegrationTestCase[] = [
         {
           selector: 'dashi-patch[kind="prepend"]',
           text: "bread",
-          attr: { target: "/todos" },
+          attr: { target: "#todos" },
         },
         {
           selector: 'dashi-patch[kind="before"]',
           text: "before",
-          attr: { target: "/slot" },
+          attr: { target: "#slot" },
         },
         {
           selector: 'dashi-patch[kind="after"]',
           text: "after",
-          attr: { target: "/slot" },
+          attr: { target: "#slot" },
         },
       ],
     },
   },
   {
-    name:
-      "POST patches without fragment header are sibling dashi-patch elements",
+    name: "POST patches without slot header are sibling dashi-patch elements",
     request: {
       method: "POST",
       path: "/patches",
@@ -340,7 +279,7 @@ const appCases: IntegrationTestCase[] = [
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
     },
     html: {
-      bodyExcludes: ["<!DOCTYPE html>", "{{fragment:"],
+      bodyExcludes: ["<!DOCTYPE html>"],
       select: [
         {
           selector: 'dashi-patch[kind="append"]',
@@ -348,9 +287,9 @@ const appCases: IntegrationTestCase[] = [
           attr: { target: "#todos" },
         },
         {
-          selector: 'dashi-patch[kind="update"][target="/todo-count"]',
+          selector: 'dashi-patch[kind="update"][target="#todo-count"]',
           text: "3",
-          attr: { target: "/todo-count" },
+          attr: { target: "#todo-count" },
         },
         {
           selector: 'dashi-patch[kind="update"][target="#status"]',
@@ -365,17 +304,17 @@ const appCases: IntegrationTestCase[] = [
         {
           selector: 'dashi-patch[kind="prepend"]',
           text: "bread",
-          attr: { target: "/todos" },
+          attr: { target: "#todos" },
         },
         {
           selector: 'dashi-patch[kind="before"]',
           text: "before",
-          attr: { target: "/slot" },
+          attr: { target: "#slot" },
         },
         {
           selector: 'dashi-patch[kind="after"]',
           text: "after",
-          attr: { target: "/slot" },
+          attr: { target: "#slot" },
         },
       ],
     },
@@ -475,10 +414,10 @@ const appCases: IntegrationTestCase[] = [
     bodyExact: "raw-404",
   },
   {
-    name: "fragment html() status 403 is a 403 partial",
+    name: "slot html() status 403 is a 403 partial",
     request: {
       path: "/status-forbidden",
-      headers: { "x-fragment": "1" },
+      headers: { "x-slot": "1" },
     },
     status: 403,
     headers: { "content-type": "text/html; charset=utf-8" },
@@ -752,7 +691,7 @@ const appCases: IntegrationTestCase[] = [
   },
   {
     name:
-      "public cache strategy sets max-age, s-maxage, and app Vary without x-fragment",
+      "public cache strategy sets max-age, s-maxage, and app Vary without x-slot",
     request: { path: "/static-public/app.css" },
     status: 200,
     headers: {
@@ -890,7 +829,7 @@ const appCases: IntegrationTestCase[] = [
     status: 200,
     headers: {
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
-      vary: "x-fragment",
+      vary: "x-slot",
     },
   },
   {
@@ -899,7 +838,7 @@ const appCases: IntegrationTestCase[] = [
     status: 200,
     headers: {
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
-      vary: "x-fragment",
+      vary: "x-slot",
     },
     bodyExact: "",
   },
@@ -910,7 +849,7 @@ const appCases: IntegrationTestCase[] = [
     headers: {
       "cache-control":
         "public, max-age=60, stale-while-revalidate=3600, stale-if-error=120",
-      vary: "x-fragment, Accept-Language",
+      vary: "x-slot, Accept-Language",
     },
     html: {
       bodyIncludes: ["<!DOCTYPE html>"],
@@ -927,7 +866,7 @@ const appCases: IntegrationTestCase[] = [
     headers: {
       "cache-control":
         "public, max-age=60, stale-while-revalidate=3600, stale-if-error=120",
-      vary: "x-fragment, Accept-Language",
+      vary: "x-slot, Accept-Language",
     },
     bodyExact: "",
   },
@@ -938,20 +877,20 @@ const appCases: IntegrationTestCase[] = [
     headers: {
       "cache-control":
         "public, max-age=60, stale-while-revalidate=3600, stale-if-error=120",
-      vary: "x-fragment, Accept-Language",
+      vary: "x-slot, Accept-Language",
     },
   },
   {
-    name: "cached public x-fragment keeps policy without doctype",
+    name: "cached public x-slot keeps policy without doctype",
     request: {
       path: "/cache-public",
-      headers: { "x-fragment": "1" },
+      headers: { "x-slot": "1" },
     },
     status: 200,
     headers: {
       "cache-control":
         "public, max-age=60, stale-while-revalidate=3600, stale-if-error=120",
-      vary: "x-fragment, Accept-Language",
+      vary: "x-slot, Accept-Language",
     },
     html: {
       bodyExcludes: ["<!DOCTYPE html>"],
@@ -962,14 +901,17 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
-    name: "eager embed does not inherit fragment cache policy",
+    name: "slot embed does not inherit slot cache policy",
     request: { path: "/cache-embed" },
     status: 200,
     headers: {
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
     },
     html: {
-      select: [{ selector: "#cache-public", text: "cached-public" }],
+      select: [
+        { selector: 'route-slot[src="/cache-public"]', exists: true },
+        { selector: "#cache-public", exists: false },
+      ],
     },
   },
   {
@@ -1040,7 +982,7 @@ const appCases: IntegrationTestCase[] = [
     status: 200,
     headers: {
       "cache-control": "private, max-age=60",
-      vary: "x-fragment, Cookie",
+      vary: "x-slot, Cookie",
     },
     html: {
       select: [{
@@ -1093,7 +1035,7 @@ const appCases: IntegrationTestCase[] = [
     status: 200,
     headers: {
       "cache-control": "public, max-age=60",
-      vary: "x-fragment, Accept-Language, Origin",
+      vary: "x-slot, Accept-Language, Origin",
       "access-control-allow-origin": "https://app.example",
     },
     html: {
@@ -1111,10 +1053,10 @@ const stillServes: IntegrationTestCase = {
 
 const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
   {
-    name: "x-fragment miss is empty 404",
+    name: "x-slot miss is empty 404",
     request: {
       path: "/no-such-page",
-      headers: { "x-fragment": "1" },
+      headers: { "x-slot": "1" },
     },
     status: 404,
     bodyExact: "",
@@ -1143,15 +1085,19 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     stillServes: true,
   },
   {
-    name: "eager fragment src miss leaves slot empty",
+    name: "slot src miss leaves host empty on the document",
     request: { path: "/embed-frag-miss" },
     status: 200,
     html: {
-      bodyExcludes: ["{{fragment:", "custom-404"],
+      bodyExcludes: ["custom-404"],
       select: [
         { selector: "#embed-miss", exists: true },
+        {
+          selector: 'route-slot[src="/no-such-slot"]',
+          exists: true,
+        },
         { selector: "#not-found", exists: false },
-        { selector: "route-fragment #not-found", exists: false },
+        { selector: "route-slot #not-found", exists: false },
       ],
     },
   },
@@ -1339,13 +1285,17 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     stillServes: true,
   },
   {
-    name: "eager fragment throw without error leaves slot empty",
+    name: "slot throw without error leaves host empty on the document",
     request: { path: "/embed-frag-throw" },
     status: 200,
     html: {
-      bodyExcludes: ["{{fragment:", "crash-fallback", "root-error"],
+      bodyExcludes: ["crash-fallback", "root-error"],
       select: [
         { selector: "#embed-throw", exists: true },
+        {
+          selector: 'route-slot[src="/frag-throw"]',
+          exists: true,
+        },
         { selector: "#frag-error", exists: false },
         { selector: "#root-error", exists: false },
       ],
@@ -1353,40 +1303,34 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     stillServes: true,
   },
   {
-    name: "eager fragment throw with error splices compact JSX",
-    request: { path: "/embed-frag-error" },
-    status: 200,
-    html: {
-      bodyExcludes: ["{{fragment:"],
-      select: [
-        { selector: "html > body > h1", text: "Website Title" },
-        { selector: "route-fragment #frag-error", text: "frag-error-ui" },
-        { selector: "route-fragment h1", exists: false },
-      ],
-    },
-    stillServes: true,
-  },
-  {
-    name: "eager fragment throw with Response error leaves slot empty",
+    name: "slot throw with Response error leaves host empty on the document",
     request: { path: "/embed-frag-error-response" },
     status: 200,
     html: {
-      bodyExcludes: ["{{fragment:", "no-splice"],
+      bodyExcludes: ["no-splice"],
       select: [
         { selector: "#embed-error-res", exists: true },
+        {
+          selector: 'route-slot[src="/frag-error-response"]',
+          exists: true,
+        },
         { selector: "#frag-error", exists: false },
       ],
     },
     stillServes: true,
   },
   {
-    name: "eager fragment throw when error throws leaves slot empty",
+    name: "slot throw when error throws leaves host empty on the document",
     request: { path: "/embed-frag-error-throws" },
     status: 200,
     html: {
-      bodyExcludes: ["{{fragment:", "crash-fallback"],
+      bodyExcludes: ["crash-fallback"],
       select: [
         { selector: "#embed-error-throws", exists: true },
+        {
+          selector: 'route-slot[src="/frag-error-throws"]',
+          exists: true,
+        },
         { selector: "#frag-error", exists: false },
         { selector: "#fallback", exists: false },
       ],
@@ -1394,10 +1338,10 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     stillServes: true,
   },
   {
-    name: "x-fragment throw with error returns markup",
+    name: "x-slot throw with error returns markup",
     request: {
       path: "/frag-error",
-      headers: { "x-fragment": "1" },
+      headers: { "x-slot": "1" },
     },
     status: 500,
     headers: { "content-type": "text/html; charset=utf-8" },
@@ -1411,132 +1355,23 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     stillServes: true,
   },
   {
-    name: "x-fragment throw with no error is empty 500",
+    name: "x-slot throw with no error is empty 500",
     request: {
       path: "/frag-throw",
-      headers: { "x-fragment": "1" },
+      headers: { "x-slot": "1" },
     },
     status: 500,
     bodyExact: "",
     stillServes: true,
   },
   {
-    name: "x-fragment last-resort is empty 500 not fatal",
+    name: "x-slot last-resort is empty 500 not fatal",
     request: {
       path: "/frag-error-throws",
-      headers: { "x-fragment": "1" },
+      headers: { "x-slot": "1" },
     },
     status: 500,
     bodyExact: "",
-    stillServes: true,
-  },
-  {
-    name: "self-including fragment is 500 naming the cycle",
-    request: { path: "/self-include" },
-    status: 500,
-    html: {
-      bodyIncludes: ["Fragment cycle: /self-include → /self-include"],
-      select: [
-        {
-          selector: "#fragment-fault",
-          text: "Fragment cycle: /self-include → /self-include",
-        },
-      ],
-    },
-    stillServes: true,
-  },
-  {
-    name: "transitive fragment cycle is 500 naming the cycle",
-    request: { path: "/embed-cycle" },
-    status: 500,
-    html: {
-      bodyIncludes: ["Fragment cycle: /cycle-a → /cycle-b → /cycle-a"],
-      select: [
-        {
-          selector: "#fragment-fault",
-          text: "Fragment cycle: /cycle-a → /cycle-b → /cycle-a",
-        },
-      ],
-    },
-    stillServes: true,
-  },
-  {
-    name: "search-only loop is a pathname cycle",
-    request: { path: "/embed-cycle-query" },
-    status: 500,
-    html: {
-      bodyIncludes: ["Fragment cycle: /cycle-query → /cycle-query"],
-      select: [
-        {
-          selector: "#fragment-fault",
-          text: "Fragment cycle: /cycle-query → /cycle-query",
-        },
-      ],
-    },
-    stillServes: true,
-  },
-  {
-    name: "six-deep eager chain exceeds default depth",
-    request: { path: "/depth-embed" },
-    status: 500,
-    html: {
-      bodyIncludes: [
-        "Fragment depth exceeded (5): /d1 → /d2 → /d3 → /d4 → /d5 → /d6",
-      ],
-      select: [
-        {
-          selector: "#fragment-fault",
-          text:
-            "Fragment depth exceeded (5): /d1 → /d2 → /d3 → /d4 → /d5 → /d6",
-        },
-      ],
-    },
-    stillServes: true,
-  },
-  {
-    name: "eager fragment timeout splices group error",
-    request: { path: "/embed-slow" },
-    status: 200,
-    html: {
-      bodyExcludes: ["{{fragment:", "slow-body"],
-      select: [
-        { selector: "route-fragment #frag-error", text: "frag-error-ui" },
-        { selector: "#peer", text: "peer-body" },
-        { selector: "#slow", exists: false },
-      ],
-    },
-    stillServes: true,
-  },
-  {
-    name: "eager fragment timeout without error leaves slot empty",
-    request: { path: "/embed-slow-empty" },
-    status: 200,
-    html: {
-      bodyExcludes: ["{{fragment:", "slow-body", "frag-error-ui"],
-      select: [
-        { selector: "#embed-slow-empty", exists: true },
-        { selector: "#peer", text: "peer-body" },
-        { selector: "#slow", exists: false },
-        { selector: "#frag-error", exists: false },
-      ],
-    },
-    stillServes: true,
-  },
-  {
-    name: "timed-out include does not splice into a later include",
-    request: { path: "/embed-slow-held" },
-    status: 200,
-    html: {
-      bodyExcludes: ["{{fragment:", "slow-short-body"],
-      select: [
-        {
-          selector: "#slow-held route-fragment #frag-error",
-          text: "frag-error-ui",
-        },
-        { selector: "#held", text: "wait-out-body" },
-        { selector: "#slow-short", exists: false },
-      ],
-    },
     stillServes: true,
   },
 ];
@@ -1570,7 +1405,7 @@ Deno.test("main fixture app over HTTP", async (t) => {
   await runCases(t, app, appCases);
   await runCases(t, app, errorCases, stillServes);
 
-  await t.step("embed page module is the route-fragment runtime", async () => {
+  await t.step("embed page module is the route-slot runtime", async () => {
     const res = await app.fetch({ path: "/embed" });
     const html = await res.text();
     const scripts = [
@@ -1599,7 +1434,7 @@ Deno.test("main fixture app over HTTP", async (t) => {
         "text/javascript; charset=utf-8",
       );
       assertStringIncludes(body, "customElements.define");
-      assertStringIncludes(body, "route-fragment");
+      assertStringIncludes(body, "route-slot");
     } catch (error) {
       const dump = formatIntegrationFailure(
         app,
@@ -1614,10 +1449,10 @@ Deno.test("main fixture app over HTTP", async (t) => {
     }
   });
 
-  await t.step("fragment without a client host has no Link", async () => {
+  await t.step("slot without a client host has no Link", async () => {
     const res = await app.fetch({
-      path: "/fragment",
-      headers: { "x-fragment": "1" },
+      path: "/slot",
+      headers: { "x-slot": "1" },
     });
     const body = await res.text();
     try {
@@ -1625,7 +1460,7 @@ Deno.test("main fixture app over HTTP", async (t) => {
     } catch (error) {
       const dump = formatIntegrationFailure(
         app,
-        { path: "/fragment", headers: { "x-fragment": "1" } },
+        { path: "/slot", headers: { "x-slot": "1" } },
         res,
         body,
       );
@@ -1636,7 +1471,7 @@ Deno.test("main fixture app over HTTP", async (t) => {
     }
   });
 
-  await t.step("client.element document script and fragment Link", async () => {
+  await t.step("client.element document script and slot Link", async () => {
     const page = await app.fetch({ path: "/probe" });
     const pageHtml = await page.text();
     const scripts = [
@@ -1644,7 +1479,7 @@ Deno.test("main fixture app over HTTP", async (t) => {
     ];
     const frag = await app.fetch({
       path: "/probe",
-      headers: { "x-fragment": "1" },
+      headers: { "x-slot": "1" },
     });
     const fragHtml = await frag.text();
     try {
@@ -1663,7 +1498,7 @@ Deno.test("main fixture app over HTTP", async (t) => {
         formatIntegrationFailure(app, { path: "/probe" }, page, pageHtml),
         formatIntegrationFailure(
           app,
-          { path: "/probe", headers: { "x-fragment": "1" } },
+          { path: "/probe", headers: { "x-slot": "1" } },
           frag,
           fragHtml,
         ),
@@ -1805,7 +1640,7 @@ Deno.test("main fixture app over HTTP", async (t) => {
   });
 
   await t.step(
-    "static CSS, JS, and image do not Vary on x-fragment",
+    "static CSS, JS, and image do not Vary on x-slot",
     async () => {
       for (
         const path of ["/static/app.css", "/static/app.js", "/static/logo.svg"]

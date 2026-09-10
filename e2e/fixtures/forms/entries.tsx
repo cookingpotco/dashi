@@ -1,4 +1,4 @@
-import { patch, type ReadArgs, RouteFragment, type WriteArgs } from "dashi";
+import { patch, type ReadArgs, RouteSlot, type WriteArgs } from "dashi";
 import { EntriesForm } from "./entries_form.tsx";
 import { recordWrite } from "./writes.ts";
 
@@ -6,7 +6,9 @@ function EntriesPage() {
   return (
     <div>
       <h1 id="heading">entries</h1>
-      <RouteFragment src="/entries-form" />
+      <div id="entries-form">
+        <RouteSlot src="/entries-form" />
+      </div>
       <form id="redirect-form" method="POST" action="/entries">
         <button id="redirect-submit" type="submit">Save</button>
       </form>
@@ -49,12 +51,12 @@ export async function write({ ctx, patches }: WriteArgs) {
     if (typeof title !== "string" || title.trim() === "") {
       return patches([
         patch.update(
-          "/entries-form",
+          "#entries-form",
           <EntriesForm error="title is required" />,
         ),
       ]);
     }
-    return patches([patch.update("/entries-form", <EntriesForm />)]);
+    return patches([patch.update("#entries-form", <EntriesForm />)]);
   }
   recordWrite();
   return Response.redirect(new URL("/search", ctx.url), 303);

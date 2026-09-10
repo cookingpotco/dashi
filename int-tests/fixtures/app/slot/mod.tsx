@@ -7,35 +7,31 @@ import {
 } from "dashi";
 import type { AppState } from "../state.ts";
 
-function fragOnly({ ctx, next }: MiddlewareArgs<AppState>) {
+function slotOnly({ ctx, next }: MiddlewareArgs<AppState>) {
   ctx.state.fragOnly = "yes";
   return next();
 }
 
-export const fragment = group<AppState>(({ route }) => ({
-  middleware: [fragOnly],
-  routes: [route("/fragment", { GET: Fragment, POST: post })],
+export const slot = group<AppState>(({ route }) => ({
+  middleware: [slotOnly],
+  routes: [route("/slot", { GET: Slot, POST: post })],
 }));
 
-function Fragment({ ctx, html }: ReadArgs<{ state: AppState }>) {
+function Slot({ ctx, html }: ReadArgs<{ state: AppState }>) {
   return html(
     <aside
       id="frag"
       data-pre={ctx.state.pre}
       data-embed-only={ctx.state.embedOnly ?? ""}
       data-frag-only={ctx.state.fragOnly ?? ""}
-      data-frag={ctx.isFragment ? "1" : "0"}
     >
-      eager-fragment-body
+      slot-body
     </aside>,
   );
 }
 
 function post({ patches }: WriteArgs<{ state: AppState }>) {
   return patches([
-    patch.update(
-      "/fragment",
-      <aside id="frag">posted-fragment-body</aside>,
-    ),
+    patch.update("#frag", <aside id="frag">posted-slot-body</aside>),
   ]);
 }

@@ -1,4 +1,4 @@
-import { type ReadArgs, RouteFragment } from "dashi";
+import { type ReadArgs, RouteSlot } from "dashi";
 
 export function PatchesPage({ html }: ReadArgs) {
   return html(
@@ -7,16 +7,15 @@ export function PatchesPage({ html }: ReadArgs) {
       <div id="status">idle</div>
       <span id="element-replace">idle</span>
       <input id="void-target" type="hidden" value="x" />
-      <RouteFragment src="/todos" />
-      <RouteFragment src="/todo-count" />
-      <RouteFragment src="/todo-count" />
-      <RouteFragment src="/hits" />
-      <RouteFragment src="/patches" />
-      <RouteFragment src="/notice" />
-      <RouteFragment src="/slot" />
-      <RouteFragment src="/inserts" />
-      <RouteFragment src="/element-replace" />
-      <RouteFragment src="/void-update" />
+      <RouteSlot src="/todos" />
+      <span id="todo-count">0</span>
+      <RouteSlot src="/hits" />
+      <RouteSlot src="/patches" />
+      <RouteSlot src="/notice" />
+      <RouteSlot src="/slot" id="slot" />
+      <RouteSlot src="/inserts" />
+      <RouteSlot src="/element-replace" />
+      <RouteSlot src="/void-update" />
     </div>,
   );
 }

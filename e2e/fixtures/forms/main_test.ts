@@ -88,13 +88,13 @@ async function prepareHosted(page: Page, origin: string, path: string) {
 async function prepareFrag(page: Page, origin: string, path: string) {
   await page.goto(`${origin}${path}`);
   await page.evaluate(() => customElements.whenDefined("navigation-root"));
-  await page.evaluate(() => customElements.whenDefined("route-fragment"));
+  await page.evaluate(() => customElements.whenDefined("route-slot"));
   await markDoc(page);
 }
 
 async function prepareBareFrag(page: Page, origin: string, path: string) {
   await page.goto(`${origin}${path}`);
-  await page.evaluate(() => customElements.whenDefined("route-fragment"));
+  await page.evaluate(() => customElements.whenDefined("route-slot"));
   await markDoc(page);
 }
 
@@ -157,12 +157,10 @@ Deno.test("forms fixture", async (t) => {
       );
 
       await t.step(
-        "validation error updates a fragment without a history write",
+        "validation error updates a slot without a history write",
         async () => {
           await prepareHosted(page, app.origin, "/entries");
-          await page.evaluate(() =>
-            customElements.whenDefined("route-fragment")
-          );
+          await page.evaluate(() => customElements.whenDefined("route-slot"));
           const before = await page.evaluate(() => history.length);
           await clickId(page, "validate-submit");
           await waitForText(page, "error", "title is required");
@@ -226,7 +224,7 @@ Deno.test("forms fixture", async (t) => {
       );
 
       await t.step(
-        "form outside a fragment updates that fragment via actions",
+        "form outside a slot updates that slot via actions",
         async () => {
           await prepareFrag(page, app.origin, "/frag-page");
           await typeField(page, "#header-write-title", "from-header");
@@ -257,7 +255,7 @@ Deno.test("forms fixture", async (t) => {
       );
 
       await t.step(
-        "write inside a fragment swaps only that host",
+        "write inside a slot swaps only that host",
         async () => {
           await prepareFrag(page, app.origin, "/frag-page");
           await typeField(page, "#frag-write-title", "milk");
@@ -271,7 +269,7 @@ Deno.test("forms fixture", async (t) => {
             marker: document.getElementById("page-marker")?.textContent ??
               null,
             item: document.getElementById("frag-item")?.textContent ?? null,
-            itemInHost: document.querySelector("route-fragment[src='/frag']")
+            itemInHost: document.querySelector("route-slot[src='/frag']")
               ?.querySelector("#frag-item")?.textContent ?? null,
             url: location.href,
           }));
@@ -286,7 +284,7 @@ Deno.test("forms fixture", async (t) => {
       );
 
       await t.step(
-        "GET form inside a fragment navigates the page",
+        "GET form inside a slot navigates the page",
         async () => {
           await prepareFrag(page, app.origin, "/frag-page");
           await typeField(page, "#frag-get-q", "inside");
@@ -298,7 +296,7 @@ Deno.test("forms fixture", async (t) => {
               null,
             heading: document.getElementById("heading")?.textContent ?? null,
             query: document.getElementById("query")?.textContent ?? null,
-            frag: document.querySelector("route-fragment[src='/frag']") !==
+            slot: document.querySelector("route-slot[src='/frag']") !==
               null,
             url: location.href,
           }));
@@ -306,13 +304,13 @@ Deno.test("forms fixture", async (t) => {
           assertEquals(result.persistent, "mutated");
           assertEquals(result.heading, "search");
           assertEquals(result.query, "inside");
-          assertEquals(result.frag, false);
+          assertEquals(result.slot, false);
           assertEquals(result.url, `${app.origin}/search?q=inside`);
         },
       );
 
       await t.step(
-        "fragment write that redirects escalates to an in-place page swap",
+        "slot write that redirects escalates to an in-place page swap",
         async () => {
           await prepareFrag(page, app.origin, "/frag-page");
           await clickId(page, "frag-leave-submit");
@@ -442,7 +440,7 @@ Deno.test("forms fixture", async (t) => {
       );
 
       await t.step(
-        "write inside a fragment applies actions with no page host",
+        "write inside a slot applies actions with no page host",
         async () => {
           await prepareBareFrag(page, app.origin, "/bare-frag-page");
           await typeField(page, "#frag-write-title", "bare-milk");
@@ -466,7 +464,7 @@ Deno.test("forms fixture", async (t) => {
       );
 
       await t.step(
-        "fragment redirect without a page host does a real document load",
+        "slot redirect without a page host does a real document load",
         async () => {
           await prepareBareFrag(page, app.origin, "/bare-frag-page");
           await Promise.all([

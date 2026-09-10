@@ -1,8 +1,76 @@
+// Keep node:async_hooks ALS: Deno AsyncContext is not public yet.
+import { AsyncLocalStorage } from "node:async_hooks";
 import { type Element, jsx, jsxTemplate } from "../jsx-runtime/mod.ts";
 import { Logger } from "../logging/mod.ts";
 import { cacheControl, CacheStrategy } from "../caching/mod.ts";
 import { DASHI_PREFIX, type ReadArgs } from "../shared/mod.ts";
-import { getRenderStore, inRender } from "../ssr/mod.ts";
+
+interface ClientCompileContext {
+  clientEntries: Set<string>;
+}
+
+const als = new AsyncLocalStorage<ClientCompileContext>();
+
+/** @internal */
+export function runWithClientCompileContext<T>(fn: () => T): T {
+  return als.run({ clientEntries: new Set() }, fn);
+}
+
+/** @internal */
+export function getClientCompileContext(): ClientCompileContext {
+  const store = als.getStore();
+  if (!store) {
+    throw new Error(
+      "getClientCompileContext() was called outside a handle() render",
+    );
+  }
+  return store;
+}
+
+function inRender(): boolean {
+  return als.getStore() !== undefined;
+}
+
+/** Document include: the compile import map, then one module script per entry. */
+export function injectModuleScripts(
+  html: string,
+  entries: Iterable<string>,
+  importMap: Record<string, string>,
+): string {
+  const tags: string[] = [];
+  if (Object.keys(importMap).length > 0) {
+    tags.push(String(jsx("script", {
+      type: "importmap",
+      dangerouslySetInnerHTML: {
+        __html: JSON.stringify({ imports: importMap }),
+      },
+    })));
+  }
+  for (const src of entries) {
+    tags.push(String(jsx("script", { type: "module", src })));
+  }
+  const scripts = tags.join("");
+  if (scripts === "") {
+    return html;
+  }
+  const close = html.lastIndexOf("</html>");
+  if (close === -1) {
+    return `${html}${scripts}`;
+  }
+  return `${html.slice(0, close)}${scripts}${html.slice(close)}`;
+}
+
+/** Slot include: `Link` names each recorded entry’s hashed URL. */
+export function appendModulePreloads(
+  headers: Headers,
+  entries: Iterable<string>,
+  importMap: Record<string, string>,
+): void {
+  for (const src of entries) {
+    const href = importMap[src] ?? src;
+    headers.append("Link", `<${href}>; rel="modulepreload"`);
+  }
+}
 
 /** Reserved URL prefix for compiled client modules. */
 const CLIENT_PREFIX = `${DASHI_PREFIX}/client`;
@@ -37,7 +105,7 @@ function recordEntry(href: string): void {
   if (path === undefined) {
     throw new Error(`client module was not compiled: ${href}`);
   }
-  getRenderStore().clientEntries.add(path);
+  getClientCompileContext().clientEntries.add(path);
 }
 
 /**

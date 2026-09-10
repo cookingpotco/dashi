@@ -51,97 +51,76 @@ Deno.test("app fixture", async (t) => {
       });
 
       await t.step(
-        "eager and nested fragment scripts stamp the page",
+        "stamped and nested slot scripts stamp the page",
         async () => {
           await page.goto(`${app.origin}/embed`);
           const result = await page.evaluate(async () => {
-            await customElements.whenDefined("eager-el");
+            await customElements.whenDefined("stamped-el");
             await customElements.whenDefined("nested-el");
             return {
-              eager: document.querySelector("eager-el")?.textContent,
+              stamped: document.querySelector("stamped-el")?.textContent,
               nested: document.querySelector("nested-el")?.textContent,
             };
           });
           assertEquals(result, {
-            eager: "eager-ran",
+            stamped: "stamped-ran",
             nested: "nested-ran",
           });
         },
       );
 
-      await t.step("lazy fragment shows fallback then content", async () => {
+      await t.step("connect slot loads lazy content", async () => {
         await page.goto(`${app.origin}/embed`, { waitUntil: "none" });
         const result = await page.evaluate(async () => {
+          await customElements.whenDefined("route-slot");
           const start = Date.now();
-          let first: { fallback: boolean; lazyEl: boolean } | undefined;
-          while (first === undefined) {
-            const host = document.querySelector("route-fragment[lazy]");
-            if (host) {
-              first = {
-                fallback: host.querySelector("#lazy-fallback") !== null,
-                lazyEl: host.querySelector("lazy-el") !== null,
-              };
-            } else if (Date.now() - start > 5000) {
-              throw new Error("lazy host did not appear");
-            } else {
-              await new Promise((resolve) => setTimeout(resolve, 10));
-            }
-          }
-          await customElements.whenDefined("route-fragment");
           while (
             document.querySelector("lazy-el")?.textContent !== "lazy-ran"
           ) {
             if (Date.now() - start > 5000) {
-              throw new Error("lazy fragment client did not stamp");
+              throw new Error("lazy slot client did not stamp");
             }
             await new Promise((resolve) => setTimeout(resolve, 25));
           }
           return {
-            first,
-            after: {
-              text: document.querySelector("lazy-el")?.textContent,
-              fallback: document.querySelector("#lazy-fallback") !== null,
-            },
+            text: document.querySelector("lazy-el")?.textContent,
           };
         });
-        assertEquals(result.first, { fallback: true, lazyEl: false });
-        assertEquals(result.after, { text: "lazy-ran", fallback: false });
+        assertEquals(result, { text: "lazy-ran" });
       });
 
       await t.step(
-        "lazy fragment 500 with error UI replaces fallback",
+        "connect slot 500 with error UI",
         async () => {
           await page.goto(`${app.origin}/fail`);
           const result = await page.evaluate(async () => {
-            await customElements.whenDefined("route-fragment");
+            await customElements.whenDefined("route-slot");
             const start = Date.now();
             while (document.getElementById("frag-error") === null) {
               if (Date.now() - start > 5000) {
-                throw new Error("error fragment UI did not arrive");
+                throw new Error("error slot UI did not arrive");
               }
               await new Promise((resolve) => setTimeout(resolve, 25));
             }
-            const host = document.querySelector("route-fragment");
+            const host = document.querySelector("route-slot");
             return {
               error: document.getElementById("frag-error")?.textContent,
-              fallback: document.getElementById("fail-fallback") !== null,
               chrome: document.getElementById("fallback-chrome") !== null,
               hostHasHtml: host?.querySelector("html") !== null,
             };
           });
           assertEquals(result, {
             error: "frag-error-ui",
-            fallback: false,
             chrome: false,
             hostHasHtml: false,
           });
         },
       );
 
-      await t.step("empty 500 keeps the fallback", async () => {
+      await t.step("empty 500 keeps the slot empty", async () => {
         await page.goto(`${app.origin}/empty`);
         const result = await page.evaluate(async () => {
-          await customElements.whenDefined("route-fragment");
+          await customElements.whenDefined("route-slot");
           const start = Date.now();
           while (
             !performance.getEntriesByType("resource").some((entry) =>
@@ -153,28 +132,28 @@ Deno.test("app fixture", async (t) => {
             }
             await new Promise((resolve) => setTimeout(resolve, 25));
           }
-          const host = document.querySelector("route-fragment");
+          const host = document.querySelector("route-slot");
           return {
-            fallback: document.getElementById("empty-fallback")?.textContent,
             error: document.getElementById("frag-error") !== null,
             chrome: document.getElementById("fallback-chrome") !== null,
             hostHasHtml: host?.querySelector("html") !== null,
+            body: host?.textContent ?? "",
           };
         });
         assertEquals(result, {
-          fallback: "Loading empty...",
           error: false,
           chrome: false,
           hostHasHtml: false,
+          body: "",
         });
       });
 
       await t.step(
-        'lazy="visible" below the fold waits for intersection',
+        'fetchWhen="visible" below the fold waits for intersection',
         async () => {
           await page.goto(`${app.origin}/visible-below`);
           const before = await page.evaluate(async () => {
-            await customElements.whenDefined("route-fragment");
+            await customElements.whenDefined("route-slot");
             await new Promise((resolve) => setTimeout(resolve, 500));
             const hits = await (await fetch("/visible-hits")).text();
             return {
@@ -190,7 +169,7 @@ Deno.test("app fixture", async (t) => {
           });
           const after = await page.evaluate(async () => {
             const host = document.querySelector(
-              "route-fragment[lazy='visible']",
+              "route-slot[fetchwhen='visible']",
             );
             if (host === null) {
               throw new Error("missing visible host");
@@ -199,7 +178,7 @@ Deno.test("app fixture", async (t) => {
             const start = Date.now();
             while (document.getElementById("visible-counted") === null) {
               if (Date.now() - start > 5000) {
-                throw new Error("visible fragment did not load");
+                throw new Error("visible slot did not load");
               }
               await new Promise((resolve) => setTimeout(resolve, 25));
             }
@@ -219,47 +198,45 @@ Deno.test("app fixture", async (t) => {
       );
 
       await t.step(
-        "boolean lazy below the fold fetches without scroll",
+        "connect slot below the fold fetches without scroll",
         async () => {
           await page.goto(`${app.origin}/lazy-below`);
           const result = await page.evaluate(async () => {
-            await customElements.whenDefined("route-fragment");
+            await customElements.whenDefined("route-slot");
             const start = Date.now();
             while (document.getElementById("below-counted") === null) {
               if (Date.now() - start > 5000) {
-                throw new Error("boolean lazy fragment did not load");
+                throw new Error("connect slot did not load");
               }
               await new Promise((resolve) => setTimeout(resolve, 25));
             }
             const hits = await (await fetch("/below-hits")).text();
             return {
               hits,
-              fallback: document.getElementById("below-fallback") !== null,
               body: document.getElementById("below-counted")?.textContent,
             };
           });
           assertEquals(result, {
             hits: "1",
-            fallback: false,
             body: "below-counted",
           });
         },
       );
 
-      await t.step("moving a lazy fragment does not refetch", async () => {
+      await t.step("moving a connect slot does not refetch", async () => {
         await page.goto(`${app.origin}/count`);
         const result = await page.evaluate(async () => {
-          await customElements.whenDefined("route-fragment");
+          await customElements.whenDefined("route-slot");
           const start = Date.now();
           while (document.getElementById("counted") === null) {
             if (Date.now() - start > 5000) {
-              throw new Error("counted fragment did not arrive");
+              throw new Error("counted slot did not arrive");
             }
             await new Promise((resolve) => setTimeout(resolve, 25));
           }
-          const host = document.querySelector("route-fragment");
+          const host = document.querySelector("route-slot");
           if (host === null) {
-            throw new Error("missing route-fragment");
+            throw new Error("missing route-slot");
           }
           const dest = document.createElement("div");
           document.body.append(dest);
@@ -269,22 +246,20 @@ Deno.test("app fixture", async (t) => {
           return {
             hits,
             counted: document.getElementById("counted")?.textContent,
-            fallback: document.getElementById("count-fallback") !== null,
           };
         });
         assertEquals(result, {
           hits: "1",
           counted: "counted",
-          fallback: false,
         });
       });
 
       await t.step(
-        "removing a lazy fragment mid-flight does not write",
+        "removing a connect slot mid-flight does not write",
         async () => {
           await page.goto(`${app.origin}/embed`);
           const result = await page.evaluate(async () => {
-            await customElements.whenDefined("route-fragment");
+            await customElements.whenDefined("route-slot");
             const errors: string[] = [];
             const onError = (event: ErrorEvent) => {
               errors.push(event.message);
@@ -296,10 +271,10 @@ Deno.test("app fixture", async (t) => {
             globalThis.addEventListener("unhandledrejection", onRejection);
             const wrap = document.createElement("div");
             wrap.innerHTML =
-              `<route-fragment src="/slow" lazy><span id="slow-fallback">waiting</span></route-fragment>`;
-            const host = wrap.querySelector("route-fragment");
+              `<route-slot src="/slow"><span id="slow-fallback">waiting</span></route-slot>`;
+            const host = wrap.querySelector("route-slot");
             if (host === null) {
-              throw new Error("failed to create route-fragment");
+              throw new Error("failed to create route-slot");
             }
             document.body.append(host);
             host.remove();
@@ -325,12 +300,10 @@ Deno.test("app fixture", async (t) => {
       );
 
       await t.step(
-        "client element inside swapped fragment markup upgrades",
+        "client element inside swapped slot markup upgrades",
         async () => {
           await page.goto(`${app.origin}/todos-page`);
-          await page.evaluate(() =>
-            customElements.whenDefined("route-fragment")
-          );
+          await page.evaluate(() => customElements.whenDefined("route-slot"));
           const add = await page.$("#todos-form button");
           if (add === null) {
             throw new Error("todos form is missing");
@@ -359,7 +332,7 @@ Deno.test("app fixture", async (t) => {
 
       await t.step("patch list refresh re-GETs the host", async () => {
         await page.goto(`${app.origin}/patches-page`);
-        await page.evaluate(() => customElements.whenDefined("route-fragment"));
+        await page.evaluate(() => customElements.whenDefined("route-slot"));
         const initial = await page.evaluate(() =>
           document.getElementById("refresh-stamp")?.textContent
         );
@@ -395,7 +368,7 @@ Deno.test("app fixture", async (t) => {
             url: location.href,
             stamp: document.getElementById("refresh-stamp")?.textContent,
             stampInHost: document.querySelector(
-              "route-fragment[src='/hits']",
+              "route-slot[src='/hits']",
             )?.querySelector("#refresh-stamp")?.textContent ?? null,
           };
         });
@@ -407,12 +380,10 @@ Deno.test("app fixture", async (t) => {
       });
 
       await t.step(
-        "patch list appends to #id, replaces a route, and updates status",
+        "patch list appends to #id, updates todo-count, and updates status",
         async () => {
           await page.goto(`${app.origin}/patches-page`);
-          await page.evaluate(() =>
-            customElements.whenDefined("route-fragment")
-          );
+          await page.evaluate(() => customElements.whenDefined("route-slot"));
           await page.evaluate(() => {
             const marker = document.getElementById("page-marker");
             if (marker) {
@@ -436,9 +407,6 @@ Deno.test("app fixture", async (t) => {
           });
           const result = await page.evaluate(() => {
             const list = document.getElementById("todos");
-            const counts = [
-              ...document.querySelectorAll("route-fragment[src='/todo-count']"),
-            ].map((host) => host.textContent);
             const status = document.getElementById("status");
             return {
               url: location.href,
@@ -447,7 +415,8 @@ Deno.test("app fixture", async (t) => {
               itemInList: list?.querySelector("#appended-todo")
                 ?.textContent ?? null,
               listTag: list?.localName ?? null,
-              counts,
+              count: document.getElementById("todo-count")?.textContent ??
+                null,
               statusTag: status?.localName ?? null,
               statusText: status?.textContent ?? null,
             };
@@ -458,16 +427,16 @@ Deno.test("app fixture", async (t) => {
             item: "action-milk",
             itemInList: "action-milk",
             listTag: "ul",
-            counts: ["1", "1"],
+            count: "1",
             statusTag: "div",
             statusText: "Saved",
           });
         },
       );
 
-      await t.step("patch list removes a host", async () => {
+      await t.step("patch list removes a target", async () => {
         await page.goto(`${app.origin}/patches-page`);
-        await page.evaluate(() => customElements.whenDefined("route-fragment"));
+        await page.evaluate(() => customElements.whenDefined("route-slot"));
         const dismiss = await page.$("#dismiss-form button");
         if (dismiss === null) {
           throw new Error("dismiss form is missing");
@@ -475,24 +444,19 @@ Deno.test("app fixture", async (t) => {
         await dismiss.click();
         await page.evaluate(async () => {
           const start = Date.now();
-          while (
-            document.querySelector("route-fragment[src='/notice']") !== null
-          ) {
+          while (document.getElementById("notice") !== null) {
             if (Date.now() - start > 10000) {
-              throw new Error("notice host was not removed");
+              throw new Error("notice was not removed");
             }
             await new Promise((resolve) => setTimeout(resolve, 25));
           }
         });
         const result = await page.evaluate(() => ({
           url: location.href,
-          host: document.querySelector("route-fragment[src='/notice']") !==
-            null,
           notice: document.getElementById("notice") !== null,
         }));
         assertEquals(result, {
           url: `${app.origin}/patches-page`,
-          host: false,
           notice: false,
         });
       });
@@ -501,9 +465,7 @@ Deno.test("app fixture", async (t) => {
         "patch list prepends inside and inserts beside the host",
         async () => {
           await page.goto(`${app.origin}/patches-page`);
-          await page.evaluate(() =>
-            customElements.whenDefined("route-fragment")
-          );
+          await page.evaluate(() => customElements.whenDefined("route-slot"));
           const submit = await page.$("#inserts-form button");
           if (submit === null) {
             throw new Error("inserts form is missing");
@@ -523,9 +485,7 @@ Deno.test("app fixture", async (t) => {
             }
           });
           const result = await page.evaluate(() => {
-            const host = document.querySelector(
-              "route-fragment[src='/slot']",
-            );
+            const host = document.getElementById("slot");
             return {
               url: location.href,
               host: host !== null,
@@ -553,7 +513,7 @@ Deno.test("app fixture", async (t) => {
 
       await t.step("patch replace swaps the target element", async () => {
         await page.goto(`${app.origin}/patches-page`);
-        await page.evaluate(() => customElements.whenDefined("route-fragment"));
+        await page.evaluate(() => customElements.whenDefined("route-slot"));
         const submit = await page.$("#element-replace-form button");
         if (submit === null) {
           throw new Error("element replace form is missing");
@@ -582,7 +542,7 @@ Deno.test("app fixture", async (t) => {
 
       await t.step("patch update on a void host throws", async () => {
         await page.goto(`${app.origin}/patches-page`);
-        await page.evaluate(() => customElements.whenDefined("route-fragment"));
+        await page.evaluate(() => customElements.whenDefined("route-slot"));
         const submit = await page.$("#void-update-form button");
         if (submit === null) {
           throw new Error("void update form is missing");

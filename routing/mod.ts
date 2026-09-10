@@ -6,4 +6,4 @@ export {
   type ParamsOf,
 } from "./table.ts";
 
-export { handle, init, runRoute } from "./pipeline.ts";
+export { handle, init } from "./pipeline.ts";

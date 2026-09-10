@@ -1,16 +1,20 @@
 import { patch, type ReadArgs, type WriteArgs } from "dashi";
 
-export function list({ html }: ReadArgs) {
-  return html(
+export function Notice() {
+  return (
     <div id="notice">
-      <p>Try dismiss — it removes this fragment.</p>
+      <p>Try dismiss — it removes this notice.</p>
       <form method="POST" action="/notice">
         <button type="submit">Dismiss</button>
       </form>
-    </div>,
+    </div>
   );
 }
 
+export function list({ html }: ReadArgs) {
+  return html(<Notice />);
+}
+
 export function dismiss({ patches }: WriteArgs) {
-  return patches([patch.remove("/notice")]);
+  return patches([patch.remove("#notice")]);
 }
