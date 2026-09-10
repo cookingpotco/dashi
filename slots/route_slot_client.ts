@@ -4,6 +4,8 @@ const slotHeaders = new Headers();
 slotHeaders.append("Accept", "text/html");
 slotHeaders.append("X-Slot", "1");
 
+const SLOT_DEPTH_LIMIT = 5;
+
 class RouteSlot extends HTMLElement {
   private readonly fetchWhen: string | null;
   private readonly src: string;
@@ -72,7 +74,38 @@ class RouteSlot extends HTMLElement {
     });
   }
 
+  private includeChain(): string[] {
+    let node: Node | null = this.parentElement;
+    while (node !== null) {
+      if (node instanceof RouteSlot) {
+        return [...node.includeChain(), node.src];
+      }
+      node = node.parentElement;
+    }
+    return [];
+  }
+
+  private showFault(message: string) {
+    const fault = document.createElement("p");
+    fault.className = "route-slot-fault";
+    fault.textContent = message;
+    this.replaceChildren(fault);
+    this.loaded = true;
+  }
+
   private beginFetch() {
+    const chain = this.includeChain();
+    if (chain.includes(this.src)) {
+      this.showFault(`Slot cycle: ${[...chain, this.src].join(" → ")}`);
+      return;
+    }
+    const next = [...chain, this.src];
+    if (next.length > SLOT_DEPTH_LIMIT) {
+      this.showFault(
+        `Slot depth exceeded (${SLOT_DEPTH_LIMIT}): ${next.join(" → ")}`,
+      );
+      return;
+    }
     const abort = new AbortController();
     this.abort = abort;
     void this.fetchAndSwap(abort);

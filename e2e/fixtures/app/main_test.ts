@@ -560,6 +560,91 @@ Deno.test("app fixture", async (t) => {
         });
         assertEquals(result, { tag: "input", value: "x" });
       });
+
+      await t.step("transitive slot cycle stops with a fault", async () => {
+        await app.fetch({ path: "/cycle-hits-reset" });
+        await page.goto(`${app.origin}/embed-cycle`);
+        const result = await page.evaluate(async () => {
+          await customElements.whenDefined("route-slot");
+          const start = Date.now();
+          while (document.querySelector(".route-slot-fault") === null) {
+            if (Date.now() - start > 5000) {
+              throw new Error("slot cycle fault did not appear");
+            }
+            await new Promise((resolve) => setTimeout(resolve, 25));
+          }
+          const fault = document.querySelector(".route-slot-fault");
+          const hits = await (await fetch("/cycle-hits")).json();
+          return {
+            fault: fault?.textContent ?? null,
+            hits,
+          };
+        });
+        assertEquals(
+          result.fault,
+          "Slot cycle: /cycle-a → /cycle-b → /cycle-a",
+        );
+        assertEquals(result.hits, { "/cycle-a": 1, "/cycle-b": 1 });
+      });
+
+      await t.step("self-including slot stops with a fault", async () => {
+        await app.fetch({ path: "/cycle-hits-reset" });
+        await page.goto(`${app.origin}/embed-self-include`);
+        const result = await page.evaluate(async () => {
+          await customElements.whenDefined("route-slot");
+          const start = Date.now();
+          while (document.querySelector(".route-slot-fault") === null) {
+            if (Date.now() - start > 5000) {
+              throw new Error("self-include slot fault did not appear");
+            }
+            await new Promise((resolve) => setTimeout(resolve, 25));
+          }
+          const fault = document.querySelector(".route-slot-fault");
+          const hits = await (await fetch("/cycle-hits")).json();
+          return {
+            fault: fault?.textContent ?? null,
+            hits,
+          };
+        });
+        assertEquals(
+          result.fault,
+          "Slot cycle: /self-include → /self-include",
+        );
+        assertEquals(result.hits, { "/self-include": 1 });
+      });
+
+      await t.step("six-deep slot chain exceeds default depth", async () => {
+        await app.fetch({ path: "/depth-hits-reset" });
+        await page.goto(`${app.origin}/depth-embed`);
+        const result = await page.evaluate(async () => {
+          await customElements.whenDefined("route-slot");
+          const start = Date.now();
+          while (document.querySelector(".route-slot-fault") === null) {
+            if (Date.now() - start > 5000) {
+              throw new Error("slot depth fault did not appear");
+            }
+            await new Promise((resolve) => setTimeout(resolve, 25));
+          }
+          const fault = document.querySelector(".route-slot-fault");
+          const hits = await (await fetch("/depth-hits")).json();
+          return {
+            fault: fault?.textContent ?? null,
+            hits,
+          };
+        });
+        assertEquals(
+          result.fault,
+          "Slot depth exceeded (5): /d1 → /d2 → /d3 → /d4 → /d5 → /d6",
+        );
+        assertEquals(result.hits, {
+          "/d1": 1,
+          "/d2": 1,
+          "/d3": 1,
+          "/d4": 1,
+          "/d5": 1,
+        });
+        assertEquals(result.hits["/d6"], undefined);
+      });
     },
   );
 });
