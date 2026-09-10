@@ -154,10 +154,12 @@ export interface SealOptions {
   cache?: CacheConfig;
 }
 
-/** Seal-time options for `patches()`. Writes are always no-store. */
+/** Seal-time options for `patches()`. */
 export interface SealPatchesOptions {
   /** Patch response HTTP status. Omitted is 200. */
   status?: number;
+  /** Cache is a read concern only; not accepted on writes. */
+  cache?: never;
 }
 
 /**
@@ -171,7 +173,8 @@ export type SealHtml = (
 ) => Response | Promise<Response>;
 
 /**
- * Bound patch sealer. Never walks layouts. Default status 200.
+ * Bound patch sealer. Never walks layouts. Default status 200. Always
+ * no-store.
  */
 export type SealPatches = (
   list: readonly Patch[],
