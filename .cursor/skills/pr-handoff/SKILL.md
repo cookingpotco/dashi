@@ -55,9 +55,25 @@ marker and do not leave it pointing at work that has already landed.
 
 Commit and push to the same branch. Do not force-push or rebase.
 
-Wait until CI is green on that push before the comment or `gh pr ready`.
-`gh pr checks --watch`. A red check means you are not done. Stay in this run
-through Ready; nothing resumes you when checks finish.
+Wait until CI is green on that push before pre-ready review, the handoff
+comment, or `gh pr ready`. `gh pr checks --watch`. A red check means you are
+not done. Stay in this run through Ready; nothing resumes you when checks
+finish.
+
+## Pre-ready review
+
+After local checks pass and CI is green on the push you will hand over, and
+**before** **Comment** and **Ready**:
+
+1. Launch the `dashi-pr-review` subagent on this branch's diff.
+2. Wait for it to finish. Do not background past this step (`is_background:
+   false`).
+3. Fix **Blockers** and **Should fix** items (one review→fix round; a second
+   round only if the first fix introduced new blockers).
+4. Push if needed, re-run local checks, and wait for CI green again.
+
+If the environment cannot spawn the subagent or its configured model, say so in
+the handoff comment and list what a human should verify manually.
 
 ## Comment
 
@@ -77,24 +93,6 @@ cannot be missed.
   **Plan deviations** again if this round added any.
 - Include a **Pre-ready review** line: `dashi-pr-review` ran; list findings
   fixed or state none.
-
-## Pre-ready review
-
-After local checks pass and CI is green on the push you will hand over, but
-**before** the handoff comment is final and **before** `gh pr ready`:
-
-1. Launch the `dashi-pr-review` subagent on this branch's diff.
-2. Wait for it to finish. Do not background past this step (`is_background:
-   false`).
-3. Fix **Blockers** and **Should fix** items (one review→fix round; a second
-   round only if the first fix introduced new blockers).
-4. Push if needed, re-run local checks, and wait for CI green again.
-5. Then post the handoff comment (with the **Pre-ready review** line) and run
-   `gh pr ready`.
-
-If the environment cannot spawn the subagent or its configured model, say so in
-the handoff comment and list what a human should verify manually. Still land the
-workflow files.
 
 ## Ready
 

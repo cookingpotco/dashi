@@ -16,7 +16,9 @@ this branch — not drive-by refactors outside the change.
 
 - `AGENTS.md` — **Tests**, **Simpler**, **One way**
 - `.cursor/rules/*` — conventions, app layout, public API, comments
-- `.cursor/BUGBOT.md` — what matters in review; do not duplicate Bugbot's job
+- `.cursor/BUGBOT.md` — runtime risks Bugbot owns (injection, request-path
+  concurrency, unawaited work, new runtime deps); this agent owns AGENTS.md
+  principles below
 - `README.md` — **By design**
 
 ## Review scope
