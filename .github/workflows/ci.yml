@@ -82,6 +82,9 @@ jobs:
           - name: Fresh project
             run: deno run -A scripts/verify_fresh_project.ts --linked
             timeout: 10
+          - name: Check create template gen
+            run: deno task create:check
+            timeout: 10
     steps:
       - uses: actions/checkout@v5
 
