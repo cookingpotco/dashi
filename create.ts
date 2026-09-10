@@ -1,9 +1,10 @@
-import pkg from "../deno.json" with { type: "json" };
+import pkg from "./deno.json" with { type: "json" };
 
 const USAGE = "Usage: deno create jsr:@cookingpot/dashi -- [dir] [--force]";
 
-const TEMPLATE_DIR = `${import.meta.dirname}/template`;
-const OVERLAY_DIR = `${import.meta.dirname}/overlay`;
+const CREATE_DIR = `${import.meta.dirname}/create`;
+const TEMPLATE_DIR = `${CREATE_DIR}/template`;
+const OVERLAY_DIR = `${CREATE_DIR}/overlay`;
 
 interface ParsedArgs {
   dir: string | undefined;

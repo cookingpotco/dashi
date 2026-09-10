@@ -1,6 +1,6 @@
 import { assertEquals, assertMatch, assertNotEquals } from "@std/assert";
 
-const CREATE = `${import.meta.dirname}/mod.ts`;
+const CREATE = `${import.meta.dirname}/../create.ts`;
 const BOOT_TIMEOUT_MS = 15_000;
 
 async function runCreate(dest: string, args: string[] = []): Promise<number> {

@@ -6,8 +6,9 @@
       "deno.unstable"
     ]
   },
-  "exclude": ["create/template/"],
+  "exclude": ["create/template/generated/"],
   "workspace": [
+    "./create",
     "./examples/hello-world",
     "./examples/slots",
     "./int-tests",
@@ -53,11 +54,12 @@
     "./client": "./client.ts",
     "./jsx-runtime": "./jsx-runtime/mod.ts",
     "./cors": "./cors/mod.ts",
-    "./create": "./create/mod.ts"
+    "./create": "./create.ts"
   },
   "publish": {
     "include": [
       "mod.ts",
+      "create.ts",
       "client.ts",
       "README.md",
       "LICENSE",
