@@ -1,3 +1,9 @@
+/**
+ * @module
+ *
+ * Scaffolds a fresh Dashi project. Not intended for runtime use.
+ */
+
 import pkg from "./deno.json" with { type: "json" };
 
 const USAGE = "Usage: deno create jsr:@cookingpot/dashi -- [dir] [--force]";
@@ -233,6 +239,29 @@ async function createApp(targetDir: string, appName: string): Promise<void> {
 
 const COMMAND = "\x1b[34m";
 const RESET = "\x1b[0m";
+const SPINNER = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+
+async function withLoader(
+  label: string,
+  work: () => Promise<void>,
+): Promise<void> {
+  if (!Deno.stdout.isTerminal()) {
+    await work();
+    return;
+  }
+  const encode = new TextEncoder();
+  let frame = 0;
+  const tick = setInterval(() => {
+    Deno.stdout.writeSync(encode.encode(`\r${SPINNER[frame]} ${label}`));
+    frame = (frame + 1) % SPINNER.length;
+  }, 80);
+  try {
+    await work();
+  } finally {
+    clearInterval(tick);
+    Deno.stdout.writeSync(encode.encode("\r\x1b[K"));
+  }
+}
 
 function printNextSteps(dirName: string): void {
   console.log(`\n✨ Created ${dirName}\n`);
@@ -256,7 +285,7 @@ async function main(): Promise<void> {
     Deno.exit(1);
   }
 
-  await createApp(targetDir, appName);
+  await withLoader("Creating...", () => createApp(targetDir, appName));
   printNextSteps(dirInput);
 }
 
