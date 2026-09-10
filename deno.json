@@ -6,7 +6,6 @@
       "deno.unstable"
     ]
   },
-  "exclude": ["create/template/generated/"],
   "workspace": [
     "./create",
     "./examples/hello-world",
