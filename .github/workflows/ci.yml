@@ -56,13 +56,13 @@ jobs:
       matrix:
         include:
           - name: Format
-            run: deno fmt --check .
+            run: deno fmt --check . && deno fmt --check -c create/deno.json create/template/
             timeout: 10
           - name: Lint
-            run: deno lint
+            run: deno lint && deno lint -c create/deno.json create/template/
             timeout: 10
           - name: Type check
-            run: deno check
+            run: deno check && deno check -c create/deno.json create/template/main.ts
             timeout: 10
           - name: Test
             run: deno task test

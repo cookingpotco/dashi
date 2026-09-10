@@ -6,9 +6,8 @@
       "deno.unstable"
     ]
   },
-  "exclude": ["create/template/generated/"],
+  "exclude": ["create/template/"],
   "workspace": [
-    "./create",
     "./examples/hello-world",
     "./examples/slots",
     "./int-tests",
@@ -80,6 +79,6 @@
       "static",
       "create"
     ],
-    "exclude": ["**/*_test.ts", "**/*_test.tsx", "create/deno.json"]
+    "exclude": ["**/*_test.ts", "**/*_test.tsx"]
   }
 }
