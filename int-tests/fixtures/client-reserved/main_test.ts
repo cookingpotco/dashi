@@ -56,9 +56,8 @@ Deno.test("reserved client path over HTTP", async (t) => {
     ];
     try {
       assertEquals(scripts.length, 2);
-      const src = scripts.find((match) =>
-        match[1]!.includes("probe_client-")
-      )?.[1];
+      const src = scripts.find((match) => match[1]!.includes("probe_client-"))
+        ?.[1];
       if (src === undefined) {
         throw new Error(`missing probe script in ${scripts.join(", ")}`);
       }

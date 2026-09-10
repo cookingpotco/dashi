@@ -531,17 +531,20 @@ Deno.test("forms fixture", async (t) => {
         },
       );
 
-      await t.step("form with no host submits natively", async () => {
-        await prepareBare(page, app.origin, "/bare");
-        await Promise.all([
-          page.waitForNavigation(),
-          clickId(page, "bare-submit"),
-        ]);
-        const result = await page.evaluate(snapshot);
-        assertEquals(result.survived, false);
-        assertEquals(result.heading, "search");
-        assertEquals(result.url, `${app.origin}/search`);
-      });
+      await t.step(
+        "redirect without a page host does a real document load",
+        async () => {
+          await prepareBare(page, app.origin, "/bare");
+          await Promise.all([
+            page.waitForNavigation(),
+            clickId(page, "bare-submit"),
+          ]);
+          const result = await page.evaluate(snapshot);
+          assertEquals(result.survived, false);
+          assertEquals(result.heading, "search");
+          assertEquals(result.url, `${app.origin}/search`);
+        },
+      );
     },
   );
 });

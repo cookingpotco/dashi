@@ -34,7 +34,7 @@ const appCases: IntegrationTestCase[] = [
     request: { path: "/" },
     status: 200,
     html: {
-      bodyIncludes: ['<script type="module"'],
+      bodyIncludes: ['<script type="module"', "submit_client-"],
       select: [
         { selector: 'script[type="importmap"]', exists: true },
         { selector: 'script[type="module"]', exists: true },
@@ -1489,9 +1489,8 @@ Deno.test("main fixture app over HTTP", async (t) => {
     const fragHtml = await frag.text();
     try {
       assertEquals(scripts.length, 2);
-      const src = scripts.find((match) =>
-        match[1]!.includes("probe_client-")
-      )?.[1];
+      const src = scripts.find((match) => match[1]!.includes("probe_client-"))
+        ?.[1];
       if (src === undefined) {
         throw new Error(`missing probe script in ${scripts.join(", ")}`);
       }
