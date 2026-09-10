@@ -1,0 +1,98 @@
+@import "tailwindcss";
+@source "./**/*.{ts,tsx}";
+
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("/static/plus-jakarta-sans.woff2") format("woff2");
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/static/jetbrains-mono.woff2") format("woff2");
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --color-black: #18181b;
+  --color-body-text: #3f3f46;
+  --color-background: #fdf6e2;
+  --color-pink: #ffade6;
+  --color-yellow: #fde68a;
+  --color-blue: #8adafd;
+  --color-error: #fd8a8a;
+
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --text-title: 3.75rem;
+  --text-title--line-height: 3.75rem;
+  --text-title--font-weight: 800;
+  --text-title--letter-spacing: -0.025em;
+
+  --text-title-compact: 2.25rem;
+  --text-title-compact--line-height: 2.25rem;
+  --text-title-compact--font-weight: 800;
+  --text-title-compact--letter-spacing: -0.025em;
+
+  --text-status: 3.75rem;
+  --text-status--line-height: 3.75rem;
+  --text-status--font-weight: 800;
+  --text-status--letter-spacing: 0em;
+
+  --text-status-compact: 2.25rem;
+  --text-status-compact--line-height: 2.25rem;
+  --text-status-compact--font-weight: 800;
+  --text-status-compact--letter-spacing: 0em;
+
+  --text-body: 1.125rem;
+  --text-body--line-height: 1.5rem;
+  --text-body--font-weight: 500;
+
+  --text-body-small: 0.875rem;
+  --text-body-small--line-height: 1.25rem;
+  --text-body-small--font-weight: 500;
+
+  --text-body-smallest: 0.75rem;
+  --text-body-smallest--line-height: 1.125rem;
+  --text-body-smallest--font-weight: 400;
+
+  --text-nav-link: 0.875rem;
+  --text-nav-link--line-height: 1.25rem;
+  --text-nav-link--font-weight: 700;
+
+  --text-button: 0.75rem;
+  --text-button--line-height: 1rem;
+  --text-button--font-weight: 800;
+  --text-button--letter-spacing: 0.025em;
+
+  --text-code-body: 0.75rem;
+  --text-code-body--line-height: 1.25rem;
+  --text-code-body--font-weight: 400;
+
+  --radius-button: 0.5rem;
+
+  --border-width-2: 0.125rem;
+
+  --shadow-regular: 0.125rem 0.125rem 0 var(--color-black);
+  --shadow-thin: 0.0625rem 0.0625rem 0 var(--color-black);
+
+  --container-main: 56rem;
+}
+
+html {
+  font-family: var(--font-sans);
+  color: var(--color-black);
+  background-color: var(--color-background);
+}
+
+button,
+a,
+input {
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
