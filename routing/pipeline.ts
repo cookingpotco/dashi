@@ -4,7 +4,6 @@ import {
   type Ctx,
   DASHI_PREFIX,
   type Fatal,
-  type GroupBoundary,
   type Method,
   METHODS,
   REQUEST_HEADERS,

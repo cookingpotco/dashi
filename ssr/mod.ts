@@ -197,7 +197,13 @@ export async function recover(
       });
     } catch (nextThrown) {
       if (nextThrown instanceof LayoutWalkError) {
-        return await recover(nextThrown.cause, nextThrown.parent, ctx, false, fatal);
+        return await recover(
+          nextThrown.cause,
+          nextThrown.parent,
+          ctx,
+          false,
+          fatal,
+        );
       }
       thrown = nextThrown;
       Logger.error(["ssr"], "render recovering from", thrown);
