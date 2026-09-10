@@ -28,7 +28,7 @@ class RouteSlot extends HTMLElement {
     }
     if (!isRootRelativePath(srcAttr)) {
       throw new Error(
-        "route-slot `src` must be a root-relative path starting with `/`",
+        "route-slot `src` must be a single-segment root-relative path; `//` and absolute URLs are not allowed",
       );
     }
 

@@ -599,13 +599,16 @@ Deno.test("app fixture", async (t) => {
           await page.goto(`${app.origin}/trust-slots`);
           const result = await page.evaluate(async () => {
             await customElements.whenDefined("route-slot");
+            const jsonHost = document.querySelector(
+              'route-slot[src="/slot-json"]',
+            );
             const start = Date.now();
-            while (Date.now() - start < 2000) {
-              const inside = document.getElementById("slot-inside");
-              const fallback = document.getElementById("json-fallback");
-              if (
-                inside !== null || fallback?.textContent !== "json-fallback"
-              ) {
+            while (Date.now() - start < 5000) {
+              const fetched = performance.getEntriesByType("resource").some(
+                (entry) => entry.name.includes("/slot-json"),
+              );
+              const busy = jsonHost?.getAttribute("aria-busy");
+              if (fetched && busy !== "true") {
                 break;
               }
               await new Promise((resolve) => setTimeout(resolve, 25));
@@ -614,9 +617,8 @@ Deno.test("app fixture", async (t) => {
               good: document.getElementById("slot-inside")?.textContent ?? null,
               jsonFallback:
                 document.getElementById("json-fallback")?.textContent ?? null,
-              jsonInside: document.querySelector(
-                'route-slot[src="/slot-json"] #slot-inside',
-              )?.textContent ?? null,
+              jsonInside: jsonHost?.querySelector("#slot-inside")
+                ?.textContent ?? null,
             };
           });
           assertEquals(result, {
