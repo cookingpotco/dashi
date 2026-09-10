@@ -1,4 +1,4 @@
-import { client, type ReadArgs, RouteFragment } from "dashi";
+import { client, type ReadArgs, RouteSlot } from "dashi";
 
 const EagerMark = client.element(
   "eager-el",
@@ -9,7 +9,7 @@ export function EagerFrag({ html }: ReadArgs) {
   return html(
     <div>
       <EagerMark />
-      <RouteFragment src="/nested" />
+      <RouteSlot src="/nested" />
     </div>,
   );
 }

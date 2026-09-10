@@ -1,14 +1,10 @@
-import { type ReadArgs, RouteFragment } from "dashi";
+import { type ReadArgs, RouteSlot } from "dashi";
 
 export function LazyBelow({ html }: ReadArgs) {
   return html(
     <div>
       <div style="height: 3000px"></div>
-      <RouteFragment
-        src="/below-counted"
-        lazy
-        fallback={<span id="below-fallback">Loading below...</span>}
-      />
+      <RouteSlot src="/below-counted" />
     </div>,
   );
 }

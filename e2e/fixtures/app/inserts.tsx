@@ -10,8 +10,8 @@ export function form({ html }: ReadArgs) {
 
 export function apply({ patches }: WriteArgs) {
   return patches([
-    patch.prepend("/slot", <span id="prepended">pre</span>),
-    patch.before("/slot", <span id="before-slot">before</span>),
-    patch.after("/slot", <span id="after-slot">after</span>),
+    patch.prepend("#slot", <span id="prepended">pre</span>),
+    patch.before("#slot", <span id="before-slot">before</span>),
+    patch.after("#slot", <span id="after-slot">after</span>),
   ]);
 }

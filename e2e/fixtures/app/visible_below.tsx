@@ -1,12 +1,12 @@
-import { type ReadArgs, RouteFragment } from "dashi";
+import { type ReadArgs, RouteSlot } from "dashi";
 
 export function VisibleBelow({ html }: ReadArgs) {
   return html(
     <div>
       <div style="height: 3000px"></div>
-      <RouteFragment
+      <RouteSlot
         src="/visible-counted"
-        lazy="visible"
+        fetchWhen="visible"
         fallback={<span id="visible-fallback">Loading visible...</span>}
       />
     </div>,

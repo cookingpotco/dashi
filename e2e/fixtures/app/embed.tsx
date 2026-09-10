@@ -1,14 +1,10 @@
-import { type ReadArgs, RouteFragment } from "dashi";
+import { type ReadArgs, RouteSlot } from "dashi";
 
 export function Embed({ html }: ReadArgs) {
   return html(
     <div>
-      <RouteFragment src="/eager" />
-      <RouteFragment
-        src="/lazy"
-        lazy
-        fallback={<span id="lazy-fallback">Loading...</span>}
-      />
+      <RouteSlot src="/eager" />
+      <RouteSlot src="/lazy" />
     </div>,
   );
 }

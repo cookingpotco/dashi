@@ -12,5 +12,5 @@ export function list({ html }: ReadArgs) {
 }
 
 export function dismiss({ patches }: WriteArgs) {
-  return patches([patch.remove("/notice")]);
+  return patches([patch.remove("#notice")]);
 }
