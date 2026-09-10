@@ -83,16 +83,79 @@ async function isNonEmptyDir(path: string): Promise<boolean> {
   }
 }
 
-async function copyDir(src: URL, dest: string): Promise<void> {
-  await Deno.mkdir(dest, { recursive: true });
-  for await (const entry of Deno.readDir(src)) {
-    const srcPath = new URL(`${entry.name}/`, src);
-    const destPath = `${dest}/${entry.name}`;
-    if (entry.isDirectory) {
-      await copyDir(srcPath, destPath);
-    } else if (entry.isFile) {
-      await Deno.copyFile(new URL(entry.name, src), destPath);
+async function readBytes(url: URL): Promise<Uint8Array> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${url.href}: ${response.status}`);
+  }
+  return new Uint8Array(await response.arrayBuffer());
+}
+
+async function readText(url: URL): Promise<string> {
+  return new TextDecoder().decode(await readBytes(url));
+}
+
+async function listLocalFiles(dir: URL): Promise<string[]> {
+  const files: string[] = [];
+  async function walk(url: URL, rel: string): Promise<void> {
+    for await (const entry of Deno.readDir(url)) {
+      const childRel = rel === "" ? entry.name : `${rel}/${entry.name}`;
+      if (entry.isDirectory) {
+        await walk(new URL(`${entry.name}/`, url), childRel);
+      } else if (entry.isFile) {
+        files.push(childRel);
+      }
     }
+  }
+  await walk(dir, "");
+  return files;
+}
+
+function jsrMetaUrl(fileUrl: URL): URL {
+  const match = fileUrl.href.match(
+    /^(https:\/\/jsr\.io\/@[^/]+\/[^/]+\/[^/]+)\//,
+  );
+  if (match === null) {
+    throw new Error(`Cannot list package files for ${fileUrl.href}`);
+  }
+  return new URL(`${match[1]}_meta.json`);
+}
+
+async function listJsrFiles(dir: URL): Promise<string[]> {
+  const metaResponse = await fetch(jsrMetaUrl(dir));
+  if (!metaResponse.ok) {
+    throw new Error(`Failed to fetch JSR meta: ${metaResponse.status}`);
+  }
+  const { manifest } = await metaResponse.json() as {
+    manifest: Record<string, unknown>;
+  };
+  const prefix = new URL(dir.href).pathname.replace(/\/?$/, "/");
+  const files: string[] = [];
+  for (const path of Object.keys(manifest)) {
+    if (path.startsWith(prefix) && !path.endsWith("/")) {
+      files.push(path.slice(prefix.length));
+    }
+  }
+  if (files.length === 0) {
+    throw new Error(`Published package has no files under ${prefix}`);
+  }
+  return files;
+}
+
+async function listFiles(dir: URL): Promise<string[]> {
+  if (dir.protocol === "file:") {
+    return await listLocalFiles(dir);
+  }
+  return await listJsrFiles(dir);
+}
+
+async function copyDir(src: URL, dest: string): Promise<void> {
+  for (const rel of await listFiles(src)) {
+    const slash = rel.lastIndexOf("/");
+    if (slash !== -1) {
+      await Deno.mkdir(`${dest}/${rel.slice(0, slash)}`, { recursive: true });
+    }
+    await Deno.writeFile(`${dest}/${rel}`, await readBytes(new URL(rel, src)));
   }
 }
 
@@ -116,14 +179,14 @@ async function substituteAppName(
 }
 
 async function applyOverlay(targetDir: string): Promise<void> {
-  const agents = await Deno.readTextFile(new URL("AGENTS.md", OVERLAY_DIR));
-  await Deno.writeTextFile(`${targetDir}/AGENTS.md`, agents);
+  await Deno.writeTextFile(
+    `${targetDir}/AGENTS.md`,
+    await readText(new URL("AGENTS.md", OVERLAY_DIR)),
+  );
 
   await Deno.writeTextFile(`${targetDir}/CLAUDE.md`, "@AGENTS.md\n");
 
-  const ruleBody = await Deno.readTextFile(
-    new URL("app-layout.md", OVERLAY_DIR),
-  );
+  const ruleBody = await readText(new URL("app-layout.md", OVERLAY_DIR));
   await Deno.mkdir(`${targetDir}/.cursor/rules`, { recursive: true });
   await Deno.writeTextFile(
     `${targetDir}/.cursor/rules/app-layout.mdc`,
@@ -138,15 +201,24 @@ async function applyOverlay(targetDir: string): Promise<void> {
 }
 
 async function createApp(targetDir: string, appName: string): Promise<void> {
+  await Deno.mkdir(targetDir, { recursive: true });
   await copyDir(TEMPLATE_DIR, targetDir);
   await writeDenoJson(targetDir);
   await substituteAppName(targetDir, appName);
   await applyOverlay(targetDir);
-  const gitignore = `${targetDir}/.gitignore`;
-  const ignore = await Deno.readTextFile(gitignore);
-  if (!ignore.includes("styles.json")) {
-    await Deno.writeTextFile(gitignore, `styles.json\n${ignore}`);
+  let ignore = "";
+  try {
+    ignore = await Deno.readTextFile(`${targetDir}/.gitignore`);
+  } catch (error) {
+    if (!(error instanceof Deno.errors.NotFound)) {
+      throw error;
+    }
+    ignore = "generated/\n.deno/\nnode_modules/\n";
   }
+  if (!ignore.includes("styles.json")) {
+    ignore = `styles.json\n${ignore}`;
+  }
+  await Deno.writeTextFile(`${targetDir}/.gitignore`, ignore);
 }
 
 const COMMAND = "\x1b[34m";

@@ -7,7 +7,6 @@
     ]
   },
   "workspace": [
-    "./create",
     "./examples/hello-world",
     "./examples/slots",
     "./int-tests",
@@ -18,13 +17,15 @@
   "lock": {
     "frozen": true
   },
+  "exclude": ["./create/template"],
   "minimumDependencyAge": "P1D",
   "fmt": {
     "useBraces": "always",
     "singleBodyPosition": "nextLine",
-    "exclude": ["**/*.svg"]
+    "exclude": ["**/*.svg", "!create/template"]
   },
   "lint": {
+    "exclude": ["!create/template"],
     "rules": {
       "exclude": [
         "jsx-key"
@@ -46,7 +47,7 @@
     "@std/assert": "jsr:@std/assert@1"
   },
   "name": "@cookingpot/dashi",
-  "version": "0.15.1",
+  "version": "0.16.0",
   "license": "MIT",
   "exports": {
     ".": "./mod.ts",
@@ -80,6 +81,11 @@
       "static",
       "create"
     ],
-    "exclude": ["**/*_test.ts", "**/*_test.tsx"]
+    "exclude": [
+      "**/*_test.ts",
+      "**/*_test.tsx",
+      "!create/template",
+      "!create/overlay"
+    ]
   }
 }

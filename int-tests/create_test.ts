@@ -1,8 +1,16 @@
 import { assertEquals, assertMatch, assertNotEquals } from "@std/assert";
+import dashiJson from "../deno.json" with { type: "json" };
 
-const CREATE = `${import.meta.dirname}/../create.ts`;
 const CHECKOUT = Deno.realPathSync(`${import.meta.dirname}/..`);
+const CREATE = `jsr:${dashiJson.name}@${dashiJson.version}/create`;
 const BOOT_TIMEOUT_MS = 15_000;
+
+async function writeCreateLinks(cwd: string): Promise<void> {
+  await Deno.writeTextFile(
+    `${cwd}/deno.json`,
+    `${JSON.stringify({ links: [CHECKOUT] }, null, 2)}\n`,
+  );
+}
 
 async function linkScaffoldToCheckout(dest: string): Promise<void> {
   const path = `${dest}/deno.json`;
@@ -13,9 +21,15 @@ async function linkScaffoldToCheckout(dest: string): Promise<void> {
   await Deno.writeTextFile(path, `${JSON.stringify(config, null, 2)}\n`);
 }
 
-async function runCreate(dest: string, args: string[] = []): Promise<number> {
+async function runCreate(
+  cwd: string,
+  dest: string,
+  args: string[] = [],
+): Promise<number> {
+  await writeCreateLinks(cwd);
   const cmd = new Deno.Command(Deno.execPath(), {
-    args: ["run", "-A", CREATE, dest, ...args],
+    args: ["run", "--min-dep-age=0", "-A", CREATE, dest, ...args],
+    cwd,
     stdout: "inherit",
     stderr: "inherit",
   });
@@ -65,14 +79,23 @@ async function waitForOk(
   throw new Error(`timed out waiting for GET ${path} on port ${port}`);
 }
 
-async function firstStaticFile(staticDir: string): Promise<string> {
-  for await (const entry of Deno.readDir(staticDir)) {
-    if (entry.isFile) {
-      return entry.name;
-    }
+Deno.test("publish includes the create template", async () => {
+  const cmd = new Deno.Command(Deno.execPath(), {
+    args: ["publish", "--dry-run", "--allow-dirty"],
+    cwd: CHECKOUT,
+    stdout: "piped",
+    stderr: "piped",
+  });
+  const out = await cmd.output();
+  const text = `${new TextDecoder().decode(out.stdout)}\n${
+    new TextDecoder().decode(out.stderr)
+  }`;
+  if (out.code !== 0) {
+    throw new Error(text);
   }
-  throw new Error(`no files in ${staticDir}`);
-}
+  assertMatch(text, /create\/template\/static\/favicon\.ico/);
+  assertMatch(text, /create\/overlay\/AGENTS\.md/);
+});
 
 Deno.test("deno create scaffolds a runnable app", async (t) => {
   const parent = await Deno.makeTempDir({ prefix: "dashi-create-" });
@@ -80,9 +103,10 @@ Deno.test("deno create scaffolds a runnable app", async (t) => {
   const dest = `${parent}/${appName}`;
 
   await t.step("create exits zero into an empty directory", async () => {
-    assertEquals(await runCreate(dest), 0);
+    assertEquals(await runCreate(parent, appName), 0);
     await Deno.stat(`${dest}/deno.json`);
     await Deno.stat(`${dest}/main.ts`);
+    await Deno.stat(`${dest}/static/favicon.ico`);
     await linkScaffoldToCheckout(dest);
   });
 
@@ -153,11 +177,8 @@ Deno.test("deno create scaffolds a runnable app", async (t) => {
         throw new Error("empty generated stylesheet");
       }
 
-      const staticFile = await firstStaticFile(`${dest}/static`);
-      const asset = await fetch(
-        `http://127.0.0.1:${port}/static/${staticFile}`,
-      );
-      const assetBody = await asset.text();
+      const asset = await fetch(`http://127.0.0.1:${port}/static/favicon.ico`);
+      const assetBody = await asset.bytes();
       assertEquals(asset.status, 200);
       assertMatch(asset.headers.get("cache-control") ?? "", /immutable/);
       if (assetBody.length === 0) {
@@ -177,8 +198,11 @@ Deno.test("deno create scaffolds a runnable app", async (t) => {
 });
 
 Deno.test("create refuses a non-empty directory without --force", async () => {
-  const dir = await Deno.makeTempDir({ prefix: "dashi-create-block-" });
+  const parent = await Deno.makeTempDir({ prefix: "dashi-create-block-" });
+  const dirName = "blocked";
+  const dir = `${parent}/${dirName}`;
+  await Deno.mkdir(dir, { recursive: true });
   await Deno.writeTextFile(`${dir}/keep.txt`, "stay\n");
-  assertNotEquals(await runCreate(dir), 0);
-  await Deno.remove(dir, { recursive: true });
+  assertNotEquals(await runCreate(parent, dirName), 0);
+  await Deno.remove(parent, { recursive: true });
 });
