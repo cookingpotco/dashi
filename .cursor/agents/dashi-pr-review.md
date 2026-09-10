@@ -24,18 +24,18 @@ this branch — not drive-by refactors outside the change.
 ## Review scope
 
 Inspect the PR/branch diff only. Confirm related flows that share touched code
-still look correct. After deletes, check modules are still needed and renames are
-consistent. Flag dead code, leftovers, and ticket-id markers left in by mistake.
-Check polish and naming consistency with surrounding code.
+still look correct. After deletes, check modules are still needed and renames
+are consistent. Flag dead code, leftovers, and ticket-id markers left in by
+mistake. Check polish and naming consistency with surrounding code.
 
 ## Checklist
 
 - **One way** — no twin APIs, aliases, or overlapping concepts beside an
   existing one without a distinction no caller can miss
 - **Simpler** — no needless helpers; short obvious checks stay inline
-- **Tests** — coverage at the layer that actually runs (unit next to module,
-  JSX in `jsx-tests/`, HTTP in `int-tests/`, live DOM in `e2e/`); no second
-  harness, no testing what never happens
+- **Tests** — coverage at the layer that actually runs (unit next to module, JSX
+  in `jsx-tests/`, HTTP in `int-tests/`, live DOM in `e2e/`); no second harness,
+  no testing what never happens
 - **Related flows** — callers and siblings of changed code still coherent
 - **Deletes / renames** — nothing orphaned; names match repo conventions
 - **Leftovers** — no debug output, commented experiments, stray `TODO`s, or
@@ -43,8 +43,8 @@ Check polish and naming consistency with surrounding code.
 
 ## Output format
 
-Report findings in these sections only. Every item includes a file path (and line
-when helpful).
+Report findings in these sections only. Every item includes a file path (and
+line when helpful).
 
 ### Blockers
 

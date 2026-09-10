@@ -56,9 +56,8 @@ marker and do not leave it pointing at work that has already landed.
 Commit and push to the same branch. Do not force-push or rebase.
 
 Wait until CI is green on that push before pre-ready review, the handoff
-comment, or `gh pr ready`. `gh pr checks --watch`. A red check means you are
-not done. Stay in this run through Ready; nothing resumes you when checks
-finish.
+comment, or `gh pr ready`. `gh pr checks --watch`. A red check means you are not
+done. Stay in this run through Ready; nothing resumes you when checks finish.
 
 ## Pre-ready review
 
@@ -66,7 +65,8 @@ After local checks pass and CI is green on the push you will hand over, and
 **before** **Comment** and **Ready**:
 
 1. Launch the `dashi-pr-review` subagent on this branch's diff.
-2. Wait for it to finish. Do not background past this step (`is_background:
+2. Wait for it to finish. Do not background past this step
+   (`is_background:
    false`).
 3. Fix **Blockers** and **Should fix** items (one review→fix round; a second
    round only if the first fix introduced new blockers).
