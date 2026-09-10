@@ -209,7 +209,10 @@ const appCases: IntegrationTestCase[] = [
     html: {
       bodyExcludes: ["<!DOCTYPE html>", "<script"],
       select: [
-        { selector: "#frag", text: "posted-slot-body" },
+        {
+          selector: 'dashi-patch[kind="update"][target="#frag"]',
+          text: "posted-slot-body",
+        },
         { selector: "h1", exists: false },
       ],
     },
