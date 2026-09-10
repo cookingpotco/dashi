@@ -1,13 +1,13 @@
-import { type ReadArgs, RouteFragment } from "dashi";
+import { type ReadArgs, RouteSlot } from "dashi";
 import type { AppState } from "./state.ts";
 
 export function LazyNestEmbed(
   { html }: ReadArgs<{ state: AppState }>,
 ) {
   return html(
-    <RouteFragment
+    <RouteSlot
       src="/lazy-nest"
-      lazy
+      fetchWhen="visible"
       fallback={<span id="lazy-nest-fallback">Loading nest...</span>}
     />,
   );

@@ -21,7 +21,7 @@ Deno.test("mixed file and JSR client entries compile over HTTP", async () => {
     assertEquals(scripts.length, 2);
     const localSrc = scripts.find((src) => src.includes("local_client-"));
     const jsrSrc = scripts.find((src) =>
-      src.includes("route_fragment_client-")
+      src.includes("route_slot_client-")
     );
     if (localSrc === undefined || jsrSrc === undefined) {
       throw new Error(`missing hashed module src in ${scripts.join(", ")}`);
@@ -37,7 +37,7 @@ Deno.test("mixed file and JSR client entries compile over HTTP", async () => {
       "text/javascript; charset=utf-8",
     );
     assertStringIncludes(localBody, "local-el");
-    assertFalse(localBody.includes("route-fragment"));
+    assertFalse(localBody.includes("route-slot"));
 
     const jsrJs = await app.fetch({ path: jsrSrc });
     const jsrBody = await jsrJs.text();
@@ -46,7 +46,7 @@ Deno.test("mixed file and JSR client entries compile over HTTP", async () => {
       jsrJs.headers.get("content-type"),
       "text/javascript; charset=utf-8",
     );
-    assertStringIncludes(jsrBody, "route-fragment");
+    assertStringIncludes(jsrBody, "route-slot");
     assertFalse(jsrBody.includes("local-el"));
   } catch (error) {
     const dump = formatIntegrationFailure(app, { path: "/" }, res, html);

@@ -1,4 +1,4 @@
-import { type ReadArgs, RouteFragment } from "dashi";
+import { type ReadArgs, RouteSlot } from "dashi";
 import type { AppState } from "./state.ts";
 
 export function CacheEmbed(
@@ -6,7 +6,7 @@ export function CacheEmbed(
 ) {
   return html(
     <div id="cache-embed">
-      <RouteFragment src="/cache-public" />
+      <RouteSlot src="/cache-public" />
     </div>,
   );
 }

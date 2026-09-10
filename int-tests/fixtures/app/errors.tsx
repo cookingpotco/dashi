@@ -5,7 +5,7 @@ import {
   type MiddlewareArgs,
   type NotFoundArgs,
   type ReadArgs,
-  RouteFragment,
+  RouteSlot,
 } from "dashi";
 import type { Element } from "dashi/jsx-runtime";
 import type { AppState } from "./state.ts";
@@ -119,7 +119,7 @@ export function embedFragThrow(
 ) {
   return html(
     <div id="embed-throw">
-      <RouteFragment src="/frag-throw" />
+      <RouteSlot src="/frag-throw" />
     </div>,
   );
 }
@@ -129,7 +129,7 @@ export function embedFragError(
 ) {
   return html(
     <div id="embed-error">
-      <RouteFragment src="/frag-error" />
+      <RouteSlot src="/frag-error" />
     </div>,
   );
 }
@@ -139,7 +139,7 @@ export function embedFragErrorResponse(
 ) {
   return html(
     <div id="embed-error-res">
-      <RouteFragment src="/frag-error-response" />
+      <RouteSlot src="/frag-error-response" />
     </div>,
   );
 }
@@ -149,7 +149,7 @@ export function embedFragErrorThrows(
 ) {
   return html(
     <div id="embed-error-throws">
-      <RouteFragment src="/frag-error-throws" />
+      <RouteSlot src="/frag-error-throws" />
     </div>,
   );
 }
@@ -159,152 +159,7 @@ export function embedFragMiss(
 ) {
   return html(
     <div id="embed-miss">
-      <RouteFragment src="/no-such-fragment" />
-    </div>,
-  );
-}
-
-export function messageError({ thrown, html }: ErrorArgs<AppState>) {
-  return html(
-    <p id="fragment-fault">
-      {thrown instanceof Error ? thrown.message : String(thrown)}
-    </p>,
-  );
-}
-
-export function SelfInclude(
-  { html }: ReadArgs<{ state: AppState }>,
-) {
-  return html(<RouteFragment src="/self-include" />);
-}
-
-export function CycleA({ html }: ReadArgs<{ state: AppState }>) {
-  return html(<RouteFragment src="/cycle-b" />);
-}
-
-export function CycleB({ html }: ReadArgs<{ state: AppState }>) {
-  return html(<RouteFragment src="/cycle-a" />);
-}
-
-export function EmbedCycle(
-  { html }: ReadArgs<{ state: AppState }>,
-) {
-  return html(<RouteFragment src="/cycle-a" />);
-}
-
-export function CycleQuery(
-  { html }: ReadArgs<{ state: AppState }>,
-) {
-  return html(<RouteFragment src="/cycle-query?y=2" />);
-}
-
-export function EmbedCycleQuery(
-  { html }: ReadArgs<{ state: AppState }>,
-) {
-  return html(<RouteFragment src="/cycle-query?x=1" />);
-}
-
-export function DepthEmbed(
-  { html }: ReadArgs<{ state: AppState }>,
-) {
-  return html(<RouteFragment src="/d1" />);
-}
-
-export function Depth1({ html }: ReadArgs<{ state: AppState }>) {
-  return html(<RouteFragment src="/d2" />);
-}
-
-export function Depth2({ html }: ReadArgs<{ state: AppState }>) {
-  return html(<RouteFragment src="/d3" />);
-}
-
-export function Depth3({ html }: ReadArgs<{ state: AppState }>) {
-  return html(<RouteFragment src="/d4" />);
-}
-
-export function Depth4({ html }: ReadArgs<{ state: AppState }>) {
-  return html(<RouteFragment src="/d5" />);
-}
-
-export function Depth5({ html }: ReadArgs<{ state: AppState }>) {
-  return html(<RouteFragment src="/d6" />);
-}
-
-export function Depth6({ html }: ReadArgs<{ state: AppState }>) {
-  return html(<p id="depth-leaf">depth-leaf</p>);
-}
-
-function delay(ms: number, signal: AbortSignal): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (signal.aborted) {
-      reject(signal.reason);
-      return;
-    }
-    const timer = setTimeout(resolve, ms);
-    signal.addEventListener("abort", () => {
-      clearTimeout(timer);
-      reject(signal.reason);
-    }, { once: true });
-  });
-}
-
-export async function Slow(
-  { ctx, html }: ReadArgs<{ state: AppState }>,
-) {
-  await delay(1000, ctx.req.signal);
-  return html(<p id="slow">slow-body</p>);
-}
-
-export async function SlowShort(
-  { ctx, html }: ReadArgs<{ state: AppState }>,
-) {
-  await delay(150, ctx.req.signal);
-  return html(
-    <div>
-      <p id="slow-short">slow-short-body</p>
-      <RouteFragment src="/wait-out" />
-    </div>,
-  );
-}
-
-export async function WaitOut(
-  { html }: ReadArgs<{ state: AppState }>,
-) {
-  await new Promise((resolve) => setTimeout(resolve, 200));
-  return html(<p id="wait-out">wait-out-body</p>);
-}
-
-export function EmbedSlow({ html }: ReadArgs<{ state: AppState }>) {
-  return html(
-    <div id="embed-slow">
-      <RouteFragment src="/slow" timeout={50} />
-      <RouteFragment src="/peer" />
-    </div>,
-  );
-}
-
-export function EmbedSlowEmpty(
-  { html }: ReadArgs<{ state: AppState }>,
-) {
-  return html(
-    <div id="embed-slow-empty">
-      <RouteFragment src="/slow-no-error" timeout={50} />
-      <RouteFragment src="/peer" />
-    </div>,
-  );
-}
-
-export function EmbedSlowHeld(
-  { html }: ReadArgs<{ state: AppState }>,
-) {
-  return html(
-    <div id="embed-slow-held">
-      <div id="slow-held">
-        <RouteFragment src="/slow-short" timeout={50} />
-      </div>
-      <div id="held">
-        <RouteFragment src="/wait-out" />
-      </div>
+      <RouteSlot src="/no-such-fragment" />
     </div>,
   );
 }

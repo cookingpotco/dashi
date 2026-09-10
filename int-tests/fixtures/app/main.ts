@@ -8,13 +8,8 @@ import { post as postPatches, postUnprocessable } from "./patches.tsx";
 import { postHtml } from "./write_html.ts";
 import { NestEmbed } from "./nest_embed.tsx";
 import { NestInner } from "./nest_inner.tsx";
-import { NestMid } from "./nest_mid.tsx";
-import { NestOuter } from "./nest_outer.tsx";
 import { LazyNest } from "./lazy_nest.tsx";
 import { LazyNestEmbed } from "./lazy_nest_embed.tsx";
-import { DupSrc } from "./dup_src.tsx";
-import { DistinctQuery } from "./distinct_query.tsx";
-import { QueryFrag } from "./query_frag.tsx";
 import { ProbePage } from "./probe.tsx";
 import { Peer } from "./peer.tsx";
 import { PostsNew } from "./posts_new.tsx";
@@ -41,7 +36,7 @@ import { cacheSession } from "./cache_session/mod.ts";
 import { cachePublicThenThrow } from "./cache_public_then_throw/mod.ts";
 import { nested } from "./nested/mod.tsx";
 import { embed } from "./embed/mod.tsx";
-import { fragment } from "./fragment/mod.tsx";
+import { slot } from "./slot/mod.tsx";
 import { api } from "./api/mod.ts";
 import { corsStar } from "./cors_star/mod.ts";
 import { corsList } from "./cors_list/mod.ts";
@@ -58,22 +53,16 @@ import { fragThrow } from "./frag_throw/mod.ts";
 import { fragError } from "./frag_error/mod.ts";
 import { fragErrorResponse } from "./frag_error_response/mod.ts";
 import { fragErrorThrows } from "./frag_error_throws/mod.ts";
-import { messageError } from "./message_error/mod.ts";
-import { slow } from "./slow/mod.ts";
 import {
   embedFragError,
   embedFragErrorResponse,
   embedFragErrorThrows,
   embedFragMiss,
   embedFragThrow,
-  EmbedSlow,
-  EmbedSlowEmpty,
-  EmbedSlowHeld,
   fatal,
   NotFound,
   okPage,
   RootError,
-  Slow,
   throwErrorHandlerBoom,
   throwHandler,
   throwServiceUnavailable,
@@ -141,15 +130,10 @@ export function start() {
       route("/echo", { GET: Echo }),
       embed,
       route("/nested-embed", { GET: NestEmbed }),
-      route("/nest-outer", { GET: NestOuter }),
-      route("/nest-mid", { GET: NestMid }),
       route("/nest-inner", { GET: NestInner }),
       route("/lazy-nest", { GET: LazyNest }),
       route("/lazy-nest-embed", { GET: LazyNestEmbed }),
-      route("/dup-src", { GET: DupSrc }),
-      route("/distinct-query", { GET: DistinctQuery }),
-      route("/query-frag", { GET: QueryFrag }),
-      fragment,
+      slot,
       route("/peer", { GET: Peer }),
       route("/patches", { POST: postPatches }),
       route("/patches-unprocessable", { POST: postUnprocessable }),
@@ -194,12 +178,6 @@ export function start() {
       route("/embed-frag-error-response", { GET: embedFragErrorResponse }),
       route("/embed-frag-error-throws", { GET: embedFragErrorThrows }),
       route("/embed-frag-miss", { GET: embedFragMiss }),
-      messageError,
-      slow,
-      route("/slow-no-error", { GET: Slow }),
-      route("/embed-slow", { GET: EmbedSlow }),
-      route("/embed-slow-empty", { GET: EmbedSlowEmpty }),
-      route("/embed-slow-held", { GET: EmbedSlowHeld }),
     ],
   }), { fatal, hostname: "127.0.0.1", port: 0 });
 }
