@@ -303,9 +303,7 @@ Deno.test("app fixture", async (t) => {
         "client element inside swapped slot markup upgrades",
         async () => {
           await page.goto(`${app.origin}/todos-page`);
-          await page.evaluate(() =>
-            customElements.whenDefined("route-slot")
-          );
+          await page.evaluate(() => customElements.whenDefined("route-slot"));
           const add = await page.$("#todos-form button");
           if (add === null) {
             throw new Error("todos form is missing");
@@ -385,9 +383,7 @@ Deno.test("app fixture", async (t) => {
         "patch list appends to #id, updates todo-count, and updates status",
         async () => {
           await page.goto(`${app.origin}/patches-page`);
-          await page.evaluate(() =>
-            customElements.whenDefined("route-slot")
-          );
+          await page.evaluate(() => customElements.whenDefined("route-slot"));
           await page.evaluate(() => {
             const marker = document.getElementById("page-marker");
             if (marker) {
@@ -469,9 +465,7 @@ Deno.test("app fixture", async (t) => {
         "patch list prepends inside and inserts beside the host",
         async () => {
           await page.goto(`${app.origin}/patches-page`);
-          await page.evaluate(() =>
-            customElements.whenDefined("route-slot")
-          );
+          await page.evaluate(() => customElements.whenDefined("route-slot"));
           const submit = await page.$("#inserts-form button");
           if (submit === null) {
             throw new Error("inserts form is missing");

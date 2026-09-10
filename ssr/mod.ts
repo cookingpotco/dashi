@@ -3,36 +3,22 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { type Element, jsx } from "../jsx-runtime/mod.ts";
 import type { Ctx, GroupBoundary } from "../shared/mod.ts";
 
-interface FragmentFault {
-  error?: Error;
-}
-
 interface RenderStore {
   pageReq: Request;
-  inflightFragments: Map<string, Promise<string | null>>;
   clientEntries: Set<string>;
   currentState: Partial<Record<string, unknown>>;
-  includeChain: string[];
-  includeSignal?: AbortSignal;
-  fragmentFault: FragmentFault;
-  fragmentDepthLimit: number;
 }
 
 const als = new AsyncLocalStorage<RenderStore>();
 
 export function runWithRenderStore<T>(
   req: Request,
-  fragmentDepthLimit: number,
   fn: () => T,
 ): T {
   return als.run({
     pageReq: req,
-    inflightFragments: new Map(),
     clientEntries: new Set(),
     currentState: {},
-    includeChain: [],
-    fragmentFault: {},
-    fragmentDepthLimit,
   }, fn);
 }
 
@@ -43,13 +29,8 @@ export function runWithNestedRenderStore<T>(
   const parent = getRenderStore();
   return als.run({
     pageReq: parent.pageReq,
-    inflightFragments: parent.inflightFragments,
     clientEntries: parent.clientEntries,
     currentState,
-    includeChain: parent.includeChain,
-    includeSignal: parent.includeSignal,
-    fragmentFault: parent.fragmentFault,
-    fragmentDepthLimit: parent.fragmentDepthLimit,
   }, fn);
 }
 
@@ -94,7 +75,7 @@ export function injectModuleScripts(
   return `${html.slice(0, close)}${scripts}${html.slice(close)}`;
 }
 
-/** Fragment include: `Link` names each recorded entry’s hashed URL. */
+/** Slot include: `Link` names each recorded entry’s hashed URL. */
 export function appendModulePreloads(
   headers: Headers,
   entries: Iterable<string>,
@@ -146,44 +127,4 @@ export async function walkLayouts(
     }
   }
   return rendered;
-}
-
-export function getFragmentSlot(src: string) {
-  return `{{fragment:${src}}}`;
-}
-
-function throwFragmentFault(store: RenderStore): void {
-  if (store.fragmentFault.error) {
-    const error = store.fragmentFault.error;
-    store.fragmentFault.error = undefined;
-    throw error;
-  }
-}
-
-export async function replaceFragmentSlots(html: string): Promise<string> {
-  const store = getRenderStore();
-  for (;;) {
-    throwFragmentFault(store);
-    if (store.inflightFragments.size === 0) {
-      return html;
-    }
-    const fragments = await Promise.all(
-      store.inflightFragments.entries().map(async ([src, promise]) => ({
-        src,
-        content: await promise,
-      })),
-    );
-    throwFragmentFault(store);
-    let next = html;
-    for (const fragment of fragments) {
-      next = next.replaceAll(
-        getFragmentSlot(fragment.src),
-        fragment.content || "",
-      );
-    }
-    if (next === html) {
-      return html;
-    }
-    html = next;
-  }
 }

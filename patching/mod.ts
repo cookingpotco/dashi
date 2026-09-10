@@ -1,6 +1,6 @@
 import { type Element, jsx, jsxTemplate } from "../jsx-runtime/mod.ts";
 
-type Target = `/${string}` | `#${string}`;
+type IdTarget = `#${string}`;
 
 const enum PatchKind {
   Update = "update",
@@ -16,49 +16,49 @@ const enum PatchKind {
 /** @internal */
 interface UpdatePatch {
   readonly kind: PatchKind.Update;
-  readonly target: Target;
+  readonly target: IdTarget;
   readonly body: Element;
 }
 
 /** @internal */
 interface ReplacePatch {
   readonly kind: PatchKind.Replace;
-  readonly target: Target;
+  readonly target: IdTarget;
   readonly body: Element;
 }
 
 /** @internal */
 interface AppendPatch {
   readonly kind: PatchKind.Append;
-  readonly target: Target;
+  readonly target: IdTarget;
   readonly body: Element;
 }
 
 /** @internal */
 interface PrependPatch {
   readonly kind: PatchKind.Prepend;
-  readonly target: Target;
+  readonly target: IdTarget;
   readonly body: Element;
 }
 
 /** @internal */
 interface BeforePatch {
   readonly kind: PatchKind.Before;
-  readonly target: Target;
+  readonly target: IdTarget;
   readonly body: Element;
 }
 
 /** @internal */
 interface AfterPatch {
   readonly kind: PatchKind.After;
-  readonly target: Target;
+  readonly target: IdTarget;
   readonly body: Element;
 }
 
 /** @internal */
 interface RemovePatch {
   readonly kind: PatchKind.Remove;
-  readonly target: Target;
+  readonly target: IdTarget;
 }
 
 /** @internal */
@@ -67,7 +67,7 @@ interface RefreshPatch {
   readonly target: `/${string}`;
 }
 
-/** One targeted update for a `/${string}` host or a `#${string}` node. */
+/** One targeted update for a `#${string}` hole or a route refresh. */
 export type Patch =
   | UpdatePatch
   | ReplacePatch
@@ -81,22 +81,22 @@ export type Patch =
 /**
  * Replace the target's children with `body`.
  *
- * @param target Route src (`/${string}`) or an element id (`#${string}`).
+ * @param target Element id (`#${string}`).
  * @param body Markup that becomes the target's children.
  *
  * @example
  * ```ts
- * return patches([patch.update("/todos", <TodoList />)]);
+ * return patches([patch.update("#todos", <TodoList />)]);
  * ```
  */
-function update(target: Target, body: Element): Patch {
+function update(target: IdTarget, body: Element): Patch {
   return { kind: PatchKind.Update, target, body };
 }
 
 /**
  * Replace the target element with `body`.
  *
- * @param target Route src (`/${string}`) or an element id (`#${string}`).
+ * @param target Element id (`#${string}`).
  * @param body Markup that replaces the target node.
  *
  * @example
@@ -104,14 +104,14 @@ function update(target: Target, body: Element): Patch {
  * return patches([patch.replace("#status", <p id="status">Saved</p>)]);
  * ```
  */
-function replace(target: Target, body: Element): Patch {
+function replace(target: IdTarget, body: Element): Patch {
   return { kind: PatchKind.Replace, target, body };
 }
 
 /**
  * Append `body` to the target's children.
  *
- * @param target Route src (`/${string}`) or an element id (`#${string}`).
+ * @param target Element id (`#${string}`).
  * @param body Markup to append.
  *
  * @example
@@ -119,73 +119,73 @@ function replace(target: Target, body: Element): Patch {
  * return patches([patch.append("#todos", <li>milk</li>)]);
  * ```
  */
-function append(target: Target, body: Element): Patch {
+function append(target: IdTarget, body: Element): Patch {
   return { kind: PatchKind.Append, target, body };
 }
 
 /**
  * Prepend `body` to the target's children.
  *
- * @param target Route src (`/${string}`) or an element id (`#${string}`).
+ * @param target Element id (`#${string}`).
  * @param body Markup to prepend.
  *
  * @example
  * ```ts
- * return patches([patch.prepend("/todos", <li>bread</li>)]);
+ * return patches([patch.prepend("#todos", <li>bread</li>)]);
  * ```
  */
-function prepend(target: Target, body: Element): Patch {
+function prepend(target: IdTarget, body: Element): Patch {
   return { kind: PatchKind.Prepend, target, body };
 }
 
 /**
  * Insert `body` as a sibling before the target.
  *
- * @param target Route src (`/${string}`) or an element id (`#${string}`).
+ * @param target Element id (`#${string}`).
  * @param body Markup to insert.
  *
  * @example
  * ```ts
- * return patches([patch.before("/slot", <p>before</p>)]);
+ * return patches([patch.before("#slot", <p>before</p>)]);
  * ```
  */
-function before(target: Target, body: Element): Patch {
+function before(target: IdTarget, body: Element): Patch {
   return { kind: PatchKind.Before, target, body };
 }
 
 /**
  * Insert `body` as a sibling after the target.
  *
- * @param target Route src (`/${string}`) or an element id (`#${string}`).
+ * @param target Element id (`#${string}`).
  * @param body Markup to insert.
  *
  * @example
  * ```ts
- * return patches([patch.after("/slot", <p>after</p>)]);
+ * return patches([patch.after("#slot", <p>after</p>)]);
  * ```
  */
-function after(target: Target, body: Element): Patch {
+function after(target: IdTarget, body: Element): Patch {
   return { kind: PatchKind.After, target, body };
 }
 
 /**
  * Drop the target from the document.
  *
- * @param target Route src (`/${string}`) or an element id (`#${string}`).
+ * @param target Element id (`#${string}`).
  *
  * @example
  * ```ts
  * return patches([patch.remove("#notice")]);
  * ```
  */
-function remove(target: Target): Patch {
+function remove(target: IdTarget): Patch {
   return { kind: PatchKind.Remove, target };
 }
 
 /**
- * Re-GET every host rendering `target`.
+ * Re-GET every `<route-slot>` rendering `target`.
  *
- * @param target Path every matching `<RouteFragment>` renders.
+ * @param target Path every matching slot fetches.
  *
  * @example
  * ```ts
@@ -198,18 +198,15 @@ function refresh(target: `/${string}`): Patch {
 
 /**
  * Targeted updates from a write handler. Seal them with `patches()`.
- * GET cannot return these; a GET or lazy fetch still replaces the host
- * that asked.
+ * GET cannot return these; a slot GET still replaces the host that asked.
  *
- * `update`, `replace`, `append`, `prepend`, `before`, `after`, `remove`,
- * and `refresh` each take a required target. `/${string}` updates every
- * `<RouteFragment>` rendering that `src`. `#${string}` updates the
- * node from `document.getElementById`. `refresh` accepts only a route.
+ * `update`, `replace`, `append`, `prepend`, `before`, `after`, and
+ * `remove` each take a `#${string}` id. `refresh` accepts only a route.
  * `update` / `append` / `prepend` mutate children; `replace` swaps the
  * node; `before` / `after` insert siblings; `remove` drops the node;
- * `refresh` re-GETs. Use `update` or `replace` when the write has the
- * markup; use `refresh` when fragments should re-fetch themselves
- * asynchronously.
+ * `refresh` re-GETs every matching slot. Use `update` or `replace` when
+ * the write has the markup; use `refresh` when slots should re-fetch
+ * themselves asynchronously.
  */
 export const patch = {
   update,

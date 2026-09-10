@@ -1,5 +1,5 @@
 import { type ReadArgs, RouteSlot } from "dashi";
-import { FragmentContent, fetchActivity } from "../fragment/mod.tsx";
+import { fetchActivity, FragmentContent } from "../fragment/mod.tsx";
 import { Notice } from "../notice/mod.tsx";
 import { CurrentTime } from "../time/mod.tsx";
 import { TodoCount, TodoList } from "../todos/mod.tsx";

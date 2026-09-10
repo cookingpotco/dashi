@@ -268,8 +268,7 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
-    name:
-      "POST patches without slot header are sibling dashi-patch elements",
+    name: "POST patches without slot header are sibling dashi-patch elements",
     request: {
       method: "POST",
       path: "/patches",

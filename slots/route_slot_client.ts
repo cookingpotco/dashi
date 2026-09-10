@@ -1,11 +1,11 @@
 import "./controller_client.ts";
 
-const fragmentHeaders = new Headers();
-fragmentHeaders.append("Accept", "text/html");
-fragmentHeaders.append("X-Fragment", "1");
+const slotHeaders = new Headers();
+slotHeaders.append("Accept", "text/html");
+slotHeaders.append("X-Slot", "1");
 
-class RouteFragment extends HTMLElement {
-  private readonly lazyAttr: string | null;
+class RouteSlot extends HTMLElement {
+  private readonly fetchWhen: string | null;
   private readonly src: string;
   private loaded = false;
   private abort: AbortController | null = null;
@@ -14,41 +14,44 @@ class RouteFragment extends HTMLElement {
   constructor() {
     super();
 
-    this.lazyAttr = this.getAttribute("lazy");
+    this.fetchWhen = this.getAttribute("fetchwhen");
 
     const srcAttr = this.getAttribute("src");
 
     if (!srcAttr) {
-      throw new Error("Missing required `src` field on fragment element");
+      throw new Error("Missing required `src` field on route-slot element");
     }
 
     this.src = srcAttr;
   }
 
   connectedCallback() {
-    if (this.lazyAttr === null || this.loaded || this.abort !== null) {
-      return;
-    }
-    if (this.lazyAttr !== "visible") {
-      this.beginFetch();
-      return;
-    }
-    const observer = new IntersectionObserver((entries) => {
-      const entry = entries.find((e) => e.isIntersecting);
-      if (!entry) {
+    if (this.fetchWhen === "visible") {
+      if (this.loaded || this.abort !== null) {
         return;
       }
-      observer.disconnect();
-      if (this.observer === observer) {
-        this.observer = null;
-      }
-      if (!this.isConnected || this.loaded || this.abort !== null) {
-        return;
-      }
-      this.beginFetch();
-    });
-    this.observer = observer;
-    observer.observe(this);
+      const observer = new IntersectionObserver((entries) => {
+        const entry = entries.find((e) => e.isIntersecting);
+        if (!entry) {
+          return;
+        }
+        observer.disconnect();
+        if (this.observer === observer) {
+          this.observer = null;
+        }
+        if (!this.isConnected || this.loaded || this.abort !== null) {
+          return;
+        }
+        this.beginFetch();
+      });
+      this.observer = observer;
+      observer.observe(this);
+      return;
+    }
+    if (this.loaded || this.abort !== null) {
+      return;
+    }
+    this.beginFetch();
   }
 
   refresh(): void {
@@ -80,7 +83,7 @@ class RouteFragment extends HTMLElement {
     try {
       const res = await fetch(this.src, {
         method: "GET",
-        headers: fragmentHeaders,
+        headers: slotHeaders,
         signal: abort.signal,
       });
       if (abort.signal.aborted) {
@@ -131,4 +134,4 @@ class RouteFragment extends HTMLElement {
   }
 }
 
-customElements.define("route-fragment", RouteFragment);
+customElements.define("route-slot", RouteSlot);

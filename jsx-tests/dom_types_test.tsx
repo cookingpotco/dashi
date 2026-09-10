@@ -19,8 +19,8 @@ function typechecks() {
   // @ts-expect-error hydration warnings are not a dashi concept
   <div suppressHydrationWarning />;
 
-  // @ts-expect-error route-fragment is not a JSX intrinsic; use RouteFragment
-  <route-fragment src="/x" />;
+  // @ts-expect-error route-slot is not a JSX intrinsic; use RouteSlot
+  <route-slot src="/x" />;
   // @ts-expect-error navigation-root is not a JSX intrinsic; use NavigationRoot
   <navigation-root />;
   <a href="/x" hardNavigation />;

@@ -51,7 +51,7 @@ in a module that is not a page.
 Application code never calls a handler. The router is what invokes one: a
 direct call skips the target's middleware and error boundary and leaves
 it reading the caller's `ctx`. Share markup as a component, including
-between two methods of one route, and use `<RouteFragment src>` to
+between two methods of one route, and use `<RouteSlot src>` to
 include another route's rendered output.
 
 Pipeline callbacks take one object: `{ ctx, html }`, `{ ctx, patches }`,

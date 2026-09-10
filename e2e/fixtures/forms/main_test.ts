@@ -160,9 +160,7 @@ Deno.test("forms fixture", async (t) => {
         "validation error updates a slot without a history write",
         async () => {
           await prepareHosted(page, app.origin, "/entries");
-          await page.evaluate(() =>
-            customElements.whenDefined("route-slot")
-          );
+          await page.evaluate(() => customElements.whenDefined("route-slot"));
           const before = await page.evaluate(() => history.length);
           await clickId(page, "validate-submit");
           await waitForText(page, "error", "title is required");

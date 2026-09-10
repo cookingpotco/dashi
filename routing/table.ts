@@ -186,7 +186,6 @@ export interface CompiledTable<
   rootMiddleware: Middleware<State>[];
   prefixCaptures: PrefixCapture<State>[];
   fatal?: Fatal;
-  fragmentDepthLimit: number;
 }
 
 interface PrefixCapture<
@@ -361,14 +360,11 @@ function staticPathname(segments: ConcreteSegment[]): string | null {
   return pathname === "" ? "/" : pathname;
 }
 
-export const DEFAULT_FRAGMENT_DEPTH_LIMIT = 5;
-
 export function compile<
   State extends Record<string, unknown> = Record<string, unknown>,
 >(
   table: Group<State>,
   fatal?: Fatal,
-  fragmentDepthLimit = DEFAULT_FRAGMENT_DEPTH_LIMIT,
 ): CompiledTable<State> {
   const rootBoundary: GroupBoundary<State> = {
     layouts: table.layouts,
@@ -438,7 +434,6 @@ export function compile<
     rootMiddleware: table.middleware,
     prefixCaptures,
     fatal,
-    fragmentDepthLimit,
   };
 }
 

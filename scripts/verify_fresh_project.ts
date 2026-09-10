@@ -16,7 +16,7 @@ const UNUSED_LINK_RE = /Linked package '[^']+' was not used[^\n]*/;
 const BOOT_TIMEOUT_MS = 30_000;
 
 const MAIN_TSX =
-  `import { patch, RouteFragment, serve, type ReadArgs, type WriteArgs } from "dashi";
+  `import { patch, RouteSlot, serve, type ReadArgs, type WriteArgs } from "dashi";
 
 const todos: string[] = [];
 
@@ -24,19 +24,15 @@ function Home({ html }: ReadArgs) {
   return html(
     <html>
       <h1>Todos</h1>
-      <RouteFragment
-        src="/todos"
-        lazy
-        fallback={<p>Loading…</p>}
-      />
+      <RouteSlot src="/todos" />
     </html>
   );
 }
 
 function TodoList({ error }: { error?: string }) {
   return (
-    <div>
-      <ul>
+    <div id="todos-root">
+      <ul id="todos">
         {todos.map((todo) => <li>{todo}</li>)}
       </ul>
       {error ? <p>{error}</p> : null}
@@ -56,11 +52,11 @@ async function create({ ctx, patches }: WriteArgs) {
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
     return patches([
-      patch.update("/todos", <TodoList error="title is required" />),
+      patch.update("#todos-root", <TodoList error="title is required" />),
     ], { status: 422 });
   }
   todos.push(title);
-  return patches([patch.update("/todos", <TodoList />)]);
+  return patches([patch.update("#todos-root", <TodoList />)]);
 }
 
 serve(({ route }) => ({

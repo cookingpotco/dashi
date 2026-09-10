@@ -1,9 +1,4 @@
-import {
-  group,
-  type MiddlewareArgs,
-  type ReadArgs,
-  RouteSlot,
-} from "dashi";
+import { group, type MiddlewareArgs, type ReadArgs, RouteSlot } from "dashi";
 import type { AppState } from "../state.ts";
 
 function embedOnly({ ctx, next }: MiddlewareArgs<AppState>) {
