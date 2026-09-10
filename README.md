@@ -59,40 +59,12 @@ serve(({ route }) => ({
 ## Quick start
 
 ```sh
-deno add jsr:@cookingpot/dashi
+deno create jsr:@cookingpot/dashi -- my-dashi-app
+cd my-dashi-app
+deno task dev
 ```
 
-Every config key a consumer needs, in one `deno.json`:
-
-```json
-{
-  "compilerOptions": {
-    "jsx": "precompile",
-    "jsxImportSource": "dashi",
-    "lib": ["dom", "deno.ns", "deno.unstable"]
-  },
-  "unstable": ["bundle", "no-legacy-abort"],
-  "imports": {
-    "dashi": "jsr:@cookingpot/dashi@^0.14.0"
-  }
-}
-```
-
-`unstable: ["bundle", "no-legacy-abort"]` is required until runtime
-`Deno.bundle` is stable and `request.signal` aborts only on client cancel.
-`serve()` cannot set CLI flags; put both in the `unstable` array.
-
-`lib` is that exact list. `dom` types client modules. `deno.ns` and
-`deno.unstable` are what `Deno.bundle` needs. A shorter array drops those.
-
-Save the snippet at the top as `main.tsx`, then:
-
-```sh
-deno run -A --watch main.tsx
-```
-
-Open http://localhost:8000. Running without permission flags dies on
-`Deno.env.get("DASHI_LOG")` at import, before serving.
+Open http://localhost:8000.
 
 ## Route slots
 

@@ -1,7 +1,6 @@
 # Releasing
 
-Bump `version` in `deno.json` and the README JSR pin to the same version on
-`main`. That is the release.
+Bump `version` in `deno.json` on `main`. That is the release.
 
 CI boots the README consumer against this checkout. After that run succeeds on
 `main`, the Publish workflow publishes with `deno publish`, then boots a fresh
