@@ -34,13 +34,23 @@ stop: tell the human rather than silently substituting another issue.
    move on. If a question has discrete options, use `AskQuestion`. Skip this
    only when the code and ticket leave no real choice.
 
+- Plans will be displayed to the user in the above format as an abridged
+  version. But
+
 2. **Plan** in plan mode, iterating until the human approves. Skip this for
-   S-pointed issues whose ticket already reads like a plan. Write the plan in
-   simple terms, skimmable bullets, each representing one idea or change. So we
-   get goals -> steps -> risks/unknowns (+tests and such). Follow the
-   simple-replies rule. No need to mention rejected paths or out of scope parts
-   unless explicitly asked for or is relevant to the decision. Don't mention
-   every file or line that will be changed, but the areas/modules/patterns.
+   S-pointed issues whose ticket already reads like a plan. Show the abridged
+   version of the plan to the user, in simple terms, skimmable bullets, each
+   representing one idea or change. So we get goals -> steps -> risks/unknowns
+   (+tests and such). Follow the simple-replies rule. No need to mention
+   rejected paths or out of scope parts unless explicitly asked for or is
+   relevant to the decision. Don't mention every file or line that will be
+   changed, but the areas/modules/patterns. The full version of the plan will
+   include every possible detail. What you submit to Linear will be maximally
+   detailed, specific files, lines, vars, etc. Assume that the implementor is
+   very literal and can't be trusted to interpret the plan. Don't leave tings to
+   their judgement. Make sure that the long and short versions of the plan match
+   each other, and the user friendly one is just a summary of the main ideas of
+   the larger plan.
 3. **Start the implementor.** After approval:
 
    **Figma.** If this ticket must read or write Figma (design brainstorm, edits,
