@@ -121,7 +121,9 @@ async function applyOverlay(targetDir: string): Promise<void> {
 
   await Deno.writeTextFile(`${targetDir}/CLAUDE.md`, "@AGENTS.md\n");
 
-  const ruleBody = await Deno.readTextFile(new URL("app-layout.md", OVERLAY_DIR));
+  const ruleBody = await Deno.readTextFile(
+    new URL("app-layout.md", OVERLAY_DIR),
+  );
   await Deno.mkdir(`${targetDir}/.cursor/rules`, { recursive: true });
   await Deno.writeTextFile(
     `${targetDir}/.cursor/rules/app-layout.mdc`,
