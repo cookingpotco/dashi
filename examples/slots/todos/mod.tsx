@@ -1,4 +1,5 @@
 import { group, patch, type ReadArgs, type WriteArgs } from "dashi";
+import { CurrentTime } from "../time/mod.tsx";
 import { todos as items } from "../todos.ts";
 
 export const todos = group("/todos", ({ route }) => ({
@@ -8,7 +9,7 @@ export const todos = group("/todos", ({ route }) => ({
   ],
 }));
 
-function TodoList({ error }: { error?: string }) {
+export function TodoList({ error }: { error?: string }) {
   return (
     <div>
       <ul id="todos">
@@ -23,28 +24,32 @@ function TodoList({ error }: { error?: string }) {
   );
 }
 
+export function TodoCount() {
+  return <span id="todo-count">{items.length}</span>;
+}
+
 function list({ html }: ReadArgs) {
   return html(<TodoList />);
 }
 
 function count({ html }: ReadArgs) {
-  return html(<span id="todo-count">{items.length}</span>);
+  return html(<TodoCount />);
 }
 
 async function create({ ctx, patches }: WriteArgs) {
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
     return patches([
-      patch.update("/todos", <TodoList error="title is required" />),
+      patch.update("#todos-root", <TodoList error="title is required" />),
     ]);
   }
   items.push(title);
   return patches([
     patch.append("#todos", <li>{title}</li>),
     patch.update(
-      "/todos/count",
+      "#todo-count",
       <span id="todo-count">{items.length}</span>,
     ),
-    patch.refresh("/time"),
+    patch.update("#current-time", <CurrentTime />),
   ]);
 }

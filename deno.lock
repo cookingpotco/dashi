@@ -137,12 +137,12 @@
           "jsr:@std/assert@1"
         ]
       },
-      "examples/fragments": {
+      "examples/hello-world": {
         "dependencies": [
           "jsr:@std/assert@1"
         ]
       },
-      "examples/hello-world": {
+      "examples/slots": {
         "dependencies": [
           "jsr:@std/assert@1"
         ]
