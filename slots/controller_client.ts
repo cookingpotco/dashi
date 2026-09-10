@@ -33,21 +33,33 @@ function cannotTakeChildren(host: Element): boolean {
   return VOID_ELEMENTS.has(host.localName);
 }
 
-function resolveHosts(target: string): Iterable<Element> {
-  if (target.startsWith("#")) {
-    const node = document.getElementById(target.slice(1));
-    return node === null ? [] : [node];
+function resolveIdHost(target: string): Element[] {
+  if (!target.startsWith("#")) {
+    return [];
   }
-  return document.querySelectorAll(`route-slot[src="${target}"]`);
+  const node = document.getElementById(target.slice(1));
+  return node === null ? [] : [node];
+}
+
+function resolveRefreshHosts(route: string): Element[] {
+  const hosts: Element[] = [];
+  for (const el of document.querySelectorAll("route-slot")) {
+    if (el.getAttribute("src") === route) {
+      hosts.push(el);
+    }
+  }
+  return hosts;
 }
 
 function applyPatch(item: Element) {
   const kind = item.getAttribute("kind");
   const target = item.getAttribute("target");
-  if (target === null) {
+  if (target === null || kind === null) {
     return;
   }
-  const hosts = resolveHosts(target);
+  const hosts = kind === SwapKind.Refresh
+    ? resolveRefreshHosts(target)
+    : resolveIdHost(target);
   if (kind === SwapKind.Remove) {
     for (const host of hosts) {
       host.remove();
@@ -136,10 +148,15 @@ function applyPatches(html: string): boolean {
   if (list.length === 0) {
     return false;
   }
-  for (const item of list) {
-    applyPatch(item);
+  try {
+    for (const item of list) {
+      applyPatch(item);
+    }
+    return true;
+  } catch (err) {
+    console.error("dashi: patch apply failed", err);
+    throw err;
   }
-  return true;
 }
 
 registerPatches(applyPatches);

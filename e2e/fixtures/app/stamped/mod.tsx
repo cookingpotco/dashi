@@ -5,7 +5,7 @@ const StampedMark = client.element(
   new URL("./stamped_client.ts", import.meta.url),
 );
 
-export function StampedFrag({ html }: ReadArgs) {
+export function StampedSlot({ html }: ReadArgs) {
   return html(
     <div>
       <StampedMark />

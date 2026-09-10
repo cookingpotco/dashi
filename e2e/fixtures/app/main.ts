@@ -5,11 +5,11 @@ import { ErrorPage, fatal } from "./errors.tsx";
 import { MarkPage } from "./mark/mod.tsx";
 import { PaintPage } from "./paint/mod.tsx";
 import { Embed } from "./embed.tsx";
-import { StampedFrag } from "./stamped/mod.tsx";
-import { NestedFrag } from "./nested/mod.tsx";
-import { LazyFrag } from "./lazy/mod.tsx";
+import { StampedSlot } from "./stamped/mod.tsx";
+import { NestedSlot } from "./nested/mod.tsx";
+import { LazySlot } from "./lazy/mod.tsx";
 import { Fail } from "./fail.tsx";
-import { FailFrag } from "./fail_frag.tsx";
+import { FailSlot } from "./fail_slot.tsx";
 import { Empty } from "./empty.tsx";
 import { emptyFailHandler } from "./empty_fail.ts";
 import { Slow } from "./slow.tsx";
@@ -45,11 +45,11 @@ export function start() {
       route("/mark", { GET: MarkPage }),
       route("/paint", { GET: PaintPage }),
       route("/embed", { GET: Embed }),
-      route("/stamped", { GET: StampedFrag }),
-      route("/nested", { GET: NestedFrag }),
-      route("/lazy", { GET: LazyFrag }),
+      route("/stamped", { GET: StampedSlot }),
+      route("/nested", { GET: NestedSlot }),
+      route("/lazy", { GET: LazySlot }),
       route("/fail", { GET: Fail }),
-      route("/fail-frag", { GET: FailFrag }),
+      route("/fail-slot", { GET: FailSlot }),
       route("/empty", { GET: Empty }),
       route("/empty-fail", { GET: emptyFailHandler }),
       route("/slow", { GET: Slow }),

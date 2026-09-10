@@ -10,7 +10,7 @@ export function RootLayout({ children }: LayoutArgs): Element {
           <input id="header-search-q" name="q" />
           <button id="header-search-submit" type="submit">Search</button>
         </form>
-        <form id="header-write" method="POST" action="/frag">
+        <form id="header-write" method="POST" action="/slot-hole">
           <input id="header-write-title" name="title" />
           <button id="header-write-submit" type="submit">Add</button>
         </form>

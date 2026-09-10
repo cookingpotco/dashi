@@ -85,14 +85,14 @@ async function prepareHosted(page: Page, origin: string, path: string) {
   await markDoc(page);
 }
 
-async function prepareFrag(page: Page, origin: string, path: string) {
+async function prepareSlotPage(page: Page, origin: string, path: string) {
   await page.goto(`${origin}${path}`);
   await page.evaluate(() => customElements.whenDefined("navigation-root"));
   await page.evaluate(() => customElements.whenDefined("route-slot"));
   await markDoc(page);
 }
 
-async function prepareBareFrag(page: Page, origin: string, path: string) {
+async function prepareBareSlotPage(page: Page, origin: string, path: string) {
   await page.goto(`${origin}${path}`);
   await page.evaluate(() => customElements.whenDefined("route-slot"));
   await markDoc(page);
@@ -224,12 +224,12 @@ Deno.test("forms fixture", async (t) => {
       );
 
       await t.step(
-        "form outside a slot updates that slot via actions",
+        "form outside a slot updates that slot via patches",
         async () => {
-          await prepareFrag(page, app.origin, "/frag-page");
+          await prepareSlotPage(page, app.origin, "/slot-page");
           await typeField(page, "#header-write-title", "from-header");
           await clickId(page, "header-write-submit");
-          await waitForText(page, "frag-item", "from-header");
+          await waitForText(page, "hole-item", "from-header");
           const result = await page.evaluate(() => {
             const title = document.getElementById("header-write-title");
             return {
@@ -239,28 +239,28 @@ Deno.test("forms fixture", async (t) => {
               heading: document.getElementById("heading")?.textContent ?? null,
               marker: document.getElementById("page-marker")?.textContent ??
                 null,
-              item: document.getElementById("frag-item")?.textContent ?? null,
+              item: document.getElementById("hole-item")?.textContent ?? null,
               title: title instanceof HTMLInputElement ? title.value : null,
               url: location.href,
             };
           });
           assertEquals(result.survived, true);
           assertEquals(result.persistent, "mutated");
-          assertEquals(result.heading, "frag-page");
+          assertEquals(result.heading, "slot-page");
           assertEquals(result.marker, "mutated");
           assertEquals(result.item, "from-header");
           assertEquals(result.title, "");
-          assertEquals(result.url, `${app.origin}/frag-page`);
+          assertEquals(result.url, `${app.origin}/slot-page`);
         },
       );
 
       await t.step(
         "write inside a slot swaps only that host",
         async () => {
-          await prepareFrag(page, app.origin, "/frag-page");
-          await typeField(page, "#frag-write-title", "milk");
-          await clickId(page, "frag-write-submit");
-          await waitForText(page, "frag-item", "milk");
+          await prepareSlotPage(page, app.origin, "/slot-page");
+          await typeField(page, "#hole-write-title", "milk");
+          await clickId(page, "hole-write-submit");
+          await waitForText(page, "hole-item", "milk");
           const result = await page.evaluate(() => ({
             survived: Reflect.get(globalThis, "__dashiDoc") === true,
             persistent: document.getElementById("persistent")?.textContent ??
@@ -268,27 +268,27 @@ Deno.test("forms fixture", async (t) => {
             heading: document.getElementById("heading")?.textContent ?? null,
             marker: document.getElementById("page-marker")?.textContent ??
               null,
-            item: document.getElementById("frag-item")?.textContent ?? null,
-            itemInHost: document.querySelector("route-slot[src='/frag']")
-              ?.querySelector("#frag-item")?.textContent ?? null,
+            item: document.getElementById("hole-item")?.textContent ?? null,
+            itemInHost: document.querySelector("route-slot[src='/slot-hole']")
+              ?.querySelector("#hole-item")?.textContent ?? null,
             url: location.href,
           }));
           assertEquals(result.survived, true);
           assertEquals(result.persistent, "mutated");
-          assertEquals(result.heading, "frag-page");
+          assertEquals(result.heading, "slot-page");
           assertEquals(result.marker, "mutated");
           assertEquals(result.item, "milk");
           assertEquals(result.itemInHost, "milk");
-          assertEquals(result.url, `${app.origin}/frag-page`);
+          assertEquals(result.url, `${app.origin}/slot-page`);
         },
       );
 
       await t.step(
         "GET form inside a slot navigates the page",
         async () => {
-          await prepareFrag(page, app.origin, "/frag-page");
-          await typeField(page, "#frag-get-q", "inside");
-          await clickId(page, "frag-get-submit");
+          await prepareSlotPage(page, app.origin, "/slot-page");
+          await typeField(page, "#hole-get-q", "inside");
+          await clickId(page, "hole-get-submit");
           await waitForHeading(page, "search");
           const result = await page.evaluate(() => ({
             survived: Reflect.get(globalThis, "__dashiDoc") === true,
@@ -296,7 +296,7 @@ Deno.test("forms fixture", async (t) => {
               null,
             heading: document.getElementById("heading")?.textContent ?? null,
             query: document.getElementById("query")?.textContent ?? null,
-            slot: document.querySelector("route-slot[src='/frag']") !==
+            slot: document.querySelector("route-slot[src='/slot-hole']") !==
               null,
             url: location.href,
           }));
@@ -312,8 +312,8 @@ Deno.test("forms fixture", async (t) => {
       await t.step(
         "slot write that redirects escalates to an in-place page swap",
         async () => {
-          await prepareFrag(page, app.origin, "/frag-page");
-          await clickId(page, "frag-leave-submit");
+          await prepareSlotPage(page, app.origin, "/slot-page");
+          await clickId(page, "slot-leave-submit");
           await waitForHeading(page, "search");
           const result = await page.evaluate(snapshot);
           assertEquals(result, {
@@ -440,24 +440,24 @@ Deno.test("forms fixture", async (t) => {
       );
 
       await t.step(
-        "write inside a slot applies actions with no page host",
+        "write inside a slot applies patches with no page host",
         async () => {
-          await prepareBareFrag(page, app.origin, "/bare-frag-page");
-          await typeField(page, "#frag-write-title", "bare-milk");
-          await clickId(page, "frag-write-submit");
-          await waitForText(page, "frag-item", "bare-milk");
+          await prepareBareSlotPage(page, app.origin, "/bare-slot-page");
+          await typeField(page, "#hole-write-title", "bare-milk");
+          await clickId(page, "hole-write-submit");
+          await waitForText(page, "hole-item", "bare-milk");
           const result = await page.evaluate(() => ({
             survived: Reflect.get(globalThis, "__dashiDoc") === true,
             heading: document.getElementById("heading")?.textContent ?? null,
-            item: document.getElementById("frag-item")?.textContent ?? null,
+            item: document.getElementById("hole-item")?.textContent ?? null,
             url: location.pathname,
             host: document.querySelector("navigation-root") !== null,
           }));
           assertEquals(result, {
             survived: true,
-            heading: "frag-page",
+            heading: "slot-page",
             item: "bare-milk",
-            url: "/bare-frag-page",
+            url: "/bare-slot-page",
             host: false,
           });
         },
@@ -466,10 +466,10 @@ Deno.test("forms fixture", async (t) => {
       await t.step(
         "slot redirect without a page host does a real document load",
         async () => {
-          await prepareBareFrag(page, app.origin, "/bare-frag-page");
+          await prepareBareSlotPage(page, app.origin, "/bare-slot-page");
           await Promise.all([
             page.waitForNavigation(),
-            clickId(page, "frag-leave-submit"),
+            clickId(page, "slot-leave-submit"),
           ]);
           const result = await page.evaluate(snapshot);
           assertEquals(result.survived, false);
@@ -481,11 +481,11 @@ Deno.test("forms fixture", async (t) => {
       await t.step(
         "GET form without a page host does a real document load",
         async () => {
-          await prepareBareFrag(page, app.origin, "/bare-frag-page");
-          await typeField(page, "#frag-get-q", "native");
+          await prepareBareSlotPage(page, app.origin, "/bare-slot-page");
+          await typeField(page, "#hole-get-q", "native");
           await Promise.all([
             page.waitForNavigation(),
-            clickId(page, "frag-get-submit"),
+            clickId(page, "hole-get-submit"),
           ]);
           const result = await page.evaluate(() => ({
             survived: Reflect.get(globalThis, "__dashiDoc") === true,

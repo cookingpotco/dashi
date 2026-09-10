@@ -9,9 +9,12 @@ import { Wrote } from "../wrote.tsx";
 import { writesHandler } from "../writes/mod.ts";
 import { jsonWriteHandler } from "../json_write.ts";
 import { dropWriteHandler } from "../drop_write.ts";
-import { FragPage } from "../frag_page/mod.tsx";
-import { list as listFrag, update as updateFrag } from "../frag.tsx";
-import { leave, list as listFragLeave } from "../frag_leave.tsx";
+import { SlotPage } from "../slot_page/mod.tsx";
+import {
+  list as listSlotHole,
+  update as updateSlotHole,
+} from "../slot_hole.tsx";
+import { leave, list as listSlotLeave } from "../slot_leave.tsx";
 import { rejectWrite } from "../reject_write.tsx";
 
 export const chrome = group(({ route }) => ({
@@ -27,8 +30,8 @@ export const chrome = group(({ route }) => ({
     route("/writes", { GET: writesHandler }),
     route("/json-write", { GET: jsonWriteHandler, POST: jsonWriteHandler }),
     route("/drop-write", { GET: dropWriteHandler, POST: dropWriteHandler }),
-    route("/frag-page", { GET: FragPage }),
-    route("/frag", { GET: listFrag, POST: updateFrag }),
-    route("/frag-leave", { GET: listFragLeave, POST: leave }),
+    route("/slot-page", { GET: SlotPage }),
+    route("/slot-hole", { GET: listSlotHole, POST: updateSlotHole }),
+    route("/slot-leave", { GET: listSlotLeave, POST: leave }),
   ],
 }));

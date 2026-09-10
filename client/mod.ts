@@ -158,7 +158,7 @@ export const client = { module, element };
 
 // Deno.bundle names each output from the source specifier and has no
 // entry map. Same-scheme graphs emit a short suffix of the path
-// (`/_dashi/client/fragments/foo.js`). Mixed schemes encode the
+// (`/_dashi/client/foo-<hash>.js`). Mixed schemes encode the
 // specifier (`/_dashi/client/https_/jsr.io/…/foo.js`,
 // `/_dashi/client/file_/…/foo.js`). Match the longest short suffix of
 // the source path, or the scheme-encoded name for that URL.

@@ -8,8 +8,8 @@ import { post as postPatches, postUnprocessable } from "./patches.tsx";
 import { postHtml } from "./write_html.ts";
 import { NestEmbed } from "./nest_embed.tsx";
 import { NestInner } from "./nest_inner.tsx";
-import { LazyNest } from "./lazy_nest.tsx";
-import { LazyNestEmbed } from "./lazy_nest_embed.tsx";
+import { NestLazy } from "./nest_lazy.tsx";
+import { NestLazyEmbed } from "./nest_lazy_embed.tsx";
 import { ProbePage } from "./probe.tsx";
 import { Peer } from "./peer.tsx";
 import { PostsNew } from "./posts_new.tsx";
@@ -49,16 +49,12 @@ import { nestedLayoutThrowsNoError } from "./nested_layout_throws_no_error/mod.t
 import { nestedErrorThrows } from "./nested_error_throws/mod.ts";
 import { mwThrows } from "./mw_throws/mod.ts";
 import { jsonThrow } from "./json_throw/mod.ts";
-import { fragThrow } from "./frag_throw/mod.ts";
-import { fragError } from "./frag_error/mod.ts";
-import { fragErrorResponse } from "./frag_error_response/mod.ts";
-import { fragErrorThrows } from "./frag_error_throws/mod.ts";
+import { slotThrow } from "./slot_throw/mod.ts";
+import { slotError } from "./slot_error/mod.ts";
+import { slotErrorResponse } from "./slot_error_response/mod.ts";
+import { slotErrorThrows } from "./slot_error_throws/mod.ts";
 import {
-  embedFragError,
-  embedFragErrorResponse,
-  embedFragErrorThrows,
-  embedFragMiss,
-  embedFragThrow,
+  embedSlotCases,
   fatal,
   NotFound,
   okPage,
@@ -131,8 +127,8 @@ export function start() {
       embed,
       route("/nested-embed", { GET: NestEmbed }),
       route("/nest-inner", { GET: NestInner }),
-      route("/lazy-nest", { GET: LazyNest }),
-      route("/lazy-nest-embed", { GET: LazyNestEmbed }),
+      route("/nest-lazy", { GET: NestLazy }),
+      route("/nest-lazy-embed", { GET: NestLazyEmbed }),
       slot,
       route("/peer", { GET: Peer }),
       route("/patches", { POST: postPatches }),
@@ -169,15 +165,11 @@ export function start() {
       nestedErrorThrows,
       mwThrows,
       jsonThrow,
-      fragThrow,
-      fragError,
-      fragErrorResponse,
-      fragErrorThrows,
-      route("/embed-frag-throw", { GET: embedFragThrow }),
-      route("/embed-frag-error", { GET: embedFragError }),
-      route("/embed-frag-error-response", { GET: embedFragErrorResponse }),
-      route("/embed-frag-error-throws", { GET: embedFragErrorThrows }),
-      route("/embed-frag-miss", { GET: embedFragMiss }),
+      slotThrow,
+      slotError,
+      slotErrorResponse,
+      slotErrorThrows,
+      route("/embed-slot-cases", { GET: embedSlotCases }),
     ],
   }), { fatal, hostname: "127.0.0.1", port: 0 });
 }

@@ -27,6 +27,16 @@ import {
 const DEFAULT_NOT_FOUND_BODY = "Not found";
 const DEFAULT_FATAL_BODY = "Something Went Wrong";
 
+function partialShortCircuit(status: 404 | 500): Response {
+  const res = new Response("", { status });
+  res.headers.set(
+    "Cache-Control",
+    cacheControl({ strategy: CacheStrategy.NoStore }),
+  );
+  mergeVary(res.headers, [REQUEST_HEADERS.SLOT]);
+  return res;
+}
+
 type RequestCtx = Ctx<Record<string, unknown>, Record<string, string>>;
 
 /**
@@ -140,7 +150,7 @@ export async function lastResort(
   isPartial: boolean,
 ): Promise<Response> {
   if (isPartial) {
-    return new Response("", { status: 500 });
+    return partialShortCircuit(500);
   }
   if (fatal === undefined) {
     return new Response(DEFAULT_FATAL_BODY, { status: 500 });
@@ -220,7 +230,7 @@ export async function executeNotFound(
   fatal: Fatal | undefined,
 ): Promise<Response> {
   if (isPartial) {
-    return new Response("", { status: 404 });
+    return partialShortCircuit(404);
   }
   let notFound;
   for (

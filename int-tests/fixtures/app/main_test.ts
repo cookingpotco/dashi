@@ -80,9 +80,9 @@ const appCases: IntegrationTestCase[] = [
     html: {
       select: [
         {
-          selector: 'route-slot[src="/lazy-nest"]',
+          selector: 'route-slot[src="/nest-lazy"]',
           exists: true,
-          attr: { src: "/lazy-nest" },
+          attr: { src: "/nest-lazy" },
         },
         { selector: "#nested-slot", exists: false },
       ],
@@ -90,13 +90,13 @@ const appCases: IntegrationTestCase[] = [
   },
   {
     name: "visible slot keeps fallback on the document",
-    request: { path: "/lazy-nest-embed" },
+    request: { path: "/nest-lazy-embed" },
     status: 200,
     html: {
       bodyExcludes: ["nested-slot-body"],
       select: [
         {
-          selector: 'route-slot[fetchwhen="visible"] #lazy-nest-fallback',
+          selector: 'route-slot[fetchwhen="visible"] #nest-lazy-fallback',
           text: "Loading nest...",
         },
         { selector: "#nested-slot", exists: false },
@@ -118,7 +118,7 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
-    name: "connect slots render hosts on the document",
+    name: "embed page renders slot hosts and visible fallback",
     request: { path: "/embed" },
     status: 200,
     html: {
@@ -133,22 +133,13 @@ const appCases: IntegrationTestCase[] = [
           exists: true,
           attr: { src: "/peer" },
         },
-        { selector: "#frag", exists: false },
+        { selector: "#slot", exists: false },
         { selector: "#peer", exists: false },
-      ],
-    },
-  },
-  {
-    name: "visible slot keeps fallback; connect slots stay empty",
-    request: { path: "/embed" },
-    status: 200,
-    html: {
-      select: [
         {
           selector: 'route-slot[fetchwhen="visible"] #fallback',
           text: "Loading...",
         },
-        { selector: 'route-slot[fetchwhen="visible"] #frag', exists: false },
+        { selector: 'route-slot[fetchwhen="visible"] #slot', exists: false },
         { selector: 'script[type="importmap"]', exists: true },
         { selector: 'script[type="module"]', exists: true },
       ],
@@ -164,12 +155,8 @@ const appCases: IntegrationTestCase[] = [
       select: [
         { selector: "html > body > h1", text: "Website Title" },
         {
-          selector: "html > body > #frag",
+          selector: "html > body > #slot",
           text: "slot-body",
-          attr: {
-            "data-embed-only": "",
-            "data-frag-only": "yes",
-          },
         },
       ],
     },
@@ -186,36 +173,15 @@ const appCases: IntegrationTestCase[] = [
       bodyExcludes: ["<!DOCTYPE html>", "<script"],
       select: [
         {
-          selector: "#frag",
+          selector: "#slot",
           text: "slot-body",
-          attr: {
-            "data-embed-only": "",
-            "data-frag-only": "yes",
-          },
         },
         { selector: "h1", exists: false },
       ],
     },
   },
   {
-    name: "POST x-slot omits layouts and doctype",
-    request: {
-      method: "POST",
-      path: "/slot",
-      headers: { "x-slot": "1" },
-    },
-    status: 200,
-    headers: { "content-type": "text/html; charset=utf-8" },
-    html: {
-      bodyExcludes: ["<!DOCTYPE html>", "<script"],
-      select: [
-        { selector: "#frag", text: "posted-slot-body" },
-        { selector: "h1", exists: false },
-      ],
-    },
-  },
-  {
-    name: "POST x-slot patches are sibling dashi-patch elements",
+    name: "POST x-slot returns partial patches without layouts",
     request: {
       method: "POST",
       path: "/patches",
@@ -225,6 +191,7 @@ const appCases: IntegrationTestCase[] = [
     headers: {
       "content-type": "text/html; charset=utf-8",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      vary: "x-slot",
     },
     html: {
       bodyExcludes: ["<!DOCTYPE html>"],
@@ -1059,6 +1026,10 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
       headers: { "x-slot": "1" },
     },
     status: 404,
+    headers: {
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      vary: "x-slot",
+    },
     bodyExact: "",
   },
   {
@@ -1085,19 +1056,32 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     stillServes: true,
   },
   {
-    name: "slot src miss leaves host empty on the document",
-    request: { path: "/embed-frag-miss" },
+    name: "embedded slot errors leave hosts empty on the document",
+    request: { path: "/embed-slot-cases" },
     status: 200,
     html: {
-      bodyExcludes: ["custom-404"],
+      bodyExcludes: ["custom-404", "crash-fallback", "no-splice"],
       select: [
-        { selector: "#embed-miss", exists: true },
+        { selector: "#embed-slot-cases", exists: true },
         {
-          selector: 'route-slot[src="/no-such-slot"]',
+          selector: '#embed-miss route-slot[src="/no-such-slot"]',
+          exists: true,
+        },
+        {
+          selector: '#embed-throw route-slot[src="/slot-throw"]',
+          exists: true,
+        },
+        {
+          selector: '#embed-error-res route-slot[src="/slot-error-response"]',
+          exists: true,
+        },
+        {
+          selector: '#embed-error-throws route-slot[src="/slot-error-throws"]',
           exists: true,
         },
         { selector: "#not-found", exists: false },
-        { selector: "route-slot #not-found", exists: false },
+        { selector: "#slot-error", exists: false },
+        { selector: "#fallback", exists: false },
       ],
     },
   },
@@ -1285,70 +1269,21 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
     stillServes: true,
   },
   {
-    name: "slot throw without error leaves host empty on the document",
-    request: { path: "/embed-frag-throw" },
-    status: 200,
-    html: {
-      bodyExcludes: ["crash-fallback", "root-error"],
-      select: [
-        { selector: "#embed-throw", exists: true },
-        {
-          selector: 'route-slot[src="/frag-throw"]',
-          exists: true,
-        },
-        { selector: "#frag-error", exists: false },
-        { selector: "#root-error", exists: false },
-      ],
-    },
-    stillServes: true,
-  },
-  {
-    name: "slot throw with Response error leaves host empty on the document",
-    request: { path: "/embed-frag-error-response" },
-    status: 200,
-    html: {
-      bodyExcludes: ["no-splice"],
-      select: [
-        { selector: "#embed-error-res", exists: true },
-        {
-          selector: 'route-slot[src="/frag-error-response"]',
-          exists: true,
-        },
-        { selector: "#frag-error", exists: false },
-      ],
-    },
-    stillServes: true,
-  },
-  {
-    name: "slot throw when error throws leaves host empty on the document",
-    request: { path: "/embed-frag-error-throws" },
-    status: 200,
-    html: {
-      bodyExcludes: ["crash-fallback"],
-      select: [
-        { selector: "#embed-error-throws", exists: true },
-        {
-          selector: 'route-slot[src="/frag-error-throws"]',
-          exists: true,
-        },
-        { selector: "#frag-error", exists: false },
-        { selector: "#fallback", exists: false },
-      ],
-    },
-    stillServes: true,
-  },
-  {
     name: "x-slot throw with error returns markup",
     request: {
-      path: "/frag-error",
+      path: "/slot-error",
       headers: { "x-slot": "1" },
     },
     status: 500,
-    headers: { "content-type": "text/html; charset=utf-8" },
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      vary: "x-slot",
+    },
     html: {
       bodyExcludes: ["<!DOCTYPE html>"],
       select: [
-        { selector: "#frag-error", text: "frag-error-ui" },
+        { selector: "#slot-error", text: "slot-error-ui" },
         { selector: "h1", exists: false },
       ],
     },
@@ -1357,20 +1292,28 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
   {
     name: "x-slot throw with no error is empty 500",
     request: {
-      path: "/frag-throw",
+      path: "/slot-throw",
       headers: { "x-slot": "1" },
     },
     status: 500,
+    headers: {
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      vary: "x-slot",
+    },
     bodyExact: "",
     stillServes: true,
   },
   {
     name: "x-slot last-resort is empty 500 not fatal",
     request: {
-      path: "/frag-error-throws",
+      path: "/slot-error-throws",
       headers: { "x-slot": "1" },
     },
     status: 500,
+    headers: {
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      vary: "x-slot",
+    },
     bodyExact: "",
     stillServes: true,
   },
