@@ -52,8 +52,9 @@ serve(({ route }) => ({
 
 - No runtime dependencies.
 - Small and powerful API, with only one way to do each thing.
-- Explicit client inclusion: JS ships only when you call `client.module` or
-  `client.element` at module scope.
+- Explicit client inclusion: every document ships the forms client (submit
+  interception and patch apply). Other JS ships only when you call
+  `client.module` or `client.element` at module scope.
 - Explicit over magic: no file-system routing, no prefixes or hidden flows.
 
 ## Quick start
@@ -185,23 +186,25 @@ serve(({ route }) => ({
 last-resort 500 on `serve()` options: no layouts, no `ctx`, no `thrown`.
 
 **Client TypeScript** attaches with `client.module` / `client.element` at module
-scope, not inside a component or handler. Documents get an import map. A module
-script is added only when a client host rendered.
+scope, not inside a component or handler. Documents get an import map and always
+ship the forms client (submit interception and `patches([...])` apply). A module
+script for your own client code is added only when that host rendered.
 
 ```tsx
 const Clock = client.module(new URL("./clock_client.ts", import.meta.url));
 ```
 
-**Soft navigation.** Wrap the swapping region in `<NavigationRoot>` in the root
-layout. Same-origin clicks, GET forms, and form redirects fetch the next
-document and replace the host's children. History, back/forward, and scroll
-restoration are included. Opt a link or form out with `hardNavigation`. From
-client TypeScript, `import { navigate } from "dashi/client"` and call
-`navigate(url)` for the same swap. Persistent elements left outside the host
-survive. The incoming document's `<head>` is merged so title, meta, and
-stylesheets update without unloading CSS already on the page. After a successful
-swap, the host dispatches `dashi:navigated` (`bubbles`, `composed`) with
-`{ url, push }`. Listen on `document` or the host.
+**Soft navigation** and **route slots** are opt-in. Wrap the swapping region in
+`<NavigationRoot>` in the root layout. Same-origin clicks, GET forms, and form
+redirects fetch the next document and replace the host's children. History,
+back/forward, and scroll restoration are included. Opt a link or form out with
+`hardNavigation`. From client TypeScript,
+`import { navigate } from "dashi/client"` and call `navigate(url)` for the same
+swap. Persistent elements left outside the host survive. The incoming document's
+`<head>` is merged so title, meta, and stylesheets update without unloading CSS
+already on the page. After a successful swap, the host dispatches
+`dashi:navigated` (`bubbles`, `composed`) with `{ url, push }`. Listen on
+`document` or the host.
 
 ```ts
 document.addEventListener("dashi:navigated", (event) => {

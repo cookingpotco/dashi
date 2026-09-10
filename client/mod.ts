@@ -108,6 +108,11 @@ function recordEntry(href: string): void {
   getClientCompileContext().clientEntries.add(path);
 }
 
+/** @internal */
+export function recordFormsClientEntry(): void {
+  recordEntry(FORMS_CLIENT.href);
+}
+
 /**
  * Register a client module. Renders nothing. Call at module scope.
  *
@@ -155,6 +160,9 @@ function element(
 
 /** Client module factory. Call `module` / `element` at module scope. */
 export const client = { module, element };
+
+const FORMS_CLIENT = new URL("../forms/submit_client.ts", import.meta.url);
+module(FORMS_CLIENT);
 
 // Deno.bundle names each output from the source specifier and has no
 // entry map. Same-scheme graphs emit a short suffix of the path
