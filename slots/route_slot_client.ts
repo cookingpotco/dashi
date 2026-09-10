@@ -1,4 +1,9 @@
 import "./controller_client.ts";
+import {
+  isHtmlContentType,
+  isRootRelativePath,
+  isSameOrigin,
+} from "../client/trust_client.ts";
 
 const slotHeaders = new Headers();
 slotHeaders.append("Accept", "text/html");
@@ -20,6 +25,11 @@ class RouteSlot extends HTMLElement {
 
     if (!srcAttr) {
       throw new Error("Missing required `src` field on route-slot element");
+    }
+    if (!isRootRelativePath(srcAttr)) {
+      throw new Error(
+        "route-slot `src` must be a root-relative path starting with `/`",
+      );
     }
 
     this.src = srcAttr;
@@ -73,6 +83,13 @@ class RouteSlot extends HTMLElement {
   }
 
   private beginFetch() {
+    if (
+      !isRootRelativePath(this.src) ||
+      !isSameOrigin(new URL(this.src, location.href))
+    ) {
+      this.loaded = true;
+      return;
+    }
     const abort = new AbortController();
     this.abort = abort;
     void this.fetchAndSwap(abort);
@@ -108,6 +125,12 @@ class RouteSlot extends HTMLElement {
   }
 
   private async applyResponse(res: Response, abort: AbortController) {
+    if (!isSameOrigin(res.url)) {
+      return;
+    }
+    if (!isHtmlContentType(res.headers.get("content-type"))) {
+      return;
+    }
     const html = await res.text();
     if (abort.signal.aborted) {
       return;
@@ -120,7 +143,10 @@ class RouteSlot extends HTMLElement {
     for (const match of link.matchAll(/<([^>]+)>;\s*rel="modulepreload"/g)) {
       const href = match[1];
       if (href !== undefined) {
-        pending.push(import(new URL(href, location.href).href));
+        const url = new URL(href, location.href);
+        if (isSameOrigin(url)) {
+          pending.push(import(url.href));
+        }
       }
     }
     await Promise.all(pending);

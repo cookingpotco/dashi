@@ -1,3 +1,5 @@
+import { isHtmlContentType, isSameOrigin } from "./trust_client.ts";
+
 export interface SubmitIntent {
   readonly method: string;
   readonly url: string;
@@ -49,7 +51,7 @@ export async function submitWrite(intent: SubmitIntent): Promise<boolean> {
       headers: { Accept: "text/html" },
       body: intent.body,
     });
-    if (new URL(res.url, location.href).origin !== location.origin) {
+    if (!isSameOrigin(res.url)) {
       location.assign(res.url);
       return false;
     }
@@ -62,13 +64,20 @@ export async function submitWrite(intent: SubmitIntent): Promise<boolean> {
       return false;
     }
     if (patches !== null) {
+      if (!isHtmlContentType(res.headers.get("content-type"))) {
+        location.assign(res.url);
+        return false;
+      }
       const html = await res.text();
       const link = res.headers.get("link") ?? "";
       const pending: Promise<unknown>[] = [];
       for (const match of link.matchAll(/<([^>]+)>;\s*rel="modulepreload"/g)) {
         const href = match[1];
         if (href !== undefined) {
-          pending.push(import(new URL(href, location.href).href));
+          const url = new URL(href, location.href);
+          if (isSameOrigin(url)) {
+            pending.push(import(url.href));
+          }
         }
       }
       await Promise.all(pending);
