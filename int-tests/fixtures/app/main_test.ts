@@ -213,6 +213,7 @@ const appCases: IntegrationTestCase[] = [
           selector: 'dashi-patch[kind="update"][target="#frag"]',
           text: "posted-slot-body",
         },
+        { selector: "#frag", exists: false },
         { selector: "h1", exists: false },
       ],
     },
