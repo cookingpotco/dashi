@@ -46,7 +46,7 @@ serve(({ route }) => ({
 - **Web standards.** Handlers read `ctx.req` as a `Request` and return a
   `Response`. HTML goes through `html()` or `patches()`. Client code uses native
   custom elements and plain DOM access.
-- **Per-route cache control.** Pass `{ cache }` to `html()` or `patches()`.
+- **Per-route cache control.** Pass `{ cache }` to `html()` on read handlers.
 
 ## By design
 
