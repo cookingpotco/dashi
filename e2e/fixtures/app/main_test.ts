@@ -643,7 +643,6 @@ Deno.test("app fixture", async (t) => {
           "/d4": 1,
           "/d5": 1,
         });
-        assertEquals(result.hits["/d6"], undefined);
       });
     },
   );

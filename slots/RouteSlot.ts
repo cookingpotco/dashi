@@ -46,6 +46,10 @@ type RouteSlotProps = ConnectedSlotProps | VisibleSlotProps;
  * Client-fetch an explicit route into a slot. `fetchWhen` is `"connected"`
  * (default) or `"visible"`; `fallback` is required when `"visible"`.
  *
+ * Nested slots track an include chain in the browser. A repeated `src` or a
+ * chain deeper than five routes stops with a `.route-slot-fault` message
+ * instead of issuing another GET.
+ *
  * @param src Path to fetch, like `/todos`.
  * @param fetchWhen `"connected"` fetches after connect. `"visible"` waits for
  * first intersection; `fallback` is required.

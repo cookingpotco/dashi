@@ -73,6 +73,10 @@ and swaps the slot. `fetchWhen="visible"` waits for the first viewport
 intersection (`fallback` is required). Omit `fetchWhen` to fetch when connected;
 `fallback` is optional on connected slots.
 
+Nested slots track an include chain in the browser. A repeated `src` or a chain
+deeper than five routes stops with a `.route-slot-fault` message instead of
+issuing another GET.
+
 ```tsx
 <RouteSlot src="/todos" />
 <RouteSlot
