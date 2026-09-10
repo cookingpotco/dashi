@@ -5,7 +5,14 @@ import {
   CacheStrategy,
   mergeVary,
 } from "../caching/mod.ts";
-import { clientImportMap, getCompiledFile } from "../client/mod.ts";
+import {
+  appendModulePreloads,
+  clientImportMap,
+  getClientCompileContext,
+  getCompiledFile,
+  injectModuleScripts,
+  runWithClientCompileContext,
+} from "../client/mod.ts";
 import { renderPatches } from "../patching/mod.ts";
 import type { Element } from "../jsx-runtime/mod.ts";
 import { Logger } from "../logging/mod.ts";
@@ -31,14 +38,7 @@ import {
   type MatchedRoute,
   matchMiss,
 } from "./table.ts";
-import {
-  appendModulePreloads,
-  getClientCompileContext,
-  injectModuleScripts,
-  LayoutWalkError,
-  runWithClientCompileContext,
-  walkLayouts,
-} from "../ssr/mod.ts";
+import { LayoutWalkError, walkLayouts } from "../ssr/mod.ts";
 
 const DEFAULT_NOT_FOUND_BODY = "Not found";
 const DEFAULT_FATAL_BODY = "Something Went Wrong";
@@ -148,7 +148,7 @@ function bindHtml(
   };
 }
 
-function bindPatches(_ctx: RequestCtx): SealPatches {
+function bindPatches(): SealPatches {
   return (list, opts?: SealOptions) =>
     seal(renderPatches(list), {
       status: opts?.status ?? 200,
@@ -270,7 +270,7 @@ async function runHandler(
         headers: { Allow: advertisedMethods(matched.handlers).join(", ") },
       });
     }
-    return await handler({ ctx, patches: bindPatches(ctx) });
+    return await handler({ ctx, patches: bindPatches() });
   }
   return new Response("Method Not Allowed", {
     status: 405,

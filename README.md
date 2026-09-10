@@ -37,7 +37,7 @@ serve(({ route }) => ({
 
 - **Route slots.** Client-fetch an explicit route with `<RouteSlot src>`.
   `fetchWhen="visible"` waits for first intersection (`fallback` required); omit
-  `fetchWhen` to fetch after connect.
+  `fetchWhen` to fetch when connected.
 - **Patches.** In response to form submissions or manual API calls, handlers
   seal a patch list with `patches()` — `patch.update`, `patch.replace`, and
   friends target `#id` holes; `patch.refresh` re-GETs every matching slot.
@@ -98,8 +98,8 @@ Open http://localhost:8000. Running without permission flags dies on
 
 Same-request UI is a component import. A `<RouteSlot src>` GETs that route later
 and swaps the slot. `fetchWhen="visible"` waits for the first viewport
-intersection (`fallback` is required). Omit `fetchWhen` to fetch after connect;
-`fallback` is optional on connect slots.
+intersection (`fallback` is required). Omit `fetchWhen` to fetch when connected;
+`fallback` is optional on connected slots.
 
 ```tsx
 <RouteSlot src="/todos" />

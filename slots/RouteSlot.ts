@@ -26,9 +26,9 @@ interface BaseRouteSlotProps extends HTMLAttributes {
 }
 
 /** @internal */
-interface ConnectSlotProps extends BaseRouteSlotProps {
-  /** Fetch after the host connects. Omitted is `"connect"`. */
-  fetchWhen?: "connect";
+interface ConnectedSlotProps extends BaseRouteSlotProps {
+  /** Fetch after the host connects. Omitted is `"connected"`. */
+  fetchWhen?: "connected";
   /** Shown until a successful body or a nonempty error body replaces it. */
   fallback?: DashiNode;
 }
@@ -42,7 +42,7 @@ interface VisibleSlotProps extends BaseRouteSlotProps {
 }
 
 /** @internal */
-type RouteSlotProps = ConnectSlotProps | VisibleSlotProps;
+type RouteSlotProps = ConnectedSlotProps | VisibleSlotProps;
 
 function resolveSlotSrc(src: string): string {
   const url = new URL(src, SLOT_SRC_BASE);
@@ -50,11 +50,11 @@ function resolveSlotSrc(src: string): string {
 }
 
 /**
- * Client-fetch an explicit route into a slot. `fetchWhen` is `"connect"`
+ * Client-fetch an explicit route into a slot. `fetchWhen` is `"connected"`
  * (default) or `"visible"`; `fallback` is required when `"visible"`.
  *
  * @param src Path to fetch, like `/todos`.
- * @param fetchWhen `"connect"` fetches after connect. `"visible"` waits for
+ * @param fetchWhen `"connected"` fetches after connect. `"visible"` waits for
  * first intersection; `fallback` is required.
  * @param fallback Shown while the slot is loading.
  *
