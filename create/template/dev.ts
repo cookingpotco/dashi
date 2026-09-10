@@ -1,3 +1,5 @@
+// Waits for css.ts to write styles.json, then runs the app. Simplified once
+// styling moves into the framework (COO-128).
 const ROOT = import.meta.dirname;
 
 function spawn(

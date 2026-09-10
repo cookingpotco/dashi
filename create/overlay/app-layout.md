@@ -2,12 +2,12 @@
 
 Every app is one tree. `main.ts` is the `serve()` callback and boots it.
 
-A **page** is a folder that exports handlers for one path (`Home`, `list`,
-`add`). The table that owns that path binds them with
-`route("/guestbook", { GET: list, POST: add })`. That table is the `serve()`
-callback or a wrap / prefix group's callback. A page module never calls
-`route()` or `group()`, and never exports a `{ GET }` bag or a function named
-`GET`.
+A **page** is a folder that exports handlers for one path (`Home`,
+`showGuestbook`, `addGuestbookEntry`). The table that owns that path binds them
+with `route("/guestbook", { GET: showGuestbook, POST: addGuestbookEntry })`.
+That table is the `serve()` callback or a wrap / prefix group's callback. A page
+module never calls `route()` or `group()`, and never exports a `{ GET }` bag or
+a function named `GET`.
 
 `group()` is only a **prefixed subtree** (nested URLs, or layouts / middleware /
 `notFound` on that prefix) or a **pathless wrap**. `group("/")` is illegal.
@@ -29,8 +29,9 @@ options.
 ## Exports
 
 A component that returns `Element` is PascalCase (`Home`, `RootLayout`).
-Middleware and per-method handlers are camelCase (`logger`, `list`, `add`). Do
-not export `GET` as the function name. Do not export a `{ GET: Home }` bag.
+Middleware and per-method handlers are camelCase (`logger`, `showGuestbook`,
+`addGuestbookEntry`). Do not export `GET` as the function name. Do not export a
+`{ GET: Home }` bag.
 
 `mod.ts` (`mod.tsx` when the file contains JSX) is the page module or the group.
 

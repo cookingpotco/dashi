@@ -6,7 +6,7 @@ export function Home({ html }: ReadArgs) {
       <main className="flex flex-1 flex-col items-center justify-center gap-8 px-20 py-20">
         <div className="flex w-full max-w-[41.5rem] flex-col items-center gap-4 text-center">
           <p className="rotate-1 rounded-button border-2 border-black bg-yellow px-3 py-1 font-mono text-button uppercase shadow-regular">
-            my-dashi-app
+            __DASHI_APP_NAME__
           </p>
           <h1 className="flex flex-nowrap items-end justify-center gap-[0.9375rem] text-title-compact md:text-title">
             <span>Welcome to</span>

@@ -10,6 +10,28 @@ interface ParsedArgs {
   force: boolean;
 }
 
+function consumerDenoJson(version: string): Record<string, unknown> {
+  return {
+    compilerOptions: {
+      jsx: "precompile",
+      jsxImportSource: "dashi",
+      lib: ["dom", "deno.ns", "deno.unstable"],
+    },
+    unstable: ["bundle", "no-legacy-abort"],
+    nodeModulesDir: "auto",
+    tasks: {
+      css: "deno run -A css.ts",
+      "css:watch": "deno run -A css.ts --watch",
+      dev: "deno run -A dev.ts",
+    },
+    imports: {
+      dashi: `jsr:@cookingpot/dashi@^${version}`,
+      tailwindcss: "npm:tailwindcss@4",
+      "@tailwindcss/cli": "npm:@tailwindcss/cli@4",
+    },
+  };
+}
+
 function parseArgs(args: string[]): ParsedArgs {
   let dir: string | undefined;
   let force = false;
@@ -74,29 +96,22 @@ async function copyDir(src: string, dest: string): Promise<void> {
   }
 }
 
-async function substituteDenoJson(targetDir: string): Promise<void> {
-  const consumer = {
-    compilerOptions: {
-      jsx: "precompile",
-      jsxImportSource: "dashi",
-      lib: ["dom", "deno.ns", "deno.unstable"],
-    },
-    unstable: ["bundle", "no-legacy-abort"],
-    nodeModulesDir: "auto",
-    tasks: {
-      css: "deno run -A css.ts",
-      "css:watch": "deno run -A css.ts --watch",
-      dev: "deno run -A dev.ts",
-    },
-    imports: {
-      dashi: `jsr:@cookingpot/dashi@^${pkg.version}`,
-      tailwindcss: "npm:tailwindcss@4",
-      "@tailwindcss/cli": "npm:@tailwindcss/cli@4",
-    },
-  };
+async function writeDenoJson(targetDir: string): Promise<void> {
   await Deno.writeTextFile(
     `${targetDir}/deno.json`,
-    `${JSON.stringify(consumer, null, 2)}\n`,
+    `${JSON.stringify(consumerDenoJson(pkg.version), null, 2)}\n`,
+  );
+}
+
+async function substituteAppName(
+  targetDir: string,
+  appName: string,
+): Promise<void> {
+  const path = `${targetDir}/home/mod.tsx`;
+  const text = await Deno.readTextFile(path);
+  await Deno.writeTextFile(
+    path,
+    text.replaceAll("__DASHI_APP_NAME__", appName),
   );
 }
 
@@ -120,25 +135,32 @@ async function applyOverlay(targetDir: string): Promise<void> {
   );
 }
 
-async function createApp(targetDir: string): Promise<void> {
+async function createApp(targetDir: string, appName: string): Promise<void> {
   await copyDir(TEMPLATE_DIR, targetDir);
-  await substituteDenoJson(targetDir);
+  await writeDenoJson(targetDir);
+  await substituteAppName(targetDir, appName);
   await applyOverlay(targetDir);
+  const gitignore = `${targetDir}/.gitignore`;
+  const ignore = await Deno.readTextFile(gitignore);
+  if (!ignore.includes("styles.json")) {
+    await Deno.writeTextFile(gitignore, `styles.json\n${ignore}`);
+  }
 }
 
-function printNextSteps(targetDir: string): void {
-  console.log(`\nCreated ${targetDir}\n`);
-  console.log(`  cd ${targetDir}`);
+function printNextSteps(dirName: string): void {
+  console.log(`\n✨ Created ${dirName}\n`);
+  console.log(`  cd ${dirName}`);
   console.log("  deno task dev");
-  console.log("\nOpen http://localhost:8000\n");
+  console.log("\n🌐 Open http://localhost:8000\n");
 }
 
 async function main(): Promise<void> {
   const { dir: dirArg, force } = parseArgs(Deno.args);
-  const dirName = dirArg ?? await promptDir();
-  const targetDir = dirName.startsWith("/")
-    ? dirName
-    : `${Deno.cwd()}/${dirName}`;
+  const dirInput = dirArg ?? await promptDir();
+  const appName = dirInput.split("/").filter(Boolean).at(-1) ?? dirInput;
+  const targetDir = dirInput.startsWith("/")
+    ? dirInput
+    : `${Deno.cwd()}/${dirInput}`;
 
   if (await isNonEmptyDir(targetDir) && !force) {
     console.error(
@@ -147,8 +169,8 @@ async function main(): Promise<void> {
     Deno.exit(1);
   }
 
-  await createApp(targetDir);
-  printNextSteps(dirName);
+  await createApp(targetDir, appName);
+  printNextSteps(dirInput);
 }
 
 if (import.meta.main) {

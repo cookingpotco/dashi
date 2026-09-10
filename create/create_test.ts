@@ -1,6 +1,6 @@
 import { assertEquals, assertMatch, assertNotEquals } from "@std/assert";
 
-const CREATE = `${import.meta.dirname}/../create/mod.ts`;
+const CREATE = `${import.meta.dirname}/mod.ts`;
 const BOOT_TIMEOUT_MS = 15_000;
 
 async function runCreate(dest: string, args: string[] = []): Promise<number> {
@@ -66,7 +66,8 @@ async function firstStaticFile(staticDir: string): Promise<string> {
 
 Deno.test("deno create scaffolds a runnable app", async (t) => {
   const parent = await Deno.makeTempDir({ prefix: "dashi-create-" });
-  const dest = `${parent}/app`;
+  const appName = "cool-app";
+  const dest = `${parent}/${appName}`;
 
   await t.step("create exits zero into an empty directory", async () => {
     assertEquals(await runCreate(dest), 0);
@@ -122,6 +123,7 @@ Deno.test("deno create scaffolds a runnable app", async (t) => {
       if (homeBody.length === 0) {
         throw new Error("empty document body");
       }
+      assertMatch(homeBody, />cool-app</);
 
       const manifest = JSON.parse(
         await Deno.readTextFile(`${dest}/styles.json`),

@@ -1,4 +1,3 @@
-styles.json
-generated/styles-*.css
+generated/
 .deno/
 node_modules/
