@@ -1,7 +1,17 @@
 import { assertEquals, assertMatch, assertNotEquals } from "@std/assert";
 
 const CREATE = `${import.meta.dirname}/../create.ts`;
+const CHECKOUT = Deno.realPathSync(`${import.meta.dirname}/..`);
 const BOOT_TIMEOUT_MS = 15_000;
+
+async function linkScaffoldToCheckout(dest: string): Promise<void> {
+  const path = `${dest}/deno.json`;
+  const config = JSON.parse(await Deno.readTextFile(path)) as {
+    links?: string[];
+  };
+  config.links = [CHECKOUT];
+  await Deno.writeTextFile(path, `${JSON.stringify(config, null, 2)}\n`);
+}
 
 async function runCreate(dest: string, args: string[] = []): Promise<number> {
   const cmd = new Deno.Command(Deno.execPath(), {
@@ -73,6 +83,7 @@ Deno.test("deno create scaffolds a runnable app", async (t) => {
     assertEquals(await runCreate(dest), 0);
     await Deno.stat(`${dest}/deno.json`);
     await Deno.stat(`${dest}/main.ts`);
+    await linkScaffoldToCheckout(dest);
   });
 
   await t.step("generated app builds and type-checks", async () => {
