@@ -148,10 +148,13 @@ async function createApp(targetDir: string, appName: string): Promise<void> {
   }
 }
 
+const COMMAND = "\x1b[34m";
+const RESET = "\x1b[0m";
+
 function printNextSteps(dirName: string): void {
   console.log(`\n✨ Created ${dirName}\n`);
-  console.log(`  cd ${dirName}`);
-  console.log("  deno task dev");
+  console.log(`  ${COMMAND}cd ${dirName}${RESET}`);
+  console.log(`  ${COMMAND}deno task dev${RESET}`);
   console.log("\n🌐 Open http://localhost:8000\n");
 }
 

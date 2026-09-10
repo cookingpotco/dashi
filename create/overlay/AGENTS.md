@@ -36,9 +36,9 @@ imports `styles.json`. Unhashed assets live under `/static/:file`.
 
 ## Best practices
 
-Cache full pages wherever the content allows. Keep handlers thin; put shared
-data on `ctx.state`. Reach for `RouteFragment` and patch updates before adding
-client modules.
+- Cache full pages wherever the content allows.
+- Keep handlers thin; put shared data on `ctx.state`.
+- Reach for `RouteFragment` and patch updates before adding client modules.
 
 ## Run
 
