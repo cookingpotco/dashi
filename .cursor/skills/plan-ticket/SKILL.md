@@ -34,9 +34,6 @@ stop: tell the human rather than silently substituting another issue.
    move on. If a question has discrete options, use `AskQuestion`. Skip this
    only when the code and ticket leave no real choice.
 
-- Plans will be displayed to the user in the above format as an abridged
-  version. But
-
 2. **Plan** in plan mode, iterating until the human approves. Skip this for
    S-pointed issues whose ticket already reads like a plan. Show the abridged
    version of the plan to the user, in simple terms, skimmable bullets, each
