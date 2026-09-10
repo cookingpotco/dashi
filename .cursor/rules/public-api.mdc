@@ -41,3 +41,7 @@ Types: `JSX` namespace, `Element`, `DashiNode`, `HTMLAttributes`,
 ## `dashi/cors`
 
 `cors`, `CorsOptions`, `CorsOrigin`
+
+## `dashi/create`
+
+CLI only: `deno create jsr:@cookingpot/dashi`. App code does not import it.

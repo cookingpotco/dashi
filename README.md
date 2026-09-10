@@ -59,8 +59,14 @@ serve(({ route }) => ({
 ## Quick start
 
 ```sh
-deno add jsr:@cookingpot/dashi
+deno create jsr:@cookingpot/dashi -- my-dashi-app
+cd my-dashi-app
+deno task dev
 ```
+
+Open http://localhost:8000.
+
+### Manual setup
 
 Every config key a consumer needs, in one `deno.json`:
 
@@ -91,8 +97,8 @@ Save the snippet at the top as `main.tsx`, then:
 deno run -A --watch main.tsx
 ```
 
-Open http://localhost:8000. Running without permission flags dies on
-`Deno.env.get("DASHI_LOG")` at import, before serving.
+Running without permission flags dies on `Deno.env.get("DASHI_LOG")` at import,
+before serving.
 
 ## Route slots
 

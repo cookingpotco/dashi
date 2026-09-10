@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "jsx": "precompile",
+    "jsxImportSource": "dashi",
+    "lib": ["dom", "deno.ns", "deno.unstable"]
+  },
+  "unstable": ["bundle", "no-legacy-abort"],
+  "nodeModulesDir": "auto",
+  "tasks": {
+    "css": "deno run -A css.ts",
+    "css:watch": "deno run -A css.ts --watch",
+    "dev": "deno run -A dev.ts"
+  },
+  "imports": {
+    "dashi": "jsr:@cookingpot/dashi@^__DASHI_VERSION__",
+    "tailwindcss": "npm:tailwindcss@4",
+    "@tailwindcss/cli": "npm:@tailwindcss/cli@4"
+  }
+}

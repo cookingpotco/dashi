@@ -6,6 +6,7 @@
       "deno.unstable"
     ]
   },
+  "exclude": ["create/template/"],
   "workspace": [
     "./examples/hello-world",
     "./examples/slots",
@@ -51,7 +52,8 @@
     ".": "./mod.ts",
     "./client": "./client.ts",
     "./jsx-runtime": "./jsx-runtime/mod.ts",
-    "./cors": "./cors/mod.ts"
+    "./cors": "./cors/mod.ts",
+    "./create": "./create/mod.ts"
   },
   "publish": {
     "include": [
@@ -74,7 +76,8 @@
       "serve",
       "shared",
       "ssr",
-      "static"
+      "static",
+      "create"
     ],
     "exclude": ["**/*_test.ts", "**/*_test.tsx"]
   }
