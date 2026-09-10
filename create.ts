@@ -111,17 +111,28 @@ async function listLocalFiles(dir: URL): Promise<string[]> {
   return files;
 }
 
-function jsrMetaUrl(fileUrl: URL): URL {
-  const match = fileUrl.href.match(
+function jsrDirPrefix(dir: URL): string {
+  const match = dir.href.match(
+    /^https:\/\/jsr\.io\/@[^/]+\/[^/]+\/[^/]+(\/.*)/,
+  );
+  if (match === null) {
+    throw new Error(`Cannot list package files for ${dir.href}`);
+  }
+  return match[1].replace(/\/?$/, "/");
+}
+
+function jsrMetaUrl(dir: URL): URL {
+  const match = dir.href.match(
     /^(https:\/\/jsr\.io\/@[^/]+\/[^/]+\/[^/]+)\//,
   );
   if (match === null) {
-    throw new Error(`Cannot list package files for ${fileUrl.href}`);
+    throw new Error(`Cannot list package files for ${dir.href}`);
   }
   return new URL(`${match[1]}_meta.json`);
 }
 
 async function listJsrFiles(dir: URL): Promise<string[]> {
+  const prefix = jsrDirPrefix(dir);
   const metaResponse = await fetch(jsrMetaUrl(dir));
   if (!metaResponse.ok) {
     throw new Error(`Failed to fetch JSR meta: ${metaResponse.status}`);
@@ -129,7 +140,6 @@ async function listJsrFiles(dir: URL): Promise<string[]> {
   const { manifest } = await metaResponse.json() as {
     manifest: Record<string, unknown>;
   };
-  const prefix = new URL(dir.href).pathname.replace(/\/?$/, "/");
   const files: string[] = [];
   for (const path of Object.keys(manifest)) {
     if (path.startsWith(prefix) && !path.endsWith("/")) {

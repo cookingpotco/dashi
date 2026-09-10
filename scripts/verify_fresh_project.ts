@@ -229,6 +229,29 @@ async function main(): Promise<void> {
     await Deno.writeTextFile(`${dir}/main.tsx`, MAIN_TSX);
     console.log(`${mode} consumer at ${dir} using ${name}@${version}`);
     await bootUntilListening(dir);
+
+    if (mode === Mode.Registry) {
+      const createParent = await Deno.makeTempDir({
+        prefix: "dashi-create-registry-",
+      });
+      const create = new Deno.Command(Deno.execPath(), {
+        args: [
+          "run",
+          "--min-dep-age=0",
+          "-A",
+          `jsr:${name}@${version}/create`,
+          "app",
+        ],
+        cwd: createParent,
+        stdout: "inherit",
+        stderr: "inherit",
+      });
+      if ((await create.output()).code !== 0) {
+        throw new Error(`deno create jsr:${name}@${version} failed`);
+      }
+      await Deno.stat(`${createParent}/app/static/favicon.ico`);
+      await Deno.remove(createParent, { recursive: true });
+    }
     passed = true;
   } finally {
     if (passed) {
