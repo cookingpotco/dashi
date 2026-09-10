@@ -3,41 +3,22 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { type Element, jsx } from "../jsx-runtime/mod.ts";
 import type { Ctx, GroupBoundary } from "../shared/mod.ts";
 
-interface RenderStore {
-  pageReq: Request;
+interface ClientCompileContext {
   clientEntries: Set<string>;
-  currentState: Partial<Record<string, unknown>>;
 }
 
-const als = new AsyncLocalStorage<RenderStore>();
+const als = new AsyncLocalStorage<ClientCompileContext>();
 
-export function runWithRenderStore<T>(
-  req: Request,
-  fn: () => T,
-): T {
-  return als.run({
-    pageReq: req,
-    clientEntries: new Set(),
-    currentState: {},
-  }, fn);
+export function runWithClientCompileContext<T>(fn: () => T): T {
+  return als.run({ clientEntries: new Set() }, fn);
 }
 
-export function runWithNestedRenderStore<T>(
-  currentState: Partial<Record<string, unknown>>,
-  fn: () => T,
-): T {
-  const parent = getRenderStore();
-  return als.run({
-    pageReq: parent.pageReq,
-    clientEntries: parent.clientEntries,
-    currentState,
-  }, fn);
-}
-
-export function getRenderStore(): RenderStore {
+export function getClientCompileContext(): ClientCompileContext {
   const store = als.getStore();
   if (!store) {
-    throw new Error("getRenderStore() was called outside a handle() render");
+    throw new Error(
+      "getClientCompileContext() was called outside a handle() render",
+    );
   }
   return store;
 }

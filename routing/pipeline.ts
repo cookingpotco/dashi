@@ -33,11 +33,10 @@ import {
 } from "./table.ts";
 import {
   appendModulePreloads,
-  getRenderStore,
+  getClientCompileContext,
   injectModuleScripts,
   LayoutWalkError,
-  runWithNestedRenderStore,
-  runWithRenderStore,
+  runWithClientCompileContext,
   walkLayouts,
 } from "../ssr/mod.ts";
 
@@ -108,15 +107,14 @@ function seal(
   options: {
     status: number;
     isPartial: boolean;
-    req: Request;
     cache?: CacheConfig;
   },
 ): Response {
   const html = String(page);
-  const store = getRenderStore();
+  const { clientEntries } = getClientCompileContext();
   let body = html;
-  if (!options.isPartial && store.pageReq === options.req) {
-    body = injectModuleScripts(html, store.clientEntries, clientImportMap());
+  if (!options.isPartial) {
+    body = injectModuleScripts(html, clientEntries, clientImportMap());
   }
   const bytes = new TextEncoder().encode(
     options.isPartial ? body : `<!DOCTYPE html>${body}`,
@@ -128,8 +126,8 @@ function seal(
   res.headers.set("Cache-Control", cacheControl(cache));
   mergeVary(res.headers, [REQUEST_HEADERS.SLOT]);
   applyVaryHeaders(res.headers, cache);
-  if (options.isPartial && store.pageReq === options.req) {
-    appendModulePreloads(res.headers, store.clientEntries, clientImportMap());
+  if (options.isPartial) {
+    appendModulePreloads(res.headers, clientEntries, clientImportMap());
   }
   return res;
 }
@@ -146,35 +144,29 @@ function bindHtml(
       status: opts?.status ?? defaultStatus,
       cache: opts?.cache,
       isPartial,
-      req: ctx.req,
     });
   };
 }
 
-function bindPatches(ctx: RequestCtx): SealPatches {
+function bindPatches(_ctx: RequestCtx): SealPatches {
   return (list, opts?: SealOptions) =>
     seal(renderPatches(list), {
       status: opts?.status ?? 200,
       cache: opts?.cache,
       isPartial: true,
-      req: ctx.req,
     });
 }
 
-function bindFatalHtml(req: Request): SealHtml {
+function bindFatalHtml(): SealHtml {
   return (page, opts?: SealOptions) =>
     seal(page, {
       status: opts?.status ?? 500,
       cache: opts?.cache,
       isPartial: false,
-      req,
     });
 }
 
-async function lastResort(
-  req: Request,
-  isPartial: boolean,
-): Promise<Response> {
+async function lastResort(isPartial: boolean): Promise<Response> {
   if (isPartial) {
     return new Response("", { status: 500 });
   }
@@ -182,7 +174,7 @@ async function lastResort(
     return new Response(DEFAULT_FATAL_BODY, { status: 500 });
   }
   try {
-    return await compiled.fatal({ html: bindFatalHtml(req) });
+    return await compiled.fatal({ html: bindFatalHtml() });
   } catch (thrown) {
     Logger.error(["routing"], "fatal recovering from", thrown);
     return new Response(DEFAULT_FATAL_BODY, { status: 500 });
@@ -203,7 +195,7 @@ async function recover(
   if (isPartial) {
     try {
       if (!boundary?.error) {
-        return await lastResort(ctx.req, true);
+        return await lastResort(true);
       }
       return await boundary.error({
         ctx,
@@ -212,7 +204,7 @@ async function recover(
       });
     } catch (nextThrown) {
       Logger.error(["ssr"], "render recovering from", nextThrown);
-      return await lastResort(ctx.req, true);
+      return await lastResort(true);
     }
   }
 
@@ -239,7 +231,7 @@ async function recover(
     }
   }
 
-  return await lastResort(ctx.req, isPartial);
+  return await lastResort(isPartial);
 }
 
 async function runHandler(
@@ -333,69 +325,23 @@ async function executeNotFound(
 async function runPipeline(
   ctx: RequestCtx,
   middleware: MatchedRoute<Record<string, unknown>>["middleware"],
-  _isPartial: boolean,
   runTerminal: () => Promise<Response>,
 ): Promise<Response> {
-  return await runWithNestedRenderStore(ctx.state, async () => {
-    let index = -1;
-    const dispatch = async (i: number): Promise<Response> => {
-      if (i <= index) {
-        throw new Error("next() called multiple times");
-      }
-      index = i;
-      const mw = middleware[i];
-      if (mw) {
-        const res = await mw({ ctx, next: () => dispatch(i + 1) });
-        return new Response(res.body, res);
-      }
-      const res = await runTerminal();
-      return new Response(res.body, res);
-    };
-    return await dispatch(0);
-  });
-}
-
-export async function runRoute(
-  req: Request,
-  options: {
-    isPartial: boolean;
-    state: Partial<Record<string, unknown>>;
-    recoverMiss: boolean;
-  },
-): Promise<Response | null> {
-  const url = new URL(req.url);
-  const matched = match(compiled, url.pathname);
-  if (!matched) {
-    if (!options.recoverMiss) {
-      return null;
+  let index = -1;
+  const dispatch = async (i: number): Promise<Response> => {
+    if (i <= index) {
+      throw new Error("next() called multiple times");
     }
-    const miss = matchMiss(compiled, url.pathname);
-    const ctx: RequestCtx = {
-      req,
-      url,
-      params: miss.params,
-      state: options.state,
-    };
-    return await runPipeline(
-      ctx,
-      miss.middleware,
-      options.isPartial,
-      () => executeNotFound(ctx, miss.boundary, options.isPartial),
-    );
-  }
-
-  const ctx: RequestCtx = {
-    req,
-    url,
-    params: matched.params,
-    state: options.state,
+    index = i;
+    const mw = middleware[i];
+    if (mw) {
+      const res = await mw({ ctx, next: () => dispatch(i + 1) });
+      return new Response(res.body, res);
+    }
+    const res = await runTerminal();
+    return new Response(res.body, res);
   };
-  return await runPipeline(
-    ctx,
-    matched.middleware,
-    options.isPartial,
-    () => executeMatched(ctx, matched, options.isPartial),
-  );
+  return await dispatch(0);
 }
 
 function isFrameworkHandler(handler: unknown): boolean {
@@ -478,22 +424,40 @@ export async function handle(
   req: Request,
 ) {
   const isPartial = req.headers.has(REQUEST_HEADERS.SLOT);
-  const res = await runWithRenderStore(
-    req,
-    async () => {
-      try {
-        const out = await runRoute(req, {
-          isPartial,
+  const res = await runWithClientCompileContext(async () => {
+    try {
+      const url = new URL(req.url);
+      const matched = match(compiled, url.pathname);
+      if (!matched) {
+        const miss = matchMiss(compiled, url.pathname);
+        const ctx: RequestCtx = {
+          req,
+          url,
+          params: miss.params,
           state: {},
-          recoverMiss: true,
-        });
-        return out!;
-      } catch (thrown) {
-        Logger.error(["routing"], "handle recovering from", thrown);
-        return await lastResort(req, isPartial);
+        };
+        return await runPipeline(
+          ctx,
+          miss.middleware,
+          () => executeNotFound(ctx, miss.boundary, isPartial),
+        );
       }
-    },
-  );
+      const ctx: RequestCtx = {
+        req,
+        url,
+        params: matched.params,
+        state: {},
+      };
+      return await runPipeline(
+        ctx,
+        matched.middleware,
+        () => executeMatched(ctx, matched, isPartial),
+      );
+    } catch (thrown) {
+      Logger.error(["routing"], "handle recovering from", thrown);
+      return await lastResort(isPartial);
+    }
+  });
   if (req.method === "HEAD") {
     return await withoutContent(res);
   }

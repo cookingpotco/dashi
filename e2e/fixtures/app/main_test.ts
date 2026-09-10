@@ -51,19 +51,19 @@ Deno.test("app fixture", async (t) => {
       });
 
       await t.step(
-        "eager and nested slot scripts stamp the page",
+        "stamped and nested slot scripts stamp the page",
         async () => {
           await page.goto(`${app.origin}/embed`);
           const result = await page.evaluate(async () => {
-            await customElements.whenDefined("eager-el");
+            await customElements.whenDefined("stamped-el");
             await customElements.whenDefined("nested-el");
             return {
-              eager: document.querySelector("eager-el")?.textContent,
+              stamped: document.querySelector("stamped-el")?.textContent,
               nested: document.querySelector("nested-el")?.textContent,
             };
           });
           assertEquals(result, {
-            eager: "eager-ran",
+            stamped: "stamped-ran",
             nested: "nested-ran",
           });
         },

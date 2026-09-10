@@ -40,7 +40,7 @@ interpolated HTML, and its request path runs concurrently under `Deno.serve`.
   already visible in rendered HTML, or when the right coverage is an HTTP case
   in `int-tests/` or a browser case in `e2e/`. Do not ask for a one-off harness;
   ask for a case there.
-- **An `int-tests/` case of client behaviour** (custom element upgrade, fragment
+- **An `int-tests/` case of client behaviour** (custom element upgrade, slot
   swap, form intercept, History API). That is `e2e/`. HTTP cases stay on the
   response; they cannot see whether the element upgraded.
 - **`@astral/astral` as a framework runtime dependency.** It is a test
@@ -98,7 +98,7 @@ cannot see project rules.
   files are `/_dashi/client/` via a reserved table route (flat
   `/_dashi/client/<name>-<hash>.js`). Relative imports are rewritten to the
   bundler path; the import map is bundler path → that public URL. Documents get
-  one import map; a module script is added only when a host rendered. A lazy
+  one import map; a module script is added only when a host rendered. A route
   slot `import()`s its `Link` modulepreloads before swap. `staticFile` is
   app-mounted disk files. Flag a second include, bundle, or inject path.
   `/_dashi/*` is reserved. `client/mod.ts` is the compiler;

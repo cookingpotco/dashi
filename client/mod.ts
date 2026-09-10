@@ -2,7 +2,7 @@ import { type Element, jsx, jsxTemplate } from "../jsx-runtime/mod.ts";
 import { Logger } from "../logging/mod.ts";
 import { cacheControl, CacheStrategy } from "../caching/mod.ts";
 import { DASHI_PREFIX, type ReadArgs } from "../shared/mod.ts";
-import { getRenderStore, inRender } from "../ssr/mod.ts";
+import { getClientCompileContext, inRender } from "../ssr/mod.ts";
 
 /** Reserved URL prefix for compiled client modules. */
 const CLIENT_PREFIX = `${DASHI_PREFIX}/client`;
@@ -37,7 +37,7 @@ function recordEntry(href: string): void {
   if (path === undefined) {
     throw new Error(`client module was not compiled: ${href}`);
   }
-  getRenderStore().clientEntries.add(path);
+  getClientCompileContext().clientEntries.add(path);
 }
 
 /**

@@ -159,7 +159,7 @@ export function embedFragMiss(
 ) {
   return html(
     <div id="embed-miss">
-      <RouteSlot src="/no-such-fragment" />
+      <RouteSlot src="/no-such-slot" />
     </div>,
   );
 }

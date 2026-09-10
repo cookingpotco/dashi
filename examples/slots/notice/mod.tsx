@@ -3,7 +3,7 @@ import { patch, type ReadArgs, type WriteArgs } from "dashi";
 export function Notice() {
   return (
     <div id="notice">
-      <p>Try dismiss — it removes this fragment.</p>
+      <p>Try dismiss — it removes this notice.</p>
       <form method="POST" action="/notice">
         <button type="submit">Dismiss</button>
       </form>

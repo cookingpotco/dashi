@@ -20,10 +20,9 @@ with `route()` on the root table under the shared root wraps. Use a `group()`
 only when the path needs a prefix or wraps (layouts, middleware, `notFound`).
 One request, several asserts: status, headers, then at most one of `html` or
 `json`. `html` covers parsed DOM `select` plus raw `bodyIncludes` /
-`bodyExcludes` (escaping, DOCTYPE, leftover `{{fragment:` markers). `json` is
-the expected parsed object. Raw top-level `bodyIncludes` / `bodyExcludes` are
-for responses that are neither (404, 405, empty 303). `runCase` parses HTML only
-when `html` is set.
+`bodyExcludes` (escaping, DOCTYPE). `json` is the expected parsed object. Raw
+top-level `bodyIncludes` / `bodyExcludes` are for responses that are neither
+(404, 405, empty 303). `runCase` parses HTML only when `html` is set.
 
 `runCase` executes that data. Flows that are not one request (cookies,
 concurrent requests) use `boot` / `App.fetch` from `mod.ts` inside a `t.step`.
@@ -39,7 +38,7 @@ one-path page is a page module bound on the root table. `group()` is only a
 prefixed subtree or a wrap shell. Put a new folder next to the fixture only when
 the behaviour cannot live on that app. Do not add a fixture as its own workspace
 member. Extra fixtures (`cors`, `error-defaults`, `error-fallback-response`,
-`fragment-depth`) are a small `main.ts` or `main.tsx` because they cannot share
+`client-reserved`) are a small `main.ts` or `main.tsx` because they cannot share
 the main app's `serve()` table; they stay inline `serve(callback)` harnesses.
 The test file imports `start` and passes it to `boot`. `deno task test:int`
 picks up every `*_test.ts` under `int-tests/`.

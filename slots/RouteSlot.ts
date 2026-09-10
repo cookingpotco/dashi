@@ -5,12 +5,13 @@ import {
   jsx,
 } from "../jsx-runtime/mod.ts";
 import { client } from "../client/mod.ts";
-import { getRenderStore } from "../ssr/mod.ts";
 
 const RouteSlotElement = client.element(
   "route-slot",
   new URL("./route_slot_client.ts", import.meta.url),
 );
+
+const SLOT_SRC_BASE = "http://local";
 
 /** @internal */
 interface BaseRouteSlotProps extends HTMLAttributes {
@@ -28,7 +29,8 @@ interface BaseRouteSlotProps extends HTMLAttributes {
 interface ConnectSlotProps extends BaseRouteSlotProps {
   /** Fetch after the host connects. Omitted is `"connect"`. */
   fetchWhen?: "connect";
-  fallback?: never;
+  /** Shown until a successful body or a nonempty error body replaces it. */
+  fallback?: DashiNode;
 }
 
 /** @internal */
@@ -42,8 +44,8 @@ interface VisibleSlotProps extends BaseRouteSlotProps {
 /** @internal */
 type RouteSlotProps = ConnectSlotProps | VisibleSlotProps;
 
-function resolveSlotSrc(src: string, base: string): string {
-  const url = new URL(src, base);
+function resolveSlotSrc(src: string): string {
+  const url = new URL(src, SLOT_SRC_BASE);
   return `${url.pathname}${url.search}`;
 }
 
@@ -54,11 +56,11 @@ function resolveSlotSrc(src: string, base: string): string {
  * @param src Path to fetch, like `/todos`.
  * @param fetchWhen `"connect"` fetches after connect. `"visible"` waits for
  * first intersection; `fallback` is required.
- * @param fallback Shown while a visible slot is loading.
+ * @param fallback Shown while the slot is loading.
  *
  * @example
  * ```tsx
- * <RouteSlot src="/todos" />
+ * <RouteSlot src="/todos" fallback={<p>Loading…</p>} />
  * <RouteSlot
  *   src="/demo"
  *   fetchWhen="visible"
@@ -69,7 +71,7 @@ function resolveSlotSrc(src: string, base: string): string {
 export function RouteSlot(
   { src, fetchWhen, fallback, ...rest }: RouteSlotProps,
 ): Element {
-  const identity = resolveSlotSrc(src, getRenderStore().pageReq.url);
+  const identity = resolveSlotSrc(src);
   if (fetchWhen === "visible") {
     return jsx(RouteSlotElement, {
       src: identity,
@@ -78,5 +80,9 @@ export function RouteSlot(
       children: fallback,
     });
   }
-  return jsx(RouteSlotElement, { src: identity, ...rest });
+  return jsx(RouteSlotElement, {
+    src: identity,
+    ...rest,
+    children: fallback,
+  });
 }

@@ -1,5 +1,5 @@
 import { type ReadArgs, RouteSlot } from "dashi";
-import { fetchActivity, FragmentContent } from "../fragment/mod.tsx";
+import { DeferredContent, fetchActivity } from "../deferred/mod.tsx";
 import { Notice } from "../notice/mod.tsx";
 import { CurrentTime } from "../time/mod.tsx";
 import { TodoCount, TodoList } from "../todos/mod.tsx";
@@ -36,9 +36,9 @@ export async function Home({ html }: ReadArgs) {
       <div id="todos-root">
         <TodoList />
       </div>
-      <FragmentContent activity={activity} />
+      <DeferredContent activity={activity} />
       <RouteSlot
-        src="/fragment"
+        src="/deferred"
         fetchWhen="visible"
         fallback={<span id="123">Loading...</span>}
       />

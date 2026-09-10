@@ -6,7 +6,7 @@ export async function fetchActivity(): Promise<string> {
   return json.activity;
 }
 
-export function FragmentContent({ activity }: { activity: string }) {
+export function DeferredContent({ activity }: { activity: string }) {
   return (
     <div>
       I can be rendered inline during SSR OR on the client!
@@ -16,7 +16,7 @@ export function FragmentContent({ activity }: { activity: string }) {
   );
 }
 
-export async function Fragment({ html }: ReadArgs) {
+export async function deferred({ html }: ReadArgs) {
   const activity = await fetchActivity();
-  return html(<FragmentContent activity={activity} />);
+  return html(<DeferredContent activity={activity} />);
 }

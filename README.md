@@ -98,7 +98,8 @@ Open http://localhost:8000. Running without permission flags dies on
 
 Same-request UI is a component import. A `<RouteSlot src>` GETs that route later
 and swaps the slot. `fetchWhen="visible"` waits for the first viewport
-intersection (`fallback` is required). Omit `fetchWhen` to fetch after connect.
+intersection (`fallback` is required). Omit `fetchWhen` to fetch after connect;
+`fallback` is optional on connect slots.
 
 ```tsx
 <RouteSlot src="/todos" />

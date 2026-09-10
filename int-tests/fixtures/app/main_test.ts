@@ -84,7 +84,7 @@ const appCases: IntegrationTestCase[] = [
           exists: true,
           attr: { src: "/lazy-nest" },
         },
-        { selector: "#nested-frag", exists: false },
+        { selector: "#nested-slot", exists: false },
       ],
     },
   },
@@ -93,13 +93,13 @@ const appCases: IntegrationTestCase[] = [
     request: { path: "/lazy-nest-embed" },
     status: 200,
     html: {
-      bodyExcludes: ["nested-fragment-body"],
+      bodyExcludes: ["nested-slot-body"],
       select: [
         {
           selector: 'route-slot[fetchwhen="visible"] #lazy-nest-fallback',
           text: "Loading nest...",
         },
-        { selector: "#nested-frag", exists: false },
+        { selector: "#nested-slot", exists: false },
       ],
     },
   },
@@ -113,7 +113,7 @@ const appCases: IntegrationTestCase[] = [
     html: {
       bodyExcludes: ["<!DOCTYPE html>"],
       select: [
-        { selector: "#nested-frag", text: "nested-fragment-body" },
+        { selector: "#nested-slot", text: "nested-slot-body" },
       ],
     },
   },
@@ -227,7 +227,7 @@ const appCases: IntegrationTestCase[] = [
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
     },
     html: {
-      bodyExcludes: ["<!DOCTYPE html>", "{{fragment:"],
+      bodyExcludes: ["<!DOCTYPE html>"],
       select: [
         {
           selector: 'dashi-patch[kind="append"]',
@@ -279,7 +279,7 @@ const appCases: IntegrationTestCase[] = [
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
     },
     html: {
-      bodyExcludes: ["<!DOCTYPE html>", "{{fragment:"],
+      bodyExcludes: ["<!DOCTYPE html>"],
       select: [
         {
           selector: 'dashi-patch[kind="append"]',
@@ -1093,7 +1093,7 @@ const errorCases: Array<IntegrationTestCase & { stillServes?: boolean }> = [
       select: [
         { selector: "#embed-miss", exists: true },
         {
-          selector: 'route-slot[src="/no-such-fragment"]',
+          selector: 'route-slot[src="/no-such-slot"]',
           exists: true,
         },
         { selector: "#not-found", exists: false },
