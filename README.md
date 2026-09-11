@@ -243,8 +243,9 @@ export const api = group("/api", ({ route }) => ({
 
 Minimal working examples, not best practice:
 
-- [`examples/hello-world`](examples/hello-world): routes, layouts, middleware, a
-  form
+- [`examples/starter`](examples/starter): routes, layouts, middleware, error
+  pages, Tailwind. This is what `deno create` scaffolds;
+  `create/generated_files.ts` is generated from it with `deno task create:gen`.
 - [`examples/slots`](examples/slots): route slots, patches, component imports
 
 ## Development
@@ -262,12 +263,15 @@ deno task test
 deno task test:int
 deno task test:e2e
 deno task test:e2e:headed
+deno task create:gen:check
 ```
 
 CI runs the same commands on every pull request and every push to `main`, except
-`test:e2e:headed`, which is local-only. Unit tests stay on the Test check; HTTP
-cases are the Integration check; browser cases are the E2E check. A version bump
-on `main` is the release; see [RELEASING.md](RELEASING.md).
+`test:e2e:headed`, which is local-only. After editing `examples/starter` or
+`create/overlay`, run `deno task create:gen` and commit
+`create/generated_files.ts`.
+
+See [RELEASING.md](RELEASING.md).
 
 ## Contributing
 
