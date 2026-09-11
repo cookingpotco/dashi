@@ -37,7 +37,7 @@ serve(({ route }) => ({
 
 - **Route slots.** Client-fetch an explicit route with `<RouteSlot src>`.
   `fetchWhen="visible"` waits for first intersection (`fallback` required); omit
-  `fetchWhen` to fetch when connected.
+  `fetchWhen` to fetch after the host connects.
 - **Patches.** In response to form submissions or manual API calls, handlers
   seal a patch list with `patches()` — `patch.update`, `patch.replace`, and
   friends target `#id` holes; `patch.refresh` re-GETs every matching slot.
@@ -71,8 +71,9 @@ Open http://localhost:8000.
 
 Same-request UI is a component import. A `<RouteSlot src>` GETs that route later
 and swaps the slot. `fetchWhen="visible"` waits for the first viewport
-intersection (`fallback` is required). Omit `fetchWhen` to fetch when connected;
-`fallback` is optional on connected slots.
+intersection (`fallback` is required). Omit `fetchWhen` to fetch after the host
+connects; `fallback` is optional then. `patch.refresh` may re-GET a visible slot
+before it intersects.
 
 ```tsx
 <RouteSlot src="/todos" />
@@ -139,8 +140,8 @@ serve(({ route }) => ({
 }));
 ```
 
-A slot GET replaces the host that asked with markup. `patch.update` / `replace`
-/ `append` / `prepend` / `before` / `after` / `remove` each take a `#${string}`
+A slot GET fills the host that asked (`innerHTML`). `patch.update` / `replace` /
+`append` / `prepend` / `before` / `after` / `remove` each take a `#${string}`
 id. `refresh` accepts only a route and re-GETs every `<route-slot src="…">`.
 `update` replaces children; `replace` swaps the element itself. `before` /
 `after` sit beside the target. Use `update` or `replace` when the write has the

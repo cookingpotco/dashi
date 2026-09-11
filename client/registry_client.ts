@@ -87,7 +87,8 @@ export async function submitWrite(intent: SubmitIntent): Promise<boolean> {
     }
     location.assign(res.url);
     return false;
-  } catch {
+  } catch (err) {
+    console.error("dashi: write failed", err);
     return false;
   }
 }

@@ -94,7 +94,7 @@ export function jsonError(): Response {
 }
 
 export function compactError({ html }: ErrorArgs<AppState>) {
-  return html(<p id="frag-error">frag-error-ui</p>);
+  return html(<p id="slot-error">slot-error-ui</p>);
 }
 
 export function responseError(): Response {
@@ -114,52 +114,23 @@ export function throwingMw(): Response {
   throw new Error("middleware-boom");
 }
 
-export function embedFragThrow(
+export function embedSlotCases(
   { html }: ReadArgs<{ state: AppState }>,
 ) {
   return html(
-    <div id="embed-throw">
-      <RouteSlot src="/frag-throw" />
-    </div>,
-  );
-}
-
-export function embedFragError(
-  { html }: ReadArgs<{ state: AppState }>,
-) {
-  return html(
-    <div id="embed-error">
-      <RouteSlot src="/frag-error" />
-    </div>,
-  );
-}
-
-export function embedFragErrorResponse(
-  { html }: ReadArgs<{ state: AppState }>,
-) {
-  return html(
-    <div id="embed-error-res">
-      <RouteSlot src="/frag-error-response" />
-    </div>,
-  );
-}
-
-export function embedFragErrorThrows(
-  { html }: ReadArgs<{ state: AppState }>,
-) {
-  return html(
-    <div id="embed-error-throws">
-      <RouteSlot src="/frag-error-throws" />
-    </div>,
-  );
-}
-
-export function embedFragMiss(
-  { html }: ReadArgs<{ state: AppState }>,
-) {
-  return html(
-    <div id="embed-miss">
-      <RouteSlot src="/no-such-slot" />
+    <div id="embed-slot-cases">
+      <section id="embed-miss">
+        <RouteSlot src="/no-such-slot" />
+      </section>
+      <section id="embed-throw">
+        <RouteSlot src="/slot-throw" />
+      </section>
+      <section id="embed-error-res">
+        <RouteSlot src="/slot-error-response" />
+      </section>
+      <section id="embed-error-throws">
+        <RouteSlot src="/slot-error-throws" />
+      </section>
     </div>,
   );
 }

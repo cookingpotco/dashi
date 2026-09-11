@@ -96,7 +96,7 @@ Deno.test("app fixture", async (t) => {
           const result = await page.evaluate(async () => {
             await customElements.whenDefined("route-slot");
             const start = Date.now();
-            while (document.getElementById("frag-error") === null) {
+            while (document.getElementById("slot-error") === null) {
               if (Date.now() - start > 5000) {
                 throw new Error("error slot UI did not arrive");
               }
@@ -104,13 +104,13 @@ Deno.test("app fixture", async (t) => {
             }
             const host = document.querySelector("route-slot");
             return {
-              error: document.getElementById("frag-error")?.textContent,
+              error: document.getElementById("slot-error")?.textContent,
               chrome: document.getElementById("fallback-chrome") !== null,
               hostHasHtml: host?.querySelector("html") !== null,
             };
           });
           assertEquals(result, {
-            error: "frag-error-ui",
+            error: "slot-error-ui",
             chrome: false,
             hostHasHtml: false,
           });
@@ -134,7 +134,7 @@ Deno.test("app fixture", async (t) => {
           }
           const host = document.querySelector("route-slot");
           return {
-            error: document.getElementById("frag-error") !== null,
+            error: document.getElementById("slot-error") !== null,
             chrome: document.getElementById("fallback-chrome") !== null,
             hostHasHtml: host?.querySelector("html") !== null,
             body: host?.textContent ?? "",

@@ -69,6 +69,10 @@ exist at runtime as an object).
 An object shape is an `interface`. `type` is for unions, aliases, mapped
 types, and everything that is not a single object shape.
 
+When a public prop is removed, delete it from the type. Do not keep it as
+`undefined`, `never`, or an optional key whose only job is to exclude a
+literal.
+
 ## Type assertions
 
 Do not assert (`as`) to silence the checker. An assertion is allowed when
@@ -102,7 +106,7 @@ bundler path. The import map is bundler path → flat hashed URL.
 Documents get one `<script type="importmap">` for that graph and always ship
 the forms client; other module scripts are added only when that host rendered.
 A route slot
-(`fetchWhen="connected"` after connect, `fetchWhen="visible"` on first
+(omit `fetchWhen` after connect, `fetchWhen="visible"` on first
 intersection) `import()`s its `Link` modulepreloads before swap.
 `DASHI_MINIFY_CLIENT=1` minifies the bundle; `deno task dev` sets it to `0`.
 `staticFile` is app-mounted disk files. `/_dashi/*` is reserved.

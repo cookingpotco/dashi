@@ -12,7 +12,7 @@ const RouteSlotElement = client.element(
 );
 
 /** @internal */
-interface BaseRouteSlotProps extends HTMLAttributes {
+interface BaseRouteSlotProps extends Omit<HTMLAttributes, "children"> {
   /**
    * Slot content is fetched from this route with `X-Slot` on GET.
    *
@@ -21,18 +21,12 @@ interface BaseRouteSlotProps extends HTMLAttributes {
    * `patch.refresh` to update `#id` holes or re-GET every matching slot.
    */
   src: `/${string}`;
-}
-
-/** @internal */
-interface ConnectedSlotProps extends BaseRouteSlotProps {
-  /** Fetch after the host connects. Omitted is `"connected"`. */
-  fetchWhen?: "connected";
   /** Shown until a successful body or a nonempty error body replaces it. */
   fallback?: DashiNode;
 }
 
 /** @internal */
-interface VisibleSlotProps extends BaseRouteSlotProps {
+interface VisibleSlotProps extends Omit<BaseRouteSlotProps, "fallback"> {
   /** Fetch on first viewport intersection. `fallback` is required. */
   fetchWhen: "visible";
   /** Shown until a successful body or a nonempty error body replaces it. */
@@ -40,20 +34,24 @@ interface VisibleSlotProps extends BaseRouteSlotProps {
 }
 
 /** @internal */
-type RouteSlotProps = ConnectedSlotProps | VisibleSlotProps;
+type RouteSlotProps = BaseRouteSlotProps | VisibleSlotProps;
 
 /**
- * Client-fetch an explicit route into a slot. `fetchWhen` is `"connected"`
- * (default) or `"visible"`; `fallback` is required when `"visible"`.
+ * Client-fetch an explicit route into a slot. Omit `fetchWhen` to fetch after
+ * connect; `fetchWhen="visible"` waits for first intersection and requires
+ * `fallback`.
+ *
+ * A `patch.refresh` on the same route may fire before a visible slot
+ * intersects; the slot still fetches on connect when `fetchWhen` is omitted.
  *
  * @param src Path to fetch, like `/todos`.
- * @param fetchWhen `"connected"` fetches after connect. `"visible"` waits for
- * first intersection; `fallback` is required.
+ * @param fetchWhen `"visible"` waits for first intersection; `fallback` is
+ * required.
  * @param fallback Shown while the slot is loading.
  *
  * @example
  * ```tsx
- * <RouteSlot src="/todos" fallback={<p>Loading…</p>} />
+ * <RouteSlot src="/todos" />
  * <RouteSlot
  *   src="/demo"
  *   fetchWhen="visible"
@@ -61,17 +59,20 @@ type RouteSlotProps = ConnectedSlotProps | VisibleSlotProps;
  * />
  * ```
  */
-export function RouteSlot(
-  { src, fetchWhen, fallback, ...rest }: RouteSlotProps,
-): Element {
-  if (fetchWhen === "visible") {
+export function RouteSlot(props: BaseRouteSlotProps): Element;
+/** `fetchWhen="visible"`; `fallback` is required. */
+export function RouteSlot(props: VisibleSlotProps): Element;
+export function RouteSlot(props: RouteSlotProps): Element {
+  if ("fetchWhen" in props && props.fetchWhen === "visible") {
+    const { src, fetchWhen, fallback, ...rest } = props;
     return jsx(RouteSlotElement, {
       src,
-      fetchWhen: "visible",
+      fetchWhen,
       ...rest,
       children: fallback,
     });
   }
+  const { src, fallback, ...rest } = props;
   return jsx(RouteSlotElement, {
     src,
     ...rest,
