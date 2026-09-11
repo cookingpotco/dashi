@@ -21,7 +21,6 @@ interface BaseRouteSlotProps extends Omit<HTMLAttributes, "children"> {
    * `patch.refresh` to update `#id` holes or re-GET every matching slot.
    */
   src: `/${string}`;
-  fetchWhen?: undefined;
   /** Shown until a successful body or a nonempty error body replaces it. */
   fallback?: DashiNode;
 }
@@ -37,6 +36,9 @@ interface VisibleSlotProps extends Omit<HTMLAttributes, "children"> {
 
 /** @internal */
 type RouteSlotProps = BaseRouteSlotProps | VisibleSlotProps;
+
+export function RouteSlot(props: BaseRouteSlotProps): Element;
+export function RouteSlot(props: VisibleSlotProps): Element;
 
 /**
  * Client-fetch an explicit route into a slot. Omit `fetchWhen` to fetch after
@@ -61,17 +63,17 @@ type RouteSlotProps = BaseRouteSlotProps | VisibleSlotProps;
  * />
  * ```
  */
-export function RouteSlot(
-  { src, fetchWhen, fallback, ...rest }: RouteSlotProps,
-): Element {
-  if (fetchWhen === "visible") {
+export function RouteSlot(props: RouteSlotProps): Element {
+  if ("fetchWhen" in props && props.fetchWhen === "visible") {
+    const { src, fetchWhen, fallback, ...rest } = props;
     return jsx(RouteSlotElement, {
       src,
-      fetchWhen: "visible",
+      fetchWhen,
       ...rest,
       children: fallback,
     });
   }
+  const { src, fallback, ...rest } = props;
   return jsx(RouteSlotElement, {
     src,
     ...rest,
