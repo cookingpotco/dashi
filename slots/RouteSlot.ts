@@ -36,9 +36,6 @@ interface VisibleSlotProps extends Omit<BaseRouteSlotProps, "fallback"> {
 /** @internal */
 type RouteSlotProps = BaseRouteSlotProps | VisibleSlotProps;
 
-export function RouteSlot(props: BaseRouteSlotProps): Element;
-export function RouteSlot(props: VisibleSlotProps): Element;
-
 /**
  * Client-fetch an explicit route into a slot. Omit `fetchWhen` to fetch after
  * connect; `fetchWhen="visible"` waits for first intersection and requires
@@ -62,6 +59,9 @@ export function RouteSlot(props: VisibleSlotProps): Element;
  * />
  * ```
  */
+export function RouteSlot(props: BaseRouteSlotProps): Element;
+/** `fetchWhen="visible"`; `fallback` is required. */
+export function RouteSlot(props: VisibleSlotProps): Element;
 export function RouteSlot(props: RouteSlotProps): Element {
   if ("fetchWhen" in props && props.fetchWhen === "visible") {
     const { src, fetchWhen, fallback, ...rest } = props;
