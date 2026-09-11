@@ -20,6 +20,6 @@ export async function patchWrite({ ctx, patches }: WriteArgs) {
     ? title.trim()
     : "empty";
   return patches([
-    patch.update("#status", <p id="status">{text}</p>),
+    patch.update("#status", <>{text}</>),
   ]);
 }
