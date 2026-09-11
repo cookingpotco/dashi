@@ -622,6 +622,106 @@ Deno.test("app fixture", async (t) => {
         });
         assertEquals(result, { tag: "input", value: "x" });
       });
+
+      await t.step(
+        "route-slot rejects a protocol-relative src at construction",
+        async () => {
+          await page.goto(`${app.origin}/embed`);
+          await page.evaluate(() => customElements.whenDefined("route-slot"));
+          const result = await page.evaluate(async () => {
+            const wrap = document.createElement("div");
+            wrap.innerHTML =
+              '<route-slot src="//evil.example/frag"><span id="evil-fallback">wait</span></route-slot>';
+            document.body.append(...wrap.childNodes);
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            const host = document.querySelector(
+              'route-slot[src="//evil.example/frag"]',
+            );
+            const fetchedEvil = performance.getEntriesByType("resource").some(
+              (entry) => entry.name.includes("evil.example"),
+            );
+            return {
+              fallback: document.getElementById("evil-fallback")?.textContent ??
+                null,
+              loaded: host?.querySelector("#slot-inside")?.textContent ?? null,
+              fetchedEvil,
+            };
+          });
+          assertEquals(result, {
+            fallback: "wait",
+            loaded: null,
+            fetchedEvil: false,
+          });
+        },
+      );
+
+      await t.step(
+        "route-slot keeps fallback when the response is not HTML",
+        async () => {
+          await page.goto(`${app.origin}/trust-slots`);
+          const result = await page.evaluate(async () => {
+            await customElements.whenDefined("route-slot");
+            const jsonHost = document.querySelector(
+              'route-slot[src="/slot-json"]',
+            );
+            const start = Date.now();
+            while (Date.now() - start < 5000) {
+              const fetched = performance.getEntriesByType("resource").some(
+                (entry) => entry.name.includes("/slot-json"),
+              );
+              const busy = jsonHost?.getAttribute("aria-busy");
+              if (fetched && busy !== "true") {
+                break;
+              }
+              await new Promise((resolve) => setTimeout(resolve, 25));
+            }
+            return {
+              good: document.getElementById("slot-inside")?.textContent ?? null,
+              jsonFallback:
+                document.getElementById("json-fallback")?.textContent ?? null,
+              jsonInside: jsonHost?.querySelector("#slot-inside")
+                ?.textContent ?? null,
+            };
+          });
+          assertEquals(result, {
+            good: "inside",
+            jsonFallback: "json-fallback",
+            jsonInside: null,
+          });
+        },
+      );
+
+      await t.step(
+        "route-slot keeps fallback when the response redirects cross-origin",
+        async () => {
+          await page.goto(`${app.origin}/trust-slots`);
+          const result = await page.evaluate(async () => {
+            await customElements.whenDefined("route-slot");
+            const start = Date.now();
+            while (Date.now() - start < 2000) {
+              const fetched = performance.getEntriesByType("resource").some(
+                (entry) => entry.name.includes("/slot-redirect-away"),
+              );
+              if (fetched) {
+                break;
+              }
+              await new Promise((resolve) => setTimeout(resolve, 25));
+            }
+            return {
+              redirectFallback:
+                document.getElementById("redirect-fallback")?.textContent ??
+                  null,
+              redirectInside: document.querySelector(
+                'route-slot[src="/slot-redirect-away"] #slot-inside',
+              )?.textContent ?? null,
+            };
+          });
+          assertEquals(result, {
+            redirectFallback: "redirect-fallback",
+            redirectInside: null,
+          });
+        },
+      );
     },
   );
 });

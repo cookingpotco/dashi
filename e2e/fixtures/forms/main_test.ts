@@ -421,6 +421,21 @@ Deno.test("forms fixture", async (t) => {
       );
 
       await t.step(
+        "a JSON write with embedded patches does not apply patches",
+        async () => {
+          await prepareHosted(page, app.origin, "/entries");
+          await Promise.all([
+            page.waitForNavigation(),
+            clickId(page, "json-patch-submit"),
+          ]);
+          const persistent = await page.evaluate(() =>
+            document.getElementById("persistent")?.textContent ?? null
+          );
+          assertEquals(persistent !== "pwned", true);
+        },
+      );
+
+      await t.step(
         "a non-HTML write response does a real GET load of the final URL",
         async () => {
           await prepareHosted(page, app.origin, "/entries");
