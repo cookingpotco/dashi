@@ -157,7 +157,7 @@ function element(
 export const client = { module, element };
 
 const FORMS_CLIENT = new URL("../forms/submit_client.ts", import.meta.url);
-registered.set(FORMS_CLIENT.href, FORMS_CLIENT);
+module(FORMS_CLIENT);
 
 /** @internal */
 export function recordFormsClientEntry(): void {
