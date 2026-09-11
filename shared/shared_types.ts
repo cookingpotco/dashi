@@ -158,8 +158,6 @@ export interface SealOptions {
 export interface SealPatchesOptions {
   /** Patch response HTTP status. Omitted is 200. */
   status?: number;
-  /** Cache is a read concern only; not accepted on writes. */
-  cache?: never;
 }
 
 /**

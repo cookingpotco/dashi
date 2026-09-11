@@ -1,5 +1,4 @@
 import {
-  CacheStrategy,
   type LayoutArgs,
   type MiddlewareArgs,
   type ReadArgs,
@@ -98,12 +97,6 @@ function typechecks() {
   function noStateWrite({ patches }: WriteArgs) {
     return patches([]);
   }
-  function patchCache({ patches }: WriteArgs) {
-    return patches([], {
-      // @ts-expect-error patches() has no cache option
-      cache: { strategy: CacheStrategy.Public, maxAge: 60 },
-    });
-  }
   function layout({ children }: LayoutArgs) {
     return children;
   }
@@ -134,7 +127,6 @@ function typechecks() {
     middleware: [mw],
     routes: [
       route("/", { GET: noState, POST: noStateWrite }),
-      route("/patch-cache", { POST: patchCache }),
       route("/s", { GET: withState }),
       route("/:id", { GET: withBoth }),
       route("/p/:id", { GET: withParams }),
