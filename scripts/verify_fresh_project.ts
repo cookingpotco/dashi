@@ -31,7 +31,7 @@ function Home({ html }: ReadArgs) {
 
 function TodoList({ error }: { error?: string }) {
   return (
-    <div id="todos-root">
+    <div>
       <ul id="todos">
         {todos.map((todo) => <li>{todo}</li>)}
       </ul>
@@ -45,7 +45,11 @@ function TodoList({ error }: { error?: string }) {
 }
 
 function list({ html }: ReadArgs) {
-  return html(<TodoList />);
+  return html(
+    <div id="todos-root">
+      <TodoList />
+    </div>,
+  );
 }
 
 async function create({ ctx, patches }: WriteArgs) {

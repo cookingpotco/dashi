@@ -1,9 +1,13 @@
 import { type ReadArgs } from "dashi";
 
+export function CurrentTimeText() {
+  return <>Current time: {new Date().toISOString()}</>;
+}
+
 export function CurrentTime() {
   return (
     <span id="current-time">
-      Current time: {new Date().toISOString()}
+      <CurrentTimeText />
     </span>
   );
 }
