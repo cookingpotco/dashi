@@ -1,5 +1,3 @@
-import "./controller_client.ts";
-
 const slotHeaders = new Headers();
 slotHeaders.append("Accept", "text/html");
 slotHeaders.append("X-Slot", "1");

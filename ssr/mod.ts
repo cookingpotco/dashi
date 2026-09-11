@@ -10,6 +10,7 @@ import {
   clientImportMap,
   getClientCompileContext,
   injectModuleScripts,
+  recordFormsClientEntry,
 } from "../client/mod.ts";
 import { renderPatches } from "../patching/mod.ts";
 import type { Element } from "../jsx-runtime/mod.ts";
@@ -84,6 +85,7 @@ function seal(
   const { clientEntries } = getClientCompileContext();
   let body = html;
   if (!options.isPartial) {
+    recordFormsClientEntry();
     body = injectModuleScripts(html, clientEntries, clientImportMap());
   }
   const bytes = new TextEncoder().encode(
