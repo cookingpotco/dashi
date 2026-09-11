@@ -157,7 +157,6 @@ function element(
 export const client = { module, element };
 
 const FORMS_CLIENT = new URL("../forms/submit_client.ts", import.meta.url);
-assertCanRegister();
 registered.set(FORMS_CLIENT.href, FORMS_CLIENT);
 
 /** @internal */
