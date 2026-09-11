@@ -175,6 +175,7 @@ const appCases: IntegrationTestCase[] = [
         {
           selector: "#slot",
           text: "slot-body",
+          attr: { "data-pre": "from-mw" },
         },
         { selector: "h1", exists: false },
       ],

@@ -26,8 +26,7 @@ interface BaseRouteSlotProps extends Omit<HTMLAttributes, "children"> {
 }
 
 /** @internal */
-interface VisibleSlotProps extends Omit<HTMLAttributes, "children"> {
-  src: `/${string}`;
+interface VisibleSlotProps extends Omit<BaseRouteSlotProps, "fallback"> {
   /** Fetch on first viewport intersection. `fallback` is required. */
   fetchWhen: "visible";
   /** Shown until a successful body or a nonempty error body replaces it. */
