@@ -126,4 +126,4 @@ Apps use Tailwind v4 on `className` only. Source `styles.css`. `css.ts` writes
 `generated/styles-<hash>.css` and `styles.json`; the layout imports the JSON.
 Serve hashed CSS at `GET /generated/:file` with `CacheStrategy.Immutable`. Serve
 unhashed files at `GET /static/:file`. No `class`, `tw`, or `css` props and no
-framework CSS pipeline. `deno create jsr:@cookingpot/dashi` emits that tree.
+framework CSS pipeline.

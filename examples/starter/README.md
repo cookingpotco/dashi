@@ -1,4 +1,4 @@
-# my-dashi-app
+# $DASHI_APP_NAME
 
 A [dashi](https://dashi.run) starter app.
 
