@@ -37,7 +37,7 @@ serve(({ route }) => ({
 
 - **Route slots.** Client-fetch an explicit route with `<RouteSlot src>`.
   `fetchWhen="visible"` waits for first intersection (`fallback` required); omit
-  `fetchWhen` to fetch when connected.
+  `fetchWhen` to fetch after the host connects.
 - **Patches.** In response to form submissions or manual API calls, handlers
   seal a patch list with `patches()` — `patch.update`, `patch.replace`, and
   friends target `#id` holes; `patch.refresh` re-GETs every matching slot.
