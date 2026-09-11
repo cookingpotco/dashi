@@ -4,7 +4,7 @@ import { CacheWrap } from "./cache_wrap.tsx";
 import { CacheDefault } from "./cache_default.tsx";
 import { CacheNoStore } from "./cache_nostore.tsx";
 
-export const cacheWrap = group<AppState>(({ route }) => ({
+export const cacheWrap = group<AppState>("/", ({ route }) => ({
   layouts: [CacheWrap],
   routes: [
     route("/cache-default", { GET: CacheDefault }),

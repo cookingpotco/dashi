@@ -201,13 +201,13 @@ function assertReservedClient(
 export function init<
   State extends Record<string, unknown> = Record<string, unknown>,
 >(
-  build: (cb: GroupCallback<"", State>) => GroupFields<State>,
+  build: (cb: GroupCallback<"/", State>) => GroupFields<State>,
   fatal?: Fatal,
 ) {
   // handle() has no State parameter. The table is only invoked with a ctx
   // whose state bag is the object the request created.
   compiled = compile(
-    group((cb: GroupCallback<"", State>) => {
+    group("/", (cb: GroupCallback<"/", State>) => {
       const fields = build(cb);
       return {
         ...fields,

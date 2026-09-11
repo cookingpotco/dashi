@@ -8,7 +8,7 @@ function requireSession({ ctx, next }: MiddlewareArgs<AppState>) {
   return next();
 }
 
-export const gated = group<AppState>(({ route }) => ({
+export const gated = group<AppState>("/", ({ route }) => ({
   middleware: [requireSession],
   routes: [route("/gated", { GET: Gated })],
 }));

@@ -10,7 +10,9 @@ module never calls `route()` or `group()`, and never exports a `{ GET }` bag or
 a function named `GET`.
 
 `group()` is only a **prefixed subtree** (nested URLs, or layouts / middleware /
-`notFound` on that prefix) or a **pathless wrap**. `group("/")` is illegal.
+`notFound` on that prefix) or a **pathless wrap**. `group("/", …)` is the wrap
+(no extra URL segment). `group("/docs", …)` is a prefixed subtree. `serve()` is
+the root table, not a group.
 
 ## File names
 

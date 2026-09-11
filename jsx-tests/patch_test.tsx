@@ -37,7 +37,7 @@ Deno.test("patch target attribute is escaped", () => {
 });
 
 function typechecks() {
-  group(({ route }) => {
+  group("/", ({ route }) => {
     route("/x", {
       // @ts-expect-error GET cannot return patches
       GET: () => [patch.remove("#x")],

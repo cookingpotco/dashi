@@ -17,7 +17,7 @@ import {
 import { leave, list as listSlotLeave } from "../slot_leave.tsx";
 import { rejectWrite } from "../reject_write.tsx";
 
-export const chrome = group(({ route }) => ({
+export const chrome = group("/", ({ route }) => ({
   layouts: [RootLayout],
   error: ErrorPage,
   routes: [

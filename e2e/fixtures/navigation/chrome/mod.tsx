@@ -13,7 +13,7 @@ import { data } from "../data.ts";
 
 export { GoAbout } from "./go_about.tsx";
 
-export const chrome = group<AppState>(({ route }) => ({
+export const chrome = group<AppState>("/", ({ route }) => ({
   layouts: [RootLayout],
   error: ErrorPage,
   routes: [
