@@ -24,6 +24,7 @@ export type {
   SealHtml,
   SealOptions,
   SealPatches,
+  SealPatchesOptions,
   WrapperCtx,
   WriteArgs,
 } from "./shared/mod.ts";

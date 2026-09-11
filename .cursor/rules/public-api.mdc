@@ -16,6 +16,7 @@ Adding a published export is fine. Removing or renaming one is a breaking
 ## `dashi`
 
 `CacheStrategy`, `CacheConfig`, `SealHtml`, `SealPatches`, `SealOptions`,
+`SealPatchesOptions`,
 `client`, `patch`, `Patch`, `RouteSlot`, `NavigationRoot`, `group`,
 `Group`, `serve`, `staticFile`, `ParamsOf`, `Ctx`, `WrapperCtx`,
 `LayoutCtx`, `ReadArgs`, `WriteArgs`, `NotFoundArgs`, `ErrorArgs`,

@@ -23,7 +23,8 @@
     "jsr:@std/path@1": "1.1.6",
     "jsr:@std/path@^1.0.8": "1.1.6",
     "jsr:@std/path@^1.1.5": "1.1.6",
-    "jsr:@zip-js/zip-js@^2.7.52": "2.8.53"
+    "jsr:@zip-js/zip-js@^2.7.52": "2.8.53",
+    "npm:tailwindcss@4": "4.3.3"
   },
   "jsr": {
     "@astral/astral@0.5.6": {
@@ -126,6 +127,11 @@
       "integrity": "767bd62c6a0f92c480cfa6d5f5d91a81f714d096993296bb5a409b3e82ed924b"
     }
   },
+  "npm": {
+    "tailwindcss@4.3.3": {
+      "integrity": "sha512-gOhV3P7ufE62QDGg1zVaTgCR+EtPv92k2nIhVcVKcLmxT1sUBsQGhnZj175j+MqRt4zLF7ic+sCYjfhxMxj7YQ=="
+    }
+  },
   "workspace": {
     "dependencies": [
       "jsr:@std/assert@1"
@@ -137,14 +143,14 @@
           "jsr:@std/assert@1"
         ]
       },
-      "examples/hello-world": {
+      "examples/slots": {
         "dependencies": [
           "jsr:@std/assert@1"
         ]
       },
-      "examples/slots": {
+      "examples/starter": {
         "dependencies": [
-          "jsr:@std/assert@1"
+          "npm:tailwindcss@4"
         ]
       },
       "int-tests": {
