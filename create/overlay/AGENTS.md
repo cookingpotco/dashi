@@ -21,9 +21,9 @@ Handlers return a plain `Response` (redirect, JSON, 204, …) or render HTML wit
 prefixed subtree or a pathless wrap. `group("/")` is illegal.
 
 **Slots.** Same-request UI is a component import. `<RouteSlot src>` GETs that
-route later and fills the slot. Use it when the shell can be cached but part of
+route later and swaps the slot. Use it when the shell can be cached but part of
 the page cannot (user-specific chrome on a public page), or when work should
-wait until after first paint (a heavy fragment, or content below the fold with
+wait until after first paint (a heavy slot, or content below the fold with
 `fetchWhen="visible"` and a `fallback`).
 
 **Forms and patches.** The usual dashi flow is SSR page render → route slots
