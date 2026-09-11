@@ -28,6 +28,9 @@ import { list as todoCount } from "./todo_count.tsx";
 import { list as hits } from "./hits.tsx";
 import { dismiss as dismissNotice, list as notice } from "./notice.tsx";
 import { list as slot } from "./slot.tsx";
+import { slotJsonHandler } from "./slot_json.ts";
+import { slotRedirectAwayHandler } from "./slot_redirect_away.ts";
+import { TrustSlots } from "./trust_slots.tsx";
 import { apply as applyInserts, form as insertsForm } from "./inserts.tsx";
 import {
   apply as applyElementReplace,
@@ -70,6 +73,9 @@ export function start() {
       route("/hits", { GET: hits }),
       route("/notice", { GET: notice, POST: dismissNotice }),
       route("/slot", { GET: slot }),
+      route("/slot-json", { GET: slotJsonHandler }),
+      route("/slot-redirect-away", { GET: slotRedirectAwayHandler }),
+      route("/trust-slots", { GET: TrustSlots }),
       route("/inserts", { GET: insertsForm, POST: applyInserts }),
       route("/element-replace", {
         GET: elementReplaceForm,

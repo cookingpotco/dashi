@@ -46,14 +46,15 @@ serve(({ route }) => ({
 - **Web standards.** Handlers read `ctx.req` as a `Request` and return a
   `Response`. HTML goes through `html()` or `patches()`. Client code uses native
   custom elements and plain DOM access.
-- **Per-route cache control.** Pass `{ cache }` to `html()` or `patches()`.
+- **Per-route cache control.** Pass `{ cache }` to `html()`.
 
 ## By design
 
 - No runtime dependencies.
 - Small and powerful API, with only one way to do each thing.
-- Explicit client inclusion: JS ships only when you call `client.module` or
-  `client.element` at module scope.
+- Explicit client inclusion: every document ships the forms client (submit
+  interception and patch apply). Other JS ships only when you call
+  `client.module` or `client.element` at module scope.
 - Explicit over magic: no file-system routing, no prefixes or hidden flows.
 
 ## Quick start
@@ -99,7 +100,7 @@ function Home({ html }: ReadArgs) {
 
 function TodoList({ error }: { error?: string }) {
   return (
-    <div id="todos-root">
+    <div>
       <ul id="todos">
         {todos.map((todo) => <li>{todo}</li>)}
       </ul>
@@ -113,7 +114,11 @@ function TodoList({ error }: { error?: string }) {
 }
 
 function list({ html }: ReadArgs) {
-  return html(<TodoList />);
+  return html(
+    <div id="todos-root">
+      <TodoList />
+    </div>,
+  );
 }
 
 async function create({ ctx, patches }: WriteArgs) {
@@ -186,23 +191,25 @@ serve(({ route }) => ({
 last-resort 500 on `serve()` options: no layouts, no `ctx`, no `thrown`.
 
 **Client TypeScript** attaches with `client.module` / `client.element` at module
-scope, not inside a component or handler. Documents get an import map. A module
-script is added only when a client host rendered.
+scope, not inside a component or handler. Documents get an import map and always
+ship the forms client (submit interception and `patches([...])` apply). A module
+script for your own client code is added only when that host rendered.
 
 ```tsx
 const Clock = client.module(new URL("./clock_client.ts", import.meta.url));
 ```
 
-**Soft navigation.** Wrap the swapping region in `<NavigationRoot>` in the root
-layout. Same-origin clicks, GET forms, and form redirects fetch the next
-document and replace the host's children. History, back/forward, and scroll
-restoration are included. Opt a link or form out with `hardNavigation`. From
-client TypeScript, `import { navigate } from "dashi/client"` and call
-`navigate(url)` for the same swap. Persistent elements left outside the host
-survive. The incoming document's `<head>` is merged so title, meta, and
-stylesheets update without unloading CSS already on the page. After a successful
-swap, the host dispatches `dashi:navigated` (`bubbles`, `composed`) with
-`{ url, push }`. Listen on `document` or the host.
+**Soft navigation** and **route slots** are opt-in. Wrap the swapping region in
+`<NavigationRoot>` in the root layout. Same-origin clicks, GET forms, and form
+redirects fetch the next document and replace the host's children. History,
+back/forward, and scroll restoration are included. Opt a link or form out with
+`hardNavigation`. From client TypeScript,
+`import { navigate } from "dashi/client"` and call `navigate(url)` for the same
+swap. Persistent elements left outside the host survive. The incoming document's
+`<head>` is merged so title, meta, and stylesheets update without unloading CSS
+already on the page. After a successful swap, the host dispatches
+`dashi:navigated` (`bubbles`, `composed`) with `{ url, push }`. Listen on
+`document` or the host.
 
 ```ts
 document.addEventListener("dashi:navigated", (event) => {
@@ -241,8 +248,9 @@ export const api = group("/api", ({ route }) => ({
 
 Minimal working examples, not best practice:
 
-- [`examples/hello-world`](examples/hello-world): routes, layouts, middleware, a
-  form
+- [`examples/starter`](examples/starter): routes, layouts, middleware, error
+  pages, Tailwind. This is what `deno create` scaffolds;
+  `create/generated_files.ts` is generated from it with `deno task create:gen`.
 - [`examples/slots`](examples/slots): route slots, patches, component imports
 
 ## Development
@@ -260,12 +268,15 @@ deno task test
 deno task test:int
 deno task test:e2e
 deno task test:e2e:headed
+deno task create:gen:check
 ```
 
 CI runs the same commands on every pull request and every push to `main`, except
-`test:e2e:headed`, which is local-only. Unit tests stay on the Test check; HTTP
-cases are the Integration check; browser cases are the E2E check. A version bump
-on `main` is the release; see [RELEASING.md](RELEASING.md).
+`test:e2e:headed`, which is local-only. After editing `examples/starter` or
+`create/overlay`, run `deno task create:gen` and commit
+`create/generated_files.ts`.
+
+See [RELEASING.md](RELEASING.md).
 
 ## Contributing
 

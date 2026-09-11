@@ -24,16 +24,20 @@ function TodoList({ error }: { error?: string }) {
 }
 
 export function list({ html }: ReadArgs) {
-  return html(<TodoList />);
+  return html(
+    <div id="todos-root">
+      <TodoList />
+    </div>,
+  );
 }
 
 export async function create({ ctx, patches }: WriteArgs) {
   const title = (await ctx.req.formData()).get("title");
   if (typeof title !== "string" || title.trim() === "") {
     return patches([
-      patch.update("#todos", <TodoList error="title is required" />),
+      patch.update("#todos-root", <TodoList error="title is required" />),
     ]);
   }
   items.push(title);
-  return patches([patch.update("#todos", <TodoList />)]);
+  return patches([patch.update("#todos-root", <TodoList />)]);
 }

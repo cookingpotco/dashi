@@ -22,8 +22,8 @@ const NavigationRootElement = client.element(
  * (`bubbles`, `composed`) with `{ url, push }`. Listen on `document`
  * or the host.
  *
- * Without this element, GET navigation is a real load. Writes still
- * apply patches when that runtime loaded.
+ * Without this element, GET navigation is a real load. Writes apply in place;
+ * redirects need this host for an in-place swap.
  */
 export function NavigationRoot(props: HTMLAttributes): Element {
   return jsx(NavigationRootElement, { ...props });

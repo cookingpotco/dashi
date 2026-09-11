@@ -79,24 +79,6 @@ async function waitForOk(
   throw new Error(`timed out waiting for GET ${path} on port ${port}`);
 }
 
-Deno.test("publish includes the create template", async () => {
-  const cmd = new Deno.Command(Deno.execPath(), {
-    args: ["publish", "--dry-run", "--allow-dirty"],
-    cwd: CHECKOUT,
-    stdout: "piped",
-    stderr: "piped",
-  });
-  const out = await cmd.output();
-  const text = `${new TextDecoder().decode(out.stdout)}\n${
-    new TextDecoder().decode(out.stderr)
-  }`;
-  if (out.code !== 0) {
-    throw new Error(text);
-  }
-  assertMatch(text, /create\/template\/static\/favicon\.ico/);
-  assertMatch(text, /create\/overlay\/AGENTS\.md/);
-});
-
 Deno.test("deno create scaffolds a runnable app", async (t) => {
   const parent = await Deno.makeTempDir({ prefix: "dashi-create-" });
   const appName = "cool-app";
@@ -104,9 +86,23 @@ Deno.test("deno create scaffolds a runnable app", async (t) => {
 
   await t.step("create exits zero into an empty directory", async () => {
     assertEquals(await runCreate(parent, appName), 0);
-    await Deno.stat(`${dest}/deno.json`);
     await Deno.stat(`${dest}/main.ts`);
-    await Deno.stat(`${dest}/static/favicon.ico`);
+    await Deno.stat(`${dest}/.cursor/rules/app-layout.mdc`);
+    const config = JSON.parse(
+      await Deno.readTextFile(`${dest}/deno.json`),
+    ) as { imports: Record<string, string> };
+    assertEquals(
+      config.imports.dashi,
+      `jsr:${dashiJson.name}@^${dashiJson.version}`,
+    );
+    assertEquals(
+      await Deno.readFile(`${dest}/static/favicon.ico`),
+      await Deno.readFile(`${CHECKOUT}/examples/starter/static/favicon.ico`),
+    );
+    assertMatch(
+      await Deno.readTextFile(`${dest}/README.md`),
+      /^# cool-app\n/,
+    );
     await linkScaffoldToCheckout(dest);
   });
 

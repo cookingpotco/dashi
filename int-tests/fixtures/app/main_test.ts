@@ -30,14 +30,14 @@ function importMapFrom(html: string): Record<string, string> {
 
 const appCases: IntegrationTestCase[] = [
   {
-    name: "home page ships no module script",
+    name: "home page ships the forms client module script",
     request: { path: "/" },
     status: 200,
     html: {
-      bodyExcludes: ['<script type="module"'],
+      bodyIncludes: ['<script type="module"', "submit_client-"],
       select: [
         { selector: 'script[type="importmap"]', exists: true },
-        { selector: 'script[type="module"]', exists: false },
+        { selector: 'script[type="module"]', exists: true },
       ],
     },
   },
@@ -1355,8 +1355,13 @@ Deno.test("main fixture app over HTTP", async (t) => {
       ...html.matchAll(/<script type="module" src="([^"]+)"><\/script>/g),
     ];
     try {
-      assertEquals(scripts.length, 1);
-      const src = scripts[0]![1]!;
+      assertEquals(scripts.length, 2);
+      const src = scripts.find((match) =>
+        match[1]!.includes("route_slot_client-")
+      )?.[1];
+      if (src === undefined) {
+        throw new Error(`missing route-slot script in ${scripts.join(", ")}`);
+      }
       assertMatch(src, /^\/_dashi\/client\/[^/]+\-[A-Za-z0-9_-]+\.js$/);
       const imports = importMapFrom(html);
       assertEquals(Object.values(imports).includes(src), true);
@@ -1426,8 +1431,12 @@ Deno.test("main fixture app over HTTP", async (t) => {
     });
     const fragHtml = await frag.text();
     try {
-      assertEquals(scripts.length, 1);
-      const src = scripts[0]![1]!;
+      assertEquals(scripts.length, 2);
+      const src = scripts.find((match) => match[1]!.includes("probe_client-"))
+        ?.[1];
+      if (src === undefined) {
+        throw new Error(`missing probe script in ${scripts.join(", ")}`);
+      }
       assertMatch(src, /^\/_dashi\/client\/[^/]+\-[A-Za-z0-9_-]+\.js$/);
       assertEquals(fragHtml.includes("<script"), false);
       const link = frag.headers.get("link");

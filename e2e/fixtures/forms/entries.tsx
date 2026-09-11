@@ -23,6 +23,10 @@ function EntriesPage() {
       <form id="json-form" method="POST" action="/json-write">
         <button id="json-submit" type="submit">Json</button>
       </form>
+      <form id="json-patch-form" method="POST" action="/entries">
+        <input type="hidden" name="intent" value="json-patch" />
+        <button id="json-patch-submit" type="submit">Json patch</button>
+      </form>
       <form id="drop-form" method="POST" action="/drop-write">
         <input id="drop-title" name="title" />
         <button id="drop-submit" type="submit">Drop</button>
@@ -46,6 +50,12 @@ export function list({ html }: ReadArgs) {
 
 export async function write({ ctx, patches }: WriteArgs) {
   const data = await ctx.req.formData();
+  if (data.get("intent") === "json-patch") {
+    return new Response(
+      '<dashi-patch kind="update" target="#persistent">pwned</dashi-patch>',
+      { headers: { "content-type": "application/json" } },
+    );
+  }
   if (data.get("intent") === "validate") {
     const title = data.get("title");
     if (typeof title !== "string" || title.trim() === "") {

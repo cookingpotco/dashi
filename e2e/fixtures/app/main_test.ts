@@ -330,6 +330,68 @@ Deno.test("app fixture", async (t) => {
         },
       );
 
+      await t.step(
+        "patch update keeps a single todos-root id after repeated submits",
+        async () => {
+          await page.goto(`${app.origin}/todos-page`);
+          await page.evaluate(() => customElements.whenDefined("route-slot"));
+          await page.evaluate(async () => {
+            const start = Date.now();
+            while (document.getElementById("todos-form") === null) {
+              if (Date.now() - start > 10000) {
+                throw new Error("todos slot did not load");
+              }
+              await new Promise((resolve) => setTimeout(resolve, 25));
+            }
+          });
+
+          for (let i = 0; i < 3; i++) {
+            await typeField("#todos-form input[name=title]", "milk");
+            const addValid = await page.$("#todos-form button");
+            if (addValid === null) {
+              throw new Error("todos form is missing");
+            }
+            await addValid.click();
+            await page.evaluate(async (expected) => {
+              const start = Date.now();
+              while (
+                document.querySelectorAll("#todos li").length !== expected
+              ) {
+                if (Date.now() - start > 10000) {
+                  throw new Error("todo row did not appear");
+                }
+                await new Promise((resolve) => setTimeout(resolve, 25));
+              }
+            }, { args: [i + 1] });
+            await typeField("#todos-form input[name=title]", "x");
+            await page.keyboard.press("Backspace");
+            const addInvalid = await page.$("#todos-form button");
+            if (addInvalid === null) {
+              throw new Error("todos form is missing");
+            }
+            await addInvalid.click();
+            await page.evaluate(async () => {
+              const start = Date.now();
+              while (
+                document.querySelector("todo-error-el")?.textContent !==
+                  "error-upgraded"
+              ) {
+                if (Date.now() - start > 10000) {
+                  throw new Error("validation error did not upgrade");
+                }
+                await new Promise((resolve) => setTimeout(resolve, 25));
+              }
+            });
+          }
+
+          const result = await page.evaluate(() => ({
+            roots: document.querySelectorAll("#todos-root").length,
+            items: document.querySelectorAll("#todos li").length,
+          }));
+          assertEquals(result, { roots: 1, items: 3 });
+        },
+      );
+
       await t.step("patch list refresh re-GETs the host", async () => {
         await page.goto(`${app.origin}/patches-page`);
         await page.evaluate(() => customElements.whenDefined("route-slot"));
@@ -560,6 +622,106 @@ Deno.test("app fixture", async (t) => {
         });
         assertEquals(result, { tag: "input", value: "x" });
       });
+
+      await t.step(
+        "route-slot rejects a protocol-relative src at construction",
+        async () => {
+          await page.goto(`${app.origin}/embed`);
+          await page.evaluate(() => customElements.whenDefined("route-slot"));
+          const result = await page.evaluate(async () => {
+            const wrap = document.createElement("div");
+            wrap.innerHTML =
+              '<route-slot src="//evil.example/frag"><span id="evil-fallback">wait</span></route-slot>';
+            document.body.append(...wrap.childNodes);
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            const host = document.querySelector(
+              'route-slot[src="//evil.example/frag"]',
+            );
+            const fetchedEvil = performance.getEntriesByType("resource").some(
+              (entry) => entry.name.includes("evil.example"),
+            );
+            return {
+              fallback: document.getElementById("evil-fallback")?.textContent ??
+                null,
+              loaded: host?.querySelector("#slot-inside")?.textContent ?? null,
+              fetchedEvil,
+            };
+          });
+          assertEquals(result, {
+            fallback: "wait",
+            loaded: null,
+            fetchedEvil: false,
+          });
+        },
+      );
+
+      await t.step(
+        "route-slot keeps fallback when the response is not HTML",
+        async () => {
+          await page.goto(`${app.origin}/trust-slots`);
+          const result = await page.evaluate(async () => {
+            await customElements.whenDefined("route-slot");
+            const jsonHost = document.querySelector(
+              'route-slot[src="/slot-json"]',
+            );
+            const start = Date.now();
+            while (Date.now() - start < 5000) {
+              const fetched = performance.getEntriesByType("resource").some(
+                (entry) => entry.name.includes("/slot-json"),
+              );
+              const busy = jsonHost?.getAttribute("aria-busy");
+              if (fetched && busy !== "true") {
+                break;
+              }
+              await new Promise((resolve) => setTimeout(resolve, 25));
+            }
+            return {
+              good: document.getElementById("slot-inside")?.textContent ?? null,
+              jsonFallback:
+                document.getElementById("json-fallback")?.textContent ?? null,
+              jsonInside: jsonHost?.querySelector("#slot-inside")
+                ?.textContent ?? null,
+            };
+          });
+          assertEquals(result, {
+            good: "inside",
+            jsonFallback: "json-fallback",
+            jsonInside: null,
+          });
+        },
+      );
+
+      await t.step(
+        "route-slot keeps fallback when the response redirects cross-origin",
+        async () => {
+          await page.goto(`${app.origin}/trust-slots`);
+          const result = await page.evaluate(async () => {
+            await customElements.whenDefined("route-slot");
+            const start = Date.now();
+            while (Date.now() - start < 2000) {
+              const fetched = performance.getEntriesByType("resource").some(
+                (entry) => entry.name.includes("/slot-redirect-away"),
+              );
+              if (fetched) {
+                break;
+              }
+              await new Promise((resolve) => setTimeout(resolve, 25));
+            }
+            return {
+              redirectFallback:
+                document.getElementById("redirect-fallback")?.textContent ??
+                  null,
+              redirectInside: document.querySelector(
+                'route-slot[src="/slot-redirect-away"] #slot-inside',
+              )?.textContent ?? null,
+            };
+          });
+          assertEquals(result, {
+            redirectFallback: "redirect-fallback",
+            redirectInside: null,
+          });
+        },
+      );
     },
   );
 });
