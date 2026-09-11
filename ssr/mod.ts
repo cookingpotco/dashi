@@ -23,6 +23,7 @@ import {
   type SealHtml,
   type SealOptions,
   type SealPatches,
+  type SealPatchesOptions,
 } from "../shared/mod.ts";
 
 const DEFAULT_NOT_FOUND_BODY = "Not found";
@@ -120,10 +121,9 @@ export function bindHtml(
 }
 
 export function bindPatches(): SealPatches {
-  return (list, opts?: SealOptions) =>
+  return (list, opts?: SealPatchesOptions) =>
     seal(renderPatches(list), {
       status: opts?.status ?? 200,
-      cache: opts?.cache,
       isPartial: true,
     });
 }
