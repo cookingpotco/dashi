@@ -1,11 +1,7 @@
-import { group, type ReadArgs, RouteSlot } from "dashi";
+import { type ReadArgs, RouteSlot } from "dashi";
 import type { AppState } from "../state.ts";
 
-export const embed = group<AppState>(({ route }) => ({
-  routes: [route("/embed", { GET: Embed })],
-}));
-
-function Embed({ html }: ReadArgs<{ state: AppState }>) {
+export function Embed({ html }: ReadArgs<{ state: AppState }>) {
   return html(
     <div>
       <section id="connect">

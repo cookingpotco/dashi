@@ -20,11 +20,11 @@ Handlers return a plain `Response` (redirect, JSON, 204, …) or render HTML wit
 **Layouts.** `root_layout.tsx` is the document shell. `group()` is only a
 prefixed subtree or a pathless wrap. `group("/")` is illegal.
 
-**Slots.** Same-request UI is a component import. `<RouteFragment src>` GETs
-that route later and swaps the slot. Use it when the shell can be cached but
-part of the page cannot (user-specific chrome on a public page), or when work
-should wait until after first paint (a heavy fragment, or content below the fold
-with `fetchWhen="visible"` and a `fallback`).
+**Slots.** Same-request UI is a component import. `<RouteSlot src>` GETs that
+route later and fills the slot. Use it when the shell can be cached but part of
+the page cannot (user-specific chrome on a public page), or when work should
+wait until after first paint (a heavy fragment, or content below the fold with
+`fetchWhen="visible"` and a `fallback`).
 
 **Forms and patches.** The usual dashi flow is SSR page render → route slots
 filled on the client → user submits a form → GET soft-navigates or a write
@@ -39,7 +39,7 @@ imports `styles.json`. Unhashed assets live under `/static/:file`.
 
 - Cache full pages wherever the content allows.
 - Keep handlers thin; put shared data on `ctx.state`.
-- Reach for `RouteFragment` and patch updates before adding client modules.
+- Reach for `RouteSlot` and patch updates before adding client modules.
 
 ## Run
 

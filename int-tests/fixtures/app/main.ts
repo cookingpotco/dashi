@@ -35,8 +35,8 @@ import { cacheBoundary } from "./cache_boundary/mod.tsx";
 import { cacheSession } from "./cache_session/mod.ts";
 import { cachePublicThenThrow } from "./cache_public_then_throw/mod.ts";
 import { nested } from "./nested/mod.tsx";
-import { embed } from "./embed/mod.tsx";
-import { slot } from "./slot/mod.tsx";
+import { Embed } from "./embed/mod.tsx";
+import { Slot } from "./slot/mod.tsx";
 import { api } from "./api/mod.ts";
 import { corsStar } from "./cors_star/mod.ts";
 import { corsList } from "./cors_list/mod.ts";
@@ -124,12 +124,12 @@ export function start() {
       cachePublicThenThrow,
       nested,
       route("/echo", { GET: Echo }),
-      embed,
+      route("/embed", { GET: Embed }),
       route("/nested-embed", { GET: NestEmbed }),
       route("/nest-inner", { GET: NestInner }),
       route("/nest-lazy", { GET: NestLazy }),
       route("/nest-lazy-embed", { GET: NestLazyEmbed }),
-      slot,
+      route("/slot", { GET: Slot }),
       route("/peer", { GET: Peer }),
       route("/patches", { POST: postPatches }),
       route("/patches-unprocessable", { POST: postUnprocessable }),
