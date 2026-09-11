@@ -1,4 +1,5 @@
 import { navigate, submitWrite } from "../client/registry_client.ts";
+import "../patching/applier_client.ts";
 
 function urlEncoded(formData: FormData): URLSearchParams {
   const params = new URLSearchParams();

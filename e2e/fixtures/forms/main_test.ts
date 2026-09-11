@@ -515,17 +515,51 @@ Deno.test("forms fixture", async (t) => {
         },
       );
 
-      await t.step("form with no host submits natively", async () => {
-        await prepareBare(page, app.origin, "/bare");
-        await Promise.all([
-          page.waitForNavigation(),
-          clickId(page, "bare-submit"),
-        ]);
-        const result = await page.evaluate(snapshot);
-        assertEquals(result.survived, false);
-        assertEquals(result.heading, "search");
-        assertEquals(result.url, `${app.origin}/search`);
-      });
+      await t.step(
+        "write with patches and no client host applies in place",
+        async () => {
+          await prepareBare(page, app.origin, "/bare-patch");
+          await typeField(page, "#bare-patch-title", "saved");
+          await clickId(page, "bare-patch-submit");
+          await waitForText(page, "status", "saved");
+          const result = await page.evaluate(() => {
+            const title = document.getElementById("bare-patch-title");
+            return {
+              survived: Reflect.get(globalThis, "__dashiDoc") === true,
+              heading: document.getElementById("heading")?.textContent ?? null,
+              status: document.getElementById("status")?.textContent ?? null,
+              title: title instanceof HTMLInputElement ? title.value : null,
+              url: location.pathname,
+              host: document.querySelector("navigation-root") !== null,
+              slot: document.querySelector("route-slot") !== null,
+            };
+          });
+          assertEquals(result, {
+            survived: true,
+            heading: "bare-patch",
+            status: "saved",
+            title: "",
+            url: "/bare-patch",
+            host: false,
+            slot: false,
+          });
+        },
+      );
+
+      await t.step(
+        "redirect without a page host does a real document load",
+        async () => {
+          await prepareBare(page, app.origin, "/bare");
+          await Promise.all([
+            page.waitForNavigation(),
+            clickId(page, "bare-submit"),
+          ]);
+          const result = await page.evaluate(snapshot);
+          assertEquals(result.survived, false);
+          assertEquals(result.heading, "search");
+          assertEquals(result.url, `${app.origin}/search`);
+        },
+      );
     },
   );
 });

@@ -18,10 +18,13 @@ Deno.test("mixed file and JSR client entries compile over HTTP", async () => {
     const scripts = [
       ...html.matchAll(/<script type="module" src="([^"]+)"><\/script>/g),
     ].map((match) => match[1]!);
-    assertEquals(scripts.length, 2);
+    assertEquals(scripts.length, 3);
     const localSrc = scripts.find((src) => src.includes("local_client-"));
     const jsrSrc = scripts.find((src) => src.includes("route_slot_client-"));
-    if (localSrc === undefined || jsrSrc === undefined) {
+    const formsSrc = scripts.find((src) => src.includes("submit_client-"));
+    if (
+      localSrc === undefined || jsrSrc === undefined || formsSrc === undefined
+    ) {
       throw new Error(`missing hashed module src in ${scripts.join(", ")}`);
     }
     assertMatch(localSrc, PUBLIC_CLIENT);

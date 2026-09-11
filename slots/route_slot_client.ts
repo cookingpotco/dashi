@@ -1,4 +1,3 @@
-import "./controller_client.ts";
 import {
   isHtmlContentType,
   isRootRelativePath,

@@ -143,15 +143,21 @@ export interface MiddlewareArgs<
 }
 
 /**
- * Seal-time framework options for `html()` and `patches()`. Other
- * headers: mutate the returned `Response`. A raw `Cache-Control`
- * header is not a twin of `cache`.
+ * Seal-time framework options for `html()`. Other headers: mutate the
+ * returned `Response`. A raw `Cache-Control` header is not a twin of
+ * `cache`.
  */
 export interface SealOptions {
-  /** Document or patch HTTP status. Omitted uses the call site default. */
+  /** Document HTTP status. Omitted uses the call site default. */
   status?: number;
   /** Cache policy. Omitted is no-store, plus `Vary: x-slot`. */
   cache?: CacheConfig;
+}
+
+/** Seal-time options for `patches()`. */
+export interface SealPatchesOptions {
+  /** Patch response HTTP status. Omitted is 200. */
+  status?: number;
 }
 
 /**
@@ -165,11 +171,12 @@ export type SealHtml = (
 ) => Response | Promise<Response>;
 
 /**
- * Bound patch sealer. Never walks layouts. Default status 200.
+ * Bound patch sealer. Never walks layouts. Default status 200. Always
+ * no-store.
  */
 export type SealPatches = (
   list: readonly Patch[],
-  opts?: SealOptions,
+  opts?: SealPatchesOptions,
 ) => Response | Promise<Response>;
 
 /**

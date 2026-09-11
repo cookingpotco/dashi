@@ -330,6 +330,68 @@ Deno.test("app fixture", async (t) => {
         },
       );
 
+      await t.step(
+        "patch update keeps a single todos-root id after repeated submits",
+        async () => {
+          await page.goto(`${app.origin}/todos-page`);
+          await page.evaluate(() => customElements.whenDefined("route-slot"));
+          await page.evaluate(async () => {
+            const start = Date.now();
+            while (document.getElementById("todos-form") === null) {
+              if (Date.now() - start > 10000) {
+                throw new Error("todos slot did not load");
+              }
+              await new Promise((resolve) => setTimeout(resolve, 25));
+            }
+          });
+
+          for (let i = 0; i < 3; i++) {
+            await typeField("#todos-form input[name=title]", "milk");
+            const addValid = await page.$("#todos-form button");
+            if (addValid === null) {
+              throw new Error("todos form is missing");
+            }
+            await addValid.click();
+            await page.evaluate(async (expected) => {
+              const start = Date.now();
+              while (
+                document.querySelectorAll("#todos li").length !== expected
+              ) {
+                if (Date.now() - start > 10000) {
+                  throw new Error("todo row did not appear");
+                }
+                await new Promise((resolve) => setTimeout(resolve, 25));
+              }
+            }, { args: [i + 1] });
+            await typeField("#todos-form input[name=title]", "x");
+            await page.keyboard.press("Backspace");
+            const addInvalid = await page.$("#todos-form button");
+            if (addInvalid === null) {
+              throw new Error("todos form is missing");
+            }
+            await addInvalid.click();
+            await page.evaluate(async () => {
+              const start = Date.now();
+              while (
+                document.querySelector("todo-error-el")?.textContent !==
+                  "error-upgraded"
+              ) {
+                if (Date.now() - start > 10000) {
+                  throw new Error("validation error did not upgrade");
+                }
+                await new Promise((resolve) => setTimeout(resolve, 25));
+              }
+            });
+          }
+
+          const result = await page.evaluate(() => ({
+            roots: document.querySelectorAll("#todos-root").length,
+            items: document.querySelectorAll("#todos li").length,
+          }));
+          assertEquals(result, { roots: 1, items: 3 });
+        },
+      );
+
       await t.step("patch list refresh re-GETs the host", async () => {
         await page.goto(`${app.origin}/patches-page`);
         await page.evaluate(() => customElements.whenDefined("route-slot"));

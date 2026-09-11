@@ -1,5 +1,4 @@
 import { registerPatches } from "../client/registry_client.ts";
-import "../forms/submit_client.ts";
 
 const enum SwapKind {
   Update = "update",

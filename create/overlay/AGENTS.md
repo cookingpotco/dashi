@@ -1,7 +1,8 @@
 # Dashi app guide
 
 Dashi is a server-first web framework for Deno. JSX compiles to HTML strings on
-the server. There is no VDOM and no hydration. Client JavaScript attaches only
+the server. There is no VDOM and no hydration. Every document ships the forms
+client (submit interception and patch apply). Other client JavaScript attaches
 through `client.module` / `client.element` at module scope.
 
 Docs: https://dashi.run/docs

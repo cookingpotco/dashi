@@ -99,8 +99,9 @@ PascalCase component; `client.element` takes the custom element tag
 table route. Public URLs are flat `/_dashi/client/<name>-<hash>.js`.
 Relative imports in compiled files are rewritten to the matching
 bundler path. The import map is bundler path → flat hashed URL.
-Documents get one `<script type="importmap">` for that graph;
-a module script is added only when a host rendered. A route slot
+Documents get one `<script type="importmap">` for that graph and always ship
+the forms client; other module scripts are added only when that host rendered.
+A route slot
 (`fetchWhen="connected"` after connect, `fetchWhen="visible"` on first
 intersection) `import()`s its `Link` modulepreloads before swap.
 `DASHI_MINIFY_CLIENT=1` minifies the bundle; `deno task dev` sets it to `0`.
@@ -126,4 +127,4 @@ Apps use Tailwind v4 on `className` only. Source `styles.css`. `css.ts` writes
 `generated/styles-<hash>.css` and `styles.json`; the layout imports the JSON.
 Serve hashed CSS at `GET /generated/:file` with `CacheStrategy.Immutable`. Serve
 unhashed files at `GET /static/:file`. No `class`, `tw`, or `css` props and no
-framework CSS pipeline. `deno create jsr:@cookingpot/dashi` emits that tree.
+framework CSS pipeline.

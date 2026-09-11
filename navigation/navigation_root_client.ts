@@ -1,5 +1,4 @@
 import { registerPage } from "../client/registry_client.ts";
-import "../forms/submit_client.ts";
 
 history.scrollRestoration = "manual";
 
