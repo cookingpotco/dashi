@@ -9,7 +9,7 @@ function takeToken({ ctx, next }: MiddlewareArgs<AppState>) {
   return next();
 }
 
-export const cacheSession = group<AppState>(({ route }) => ({
+export const cacheSession = group<AppState>("/", ({ route }) => ({
   middleware: [takeToken],
   routes: [route("/cache-session", { GET: CacheSession })],
 }));

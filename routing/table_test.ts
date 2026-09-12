@@ -33,7 +33,7 @@ function typechecks() {
     Equal<Ctx<AppState, { id: string }>["params"]["id"], string>
   >;
 
-  group(({ route }) => {
+  group("/", ({ route }) => {
     route("/", { GET: noop });
     // @ts-expect-error HEAD is not a declared handler; GET answers it
     route("/", { HEAD: noop });
@@ -121,7 +121,7 @@ function typechecks() {
     ],
   }));
 
-  group((cb) => {
+  group("/", (cb) => {
     // @ts-expect-error GroupCallback is only { route }
     cb.group("/x", () => ({ routes: [] }));
     return { routes: [] };
@@ -139,7 +139,6 @@ function typechecks() {
   // @ts-expect-error catch-all cannot end a group prefix
   group("/files/:path*", (_cb) => ({ routes: [] }));
 
-  // @ts-expect-error "/" is not a valid group prefix
   group("/", (_cb) => ({ routes: [] }));
 
   // @ts-expect-error "" is not a valid group prefix
@@ -151,11 +150,6 @@ function typechecks() {
 
   group("/:id", ({ route }) => ({
     routes: [route("/", get)],
-  }));
-
-  const prefix: string = "/api";
-  group(prefix, ({ route }) => ({
-    routes: [route("/x", get)],
   }));
 }
 
@@ -172,7 +166,7 @@ Deno.test("match ranks routes and extracts params", () => {
   const firstTie = () => new Response();
   const secondTie = () => new Response();
 
-  const compiled = compile(group(({ route }) => ({
+  const compiled = compile(group("/", ({ route }) => ({
     routes: [
       route("/posts/:path*", { GET: postsRest }),
       route("/posts/:id", { GET: postsId }),
@@ -212,7 +206,7 @@ Deno.test("match ranks routes and extracts params", () => {
 Deno.test("compile rejects duplicate and invalid paths", () => {
   assertThrows(
     () =>
-      compile(group(({ route }) => ({
+      compile(group("/", ({ route }) => ({
         routes: [
           route("/posts/:id", { GET: noop }),
           route("/posts/:slug", { GET: noop }),
@@ -223,7 +217,7 @@ Deno.test("compile rejects duplicate and invalid paths", () => {
   );
   assertThrows(
     () =>
-      compile(group(({ route }) => ({
+      compile(group("/", ({ route }) => ({
         routes: [route("/", { GET: noop }), route("/:id?", { GET: noop })],
       }))),
     Error,
@@ -231,7 +225,7 @@ Deno.test("compile rejects duplicate and invalid paths", () => {
   );
   assertThrows(
     () =>
-      compile(group(({ route }) => ({
+      compile(group("/", ({ route }) => ({
         routes: [route("/a/:b?/c" as never, { GET: noop })],
       }))),
     Error,
@@ -239,7 +233,7 @@ Deno.test("compile rejects duplicate and invalid paths", () => {
   );
   assertThrows(
     () =>
-      compile(group(({ route }) => ({
+      compile(group("/", ({ route }) => ({
         routes: [route("/a/:b*/c" as never, { GET: noop })],
       }))),
     Error,
@@ -247,7 +241,7 @@ Deno.test("compile rejects duplicate and invalid paths", () => {
   );
   assertThrows(
     () =>
-      compile(group(({ route }) => ({
+      compile(group("/", ({ route }) => ({
         routes: [route("/nested/" as never, { GET: noop })],
       }))),
     Error,
@@ -255,7 +249,7 @@ Deno.test("compile rejects duplicate and invalid paths", () => {
   );
   assertThrows(
     () =>
-      compile(group(({ route }) => ({
+      compile(group("/", ({ route }) => ({
         routes: [route("/posts/:1id" as never, { GET: noop })],
       }))),
     Error,
@@ -263,7 +257,7 @@ Deno.test("compile rejects duplicate and invalid paths", () => {
   );
   assertThrows(
     () =>
-      compile(group(({ route }) => ({
+      compile(group("/", ({ route }) => ({
         routes: [route("/posts/:id-x" as never, { GET: noop })],
       }))),
     Error,
@@ -271,7 +265,7 @@ Deno.test("compile rejects duplicate and invalid paths", () => {
   );
   assertThrows(
     () =>
-      compile(group(({ route }) => ({
+      compile(group("/", ({ route }) => ({
         routes: [route("/a/:id/b/:id" as never, { GET: noop })],
       }))),
     Error,
@@ -279,7 +273,7 @@ Deno.test("compile rejects duplicate and invalid paths", () => {
   );
   assertThrows(
     () =>
-      compile(group(({ route }) => ({
+      compile(group("/", ({ route }) => ({
         routes: [route("/files/*" as never, { GET: noop })],
       }))),
     Error,
@@ -322,12 +316,12 @@ Deno.test("compile inherits wraps outermost-first and preserves declaration orde
   const postsNew = () => new Response();
   const postsId = () => new Response();
 
-  const compiled = compile(group(({ route }) => ({
+  const compiled = compile(group("/", ({ route }) => ({
     layouts: [rootLayout],
     middleware: [rootMw],
     routes: [
       route("/", { GET: home }),
-      group(({ route }) => ({
+      group("/", ({ route }) => ({
         layouts: [nestedLayout],
         middleware: [nestedMw],
         routes: [route("/nested", { GET: nested })],
@@ -383,10 +377,10 @@ Deno.test("compile keeps per-group error on the boundary chain", () => {
   const nestedError = () => new Response();
   const page = () => new Response();
 
-  const compiled = compile(group(() => ({
+  const compiled = compile(group("/", () => ({
     error: rootError,
     routes: [
-      group(({ route }) => ({
+      group("/", ({ route }) => ({
         error: nestedError,
         routes: [route("/x", { GET: page })],
       })),
@@ -402,7 +396,7 @@ Deno.test("compile keeps per-group error on the boundary chain", () => {
 Deno.test("GET+POST share one path; empty map throws", () => {
   const list = () => new Response();
   const add = () => new Response();
-  const compiled = compile(group(({ route }) => ({
+  const compiled = compile(group("/", ({ route }) => ({
     routes: [
       route("/guestbook", { GET: list, POST: add }),
     ],
@@ -412,7 +406,7 @@ Deno.test("GET+POST share one path; empty map throws", () => {
   assertEquals(matched?.handlers.POST, add);
 
   assertThrows(
-    () => group(({ route }) => ({ routes: [route("/", {} as never)] })),
+    () => group("/", ({ route }) => ({ routes: [route("/", {} as never)] })),
     Error,
     "has no method handlers",
   );
@@ -421,7 +415,7 @@ Deno.test("GET+POST share one path; empty map throws", () => {
 Deno.test("compile matches joined paths from a prefixed group", () => {
   const index = () => new Response();
   const field = () => new Response();
-  const compiled = compile(group(() => ({
+  const compiled = compile(group("/", () => ({
     routes: [
       group("/users/:id", ({ route }) => ({
         routes: [

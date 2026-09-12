@@ -4,7 +4,7 @@ import type { AppState } from "../state.ts";
 import { ok } from "../ok/mod.ts";
 import { CacheCors } from "./cache_cors.tsx";
 
-export const corsList = group<AppState>(({ route }) => ({
+export const corsList = group<AppState>("/", ({ route }) => ({
   middleware: [cors({
     origin: ["https://app.example", "https://other.example"],
   })],

@@ -160,8 +160,10 @@ individual route handlers. A layout is `({ ctx, children }) => ...`. Attach
 **Middleware** is a `({ ctx, next }) => Response` factory attached on `group()`.
 It runs for document hits and slot hits.
 
-**Prefixed `group()`** joins a path onto child routes. Import `group` from
-`dashi` in a feature `mod.ts` and drop the `Group` into the root callback:
+**Prefixed `group()`** joins a path onto child routes. `group("/", cb)` is a
+wrap and adds no URL segment. `serve()` is the root table and takes no prefix.
+Import `group` from `dashi` in a feature `mod.ts` and drop the `Group` into the
+root callback:
 
 ```tsx
 // posts/mod.tsx

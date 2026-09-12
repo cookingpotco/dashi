@@ -16,8 +16,9 @@ callback or a wrap / prefix group's callback. A page module never calls
 named `GET`.
 
 `group()` is only a **prefixed subtree** (nested URLs, or layouts /
-middleware / `notFound` on that prefix) or a **pathless wrap**. `group("/")`
-is illegal. Pathless `group()` is not the `/` page.
+middleware / `notFound` on that prefix) or a **pathless wrap**.
+`group("/", …)` is the wrap (no extra URL segment). `group("/docs", …)` is
+a prefixed subtree. `serve()` is the root table, not a group.
 
 README snippets may inline `serve(callback)` to show the whole flow; those
 are not apps.
@@ -77,8 +78,8 @@ export async function add({ ctx }: WriteArgs) {
 }
 ```
 
-`group("/", …)` is illegal. Pathless `group(({ route }) => …)` is a
-layout/middleware shell with no extra prefix. A pre-built `Group` types
+`group("/", ({ route }) => …)` is a layout/middleware shell with no extra
+prefix. A pre-built `Group` types
 `ctx.params` from its own prefix; nested groups do not read ancestor params
 they did not declare. Shared data goes on `ctx.state`.
 

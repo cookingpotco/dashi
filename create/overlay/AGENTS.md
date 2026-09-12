@@ -18,7 +18,8 @@ Handlers return a plain `Response` (redirect, JSON, 204, …) or render HTML wit
 `html()`, which runs layouts and builds the document response.
 
 **Layouts.** `root_layout.tsx` is the document shell. `group()` is only a
-prefixed subtree or a pathless wrap. `group("/")` is illegal.
+prefixed subtree or a pathless wrap (`group("/", cb)`). `serve()` is the root
+table and takes no prefix.
 
 **Slots.** Same-request UI is a component import. `<RouteSlot src>` GETs that
 route later and swaps the slot. Use it when the shell can be cached but part of

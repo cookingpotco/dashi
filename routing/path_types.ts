@@ -140,20 +140,18 @@ type EndsWithOptionalOrCatchall<Path extends string> = Path extends `${string}?`
   : false;
 
 /**
- * A group prefix: a valid path that does not end in optional or
- * catch-all. `""` and `"/"` are invalid; omit the argument for a
- * pathless group.
+ * A group prefix is a `/${string}` path that does not end in optional or
+ * catch-all. `"/"` is a pathless wrap (adds no segments).
  *
  * @internal
  */
-export type GroupPrefixError<Path extends string> = Path extends "" | "/"
-  ? "Invalid group prefix: omit the argument for a pathless group"
-  : PathError<Path> extends infer Error
-    ? [Error] extends [never]
-      ? EndsWithOptionalOrCatchall<Path> extends true
-        ? "Invalid group prefix: optional and catch-all are not allowed"
-      : never
-    : Error
+export type GroupPrefixError<Path extends string> = PathError<Path> extends
+  infer Error
+  ? [Error] extends [never]
+    ? EndsWithOptionalOrCatchall<Path> extends true
+      ? "Invalid group prefix: optional and catch-all are not allowed"
+    : never
+  : Error
   : never;
 
 /**

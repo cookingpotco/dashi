@@ -7,7 +7,7 @@ import {
   throwHandler,
 } from "../errors.tsx";
 
-export const nestedError = group<AppState>(({ route }) => ({
+export const nestedError = group<AppState>("/", ({ route }) => ({
   layouts: [nestedErrorLayout],
   middleware: [nestedMw],
   error: nestedErrorPage,
