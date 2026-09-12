@@ -42,7 +42,9 @@ serve(({ route }) => ({
   seal a patch list with `patches()` — `patch.update`, `patch.replace`, and
   friends target `#id` holes; `patch.refresh` re-GETs every matching slot.
 - **Explicit route table.** Typed params from the path literal, and per-method
-  handlers, in one `serve()` callback.
+  handlers, in one `serve()` callback. A path ending in `/` (except `/`) gets a
+  301 to the same path without the slash, before routing and middleware; query
+  is preserved.
 - **Web standards.** Handlers read `ctx.req` as a `Request` and return a
   `Response`. HTML goes through `html()` or `patches()`. Client code uses native
   custom elements and plain DOM access.

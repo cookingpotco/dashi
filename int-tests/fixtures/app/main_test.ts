@@ -1370,6 +1370,27 @@ Deno.test("main fixture app over HTTP", async (t) => {
   await runCases(t, app, appCases);
   await runCases(t, app, errorCases, stillServes);
 
+  await t.step("trailing slash redirect skips middleware", async () => {
+    const res = await app.fetch({ path: "/nested/" });
+    const body = await res.text();
+    try {
+      assertEquals(res.status, 301);
+      assertEquals(res.headers.get("location"), "/nested");
+      assertEquals(res.headers.get("x-mw"), null);
+    } catch (error) {
+      const dump = formatIntegrationFailure(
+        app,
+        { path: "/nested/" },
+        res,
+        body,
+      );
+      if (error instanceof Error) {
+        error.message = `${error.message}\n\n${dump}`;
+      }
+      throw error;
+    }
+  });
+
   await t.step("embed page module is the route-slot runtime", async () => {
     const res = await app.fetch({ path: "/embed" });
     const html = await res.text();

@@ -251,12 +251,13 @@ export async function handle(
     try {
       const url = new URL(req.url);
       if (url.pathname !== "/" && url.pathname.endsWith("/")) {
-        return new Response(null, {
-          status: 301,
-          headers: {
-            Location: `${url.pathname.slice(0, -1)}${url.search}`,
-          },
-        });
+        const location = `${url.pathname.slice(0, -1)}${url.search}`;
+        if (!location.startsWith("//")) {
+          return new Response(null, {
+            status: 301,
+            headers: { Location: location },
+          });
+        }
       }
       const matched = match(compiled, url.pathname);
       if (!matched) {
