@@ -558,6 +558,27 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
+    name: "trailing slash on matched path redirects",
+    request: { path: "/ok/" },
+    status: 301,
+    headers: { location: "/ok" },
+    bodyExact: "",
+  },
+  {
+    name: "trailing slash preserves query",
+    request: { path: "/ok/?q=1" },
+    status: 301,
+    headers: { location: "/ok?q=1" },
+    bodyExact: "",
+  },
+  {
+    name: "trailing slash on miss redirects before notFound",
+    request: { path: "/no-such-page/" },
+    status: 301,
+    headers: { location: "/no-such-page" },
+    bodyExact: "",
+  },
+  {
     name: "GET /ok is JSON",
     request: { path: "/ok" },
     status: 200,
