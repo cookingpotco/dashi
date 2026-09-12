@@ -250,6 +250,15 @@ export async function handle(
   const res = await runWithClientCompileContext(async () => {
     try {
       const url = new URL(req.url);
+      if (url.pathname !== "/" && url.pathname.endsWith("/")) {
+        const location = `${url.pathname.slice(0, -1)}${url.search}`;
+        if (!location.startsWith("//")) {
+          return new Response(null, {
+            status: 301,
+            headers: { Location: location },
+          });
+        }
+      }
       const matched = match(compiled, url.pathname);
       if (!matched) {
         const miss = matchMiss(compiled, url.pathname);

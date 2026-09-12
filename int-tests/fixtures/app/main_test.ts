@@ -558,6 +558,27 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
+    name: "trailing slash on matched path redirects",
+    request: { path: "/ok/" },
+    status: 301,
+    headers: { location: "/ok" },
+    bodyExact: "",
+  },
+  {
+    name: "trailing slash preserves query",
+    request: { path: "/ok/?q=1" },
+    status: 301,
+    headers: { location: "/ok?q=1" },
+    bodyExact: "",
+  },
+  {
+    name: "trailing slash on miss redirects before notFound",
+    request: { path: "/no-such-page/" },
+    status: 301,
+    headers: { location: "/no-such-page" },
+    bodyExact: "",
+  },
+  {
     name: "GET /ok is JSON",
     request: { path: "/ok" },
     status: 200,
@@ -1348,6 +1369,27 @@ Deno.test("main fixture app over HTTP", async (t) => {
 
   await runCases(t, app, appCases);
   await runCases(t, app, errorCases, stillServes);
+
+  await t.step("trailing slash redirect skips middleware", async () => {
+    const res = await app.fetch({ path: "/nested/" });
+    const body = await res.text();
+    try {
+      assertEquals(res.status, 301);
+      assertEquals(res.headers.get("location"), "/nested");
+      assertEquals(res.headers.get("x-mw"), null);
+    } catch (error) {
+      const dump = formatIntegrationFailure(
+        app,
+        { path: "/nested/" },
+        res,
+        body,
+      );
+      if (error instanceof Error) {
+        error.message = `${error.message}\n\n${dump}`;
+      }
+      throw error;
+    }
+  });
 
   await t.step("embed page module is the route-slot runtime", async () => {
     const res = await app.fetch({ path: "/embed" });
