@@ -10,11 +10,6 @@ import { METHODS, type Middleware } from "../shared/mod.ts";
 /**
  * Allowed origin: a string, a list, or a function of the request Origin.
  *
- * @example
- * ```ts
- * const origin: CorsOrigin = "https://app.example.com";
- * ```
- *
  * @see https://dashi.run/docs/and-more#cors
  */
 export type CorsOrigin =

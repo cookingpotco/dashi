@@ -6,14 +6,6 @@ export const trustedHtmlBrand: unique symbol = Symbol("dashi.trustedHtml");
 /**
  * HTML returned by JSX.
  *
- * @example
- * ```ts
- * import type { Element } from "dashi/jsx-runtime";
- * export function Field(): Element {
- *   return <label>Email</label>;
- * }
- * ```
- *
  * @see https://dashi.run/docs/jsx#types
  */
 export type Element = string & {
@@ -36,12 +28,6 @@ export function asTrustedHtml(html: string): Element {
 
 /**
  * A value that can appear as a JSX child.
- *
- * @example
- * ```ts
- * import type { DashiNode } from "dashi/jsx-runtime";
- * const child: DashiNode = "hello";
- * ```
  *
  * @see https://dashi.run/docs/jsx#types
  */

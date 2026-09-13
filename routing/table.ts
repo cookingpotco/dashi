@@ -68,13 +68,6 @@ interface FlattenedRoute<
 /**
  * One node in the route tree: prefix, layouts, middleware, errors, and child routes.
  *
- * @example
- * ```ts
- * export const posts = group("/posts", ({ route }) => ({
- *   routes: [route("/", { GET: list })],
- * }));
- * ```
- *
  * @see https://dashi.run/docs/routing#group
  */
 export interface Group<

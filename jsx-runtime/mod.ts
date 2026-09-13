@@ -9,12 +9,6 @@ import { asTrustedHtml, type Element, isTrustedHtml } from "./jsx_types.ts";
 /**
  * JSX namespace used by `jsxImportSource`.
  *
- * @example
- * ```ts
- * import type { JSX } from "dashi/jsx-runtime";
- * type AnchorProps = JSX.IntrinsicElements["a"];
- * ```
- *
  * @see https://dashi.run/docs/jsx#types
  */
 export type * as JSX from "./jsx_types.ts";

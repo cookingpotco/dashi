@@ -5,13 +5,6 @@ import type { Element } from "../jsx-runtime/mod.ts";
 /**
  * Per-invocation request context. Mutate `state` in place; do not replace the object.
  *
- * @example
- * ```ts
- * export function show({ ctx, html }: ReadArgs<{ params: { id: string } }>) {
- *   return html(<p>{ctx.params.id}</p>);
- * }
- * ```
- *
  * @see https://dashi.run/docs/handlers#ctx
  */
 export interface Ctx<
@@ -31,13 +24,6 @@ export interface Ctx<
 /**
  * `Ctx` as seen by middleware or an error handler. Params are a wide string record.
  *
- * @example
- * ```ts
- * export async function session({ ctx, next }: MiddlewareArgs) {
- *   return next();
- * }
- * ```
- *
  * @see https://dashi.run/docs/handlers#ctx
  */
 export type WrapperCtx<
@@ -46,13 +32,6 @@ export type WrapperCtx<
 
 /**
  * `Ctx` as seen by a layout. Same object as the handler's ctx; `state` is readonly.
- *
- * @example
- * ```ts
- * export function RootLayout({ ctx, children }: LayoutArgs) {
- *   return <html>{children}</html>;
- * }
- * ```
  *
  * @see https://dashi.run/docs/layouts-middleware-errors#layouts
  */
@@ -64,13 +43,6 @@ export type LayoutCtx<
 
 /**
  * GET / HEAD args. Call `html()` to seal markup, or return a raw `Response`.
- *
- * @example
- * ```ts
- * export function Home({ html }: ReadArgs) {
- *   return html(<h1>Hello</h1>);
- * }
- * ```
  *
  * @see https://dashi.run/docs/handlers#read-handler
  */
@@ -99,13 +71,6 @@ export interface ReadArgs<
 /**
  * POST / PUT / PATCH / DELETE args. Call `patches()` or return a raw `Response`.
  *
- * @example
- * ```ts
- * export function add({ patches }: WriteArgs) {
- *   return patches([patch.append("#todos", <li>milk</li>)]);
- * }
- * ```
- *
  * @see https://dashi.run/docs/handlers#write-handler
  */
 export interface WriteArgs<
@@ -133,13 +98,6 @@ export interface WriteArgs<
 /**
  * `notFound` args. Same fields as `ReadArgs`; params are a wide string record.
  *
- * @example
- * ```ts
- * export function notFound({ html }: NotFoundArgs) {
- *   return html(<p>Not found</p>);
- * }
- * ```
- *
  * @see https://dashi.run/docs/layouts-middleware-errors#errors
  */
 export type NotFoundArgs<
@@ -148,13 +106,6 @@ export type NotFoundArgs<
 
 /**
  * Group `error` args. `thrown` is the raw value.
- *
- * @example
- * ```ts
- * export function error({ html }: ErrorArgs) {
- *   return html(<p>Something went wrong</p>);
- * }
- * ```
  *
  * @see https://dashi.run/docs/layouts-middleware-errors#errors
  */
@@ -172,13 +123,6 @@ export interface ErrorArgs<
 /**
  * Last-resort 500 args. No `ctx`, no `thrown`.
  *
- * @example
- * ```ts
- * export function fatal({ html }: FatalArgs) {
- *   return html(<p>The site could not recover</p>);
- * }
- * ```
- *
  * @see https://dashi.run/docs/layouts-middleware-errors#errors
  */
 export interface FatalArgs {
@@ -188,13 +132,6 @@ export interface FatalArgs {
 
 /**
  * Layout args. `ctx.state` is readonly.
- *
- * @example
- * ```ts
- * export function RootLayout({ children }: LayoutArgs) {
- *   return <html><body>{children}</body></html>;
- * }
- * ```
  *
  * @see https://dashi.run/docs/layouts-middleware-errors#layouts
  */
@@ -209,13 +146,6 @@ export interface LayoutArgs<
 
 /**
  * Middleware args. Mutate `ctx.state` in place.
- *
- * @example
- * ```ts
- * export async function session({ ctx, next }: MiddlewareArgs) {
- *   return next();
- * }
- * ```
  *
  * @see https://dashi.run/docs/layouts-middleware-errors#middleware
  */
@@ -263,13 +193,6 @@ export interface SealPatchesOptions {
 /**
  * Bound HTML sealer. Walks layouts on a document hit; slot hits skip layouts.
  *
- * @example
- * ```ts
- * export function Home({ html }: ReadArgs) {
- *   return html(<h1>Hello</h1>);
- * }
- * ```
- *
  * @see https://dashi.run/docs/handlers#read-handler
  */
 export type SealHtml = (
@@ -279,13 +202,6 @@ export type SealHtml = (
 
 /**
  * Bound patch sealer. Never walks layouts. Default status 200. Always no-store.
- *
- * @example
- * ```ts
- * export function add({ patches }: WriteArgs) {
- *   return patches([patch.append("#todos", <li>milk</li>)]);
- * }
- * ```
  *
  * @see https://dashi.run/docs/handlers#write-handler
  */

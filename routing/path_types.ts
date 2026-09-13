@@ -187,11 +187,6 @@ type MergeParams<Segments extends string[]> = Segments extends
 /**
  * Params inferred from a path literal like `/posts/:id`.
  *
- * @example
- * ```ts
- * type P = ParamsOf<"/posts/:id">;
- * ```
- *
  * @see https://dashi.run/docs/routing#params
  */
 export type ParamsOf<Path extends string> = [PathError<Path>] extends [never]

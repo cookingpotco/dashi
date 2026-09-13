@@ -70,11 +70,6 @@ interface RefreshPatch {
 /**
  * One targeted update for a `#${string}` hole or a route refresh.
  *
- * @example
- * ```ts
- * const list: Patch[] = [patch.remove("#notice")];
- * ```
- *
  * @see https://dashi.run/docs/handlers#write-handler
  */
 export type Patch =
