@@ -606,7 +606,7 @@ const appCases: IntegrationTestCase[] = [
     headers: {
       "content-type": "text/css; charset=utf-8",
       "content-length": "24",
-      "cache-control": "public, max-age=31536000, immutable",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
       "x-mw": "ok",
     },
     bodyExact: "body {\n  color: #111;\n}\n",
@@ -618,7 +618,7 @@ const appCases: IntegrationTestCase[] = [
     headers: {
       "content-type": "text/css; charset=utf-8",
       "content-length": "24",
-      "cache-control": "public, max-age=31536000, immutable",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
       "x-mw": "ok",
     },
     bodyExact: "body {\n  color: #000;\n}\n",
@@ -630,7 +630,7 @@ const appCases: IntegrationTestCase[] = [
     headers: {
       "content-type": "text/css; charset=utf-8",
       "content-length": "24",
-      "cache-control": "public, max-age=31536000, immutable",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
       "x-mw": "ok",
     },
     bodyExact: "",
@@ -1675,7 +1675,7 @@ Deno.test("main fixture app over HTTP", async (t) => {
       assertEquals(get304.headers.get("etag"), etag);
       assertEquals(
         get304.headers.get("cache-control"),
-        "public, max-age=31536000, immutable",
+        "no-cache, no-store, max-age=0, must-revalidate",
       );
 
       const head304 = await app.fetch({
@@ -1689,7 +1689,7 @@ Deno.test("main fixture app over HTTP", async (t) => {
       assertEquals(head304.headers.get("etag"), etag);
       assertEquals(
         head304.headers.get("cache-control"),
-        "public, max-age=31536000, immutable",
+        "no-cache, no-store, max-age=0, must-revalidate",
       );
 
       const star = await app.fetch({
