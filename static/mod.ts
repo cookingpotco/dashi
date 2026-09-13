@@ -111,14 +111,16 @@ async function realPath(path: string): Promise<string | null> {
  *   `Deno.cwd()`; pass `${import.meta.dirname}/static` so the folder
  *   travels with the module.
  * @param relative Path under `dir`, typically a catch-all route param.
- * @param cache How this resource should be cached. Defaults to immutable.
+ * @param cache How this resource should be cached. Defaults to no-store.
  *   Shared caches cannot vary on `Cookie` or `*`.
  *
  * @example
  * ```ts
  * route("/assets/:path*", {
  *   GET: ({ ctx }) =>
- *     staticFile(ctx, `${import.meta.dirname}/static`, ctx.params.path),
+      staticFile(ctx, `${import.meta.dirname}/static`, ctx.params.file, {
+        strategy: CacheStrategy.Immutable,
+      }),
  * })
  * ```
  */
@@ -127,7 +129,7 @@ export async function staticFile(
   dir: string,
   relative: string,
   cache: CacheConfig = {
-    strategy: CacheStrategy.Immutable,
+    strategy: CacheStrategy.NoStore,
   },
 ): Promise<Response> {
   const decoded = decodeRelative(relative);
