@@ -1,4 +1,13 @@
-/** Predefined strategies translated later to Cache-Control headers - for CDN and browser use */
+/**
+ * Cache-Control policy passed to `html()` or `staticFile`.
+ *
+ * @example
+ * ```ts
+ * return html(<main />, { cache: { strategy: CacheStrategy.Immutable } });
+ * ```
+ *
+ * @see https://dashi.run/docs/handlers#read-handler
+ */
 export const enum CacheStrategy {
   /** `public, max-age=31536000, immutable` */
   Immutable = "immutable",
@@ -45,7 +54,16 @@ export interface NoStoreCacheConfig extends BaseCacheConfig {
   strategy: CacheStrategy.NoStore;
 }
 
-/** Configure how this resource should be cached (Affects Cache-Control headers). */
+/**
+ * Cache policy for `html()` or `staticFile`. Omitted is no-store, plus `Vary: x-slot`.
+ *
+ * @example
+ * ```ts
+ * const cache: CacheConfig = { strategy: CacheStrategy.Public, maxAge: 60 };
+ * ```
+ *
+ * @see https://dashi.run/docs/handlers#read-handler
+ */
 export type CacheConfig =
   | ImmutableCacheConfig
   | PublicCacheConfig

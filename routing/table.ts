@@ -66,9 +66,16 @@ interface FlattenedRoute<
 }
 
 /**
- * One node in the route tree. `prefix` is this group's path prefix.
- * `"/"` adds no segments. Nested groups and routes join ancestor prefixes
- * at compile.
+ * One node in the route tree: prefix, layouts, middleware, errors, and child routes.
+ *
+ * @example
+ * ```ts
+ * export const posts = group("/posts", ({ route }) => ({
+ *   routes: [route("/", { GET: list })],
+ * }));
+ * ```
+ *
+ * @see https://dashi.run/docs/routing#group
  */
 export interface Group<
   State extends Record<string, unknown> = Record<string, unknown>,
@@ -644,42 +651,19 @@ function createGroupCallback<
 }
 
 /**
- * Declares a node in the route tree. `prefix` is joined onto child
- * paths. `"/"` adds no segments (a layout / middleware / `notFound`
- * wrap). The callback's `route` closes over this group's prefix so
- * handlers see joined params. Nested groups are `group()` values in
- * `routes`. `notFound` handles document misses under this prefix;
- * omitted walks to the parent.
- *
- * Layouts are shared UI only. They wrap the route on document render,
- * outermost first, after the route has rendered, and do not run on
- * slot renders. Never use them for gating or state-setting — that
- * belongs on middleware or individual route handlers. Middleware is
- * the request pipeline, outermost first, and runs for document hits
- * and slot hits. `error` catches handler throws and inner group
- * failures; it does not catch this group's own layouts.
+ * Declares a prefixed subtree or a pathless wrap in the route table.
  *
  * @param prefix Path joined onto child routes. `"/"` adds no segments.
  * @param build Callback that receives `route` closed over `prefix`.
  *
  * @example
  * ```ts
- * export const menu = group("/menu", ({ route }) => ({
- *   layouts: [MenuLayout],
- *   routes: [
- *     route("/", { GET: ({ html }) => html(<h1>Menu</h1>) }),
- *     route("/specials", { GET: ({ html }) => html(<p>Today</p>) }),
- *   ],
+ * export const posts = group("/posts", ({ route }) => ({
+ *   routes: [route("/:id", { GET: show })],
  * }));
  * ```
  *
- * @example
- * ```ts
- * export const chrome = group("/", ({ route }) => ({
- *   layouts: [Chrome],
- *   routes: [route("/entries", { GET: list })],
- * }));
- * ```
+ * @see https://dashi.run/docs/routing#group
  */
 export function group<
   State extends Record<string, unknown> = Record<string, unknown>,

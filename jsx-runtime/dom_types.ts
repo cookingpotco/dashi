@@ -215,7 +215,17 @@ interface BaseAttributes extends AriaAttributes, DOMAttributes {
   part?: string;
 }
 
-/** Shared HTML element attributes. Per-tag extras are `JSX.IntrinsicElements["a"]`. */
+/**
+ * Shared HTML element attributes. Per-tag extras are `JSX.IntrinsicElements["a"]`.
+ *
+ * @example
+ * ```ts
+ * import type { HTMLAttributes } from "dashi/jsx-runtime";
+ * const attrs: HTMLAttributes = { id: "main", className: "page" };
+ * ```
+ *
+ * @see https://dashi.run/docs/jsx#types
+ */
 export interface HTMLAttributes extends BaseAttributes {
   /** Form control this label is for. */
   htmlFor?: string;
@@ -838,7 +848,17 @@ export interface VideoHTMLAttributes extends MediaHTMLAttributes {
   disableRemotePlayback?: boolean;
 }
 
-/** Shared SVG element attributes. */
+/**
+ * Shared SVG element attributes.
+ *
+ * @example
+ * ```ts
+ * import type { SVGAttributes } from "dashi/jsx-runtime";
+ * const attrs: SVGAttributes = { viewBox: "0 0 16 16" };
+ * ```
+ *
+ * @see https://dashi.run/docs/jsx#types
+ */
 export interface SVGAttributes extends BaseAttributes {
   /** SVG `color` attribute. */
   color?: string;

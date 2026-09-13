@@ -153,7 +153,16 @@ function element(
   };
 }
 
-/** Client module factory. Call `module` / `element` at module scope. */
+/**
+ * Client module factory. Call `module` / `element` at module scope.
+ *
+ * @example
+ * ```ts
+ * const Clock = client.module(new URL("./clock_client.ts", import.meta.url));
+ * ```
+ *
+ * @see https://dashi.run/docs/client
+ */
 export const client = { module, element };
 
 const FORMS_CLIENT = new URL("../forms/submit_client.ts", import.meta.url);

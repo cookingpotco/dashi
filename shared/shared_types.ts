@@ -3,8 +3,16 @@ import type { Patch } from "../patching/mod.ts";
 import type { Element } from "../jsx-runtime/mod.ts";
 
 /**
- * Per-invocation request context. Mutate `state` in place; do not
- * replace the object.
+ * Per-invocation request context. Mutate `state` in place; do not replace the object.
+ *
+ * @example
+ * ```ts
+ * export function show({ ctx, html }: ReadArgs<{ params: { id: string } }>) {
+ *   return html(<p>{ctx.params.id}</p>);
+ * }
+ * ```
+ *
+ * @see https://dashi.run/docs/handlers#ctx
  */
 export interface Ctx<
   State extends Record<string, unknown> = Record<string, unknown>,
@@ -21,20 +29,32 @@ export interface Ctx<
 }
 
 /**
- * `Ctx` as seen by middleware or an error handler. Params are a wide
- * string record so one wrap can cover `/` and `/posts/:id`. Same object
- * as the handler's ctx at runtime; precise keys stay on the handler.
+ * `Ctx` as seen by middleware or an error handler. Params are a wide string record.
+ *
+ * @example
+ * ```ts
+ * export async function session({ ctx, next }: MiddlewareArgs) {
+ *   return next();
+ * }
+ * ```
+ *
+ * @see https://dashi.run/docs/handlers#ctx
  */
 export type WrapperCtx<
   State extends Record<string, unknown> = Record<string, unknown>,
 > = Ctx<State, Record<string, string>>;
 
 /**
- * `Ctx` as seen by a layout. Same object as the handler's ctx at
- * runtime; `state` is readonly. Layouts are shared UI only. They run
- * after the route has rendered. Never use them for gating or
- * state-setting — that belongs on middleware or individual route
- * handlers.
+ * `Ctx` as seen by a layout. Same object as the handler's ctx; `state` is readonly.
+ *
+ * @example
+ * ```ts
+ * export function RootLayout({ ctx, children }: LayoutArgs) {
+ *   return <html>{children}</html>;
+ * }
+ * ```
+ *
+ * @see https://dashi.run/docs/layouts-middleware-errors#layouts
  */
 export type LayoutCtx<
   State extends Record<string, unknown> = Record<string, unknown>,
@@ -43,9 +63,16 @@ export type LayoutCtx<
 };
 
 /**
- * GET / HEAD args. A read may return a raw `Response` and never call
- * `html`. Pass `{ state }` and/or `{ params }`. Omit the argument when
- * the handler uses neither.
+ * GET / HEAD args. Call `html()` to seal markup, or return a raw `Response`.
+ *
+ * @example
+ * ```ts
+ * export function Home({ html }: ReadArgs) {
+ *   return html(<h1>Hello</h1>);
+ * }
+ * ```
+ *
+ * @see https://dashi.run/docs/handlers#read-handler
  */
 export interface ReadArgs<
   T extends
@@ -70,9 +97,16 @@ export interface ReadArgs<
 }
 
 /**
- * POST / PUT / PATCH / DELETE args. A write may return a raw `Response`
- * and never call `patches`. Pass `{ state }` and/or `{ params }`, same
- * as `ReadArgs`.
+ * POST / PUT / PATCH / DELETE args. Call `patches()` or return a raw `Response`.
+ *
+ * @example
+ * ```ts
+ * export function add({ patches }: WriteArgs) {
+ *   return patches([patch.append("#todos", <li>milk</li>)]);
+ * }
+ * ```
+ *
+ * @see https://dashi.run/docs/handlers#write-handler
  */
 export interface WriteArgs<
   T extends
@@ -97,14 +131,33 @@ export interface WriteArgs<
 }
 
 /**
- * `notFound` args. Same fields as `ReadArgs`; params are a wide string
- * record so one wrap can cover `/` and `/posts/:id`.
+ * `notFound` args. Same fields as `ReadArgs`; params are a wide string record.
+ *
+ * @example
+ * ```ts
+ * export function notFound({ html }: NotFoundArgs) {
+ *   return html(<p>Not found</p>);
+ * }
+ * ```
+ *
+ * @see https://dashi.run/docs/layouts-middleware-errors#errors
  */
 export type NotFoundArgs<
   State extends Record<string, unknown> = Record<string, unknown>,
 > = ReadArgs<{ state: State; params: Record<string, string> }>;
 
-/** Group `error` args. `thrown` is the raw value. */
+/**
+ * Group `error` args. `thrown` is the raw value.
+ *
+ * @example
+ * ```ts
+ * export function error({ html }: ErrorArgs) {
+ *   return html(<p>Something went wrong</p>);
+ * }
+ * ```
+ *
+ * @see https://dashi.run/docs/layouts-middleware-errors#errors
+ */
 export interface ErrorArgs<
   State extends Record<string, unknown> = Record<string, unknown>,
 > {
@@ -116,13 +169,35 @@ export interface ErrorArgs<
   html: SealHtml;
 }
 
-/** Last-resort 500 args. No `ctx`, no `thrown`. */
+/**
+ * Last-resort 500 args. No `ctx`, no `thrown`.
+ *
+ * @example
+ * ```ts
+ * export function fatal({ html }: FatalArgs) {
+ *   return html(<p>The site could not recover</p>);
+ * }
+ * ```
+ *
+ * @see https://dashi.run/docs/layouts-middleware-errors#errors
+ */
 export interface FatalArgs {
   /** Bound HTML sealer. Default status 500. No layouts. */
   html: SealHtml;
 }
 
-/** Layout args. `ctx.state` is readonly. */
+/**
+ * Layout args. `ctx.state` is readonly.
+ *
+ * @example
+ * ```ts
+ * export function RootLayout({ children }: LayoutArgs) {
+ *   return <html><body>{children}</body></html>;
+ * }
+ * ```
+ *
+ * @see https://dashi.run/docs/layouts-middleware-errors#layouts
+ */
 export interface LayoutArgs<
   State extends Record<string, unknown> = Record<string, unknown>,
 > {
@@ -132,7 +207,18 @@ export interface LayoutArgs<
   children: Element;
 }
 
-/** Middleware args. Mutate `ctx.state` in place. */
+/**
+ * Middleware args. Mutate `ctx.state` in place.
+ *
+ * @example
+ * ```ts
+ * export async function session({ ctx, next }: MiddlewareArgs) {
+ *   return next();
+ * }
+ * ```
+ *
+ * @see https://dashi.run/docs/layouts-middleware-errors#middleware
+ */
 export interface MiddlewareArgs<
   State extends Record<string, unknown> = Record<string, unknown>,
 > {
@@ -143,9 +229,14 @@ export interface MiddlewareArgs<
 }
 
 /**
- * Seal-time framework options for `html()`. Other headers: mutate the
- * returned `Response`. A raw `Cache-Control` header is not a twin of
- * `cache`.
+ * Seal-time options for `html()`.
+ *
+ * @example
+ * ```ts
+ * return html(<h1>Gone</h1>, { status: 410 });
+ * ```
+ *
+ * @see https://dashi.run/docs/handlers#read-handler
  */
 export interface SealOptions {
   /** Document HTTP status. Omitted uses the call site default. */
@@ -154,16 +245,32 @@ export interface SealOptions {
   cache?: CacheConfig;
 }
 
-/** Seal-time options for `patches()`. */
+/**
+ * Seal-time options for `patches()`.
+ *
+ * @example
+ * ```ts
+ * return patches([patch.remove("#notice")], { status: 422 });
+ * ```
+ *
+ * @see https://dashi.run/docs/handlers#write-handler
+ */
 export interface SealPatchesOptions {
   /** Patch response HTTP status. Omitted is 200. */
   status?: number;
 }
 
 /**
- * Bound HTML sealer. Walks layouts on a document hit, then seals bytes
- * once. Slot hits skip layouts. Default status depends on the call
- * site (GET 200, `notFound` 404, `error` / `fatal` 500).
+ * Bound HTML sealer. Walks layouts on a document hit; slot hits skip layouts.
+ *
+ * @example
+ * ```ts
+ * export function Home({ html }: ReadArgs) {
+ *   return html(<h1>Hello</h1>);
+ * }
+ * ```
+ *
+ * @see https://dashi.run/docs/handlers#read-handler
  */
 export type SealHtml = (
   page: Element,
@@ -171,8 +278,16 @@ export type SealHtml = (
 ) => Response | Promise<Response>;
 
 /**
- * Bound patch sealer. Never walks layouts. Default status 200. Always
- * no-store.
+ * Bound patch sealer. Never walks layouts. Default status 200. Always no-store.
+ *
+ * @example
+ * ```ts
+ * export function add({ patches }: WriteArgs) {
+ *   return patches([patch.append("#todos", <li>milk</li>)]);
+ * }
+ * ```
+ *
+ * @see https://dashi.run/docs/handlers#write-handler
  */
 export type SealPatches = (
   list: readonly Patch[],

@@ -10,29 +10,10 @@ import type { FatalArgs } from "../shared/mod.ts";
 import { bindUrls, grantedNetworkInterfaces } from "./bind_urls.ts";
 
 /**
- * Starts the HTTP server.
+ * Starts the HTTP server from a pathless root table.
  *
- * The first argument is the root table callback. The root itself is
- * pathless; `notFound` here is the default 404. `routes` holds `route()`
- * entries and `group()` values. Layouts are shared UI only. They wrap
- * the route on document render, outermost first, after the route has
- * rendered, and do not run on slot renders. Never use them for
- * gating or state-setting — that belongs on middleware or individual
- * route handlers. Middleware is the request pipeline, outermost first,
- * and runs for document hits and slot hits. `error` catches
- * handler throws and inner group failures. `fatal` is the last-resort
- * 500 value when the error walk is exhausted.
- *
- * Compiles the client graph, then returns the `Deno.HttpServer` that
- * `Deno.serve` returns. Callers that only boot a process may omit
- * `await`. On listen, logs one `Listening on` line with localhost and,
- * when bound on all interfaces, each non-loopback IPv4 LAN URL. A
- * caller `onListen` runs after that line.
- *
- * @param build Root table. Pathless. `route()` and `group()` values go
- * in `routes`.
+ * @param build Root table callback. `route()` and `group()` values go in `routes`.
  * @param options Forwarded to `Deno.serve`, plus `fatal`.
- * `handler` is always the router.
  *
  * @example
  * ```ts
@@ -42,6 +23,8 @@ import { bindUrls, grantedNetworkInterfaces } from "./bind_urls.ts";
  *   routes: [route("/", { GET: ({ html }) => html(<h1>Hi</h1>) })],
  * }));
  * ```
+ *
+ * @see https://dashi.run/docs/routing#serve
  */
 export async function serve<
   State extends Record<string, unknown> = Record<string, unknown>,

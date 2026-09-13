@@ -7,7 +7,16 @@
 import { mergeVary } from "../caching/mod.ts";
 import { METHODS, type Middleware } from "../shared/mod.ts";
 
-/** Allowed origin: a string, a list, or a function of the request Origin. */
+/**
+ * Allowed origin: a string, a list, or a function of the request Origin.
+ *
+ * @example
+ * ```ts
+ * const origin: CorsOrigin = "https://app.example.com";
+ * ```
+ *
+ * @see https://dashi.run/docs/and-more#cors
+ */
 export type CorsOrigin =
   | string
   | readonly string[]
@@ -22,7 +31,19 @@ interface CorsOptionsBase {
   maxAge?: number;
 }
 
-/** CORS options. `credentials: true` requires an explicit `origin`. */
+/**
+ * CORS options. `credentials: true` requires an explicit `origin`.
+ *
+ * @example
+ * ```ts
+ * const options: CorsOptions = {
+ *   origin: "https://app.example.com",
+ *   credentials: true,
+ * };
+ * ```
+ *
+ * @see https://dashi.run/docs/and-more#cors
+ */
 export type CorsOptions =
   | (CorsOptionsBase & { credentials?: false })
   | (CorsOptionsBase & { origin: CorsOrigin; credentials: true });
@@ -70,10 +91,7 @@ function assignCorsHeaders(
 /**
  * CORS middleware. Attach on `group()`.
  *
- * OPTIONS returns 204 with CORS headers and does not call `next()`.
- * Other methods call `next()` and add CORS headers to that response.
- *
- * @param options Origin, methods, headers, credentials, and max-age.
+ * @param options CORS policy. Defaults to `*` origin.
  *
  * @example
  * ```ts
@@ -82,6 +100,8 @@ function assignCorsHeaders(
  *   routes: [route("/ok", { GET: () => Response.json({ ok: true }) })],
  * }));
  * ```
+ *
+ * @see https://dashi.run/docs/and-more#cors
  */
 export function cors<
   State extends Record<string, unknown> = Record<string, unknown>,

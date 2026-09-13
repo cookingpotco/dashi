@@ -23,10 +23,7 @@ export function registerPatches(apply: (html: string) => boolean): void {
 }
 
 /**
- * Browser-only. Fetch `url` and swap the connected `<navigation-root>`
- * in place. Pushes history and scrolls to the top, or to the hash
- * target. Without a page host, or when the response cannot be swapped,
- * does a real navigation.
+ * Fetch `url` and swap the connected `<navigation-root>` in place.
  *
  * @param url Destination, resolved against `location.href` if relative.
  *
@@ -35,6 +32,8 @@ export function registerPatches(apply: (html: string) => boolean): void {
  * import { navigate } from "dashi/client";
  * await navigate("/about");
  * ```
+ *
+ * @see https://dashi.run/docs/soft-navigation#client
  */
 export function navigate(url: string | URL): Promise<void> {
   if (page !== null) {
