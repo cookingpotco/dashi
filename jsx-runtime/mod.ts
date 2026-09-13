@@ -6,7 +6,11 @@
 
 import { asTrustedHtml, type Element, isTrustedHtml } from "./jsx_types.ts";
 
-/** JSX namespace used by `jsxImportSource`. */
+/**
+ * JSX namespace used by `jsxImportSource`.
+ *
+ * @see https://dashi.run/docs/jsx#types
+ */
 export type * as JSX from "./jsx_types.ts";
 export { type HTMLAttributes, type SVGAttributes } from "./dom_types.ts";
 export { type DashiNode, type Element } from "./jsx_types.ts";

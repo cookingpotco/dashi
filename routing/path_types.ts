@@ -184,7 +184,11 @@ type MergeParams<Segments extends string[]> = Segments extends
   : never
   : Record<string, never>;
 
-/** Params inferred from a path literal like `/posts/:id`. */
+/**
+ * Params inferred from a path literal like `/posts/:id`.
+ *
+ * @see https://dashi.run/docs/routing#params
+ */
 export type ParamsOf<Path extends string> = [PathError<Path>] extends [never]
   ? Flatten<MergeParams<SegmentsOf<Path>>>
   : never;

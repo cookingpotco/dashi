@@ -106,23 +106,22 @@ async function realPath(path: string): Promise<string | null> {
 /**
  * Streams a file from `dir`.
  *
- * @param ctx Request context; used for `If-None-Match`.
- * @param dir Directory to read from. Relative paths resolve against
- *   `Deno.cwd()`; pass `${import.meta.dirname}/static` so the folder
- *   travels with the module.
- * @param relative Path under `dir`, typically a catch-all route param.
- * @param cache How this resource should be cached. Defaults to no-store.
- *   Shared caches cannot vary on `Cookie` or `*`.
+ * @param ctx Request context.
+ * @param dir Directory to read from.
+ * @param relative Path under `dir`.
+ * @param cache Cache policy. Defaults to no-store.
  *
  * @example
  * ```ts
- * route("/assets/:path*", {
+ * route("/static/:file", {
  *   GET: ({ ctx }) =>
-      staticFile(ctx, `${import.meta.dirname}/static`, ctx.params.file, {
-        strategy: CacheStrategy.Immutable,
-      }),
- * })
+ *     staticFile(ctx, `${import.meta.dirname}/static`, ctx.params.file, {
+ *       strategy: CacheStrategy.Immutable,
+ *     }),
+ * });
  * ```
+ *
+ * @see https://dashi.run/docs/and-more#static-files
  */
 export async function staticFile(
   ctx: Ctx<Record<string, unknown>, Record<string, string>>,

@@ -3,7 +3,11 @@ import type * as dom from "./dom_types.ts";
 /** @internal */
 export const trustedHtmlBrand: unique symbol = Symbol("dashi.trustedHtml");
 
-/** HTML returned by JSX. */
+/**
+ * HTML returned by JSX.
+ *
+ * @see https://dashi.run/docs/jsx#types
+ */
 export type Element = string & {
   /** @internal */
   readonly [trustedHtmlBrand]: true;
@@ -22,7 +26,11 @@ export function asTrustedHtml(html: string): Element {
   return value;
 }
 
-/** A value that can appear as a JSX child. */
+/**
+ * A value that can appear as a JSX child.
+ *
+ * @see https://dashi.run/docs/jsx#types
+ */
 export type DashiNode = dom.Node | Element;
 
 /** @internal */

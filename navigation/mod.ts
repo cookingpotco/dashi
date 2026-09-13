@@ -7,23 +7,16 @@ const NavigationRootElement = client.element(
 );
 
 /**
- * Wraps the region that swaps on soft navigation. Put it in the
- * root layout around the page content; persistent elements left
- * outside survive.
+ * Wraps the region that swaps on soft navigation.
  *
- * Same-origin left-clicks, GET forms, and form redirects fetch the
- * next document and replace this element's children. The incoming
- * `<head>` is merged: matching stylesheets and scripts stay, the rest
- * of the live head is replaced, and new stylesheets load before the
- * swap. History, back/forward, and scroll restoration are included.
- * `hardNavigation` on an `<a>` or a form opts that control out. From
- * client TypeScript, `import { navigate } from "dashi/client"`. After
- * a successful swap, this element dispatches `dashi:navigated`
- * (`bubbles`, `composed`) with `{ url, push }`. Listen on `document`
- * or the host.
+ * @param props Standard HTML attributes; put page content in `children`.
  *
- * Without this element, GET navigation is a real load. Writes apply in place;
- * redirects need this host for an in-place swap.
+ * @example
+ * ```tsx
+ * <NavigationRoot>{children}</NavigationRoot>
+ * ```
+ *
+ * @see https://dashi.run/docs/soft-navigation#navigationroot
  */
 export function NavigationRoot(props: HTMLAttributes): Element {
   return jsx(NavigationRootElement, { ...props });

@@ -25,6 +25,14 @@ Two cases earn one.
 **JSDoc on a function**, for external API surface or genuinely complex logic. Not
 on every function, and not to restate the signature.
 
+Public export JSDoc is one sentence (what it is), `@param` (one short clause per
+argument when the function has parameters; a bag names the bag, not its fields),
+`@see https://dashi.run/docs/…` to the matching handbook h2, and `@example` only
+where someone constructs a value and passes it (functions, value objects like
+`patch` / `client`, and option bags). Received args, bound sealers, and
+annotation types get sentence plus `@see` only. Nested members and `@internal`
+compiler symbols are not this formula.
+
 **A note on something done unusually**, where the reason is not obvious from the
 code and the next reader would otherwise "fix" it. Going against convention,
 suppressing a lint rule, working around a bug elsewhere, or anything temporary.

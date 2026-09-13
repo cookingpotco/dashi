@@ -16,231 +16,30 @@
 
 ## What is dashi?
 
-dashi is a server-first web framework for Deno that compiles JSX to HTML strings
-on the server. No VDOM, no hydration, no client framework. Pages update by
-swapping server-rendered route slots, in the spirit of
-[Hotwire](https://hotwired.dev/) and [htmx](https://htmx.org/).
+dashi is a server-first web framework for Deno. JSX is precompiled to HTML with
+no VDOM intermediary or hydration. Pages update by swapping server-rendered
+HTML, in the spirit of [Hotwire](https://hotwired.dev/) and
+[htmx](https://htmx.org/).
 
 ```tsx
-import { serve } from "dashi";
-
-serve(({ route }) => ({
-  routes: [
-    route("/", {
-      GET: ({ html }) => html(<h1>Hello</h1>),
-    }),
-  ],
-}));
-```
-
-## Features
-
-- **Route slots.** Client-fetch an explicit route with `<RouteSlot src>`.
-  `fetchWhen="visible"` waits for first intersection (`fallback` required); omit
-  `fetchWhen` to fetch after the host connects.
-- **Patches.** In response to form submissions or manual API calls, handlers
-  seal a patch list with `patches()` — `patch.update`, `patch.replace`, and
-  friends target `#id` holes; `patch.refresh` re-GETs every matching slot.
-- **Explicit route table.** Typed params from the path literal, and per-method
-  handlers, in one `serve()` callback. A path ending in `/` (except `/`) gets a
-  301 to the same path without the slash, before routing and middleware; query
-  is preserved.
-- **Web standards.** Handlers read `ctx.req` as a `Request` and return a
-  `Response`. HTML goes through `html()` or `patches()`. Client code uses native
-  custom elements and plain DOM access.
-- **Per-route cache control.** Pass `{ cache }` to `html()`.
-
-## By design
-
-- No runtime dependencies.
-- Small and powerful API, with only one way to do each thing.
-- Explicit client inclusion: every document ships the forms client (submit
-  interception and patch apply). Other JS ships only when you call
-  `client.module` or `client.element` at module scope.
-- Explicit over magic: no file-system routing, no prefixes or hidden flows.
-
-## Quick start
-
-```sh
-deno create jsr:@cookingpot/dashi -- my-dashi-app
-cd my-dashi-app
-deno task dev
-```
-
-Open http://localhost:8000.
-
-## Route slots
-
-Same-request UI is a component import. A `<RouteSlot src>` GETs that route later
-and swaps the slot. `fetchWhen="visible"` waits for the first viewport
-intersection (`fallback` is required). Omit `fetchWhen` to fetch after the host
-connects; `fallback` is optional then. `patch.refresh` may re-GET a visible slot
-before it intersects.
-
-```tsx
-<RouteSlot src="/todos" />
-<RouteSlot
-  src="/demo"
-  fetchWhen="visible"
-  fallback={<p>Loading...</p>}
-/>
-```
-
-```tsx
-import { patch, type ReadArgs, RouteSlot, serve, type WriteArgs } from "dashi";
-
-const todos: string[] = [];
+import { type ReadArgs, serve } from "dashi";
 
 function Home({ html }: ReadArgs) {
-  return html(
-    <html>
-      <h1>Todos</h1>
-      <RouteSlot src="/todos" />
-    </html>,
-  );
-}
-
-function TodoList({ error }: { error?: string }) {
-  return (
-    <div>
-      <ul id="todos">
-        {todos.map((todo) => <li>{todo}</li>)}
-      </ul>
-      {error ? <p>{error}</p> : null}
-      <form method="POST" action="/todos">
-        <input name="title" />
-        <button type="submit">Add</button>
-      </form>
-    </div>
-  );
-}
-
-function list({ html }: ReadArgs) {
-  return html(
-    <div id="todos-root">
-      <TodoList />
-    </div>,
-  );
-}
-
-async function create({ ctx, patches }: WriteArgs) {
-  const title = (await ctx.req.formData()).get("title");
-  if (typeof title !== "string" || title.trim() === "") {
-    return patches([
-      patch.update("#todos-root", <TodoList error="title is required" />),
-    ], { status: 422 });
-  }
-  todos.push(title);
-  return patches([patch.update("#todos-root", <TodoList />)]);
+  return html(<h1>Hello</h1>);
 }
 
 serve(({ route }) => ({
   routes: [
     route("/", { GET: Home }),
-    route("/todos", { GET: list, POST: create }),
   ],
 }));
 ```
 
-A slot GET fills the host that asked (`innerHTML`). `patch.update` / `replace` /
-`append` / `prepend` / `before` / `after` / `remove` each take a `#${string}`
-id. `refresh` accepts only a route and re-GETs every `<route-slot src="…">`.
-`update` replaces children; `replace` swaps the element itself. `before` /
-`after` sit beside the target. Use `update` or `replace` when the write has the
-markup; use `refresh` when slots should re-fetch themselves asynchronously. A
-write handler seals that list with `patches()`, or returns a non-HTML `Response`
-(redirect, JSON, 204, etc.). The form can sit anywhere on the page.
-
-## Other features
-
-**Layouts** are shared UI only. They wrap the route on document render,
-outermost first, after the route has rendered, and do not run on slot renders.
-Never use them for gating or state-setting — that belongs on middleware or
-individual route handlers. A layout is `({ ctx, children }) => ...`. Attach
-`layouts: [RootLayout]` on the table or a `group()`.
-
-**Middleware** is a `({ ctx, next }) => Response` factory attached on `group()`.
-It runs for document hits and slot hits.
-
-**Prefixed `group()`** joins a path onto child routes. `group("/", cb)` is a
-wrap and adds no URL segment. `serve()` is the root table and takes no prefix.
-Import `group` from `dashi` in a feature `mod.ts` and drop the `Group` into the
-root callback:
-
-```tsx
-// posts/mod.tsx
-import { group } from "dashi";
-
-export const posts = group("/posts", ({ route }) => ({
-  routes: [
-    route("/:id", { GET: ({ ctx, html }) => html(<p>{ctx.params.id}</p>) }),
-  ],
-}));
+```sh
+deno create jsr:@cookingpot/dashi
 ```
 
-```tsx
-// main.ts
-import { serve } from "dashi";
-import { posts } from "./posts/mod.ts";
-
-serve(({ route }) => ({
-  routes: [
-    route("/", { GET: Home }),
-    posts,
-  ],
-}));
-```
-
-**Error boundaries.** `notFound` and `error` live on the table. `fatal` is the
-last-resort 500 on `serve()` options: no layouts, no `ctx`, no `thrown`.
-
-**Client TypeScript** attaches with `client.module` / `client.element` at module
-scope, not inside a component or handler. Documents get an import map and always
-ship the forms client (submit interception and `patches([...])` apply). A module
-script for your own client code is added only when that host rendered.
-
-```tsx
-const Clock = client.module(new URL("./clock_client.ts", import.meta.url));
-```
-
-**Soft navigation** and **route slots** are opt-in. Wrap the swapping region in
-`<NavigationRoot>` in the root layout. Same-origin clicks, GET forms, and form
-redirects fetch the next document and replace the host's children. History,
-back/forward, and scroll restoration are included. Opt a link or form out with
-`hardNavigation`. From client TypeScript,
-`import { navigate } from "dashi/client"` and call `navigate(url)` for the same
-swap. Persistent elements left outside the host survive. The incoming document's
-`<head>` is merged so title, meta, and stylesheets update without unloading CSS
-already on the page. After a successful swap, the host dispatches
-`dashi:navigated` (`bubbles`, `composed`) with `{ url, push }`. Listen on
-`document` or the host.
-
-```ts
-document.addEventListener("dashi:navigated", (event) => {
-  if (!(event instanceof CustomEvent)) {
-    return;
-  }
-  const { url, push } = event.detail;
-});
-```
-
-**Static files** from a directory: `staticFile(ctx, dir, relative)` in a route
-handler. Pass `${import.meta.dirname}/static` so the folder travels with the
-module.
-
-**CORS** is `import { cors } from "dashi/cors"`, attached on `group()` in a
-feature `mod.ts`:
-
-```tsx
-// api/mod.ts
-import { group } from "dashi";
-import { cors } from "dashi/cors";
-
-export const api = group("/api", ({ route }) => ({
-  middleware: [cors()],
-  routes: [route("/ok", { GET: () => Response.json({ ok: true }) })],
-}));
-```
+Learn more in the [dashi docs](https://dashi.run/docs/introduction).
 
 ## Not yet
 

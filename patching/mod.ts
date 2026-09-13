@@ -67,7 +67,11 @@ interface RefreshPatch {
   readonly target: `/${string}`;
 }
 
-/** One targeted update for a `#${string}` hole or a route refresh. */
+/**
+ * One targeted update for a `#${string}` hole or a route refresh.
+ *
+ * @see https://dashi.run/docs/handlers#write-handler
+ */
 export type Patch =
   | UpdatePatch
   | ReplacePatch
@@ -198,15 +202,13 @@ function refresh(target: `/${string}`): Patch {
 
 /**
  * Targeted updates from a write handler. Seal them with `patches()`.
- * GET cannot return these; a slot GET still replaces the host that asked.
  *
- * `update`, `replace`, `append`, `prepend`, `before`, `after`, and
- * `remove` each take a `#${string}` id. `refresh` accepts only a route.
- * `update` / `append` / `prepend` mutate children; `replace` swaps the
- * node; `before` / `after` insert siblings; `remove` drops the node;
- * `refresh` re-GETs every matching slot. Use `update` or `replace` when
- * the write has the markup; use `refresh` when slots should re-fetch
- * themselves asynchronously.
+ * @example
+ * ```ts
+ * return patches([patch.append("#todos", <li>milk</li>)]);
+ * ```
+ *
+ * @see https://dashi.run/docs/handlers#write-handler
  */
 export const patch = {
   update,

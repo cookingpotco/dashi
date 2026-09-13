@@ -37,27 +37,17 @@ interface VisibleSlotProps extends Omit<BaseRouteSlotProps, "fallback"> {
 type RouteSlotProps = BaseRouteSlotProps | VisibleSlotProps;
 
 /**
- * Client-fetch an explicit route into a slot. Omit `fetchWhen` to fetch after
- * connect; `fetchWhen="visible"` waits for first intersection and requires
- * `fallback`.
+ * Client-fetch an explicit route into a slot.
  *
- * A `patch.refresh` on the same route may fire before a visible slot
- * intersects; the slot still fetches on connect when `fetchWhen` is omitted.
- *
- * @param src Path to fetch, like `/todos`.
- * @param fetchWhen `"visible"` waits for first intersection; `fallback` is
- * required.
- * @param fallback Shown while the slot is loading.
+ * @param props Route to fetch and optional fallback; `fetchWhen="visible"` requires fallback.
  *
  * @example
  * ```tsx
  * <RouteSlot src="/todos" />
- * <RouteSlot
- *   src="/demo"
- *   fetchWhen="visible"
- *   fallback={<p>Loading…</p>}
- * />
+ * <RouteSlot src="/demo" fetchWhen="visible" fallback={<p>Loading…</p>} />
  * ```
+ *
+ * @see https://dashi.run/docs/slots#routeslot
  */
 export function RouteSlot(props: BaseRouteSlotProps): Element;
 /** `fetchWhen="visible"`; `fallback` is required. */
