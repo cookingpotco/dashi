@@ -35,6 +35,8 @@ serve(({ route }) => ({
 }));
 ```
 
+## Get started with
+
 ```sh
 deno create jsr:@cookingpot/dashi
 ```
