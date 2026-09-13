@@ -39,7 +39,7 @@ serve(({ route }) => ({
 deno create jsr:@cookingpot/dashi
 ```
 
-Learn more on [dashi.run](https://dashi.run).
+Learn more in the [dashi docs](https://dashi.run/docs/introduction).
 
 ## Not yet
 
