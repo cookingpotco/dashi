@@ -204,13 +204,9 @@ registered.set(FORMS_CLIENT.href, FORMS_CLIENT);
 
 const FORMS_CLIENT_MARKERS = /<(?:form|navigation-root|route-slot)(?:[\s/>]|$)/;
 
-function documentNeedsFormsClient(html: string): boolean {
-  return FORMS_CLIENT_MARKERS.test(html);
-}
-
 /** @internal */
 export function recordFormsClientEntry(html: string): void {
-  if (!documentNeedsFormsClient(html)) {
+  if (!FORMS_CLIENT_MARKERS.test(html)) {
     return;
   }
   recordEntry(FORMS_CLIENT.href);

@@ -55,6 +55,19 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
+    name: "navigation root without a form ships the forms client",
+    request: { path: "/nav-only" },
+    status: 200,
+    html: {
+      bodyIncludes: ["submit_client-", "navigation_root_client-"],
+      select: [
+        { selector: "navigation-root", exists: true },
+        { selector: "#nav-only", text: "no form" },
+        { selector: "form", exists: false },
+      ],
+    },
+  },
+  {
     name: "nested page wraps in both layouts",
     request: { path: "/nested" },
     status: 200,
