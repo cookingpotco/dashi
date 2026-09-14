@@ -207,6 +207,9 @@ export const client = { module, element };
 const FORMS_CLIENT = new URL("../forms/submit_client.ts", import.meta.url);
 registered.set(FORMS_CLIENT.href, FORMS_CLIENT);
 bindFormClientRecorder(() => {
+  if (!inRender()) {
+    return;
+  }
   recordEntry(FORMS_CLIENT.href);
 });
 

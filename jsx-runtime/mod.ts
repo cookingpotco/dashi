@@ -17,7 +17,6 @@ export { type DashiNode, type Element } from "./jsx_types.ts";
 /** @internal */
 export type { trustedHtmlBrand } from "./jsx_types.ts";
 
-// Closed list matching Deno's jsx precompile void elements.
 type FormClientRecorder = () => void;
 
 let formClientRecorder: FormClientRecorder | undefined;
@@ -33,6 +32,7 @@ export function bindFormClientRecorder(recorder: FormClientRecorder): void {
   formClientRecorder = recorder;
 }
 
+// Closed list matching Deno's jsx precompile void elements.
 const VOID_ELEMENTS = new Set([
   "area",
   "base",
