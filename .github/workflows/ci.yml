@@ -112,6 +112,7 @@ jobs:
 
       - name: ${{ matrix.name }}
         run: ${{ matrix.run }}
+        working-directory: ${{ matrix.working-directory || '.' }}
 
       - uses: actions/upload-artifact@v4
         if: ${{ failure() && matrix.name == 'E2E' }}
