@@ -6,9 +6,10 @@ alwaysApply: true
 # Public API
 
 App code imports from `dashi`, except JSX types from `dashi/jsx-runtime`,
-browser APIs from `dashi/client`, and CORS from `dashi/cors`. Do not
-re-export JSX types from root `mod.ts`. Do not star-export internals. Do
-not add a second specifier for something already on one entry.
+browser APIs from `dashi/client`, CORS from `dashi/cors`, and optional styling
+from `@cookingpot/dashi-css`. Still not a `dashi` subpath. Do not re-export JSX
+types from root `mod.ts`. Do not star-export internals. Do not add a second
+specifier for something already on one entry.
 
 Adding a published export is fine. Removing or renaming one is a breaking
 0.x change.
@@ -46,3 +47,8 @@ Types: `JSX` namespace, `Element`, `DashiNode`, `HTMLAttributes`,
 ## `dashi/create`
 
 CLI only: `deno create jsr:@cookingpot/dashi`. App code does not import it.
+
+## `@cookingpot/dashi-css`
+
+`buildCss`, `BuildCssOptions`, `cn`, `stylesheetHref`. CLI when the module is
+the `deno run` entry (`import.meta.main`).

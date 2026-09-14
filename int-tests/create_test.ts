@@ -1,23 +1,53 @@
 import { assertEquals, assertMatch, assertNotEquals } from "@std/assert";
+import cssJson from "../css/deno.json" with { type: "json" };
 import dashiJson from "../deno.json" with { type: "json" };
 
 const CHECKOUT = Deno.realPathSync(`${import.meta.dirname}/..`);
 const CREATE = `jsr:${dashiJson.name}@${dashiJson.version}/create`;
 const BOOT_TIMEOUT_MS = 15_000;
 
+function recordStringMap(
+  value: unknown,
+  label: string,
+): Record<string, string> {
+  if (typeof value !== "object" || value === null) {
+    throw new Error(`invalid ${label}`);
+  }
+  const map: Record<string, string> = {};
+  for (const [key, entry] of Object.entries(value)) {
+    if (typeof entry !== "string") {
+      throw new Error(`invalid ${label}`);
+    }
+    map[key] = entry;
+  }
+  return map;
+}
+
+function manifestHref(value: unknown): string {
+  if (typeof value !== "object" || value === null) {
+    throw new Error("invalid styles.json");
+  }
+  const href = Reflect.get(value, "href");
+  if (typeof href !== "string") {
+    throw new Error("invalid styles.json");
+  }
+  return href;
+}
+
 async function writeCreateLinks(cwd: string): Promise<void> {
   await Deno.writeTextFile(
     `${cwd}/deno.json`,
-    `${JSON.stringify({ links: [CHECKOUT] }, null, 2)}\n`,
+    `${JSON.stringify({ links: [CHECKOUT, `${CHECKOUT}/css`] }, null, 2)}\n`,
   );
 }
 
 async function linkScaffoldToCheckout(dest: string): Promise<void> {
   const path = `${dest}/deno.json`;
-  const config = JSON.parse(await Deno.readTextFile(path)) as {
-    links?: string[];
-  };
-  config.links = [CHECKOUT];
+  const config = JSON.parse(await Deno.readTextFile(path));
+  if (typeof config !== "object" || config === null) {
+    throw new Error("invalid deno.json");
+  }
+  Reflect.set(config, "links", [CHECKOUT, `${CHECKOUT}/css`]);
   await Deno.writeTextFile(path, `${JSON.stringify(config, null, 2)}\n`);
 }
 
@@ -90,10 +120,18 @@ Deno.test("deno create scaffolds a runnable app", async (t) => {
     await Deno.stat(`${dest}/.cursor/rules/app-layout.mdc`);
     const config = JSON.parse(
       await Deno.readTextFile(`${dest}/deno.json`),
-    ) as { imports: Record<string, string> };
+    );
+    if (typeof config !== "object" || config === null) {
+      throw new Error("invalid deno.json");
+    }
+    const imports = recordStringMap(Reflect.get(config, "imports"), "imports");
     assertEquals(
-      config.imports.dashi,
+      imports.dashi,
       `jsr:${dashiJson.name}@^${dashiJson.version}`,
+    );
+    assertEquals(
+      imports["@cookingpot/dashi-css"],
+      `jsr:${cssJson.name}@^${cssJson.version}`,
     );
     assertEquals(
       await Deno.readFile(`${dest}/static/favicon.ico`),
@@ -156,11 +194,17 @@ Deno.test("deno create scaffolds a runnable app", async (t) => {
       }
       assertMatch(homeBody, />cool-app</);
 
-      const manifest = JSON.parse(
-        await Deno.readTextFile(`${dest}/styles.json`),
-      ) as { href: string };
+      const manifestHrefValue = manifestHref(
+        JSON.parse(await Deno.readTextFile(`${dest}/styles.json`)),
+      );
+      assertMatch(
+        homeBody,
+        new RegExp(
+          `href="${manifestHrefValue.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`,
+        ),
+      );
       const generated = await fetch(
-        `http://127.0.0.1:${port}${manifest.href}`,
+        `http://127.0.0.1:${port}${manifestHrefValue}`,
       );
       const generatedBody = await generated.text();
       assertEquals(generated.status, 200);

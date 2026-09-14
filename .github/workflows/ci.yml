@@ -79,6 +79,10 @@ jobs:
           - name: Publish dry-run
             run: deno publish --dry-run
             timeout: 10
+          - name: Publish dry-run css
+            run: deno publish --dry-run
+            working-directory: css
+            timeout: 10
           - name: Fresh project
             run: deno run -A scripts/verify_fresh_project.ts --linked
             timeout: 10
@@ -108,6 +112,7 @@ jobs:
 
       - name: ${{ matrix.name }}
         run: ${{ matrix.run }}
+        working-directory: ${{ matrix.working-directory || '.' }}
 
       - uses: actions/upload-artifact@v4
         if: ${{ failure() && matrix.name == 'E2E' }}

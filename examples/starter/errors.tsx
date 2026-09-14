@@ -1,5 +1,10 @@
+import { stylesheetHref } from "@cookingpot/dashi-css";
 import type { ErrorArgs, FatalArgs, NotFoundArgs } from "dashi";
-import styles from "./styles.json" with { type: "json" };
+
+if (import.meta.dirname === undefined) {
+  throw new Error("import.meta.dirname is required");
+}
+const appRoot = import.meta.dirname;
 
 function ErrorWell({ code, message }: { code: string; message: string }) {
   return (
@@ -38,7 +43,10 @@ export function fatal({ html }: FatalArgs) {
           href="/static/favicon.ico"
           type="image/x-icon"
         />
-        <link rel="stylesheet" href={styles.href} />
+        <link
+          rel="stylesheet"
+          href={stylesheetHref(appRoot)}
+        />
       </head>
       <body className="flex min-h-screen flex-col">
         <ErrorWell code="500" message="Something went wrong." />
