@@ -5,7 +5,8 @@ Tailwind v4 build and `className` helpers for [Dashi](https://dashi.run) apps.
 ## Setup
 
 1. Add `npm:tailwindcss@4` and `jsr:@cookingpot/dashi-css` to the app
-   `deno.json`.
+   `deno.json`, with `"nodeModulesDir": "auto"` so `@import "tailwindcss"`
+   resolves.
 2. Create `styles.css`:
 
 ```css

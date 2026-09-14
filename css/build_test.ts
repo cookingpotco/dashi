@@ -98,12 +98,14 @@ Deno.test("buildCss watch keeps previous fingerprint while rebuilding", async (t
     await setupTailwindProject(root);
     const ac = new AbortController();
     let buildError: Error | undefined;
-    void buildCss({ root, watch: true, signal: ac.signal }).catch((error) => {
-      if (error instanceof DOMException && error.name === "AbortError") {
-        return;
-      }
-      buildError = error instanceof Error ? error : new Error(String(error));
-    });
+    const build = buildCss({ root, watch: true, signal: ac.signal }).catch(
+      (error) => {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+        buildError = error instanceof Error ? error : new Error(String(error));
+      },
+    );
 
     const deadline = Date.now() + 30_000;
     while (Date.now() < deadline) {
@@ -138,6 +140,9 @@ Deno.test("buildCss watch keeps previous fingerprint while rebuilding", async (t
       }
       hrefB = await readManifestHref(root);
       if (hrefB !== hrefA) {
+        const nameBNow = hrefB.replace("/generated/", "");
+        await Deno.stat(`${root}/generated/${nameA}`);
+        await Deno.stat(`${root}/generated/${nameBNow}`);
         break;
       }
       await new Promise((resolve) => setTimeout(resolve, 50));
@@ -190,7 +195,7 @@ Deno.test("buildCss watch keeps previous fingerprint while rebuilding", async (t
     });
 
     ac.abort();
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await build;
     if (buildError !== undefined) {
       throw buildError;
     }

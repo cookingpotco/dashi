@@ -1,4 +1,4 @@
-// Waits for styles.json, runs Tailwind in-process, then starts the app.
+// Waits for styles.json, runs buildCss in watch mode, then starts the app.
 import { buildCss } from "@cookingpot/dashi-css";
 
 if (import.meta.dirname === undefined) {
@@ -41,10 +41,10 @@ void buildCss({ root: ROOT, watch: true, signal: ac.signal }).then(
     }
     buildFailed = true;
     stop();
-    if (error instanceof Error && "code" in error) {
-      const code = Reflect.get(error, "code");
-      if (typeof code === "number") {
-        Deno.exit(code);
+    if (error instanceof Error) {
+      const match = error.message.match(/exited with code (\d+)/);
+      if (match !== null) {
+        Deno.exit(Number(match[1]));
       }
     }
     Deno.exit(1);

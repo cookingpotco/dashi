@@ -26,7 +26,7 @@ function spawnTailwind(
     outPath,
   );
   if (watch) {
-    args.push("--watch", "--poll");
+    args.push("--watch=always", "--poll");
   }
   return new Deno.Command(Deno.execPath(), {
     args,
@@ -87,6 +87,9 @@ async function fingerprint(
   const name = `styles-${hash}.css`;
   const href = `/generated/${name}`;
   const previousHref = await readPreviousHref(options.manifest);
+  if (options.watch && previousHref === href) {
+    return;
+  }
   await Deno.mkdir(options.generatedDir, { recursive: true });
   await Deno.writeFile(`${options.generatedDir}/${name}`, bytes);
   await Deno.writeTextFile(
@@ -125,6 +128,7 @@ function throwIfAborted(signal?: AbortSignal): void {
 /**
  * Runs the Tailwind CLI and writes a fingerprinted stylesheet manifest.
  *
+ * @param options Root directory, watch flag, and optional abort signal.
  * @see https://dashi.run/docs/styling#buildcss
  */
 export async function buildCss(options: BuildCssOptions): Promise<void> {
@@ -207,20 +211,14 @@ export async function buildCss(options: BuildCssOptions): Promise<void> {
       fail(abortError());
     }, { once: true });
 
-    const superviseChild = async (): Promise<void> => {
-      while (!signal?.aborted) {
-        const status = await tailwind.child.status;
-        if (signal?.aborted) {
-          return;
-        }
-        if (!status.success) {
-          fail(new Error(`Tailwind CLI exited with code ${status.code}`));
-          return;
-        }
-        tailwind.child = spawnTailwind(root, source, outPath, true);
+    void tailwind.child.status.then((status) => {
+      if (signal?.aborted) {
+        return;
       }
-    };
-    void superviseChild();
+      if (!status.success) {
+        fail(new Error(`Tailwind CLI exited with code ${status.code}`));
+      }
+    });
 
     void (async () => {
       try {

@@ -12,6 +12,7 @@ function manifestHref(parsed: unknown, manifestPath: string): string {
 /**
  * Reads the hashed stylesheet URL from `styles.json` at request time.
  *
+ * @param root App root directory containing `styles.json`.
  * @see https://dashi.run/docs/styling#stylesheethref
  */
 export function stylesheetHref(root: string): string {
