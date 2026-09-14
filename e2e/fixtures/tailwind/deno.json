@@ -1,6 +1,0 @@
-{
-  "nodeModulesDir": "auto",
-  "imports": {
-    "tailwindcss": "npm:tailwindcss@4"
-  }
-}

@@ -525,7 +525,8 @@
       "e2e": {
         "dependencies": [
           "jsr:@astral/astral@0.5",
-          "jsr:@std/assert@1"
+          "jsr:@std/assert@1",
+          "npm:tailwindcss@4"
         ]
       },
       "examples/slots": {

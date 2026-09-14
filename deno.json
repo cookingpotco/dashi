@@ -18,6 +18,7 @@
   "lock": {
     "frozen": true
   },
+  "nodeModulesDir": "auto",
   "minimumDependencyAge": "P1D",
   "exclude": [".deno", "**/.deno"],
   "fmt": {

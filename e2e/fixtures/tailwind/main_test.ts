@@ -1,8 +1,13 @@
 import { assertEquals, assertMatch } from "@std/assert";
+import { buildCss } from "@cookingpot/dashi-css";
 import { withBrowser } from "../../harness.ts";
 import { start } from "./main.ts";
 
 Deno.test("tailwind builds, links, and applies in the document", async () => {
+  if (import.meta.dirname === undefined) {
+    throw new Error("import.meta.dirname is required");
+  }
+  await buildCss({ root: import.meta.dirname });
   await withBrowser(start, async ({ app, page }) => {
     await page.goto(`${app.origin}/`);
     const result = await page.evaluate(() => {

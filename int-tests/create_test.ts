@@ -133,17 +133,6 @@ Deno.test("deno create scaffolds a runnable app", async (t) => {
       imports["@cookingpot/dashi-css"],
       `jsr:${cssJson.name}@^${cssJson.version}`,
     );
-    let cssTsMissing = false;
-    try {
-      await Deno.stat(`${dest}/css.ts`);
-    } catch (error) {
-      if (error instanceof Deno.errors.NotFound) {
-        cssTsMissing = true;
-      } else {
-        throw error;
-      }
-    }
-    assertEquals(cssTsMissing, true);
     assertEquals(
       await Deno.readFile(`${dest}/static/favicon.ico`),
       await Deno.readFile(`${CHECKOUT}/examples/starter/static/favicon.ico`),

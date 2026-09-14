@@ -1,4 +1,4 @@
-import { stylesheetHref } from "../../../css/mod.ts";
+import { stylesheetHref } from "@cookingpot/dashi-css";
 import { type LayoutArgs } from "dashi";
 import type { Element } from "dashi/jsx-runtime";
 
