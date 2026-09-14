@@ -10,7 +10,6 @@ import { NestEmbed } from "./nest_embed.tsx";
 import { NestInner } from "./nest_inner.tsx";
 import { NestLazy } from "./nest_lazy.tsx";
 import { NestLazyEmbed } from "./nest_lazy_embed.tsx";
-import { NavOnly } from "./nav_only.tsx";
 import { ProbePage } from "./probe.tsx";
 import { Peer } from "./peer.tsx";
 import { PostsNew } from "./posts_new.tsx";
@@ -110,7 +109,6 @@ export function start() {
     error: RootError,
     routes: [
       route("/", { GET: Home }),
-      route("/nav-only", { GET: NavOnly }),
       route("/probe", { GET: ProbePage }),
       route("/cache-public", { GET: CachePublic }),
       route("/cache-public-cookie", { GET: CachePublicCookie }),

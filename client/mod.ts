@@ -1,6 +1,11 @@
 // Keep node:async_hooks ALS: Deno AsyncContext is not public yet.
 import { AsyncLocalStorage } from "node:async_hooks";
-import { type Element, jsx, jsxTemplate } from "../jsx-runtime/mod.ts";
+import {
+  bindFormClientRecorder,
+  type Element,
+  jsx,
+  jsxTemplate,
+} from "../jsx-runtime/mod.ts";
 import { Logger } from "../logging/mod.ts";
 import { cacheControl, CacheStrategy } from "../caching/mod.ts";
 import { DASHI_PREFIX, type ReadArgs } from "../shared/mod.ts";
@@ -201,16 +206,9 @@ export const client = { module, element };
 
 const FORMS_CLIENT = new URL("../forms/submit_client.ts", import.meta.url);
 registered.set(FORMS_CLIENT.href, FORMS_CLIENT);
-
-const FORMS_CLIENT_MARKERS = /<(?:form|navigation-root|route-slot)(?:[\s/>]|$)/;
-
-/** @internal */
-export function recordFormsClientEntry(html: string): void {
-  if (!FORMS_CLIENT_MARKERS.test(html)) {
-    return;
-  }
+bindFormClientRecorder(() => {
   recordEntry(FORMS_CLIENT.href);
-}
+});
 
 // Deno.bundle names each output from the source specifier and has no
 // entry map. Same-scheme graphs emit a short suffix of the path

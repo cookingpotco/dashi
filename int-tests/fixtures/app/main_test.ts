@@ -55,19 +55,6 @@ const appCases: IntegrationTestCase[] = [
     },
   },
   {
-    name: "navigation root without a form ships the forms client",
-    request: { path: "/nav-only" },
-    status: 200,
-    html: {
-      bodyIncludes: ["submit_client-", "navigation_root_client-"],
-      select: [
-        { selector: "navigation-root", exists: true },
-        { selector: "#nav-only", text: "no form" },
-        { selector: "form", exists: false },
-      ],
-    },
-  },
-  {
     name: "nested page wraps in both layouts",
     request: { path: "/nested" },
     status: 200,
@@ -1424,7 +1411,7 @@ Deno.test("main fixture app over HTTP", async (t) => {
       ...html.matchAll(/<script type="module" src="([^"]+)"><\/script>/g),
     ];
     try {
-      assertEquals(scripts.length, 2);
+      assertEquals(scripts.length, 1);
       const src = scripts.find((match) =>
         match[1]!.includes("route_slot_client-")
       )?.[1];
