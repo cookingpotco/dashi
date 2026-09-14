@@ -19,6 +19,7 @@
     "frozen": true
   },
   "minimumDependencyAge": "P1D",
+  "exclude": [".deno", "**/.deno"],
   "fmt": {
     "useBraces": "always",
     "singleBodyPosition": "nextLine",
