@@ -94,8 +94,8 @@ function seal(
   const html = String(page);
   const { clientEntries } = getClientCompileContext();
   let body = html;
+  recordFormsClientEntry(body);
   if (!options.isPartial) {
-    recordFormsClientEntry();
     body = injectModuleScripts(html, clientEntries, clientImportMap());
   }
   const bytes = new TextEncoder().encode(

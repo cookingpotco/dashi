@@ -98,8 +98,9 @@ cannot see project rules.
   files are `/_dashi/client/` via a reserved table route (flat
   `/_dashi/client/<name>-<hash>.js`). Relative imports are rewritten to the
   bundler path; the import map is bundler path → that public URL. Documents get
-  one import map and always ship the forms client; other module scripts are
-  added only when that host rendered. A route slot `import()`s its `Link`
+  one import map when a client module is needed; ship the forms client when the
+  tree has a form, NavigationRoot, or RouteSlot; other module scripts are added
+  only when that host rendered. A route slot `import()`s its `Link`
   modulepreloads before swap. `staticFile` is app-mounted disk files. Flag a
   second include, bundle, or inject path. `/_dashi/*` is reserved.
   `client/mod.ts` is the compiler; `client/registry_client.ts` is the browser
