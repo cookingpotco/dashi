@@ -30,14 +30,27 @@ function importMapFrom(html: string): Record<string, string> {
 
 const appCases: IntegrationTestCase[] = [
   {
-    name: "home page ships the forms client module script",
+    name: "home page omits client scripts without forms or client modules",
     request: { path: "/" },
+    status: 200,
+    html: {
+      bodyExcludes: ["submit_client-", '<script type="module"'],
+      select: [
+        { selector: 'script[type="importmap"]', exists: false },
+        { selector: 'script[type="module"]', exists: false },
+      ],
+    },
+  },
+  {
+    name: "guestbook page ships the forms client module script",
+    request: { path: "/guestbook" },
     status: 200,
     html: {
       bodyIncludes: ['<script type="module"', "submit_client-"],
       select: [
         { selector: 'script[type="importmap"]', exists: true },
         { selector: 'script[type="module"]', exists: true },
+        { selector: "form", attr: { method: "POST", action: "/guestbook" } },
       ],
     },
   },
@@ -1398,7 +1411,7 @@ Deno.test("main fixture app over HTTP", async (t) => {
       ...html.matchAll(/<script type="module" src="([^"]+)"><\/script>/g),
     ];
     try {
-      assertEquals(scripts.length, 2);
+      assertEquals(scripts.length, 1);
       const src = scripts.find((match) =>
         match[1]!.includes("route_slot_client-")
       )?.[1];
@@ -1474,7 +1487,7 @@ Deno.test("main fixture app over HTTP", async (t) => {
     });
     const fragHtml = await frag.text();
     try {
-      assertEquals(scripts.length, 2);
+      assertEquals(scripts.length, 1);
       const src = scripts.find((match) => match[1]!.includes("probe_client-"))
         ?.[1];
       if (src === undefined) {

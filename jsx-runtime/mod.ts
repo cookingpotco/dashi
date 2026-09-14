@@ -17,6 +17,21 @@ export { type DashiNode, type Element } from "./jsx_types.ts";
 /** @internal */
 export type { trustedHtmlBrand } from "./jsx_types.ts";
 
+type FormClientRecorder = () => void;
+
+let formClientRecorder: FormClientRecorder | undefined;
+
+const FORM_OPEN = /<form(?:[\s/>]|$)/;
+
+function noteFormRendered(): void {
+  formClientRecorder?.();
+}
+
+/** @internal */
+export function bindFormClientRecorder(recorder: FormClientRecorder): void {
+  formClientRecorder = recorder;
+}
+
 // Closed list matching Deno's jsx precompile void elements.
 const VOID_ELEMENTS = new Set([
   "area",
@@ -69,6 +84,12 @@ export function jsxTemplate(
   strings: string[],
   ...dynamic: Array<string | Element>
 ): Element {
+  for (const part of strings) {
+    if (FORM_OPEN.test(part)) {
+      noteFormRendered();
+    }
+  }
+
   const arr = [];
 
   for (let i = 0; i < dynamic.length; i++) {
@@ -255,6 +276,10 @@ export function jsx(
       return res;
     }
     return asTrustedHtml(jsxEscape(res));
+  }
+
+  if (type === "form") {
+    noteFormRendered();
   }
 
   const { children, dangerouslySetInnerHTML, ...rest } = props ?? {};
