@@ -6,7 +6,7 @@ if (import.meta.dirname === undefined) {
 }
 const ROOT = import.meta.dirname;
 const ac = new AbortController();
-let server: Deno.ChildProcess | undefined;
+const proc: { server?: Deno.ChildProcess } = {};
 
 function spawn(
   args: string[],
@@ -26,7 +26,7 @@ function spawn(
 function stop() {
   ac.abort();
   try {
-    server?.kill();
+    proc.server?.kill();
   } catch {
     // already exited
   }
@@ -66,13 +66,13 @@ while (true) {
   await new Promise((resolve) => setTimeout(resolve, 50));
 }
 
-server = spawn(["run", "-A", "--watch", `${ROOT}/main.ts`], {
+proc.server = spawn(["run", "-A", "--watch", `${ROOT}/main.ts`], {
   DASHI_MINIFY_CLIENT: "0",
 });
 
 Deno.addSignalListener("SIGINT", stop);
 Deno.addSignalListener("SIGTERM", stop);
 
-const status = await server.status;
+const status = await proc.server.status;
 stop();
 Deno.exit(status.code);
