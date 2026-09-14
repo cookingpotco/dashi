@@ -26,7 +26,13 @@ const STARTER = new URL("examples/starter/", ROOT);
 const OVERLAY = new URL("create/overlay/", ROOT);
 const OUT = new URL("create/generated_files.ts", ROOT);
 
-const SKIP = new Set(["node_modules", "generated", ".deno", "deno.lock"]);
+const SKIP = new Set([
+  "node_modules",
+  "generated",
+  "styles.json",
+  ".deno",
+  "deno.lock",
+]);
 
 const utf8 = new TextDecoder("utf-8", { fatal: true });
 

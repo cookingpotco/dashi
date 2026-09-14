@@ -18,9 +18,7 @@
   "lock": {
     "frozen": true
   },
-  "nodeModulesDir": "auto",
   "minimumDependencyAge": "P1D",
-  "exclude": ["node_modules", "**/node_modules"],
   "fmt": {
     "useBraces": "always",
     "singleBodyPosition": "nextLine",
