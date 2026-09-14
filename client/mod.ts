@@ -55,8 +55,9 @@ function importMapForEntries(
     }
   }
   const subset: Record<string, string> = {};
+  const includeChunks = needed.size > 0;
   for (const [key, value] of Object.entries(map)) {
-    if (needed.has(value)) {
+    if (needed.has(value) || (includeChunks && key.includes("/chunk-"))) {
       subset[key] = value;
     }
   }
