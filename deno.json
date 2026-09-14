@@ -7,6 +7,7 @@
     ]
   },
   "workspace": [
+    "./css",
     "./examples/slots",
     "./examples/starter",
     "./int-tests",
@@ -39,7 +40,7 @@
     "test:int": "deno test -A int-tests/",
     "test:e2e": "deno test -A --junit-path=e2e/results/junit.xml e2e/",
     "test:e2e:headed": "DASHI_E2E_HEADED=1 deno test -A e2e/",
-    "doc:lint": "deno doc --lint mod.ts client.ts jsx-runtime/mod.ts cors/mod.ts",
+    "doc:lint": "deno doc --lint mod.ts client.ts jsx-runtime/mod.ts cors/mod.ts css/mod.ts",
     "create:gen": "deno run -A scripts/gen_create_template.ts",
     "create:gen:check": "deno run -A scripts/gen_create_template.ts --check"
   },

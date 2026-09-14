@@ -24,6 +24,7 @@
     "jsr:@std/path@^1.0.8": "1.1.6",
     "jsr:@std/path@^1.1.5": "1.1.6",
     "jsr:@zip-js/zip-js@^2.7.52": "2.8.53",
+    "npm:tailwind-merge@3": "3.7.0",
     "npm:tailwindcss@4": "4.3.3"
   },
   "jsr": {
@@ -128,6 +129,9 @@
     }
   },
   "npm": {
+    "tailwind-merge@3.7.0": {
+      "integrity": "sha512-XPPUyAc+cvspz3lHTcR/QgPfW2A0lv/xQNIjX3HGhLR+Nq2lHaLq5MtTesHn8GUr3W3DguT2KT5x3NVgRtYwmA=="
+    },
     "tailwindcss@4.3.3": {
       "integrity": "sha512-gOhV3P7ufE62QDGg1zVaTgCR+EtPv92k2nIhVcVKcLmxT1sUBsQGhnZj175j+MqRt4zLF7ic+sCYjfhxMxj7YQ=="
     }
@@ -137,6 +141,12 @@
       "jsr:@std/assert@1"
     ],
     "members": {
+      "css": {
+        "dependencies": [
+          "jsr:@std/assert@1",
+          "npm:tailwind-merge@3"
+        ]
+      },
       "e2e": {
         "dependencies": [
           "jsr:@astral/astral@0.5",

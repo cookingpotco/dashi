@@ -32,9 +32,12 @@ filled on the client → user submits a form → GET soft-navigates or a write
 returns `patches()`. Drive UI changes with HTML renders, form submissions, and
 patch lists. Avoid custom JS and JSON endpoints for routine UI updates.
 
-**Styling.** Tailwind v4 on `className` only. No `class`, `tw`, or `css` props.
-`css.ts` writes `generated/styles-<hash>.css` and `styles.json`. The layout
-imports `styles.json`. Unhashed assets live under `/static/:file`.
+**Styling.** Tailwind v4 on `className` only. Source `styles.css`.
+`@cookingpot/dashi-css` (`deno task css` / `buildCss`) writes
+`generated/styles-<hash>.css` and `styles.json`. The layout uses
+`stylesheetHref(import.meta.dirname)`. Compose with `cn(...)`. Hashed CSS at
+`GET /generated/:file` with `CacheStrategy.Immutable`; unhashed assets at
+`GET /static/:file`. No `class`, `tw`, or `css` props.
 
 ## Best practices
 

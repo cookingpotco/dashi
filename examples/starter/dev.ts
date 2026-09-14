@@ -1,6 +1,12 @@
-// Waits for css.ts to write styles.json, then runs the app. Simplified once
-// styling moves into the framework (COO-128).
+// Waits for styles.json, runs Tailwind in-process, then starts the app.
+import { buildCss } from "@cookingpot/dashi-css";
+
+if (import.meta.dirname === undefined) {
+  throw new Error("import.meta.dirname is required");
+}
 const ROOT = import.meta.dirname;
+const ac = new AbortController();
+let server: Deno.ChildProcess | undefined;
 
 function spawn(
   args: string[],
@@ -17,13 +23,38 @@ function spawn(
   }).spawn();
 }
 
-const css = spawn(["run", "-A", `${ROOT}/css.ts`, "--watch"]);
-let cssStatus: Deno.CommandStatus | undefined;
-void css.status.then((status) => {
-  cssStatus = status;
-});
+function stop() {
+  ac.abort();
+  try {
+    server?.kill();
+  } catch {
+    // already exited
+  }
+}
+
+let buildFailed = false;
+void buildCss({ root: ROOT, watch: true, signal: ac.signal }).then(
+  () => {},
+  (error) => {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      return;
+    }
+    buildFailed = true;
+    stop();
+    if (error instanceof Error && "code" in error) {
+      const code = Reflect.get(error, "code");
+      if (typeof code === "number") {
+        Deno.exit(code);
+      }
+    }
+    Deno.exit(1);
+  },
+);
 
 while (true) {
+  if (buildFailed) {
+    Deno.exit(1);
+  }
   try {
     await Deno.stat(`${ROOT}/styles.json`);
     break;
@@ -32,38 +63,15 @@ while (true) {
       throw error;
     }
   }
-  if (cssStatus !== undefined) {
-    Deno.exit(cssStatus.success ? 1 : cssStatus.code);
-  }
   await new Promise((resolve) => setTimeout(resolve, 50));
 }
 
-const server = spawn(["run", "-A", "--watch", `${ROOT}/main.ts`], {
+server = spawn(["run", "-A", "--watch", `${ROOT}/main.ts`], {
   DASHI_MINIFY_CLIENT: "0",
 });
 
-function stop() {
-  try {
-    css.kill();
-  } catch {
-    // already exited
-  }
-  try {
-    server.kill();
-  } catch {
-    // already exited
-  }
-}
-
 Deno.addSignalListener("SIGINT", stop);
 Deno.addSignalListener("SIGTERM", stop);
-
-void css.status.then((status) => {
-  if (!status.success) {
-    stop();
-    Deno.exit(status.code);
-  }
-});
 
 const status = await server.status;
 stop();

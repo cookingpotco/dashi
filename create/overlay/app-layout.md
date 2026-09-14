@@ -83,11 +83,12 @@ if (import.meta.main) {
 
 ## Styling
 
-Tailwind v4 on `className` only. Source `styles.css`. `css.ts` writes
-`generated/styles-<hash>.css` and `styles.json`; the layout imports the JSON.
-Serve hashed CSS at `GET /generated/:file` with `CacheStrategy.Immutable`. Serve
-unhashed files at `GET /static/:file`. No `class`, `tw`, or `css` props and no
-framework CSS pipeline.
+Tailwind v4 on `className` only. Source `styles.css`. `@cookingpot/dashi-css`:
+`deno task css` / `buildCss` writes `generated/styles-<hash>.css` and
+`styles.json`. The layout uses `stylesheetHref(import.meta.dirname)`. Compose
+with `cn(...)`. Serve hashed CSS at `GET /generated/:file` with
+`CacheStrategy.Immutable`. Serve unhashed files at `GET /static/:file`. No
+`class`, `tw`, or `css` props and no framework CSS pipeline.
 
 ## Imports
 

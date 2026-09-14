@@ -1,4 +1,5 @@
 import { assertEquals, assertMatch, assertNotEquals } from "@std/assert";
+import cssJson from "../css/deno.json" with { type: "json" };
 import dashiJson from "../deno.json" with { type: "json" };
 
 const CHECKOUT = Deno.realPathSync(`${import.meta.dirname}/..`);
@@ -8,7 +9,7 @@ const BOOT_TIMEOUT_MS = 15_000;
 async function writeCreateLinks(cwd: string): Promise<void> {
   await Deno.writeTextFile(
     `${cwd}/deno.json`,
-    `${JSON.stringify({ links: [CHECKOUT] }, null, 2)}\n`,
+    `${JSON.stringify({ links: [CHECKOUT, `${CHECKOUT}/css`] }, null, 2)}\n`,
   );
 }
 
@@ -17,7 +18,7 @@ async function linkScaffoldToCheckout(dest: string): Promise<void> {
   const config = JSON.parse(await Deno.readTextFile(path)) as {
     links?: string[];
   };
-  config.links = [CHECKOUT];
+  config.links = [CHECKOUT, `${CHECKOUT}/css`];
   await Deno.writeTextFile(path, `${JSON.stringify(config, null, 2)}\n`);
 }
 
@@ -96,6 +97,21 @@ Deno.test("deno create scaffolds a runnable app", async (t) => {
       `jsr:${dashiJson.name}@^${dashiJson.version}`,
     );
     assertEquals(
+      config.imports["@cookingpot/dashi-css"],
+      `jsr:${cssJson.name}@^${cssJson.version}`,
+    );
+    let cssTsMissing = false;
+    try {
+      await Deno.stat(`${dest}/css.ts`);
+    } catch (error) {
+      if (error instanceof Deno.errors.NotFound) {
+        cssTsMissing = true;
+      } else {
+        throw error;
+      }
+    }
+    assertEquals(cssTsMissing, true);
+    assertEquals(
       await Deno.readFile(`${dest}/static/favicon.ico`),
       await Deno.readFile(`${CHECKOUT}/examples/starter/static/favicon.ico`),
     );
@@ -159,6 +175,12 @@ Deno.test("deno create scaffolds a runnable app", async (t) => {
       const manifest = JSON.parse(
         await Deno.readTextFile(`${dest}/styles.json`),
       ) as { href: string };
+      assertMatch(
+        homeBody,
+        new RegExp(
+          `href="${manifest.href.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`,
+        ),
+      );
       const generated = await fetch(
         `http://127.0.0.1:${port}${manifest.href}`,
       );

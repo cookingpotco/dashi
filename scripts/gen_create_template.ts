@@ -15,6 +15,7 @@
  *   deno task create:gen:check
  */
 
+import cssConfig from "../css/deno.json" with { type: "json" };
 import rootConfig from "../deno.json" with { type: "json" };
 import starterConfig from "../examples/starter/deno.json" with {
   type: "json",
@@ -46,13 +47,23 @@ async function walk(dir: URL, rel: string, files: string[]): Promise<void> {
 function consumerDenoJson(): string {
   const imports: Record<string, string> = {
     dashi: `jsr:${rootConfig.name}@^$DASHI_VERSION`,
+    "@cookingpot/dashi-css": `jsr:${cssConfig.name}@^${cssConfig.version}`,
   };
   for (const [key, value] of Object.entries(starterConfig.imports)) {
-    if (key !== "dashi" && !key.startsWith("dashi/")) {
+    if (
+      key !== "dashi" &&
+      !key.startsWith("dashi/") &&
+      key !== "@cookingpot/dashi-css"
+    ) {
       imports[key] = value;
     }
   }
-  const { compilerOptions, ...rest } = starterConfig;
+  const { compilerOptions, tasks, ...rest } = starterConfig;
+  const consumerTasks = {
+    ...tasks,
+    css: `deno run -A jsr:${cssConfig.name}`,
+    "css:watch": `deno run -A jsr:${cssConfig.name} --watch`,
+  };
   // `unstable` and `nodeModulesDir` are root-only fields in a workspace, so
   // the starter member cannot carry them. Tailwind resolves
   // `@import "tailwindcss"` through node_modules, hence "auto".
@@ -61,6 +72,7 @@ function consumerDenoJson(): string {
     unstable: rootConfig.unstable,
     nodeModulesDir: "auto",
     ...rest,
+    tasks: consumerTasks,
     imports,
   };
   return `${JSON.stringify(config, null, 2)}\n`;

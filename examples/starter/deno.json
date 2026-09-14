@@ -5,14 +5,15 @@
     "lib": ["dom", "deno.ns", "deno.unstable"]
   },
   "tasks": {
-    "css": "deno run -A css.ts",
-    "css:watch": "deno run -A css.ts --watch",
+    "css": "deno run -A ../../css/mod.ts",
+    "css:watch": "deno run -A ../../css/mod.ts --watch",
     "dev": "deno run -A dev.ts"
   },
   "imports": {
     "dashi": "../../mod.ts",
     "dashi/client": "../../client.ts",
     "dashi/jsx-runtime": "../../jsx-runtime/mod.ts",
+    "@cookingpot/dashi-css": "../../css/mod.ts",
     "tailwindcss": "npm:tailwindcss@4"
   }
 }
