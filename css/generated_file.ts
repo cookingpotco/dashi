@@ -8,7 +8,7 @@ import { CacheStrategy, type ReadArgs, staticFile } from "dashi";
  */
 export function generatedFile(
   root: string,
-): (args: ReadArgs) => Promise<Response> {
+): (args: ReadArgs<{ params: { file: string } }>) => Promise<Response> {
   const generatedDir = `${root}/generated`;
   return ({ ctx }) =>
     staticFile(ctx, generatedDir, ctx.params.file, {

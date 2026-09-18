@@ -81,6 +81,9 @@ async function fingerprint(
 ): Promise<void> {
   const bytes = await Deno.readFile(cssPath);
   if (bytes.length === 0) {
+    if (!options.watch) {
+      throw new Error("Tailwind produced empty CSS output");
+    }
     return;
   }
   const hash = await hashCss(bytes);
@@ -139,116 +142,6 @@ function abortWhenSignaled(signal?: AbortSignal): Promise<never> {
   });
 }
 
-async function waitForFirstFingerprint(
-  outPath: string,
-  fingerprintCss: () => Promise<void>,
-  signal?: AbortSignal,
-): Promise<void> {
-  const deadline = Date.now() + 30_000;
-  while (Date.now() < deadline) {
-    throwIfAborted(signal);
-    try {
-      await Deno.stat(outPath);
-      await fingerprintCss();
-      return;
-    } catch (error) {
-      if (error instanceof Deno.errors.NotFound) {
-        await new Promise((resolve) => setTimeout(resolve, 50));
-        continue;
-      }
-      throw error;
-    }
-  }
-  throw new Error("Timed out waiting for Tailwind output");
-}
-
-async function watchFingerprints(
-  watcher: Deno.FsWatcher,
-  fingerprintCss: () => Promise<void>,
-  signal?: AbortSignal,
-): Promise<void> {
-  for await (const event of watcher) {
-    throwIfAborted(signal);
-    if (event.kind === "access") {
-      continue;
-    }
-    await fingerprintCss();
-  }
-}
-
-async function maybeFingerprint(
-  outPath: string,
-  generatedDir: string,
-  manifest: string,
-): Promise<void> {
-  try {
-    await fingerprint(outPath, { watch: true, generatedDir, manifest });
-  } catch (error) {
-    if (error instanceof Deno.errors.NotFound) {
-      return;
-    }
-    throw error;
-  }
-}
-
-async function watchBuildCss(options: {
-  root: string;
-  source: string;
-  generatedDir: string;
-  manifest: string;
-  tempDir: string;
-  outPath: string;
-  signal?: AbortSignal;
-}): Promise<void> {
-  const watcher = Deno.watchFs(options.tempDir);
-  const tailwind = spawnTailwind(
-    options.root,
-    options.source,
-    options.outPath,
-    true,
-  );
-  const fingerprintCss = () =>
-    maybeFingerprint(options.outPath, options.generatedDir, options.manifest);
-
-  try {
-    await Promise.race([
-      (async () => {
-        await waitForFirstFingerprint(
-          options.outPath,
-          fingerprintCss,
-          options.signal,
-        );
-        await watchFingerprints(watcher, fingerprintCss, options.signal);
-      })(),
-      tailwind.status.then((status) => {
-        if (options.signal?.aborted) {
-          return;
-        }
-        if (!status.success) {
-          throw new Error(`Tailwind CLI exited with code ${status.code}`);
-        }
-      }),
-      abortWhenSignaled(options.signal),
-    ]);
-  } finally {
-    try {
-      tailwind.kill();
-    } catch {
-      // already exited
-    }
-    try {
-      watcher.close();
-    } catch {
-      // already closed
-    }
-    try {
-      await Deno.remove(options.tempDir, { recursive: true });
-    } catch {
-      // already removed
-    }
-  }
-}
-
 /**
  * Runs the Tailwind CLI and writes a fingerprinted stylesheet manifest.
  *
@@ -279,13 +172,80 @@ export async function buildCss(options: BuildCssOptions): Promise<void> {
     return;
   }
 
-  await watchBuildCss({
-    root,
-    source,
-    generatedDir,
-    manifest,
-    tempDir,
-    outPath,
-    signal: options.signal,
-  });
+  const watcher = Deno.watchFs(tempDir);
+  const tailwind = spawnTailwind(root, source, outPath, true);
+  const signal = options.signal;
+
+  async function maybeFingerprint(): Promise<void> {
+    try {
+      await fingerprint(outPath, { watch: true, generatedDir, manifest });
+    } catch (error) {
+      if (error instanceof Deno.errors.NotFound) {
+        return;
+      }
+      throw error;
+    }
+  }
+
+  try {
+    const initialDeadline = Date.now() + 30_000;
+    while (Date.now() < initialDeadline) {
+      throwIfAborted(signal);
+      await maybeFingerprint();
+      try {
+        await Deno.stat(manifest);
+        break;
+      } catch (error) {
+        if (!(error instanceof Deno.errors.NotFound)) {
+          throw error;
+        }
+      }
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    try {
+      await Deno.stat(manifest);
+    } catch (error) {
+      if (error instanceof Deno.errors.NotFound) {
+        throw new Error("Timed out waiting for Tailwind output");
+      }
+      throw error;
+    }
+
+    await Promise.race([
+      (async () => {
+        for await (const event of watcher) {
+          throwIfAborted(signal);
+          if (event.kind === "access") {
+            continue;
+          }
+          await maybeFingerprint();
+        }
+      })(),
+      tailwind.status.then((status) => {
+        if (signal?.aborted) {
+          return;
+        }
+        if (!status.success) {
+          throw new Error(`Tailwind CLI exited with code ${status.code}`);
+        }
+      }),
+      abortWhenSignaled(signal),
+    ]);
+  } finally {
+    try {
+      tailwind.kill();
+    } catch {
+      // already exited
+    }
+    try {
+      watcher.close();
+    } catch {
+      // already closed
+    }
+    try {
+      await Deno.remove(tempDir, { recursive: true });
+    } catch {
+      // already removed
+    }
+  }
 }

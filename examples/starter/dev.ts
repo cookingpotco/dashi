@@ -70,10 +70,7 @@ while (true) {
 proc.server = spawn([
   "run",
   "-A",
-  "--watch",
-  "main.ts",
-  "--watch",
-  "generated/styles.json",
+  "--watch=generated/styles.json",
   "main.ts",
 ], {
   DASHI_MINIFY_CLIENT: "0",

@@ -91,4 +91,5 @@ Compose with `cn(...)`. Serve hashed CSS at `GET /generated/:file` with
 App code imports from `dashi` (`ReadArgs`, `WriteArgs`, `Ctx`, `serve`, …). JSX
 types (`Element`, `HTMLAttributes`, `DashiNode`, `JSX`) import from
 `dashi/jsx-runtime`. Browser APIs import from `dashi/client`. Styling helpers
-(`buildCss`, `stylesheetHref`, `cn`) import from `@cookingpot/dashi-css`.
+(`buildCss`, `generatedFile`, `stylesheetHref`, `cn`) import from
+`@cookingpot/dashi-css`.
