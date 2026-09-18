@@ -41,7 +41,11 @@ jobs:
           restore-keys: |
             deno-${{ runner.os }}-
 
-      - name: Publish
+      - name: Publish dashi-css
+        working-directory: css
+        run: deno publish
+
+      - name: Publish dashi
         run: deno publish
 
   verify-release:

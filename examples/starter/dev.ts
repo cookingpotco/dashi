@@ -1,6 +1,13 @@
-// Waits for css.ts to write styles.json, then runs the app. Simplified once
-// styling moves into the framework (COO-128).
+// Waits for generated/styles.json, runs buildCss in watch mode, then starts the app.
+import { buildCss } from "@cookingpot/dashi-css";
+
+if (import.meta.dirname === undefined) {
+  throw new Error("import.meta.dirname is required");
+}
 const ROOT = import.meta.dirname;
+const MANIFEST = `${ROOT}/generated/styles.json`;
+const ac = new AbortController();
+const proc: { server?: Deno.ChildProcess } = {};
 
 function spawn(
   args: string[],
@@ -17,54 +24,61 @@ function spawn(
   }).spawn();
 }
 
-const css = spawn(["run", "-A", `${ROOT}/css.ts`, "--watch"]);
-let cssStatus: Deno.CommandStatus | undefined;
-void css.status.then((status) => {
-  cssStatus = status;
-});
+function stop() {
+  ac.abort();
+  try {
+    proc.server?.kill();
+  } catch {
+    // already exited
+  }
+}
+
+let buildFailed = false;
+void buildCss({ root: ROOT, watch: true, signal: ac.signal }).then(
+  () => {},
+  (error) => {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      return;
+    }
+    buildFailed = true;
+    stop();
+    if (error instanceof Error) {
+      const match = error.message.match(/exited with code (\d+)/);
+      if (match !== null) {
+        Deno.exit(Number(match[1]));
+      }
+    }
+    Deno.exit(1);
+  },
+);
 
 while (true) {
+  if (buildFailed) {
+    Deno.exit(1);
+  }
   try {
-    await Deno.stat(`${ROOT}/styles.json`);
+    await Deno.stat(MANIFEST);
     break;
   } catch (error) {
     if (!(error instanceof Deno.errors.NotFound)) {
       throw error;
     }
   }
-  if (cssStatus !== undefined) {
-    Deno.exit(cssStatus.success ? 1 : cssStatus.code);
-  }
   await new Promise((resolve) => setTimeout(resolve, 50));
 }
 
-const server = spawn(["run", "-A", "--watch", `${ROOT}/main.ts`], {
+proc.server = spawn([
+  "run",
+  "-A",
+  "--watch=generated/styles.json",
+  "main.ts",
+], {
   DASHI_MINIFY_CLIENT: "0",
 });
-
-function stop() {
-  try {
-    css.kill();
-  } catch {
-    // already exited
-  }
-  try {
-    server.kill();
-  } catch {
-    // already exited
-  }
-}
 
 Deno.addSignalListener("SIGINT", stop);
 Deno.addSignalListener("SIGTERM", stop);
 
-void css.status.then((status) => {
-  if (!status.success) {
-    stop();
-    Deno.exit(status.code);
-  }
-});
-
-const status = await server.status;
+const status = await proc.server.status;
 stop();
 Deno.exit(status.code);

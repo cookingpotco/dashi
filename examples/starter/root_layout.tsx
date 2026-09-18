@@ -1,6 +1,11 @@
+import { stylesheetHref } from "@cookingpot/dashi-css";
 import { type LayoutArgs, NavigationRoot } from "dashi";
 import type { Element } from "dashi/jsx-runtime";
-import styles from "./styles.json" with { type: "json" };
+
+if (import.meta.dirname === undefined) {
+  throw new Error("import.meta.dirname is required");
+}
+const appRoot = import.meta.dirname;
 
 export function RootLayout({ children }: LayoutArgs): Element {
   return (
@@ -20,7 +25,10 @@ export function RootLayout({ children }: LayoutArgs): Element {
           type="font/woff2"
           crossOrigin=""
         />
-        <link rel="stylesheet" href={styles.href} />
+        <link
+          rel="stylesheet"
+          href={stylesheetHref(appRoot)}
+        />
       </head>
       <body className="flex min-h-screen flex-col">
         <NavigationRoot className="flex grow flex-col">
