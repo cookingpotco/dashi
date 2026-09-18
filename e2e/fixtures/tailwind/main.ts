@@ -1,4 +1,5 @@
-import { CacheStrategy, serve, staticFile } from "dashi";
+import { serve } from "dashi";
+import { generatedFile } from "@cookingpot/dashi-css";
 import { Home } from "./home/mod.tsx";
 import { RootLayout } from "./root_layout.tsx";
 
@@ -11,12 +12,7 @@ export function start() {
     layouts: [RootLayout],
     routes: [
       route("/", { GET: Home }),
-      route("/generated/:file", {
-        GET: ({ ctx }) =>
-          staticFile(ctx, `${root}/generated`, ctx.params.file, {
-            strategy: CacheStrategy.Immutable,
-          }),
-      }),
+      route("/generated/:file", { GET: generatedFile(root) }),
     ],
   }), { hostname: "127.0.0.1", port: 0 });
 }

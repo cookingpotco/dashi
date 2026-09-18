@@ -23,11 +23,11 @@ Tailwind v4 build and `className` helpers for [Dashi](https://dashi.run) apps.
 
 4. In `dev.ts`, import `buildCss` and call
    `buildCss({ root: import.meta.dirname, watch: true, signal })`. Wait until
-   `styles.json` exists, then spawn `deno run -A --watch main.ts`.
+   `generated/styles.json` exists, then spawn
+   `deno run -A --watch main.ts --watch generated/styles.json`.
 5. In the layout, set
    `<link rel="stylesheet" href={stylesheetHref(import.meta.dirname)} />`.
-6. Serve hashed CSS at `GET /generated/:file` with `staticFile` and
-   `CacheStrategy.Immutable`.
+6. Serve hashed CSS at `GET /generated/:file` with `generatedFile(root)`.
 7. Compose classes with `cn(...)`.
 
 Use `className` only. Core `dashi` does not compile CSS.

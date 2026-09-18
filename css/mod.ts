@@ -6,6 +6,7 @@
 
 export { buildCss, type BuildCssOptions } from "./build.ts";
 export { cn } from "./cn.ts";
+export { generatedFile } from "./generated_file.ts";
 export { stylesheetHref } from "./stylesheet_href.ts";
 
 import { buildCss } from "./build.ts";

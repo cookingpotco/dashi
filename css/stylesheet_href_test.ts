@@ -3,8 +3,10 @@ import { stylesheetHref } from "./mod.ts";
 
 Deno.test("stylesheetHref reads href from manifest", async () => {
   const dir = await Deno.makeTempDir({ prefix: "dashi-css-href-" });
+  const generatedDir = `${dir}/generated`;
+  await Deno.mkdir(generatedDir);
   await Deno.writeTextFile(
-    `${dir}/styles.json`,
+    `${generatedDir}/styles.json`,
     `${JSON.stringify({ href: "/generated/styles-abc.css" }, null, 2)}\n`,
   );
   assertEquals(stylesheetHref(dir), "/generated/styles-abc.css");
@@ -28,9 +30,11 @@ Deno.test("stylesheetHref throws when manifest is missing", async () => {
 
 Deno.test("stylesheetHref throws on invalid manifest", async () => {
   const dir = await Deno.makeTempDir({ prefix: "dashi-css-href-" });
-  await Deno.writeTextFile(`${dir}/styles.json`, "not json\n");
+  const generatedDir = `${dir}/generated`;
+  await Deno.mkdir(generatedDir);
+  await Deno.writeTextFile(`${generatedDir}/styles.json`, "not json\n");
   assertThrows(() => stylesheetHref(dir));
-  await Deno.writeTextFile(`${dir}/styles.json`, "{}\n");
+  await Deno.writeTextFile(`${generatedDir}/styles.json`, "{}\n");
   assertThrows(() => stylesheetHref(dir), Error, "styles.json");
   await Deno.remove(dir, { recursive: true });
 });

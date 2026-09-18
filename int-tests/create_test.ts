@@ -152,7 +152,7 @@ Deno.test("deno create scaffolds a runnable app", async (t) => {
       stderr: "inherit",
     });
     assertEquals((await css.output()).code, 0);
-    await Deno.stat(`${dest}/styles.json`);
+    await Deno.stat(`${dest}/generated/styles.json`);
 
     const check = new Deno.Command(Deno.execPath(), {
       args: ["check", "--min-dep-age=0", "main.ts"],
@@ -195,7 +195,7 @@ Deno.test("deno create scaffolds a runnable app", async (t) => {
       assertMatch(homeBody, />cool-app</);
 
       const manifestHrefValue = manifestHref(
-        JSON.parse(await Deno.readTextFile(`${dest}/styles.json`)),
+        JSON.parse(await Deno.readTextFile(`${dest}/generated/styles.json`)),
       );
       assertMatch(
         homeBody,

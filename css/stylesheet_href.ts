@@ -10,13 +10,13 @@ function manifestHref(parsed: unknown, manifestPath: string): string {
 }
 
 /**
- * Reads the hashed stylesheet URL from `styles.json` at request time.
+ * Reads the hashed stylesheet URL from `generated/styles.json` at request time.
  *
- * @param root App root directory containing `styles.json`.
+ * @param root App root directory containing `generated/styles.json`.
  * @see https://dashi.run/docs/styling#stylesheethref
  */
 export function stylesheetHref(root: string): string {
-  const manifestPath = `${root}/styles.json`;
+  const manifestPath = `${root}/generated/styles.json`;
   let text: string;
   try {
     text = Deno.readTextFileSync(manifestPath);

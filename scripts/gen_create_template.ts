@@ -29,7 +29,6 @@ const OUT = new URL("create/generated_files.ts", ROOT);
 const SKIP = new Set([
   "node_modules",
   "generated",
-  "styles.json",
   ".deno",
   "deno.lock",
 ]);

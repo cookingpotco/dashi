@@ -10,6 +10,7 @@
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1",
+    "dashi": "../mod.ts",
     "tailwind-merge": "npm:tailwind-merge@3"
   },
   "publish": {
@@ -17,6 +18,7 @@
       "mod.ts",
       "build.ts",
       "cn.ts",
+      "generated_file.ts",
       "stylesheet_href.ts",
       "README.md",
       "LICENSE"

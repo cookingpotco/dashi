@@ -1,10 +1,11 @@
-// Waits for styles.json, runs buildCss in watch mode, then starts the app.
+// Waits for generated/styles.json, runs buildCss in watch mode, then starts the app.
 import { buildCss } from "@cookingpot/dashi-css";
 
 if (import.meta.dirname === undefined) {
   throw new Error("import.meta.dirname is required");
 }
 const ROOT = import.meta.dirname;
+const MANIFEST = `${ROOT}/generated/styles.json`;
 const ac = new AbortController();
 const proc: { server?: Deno.ChildProcess } = {};
 
@@ -56,7 +57,7 @@ while (true) {
     Deno.exit(1);
   }
   try {
-    await Deno.stat(`${ROOT}/styles.json`);
+    await Deno.stat(MANIFEST);
     break;
   } catch (error) {
     if (!(error instanceof Deno.errors.NotFound)) {
@@ -66,7 +67,15 @@ while (true) {
   await new Promise((resolve) => setTimeout(resolve, 50));
 }
 
-proc.server = spawn(["run", "-A", "--watch", `${ROOT}/main.ts`], {
+proc.server = spawn([
+  "run",
+  "-A",
+  "--watch",
+  "main.ts",
+  "--watch",
+  "generated/styles.json",
+  "main.ts",
+], {
   DASHI_MINIFY_CLIENT: "0",
 });
 

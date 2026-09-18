@@ -51,6 +51,7 @@ export function Home({ html }: ReadArgs) {
 
 ```ts
 import { CacheStrategy, serve, staticFile } from "dashi";
+import { generatedFile } from "@cookingpot/dashi-css";
 import { Home } from "./home/mod.tsx";
 import { error, fatal, notFound } from "./errors.tsx";
 import { logger } from "./logger_middleware.ts";
@@ -64,12 +65,7 @@ if (import.meta.main) {
     error,
     routes: [
       route("/", { GET: Home }),
-      route("/generated/:file", {
-        GET: ({ ctx }) =>
-          staticFile(ctx, `${import.meta.dirname}/generated`, ctx.params.file, {
-            strategy: CacheStrategy.Immutable,
-          }),
-      }),
+      route("/generated/:file", { GET: generatedFile(import.meta.dirname) }),
       route("/static/:file", {
         GET: ({ ctx }) =>
           staticFile(ctx, `${import.meta.dirname}/static`, ctx.params.file, {
@@ -85,10 +81,10 @@ if (import.meta.main) {
 
 Tailwind v4 on `className` only. Source `styles.css`. `@cookingpot/dashi-css`:
 `deno task css` / `buildCss` writes `generated/styles-<hash>.css` and
-`styles.json`. The layout uses `stylesheetHref(import.meta.dirname)`. Compose
-with `cn(...)`. Serve hashed CSS at `GET /generated/:file` with
-`CacheStrategy.Immutable`. Serve unhashed files at `GET /static/:file`. No
-`class`, `tw`, or `css` props and no framework CSS pipeline.
+`generated/styles.json`. The layout uses `stylesheetHref(import.meta.dirname)`.
+Compose with `cn(...)`. Serve hashed CSS at `GET /generated/:file` with
+`generatedFile(root)`. Serve unhashed files at `GET /static/:file`. No `class`,
+`tw`, or `css` props and no framework CSS pipeline.
 
 ## Imports
 

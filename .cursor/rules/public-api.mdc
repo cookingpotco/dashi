@@ -50,5 +50,5 @@ CLI only: `deno create jsr:@cookingpot/dashi`. App code does not import it.
 
 ## `@cookingpot/dashi-css`
 
-`buildCss`, `BuildCssOptions`, `cn`, `stylesheetHref`. CLI when the module is
-the `deno run` entry (`import.meta.main`).
+`buildCss`, `BuildCssOptions`, `cn`, `generatedFile`, `stylesheetHref`. CLI when
+the module is the `deno run` entry (`import.meta.main`).

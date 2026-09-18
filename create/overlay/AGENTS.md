@@ -34,9 +34,9 @@ patch lists. Avoid custom JS and JSON endpoints for routine UI updates.
 
 **Styling.** Tailwind v4 on `className` only. Source `styles.css`.
 `@cookingpot/dashi-css` (`deno task css` / `buildCss`) writes
-`generated/styles-<hash>.css` and `styles.json`. The layout uses
+`generated/styles-<hash>.css` and `generated/styles.json`. The layout uses
 `stylesheetHref(import.meta.dirname)`. Compose with `cn(...)`. Hashed CSS at
-`GET /generated/:file` with `CacheStrategy.Immutable`; unhashed assets at
+`GET /generated/:file` with `generatedFile(root)`; unhashed assets at
 `GET /static/:file`. No `class`, `tw`, or `css` props.
 
 ## Best practices
